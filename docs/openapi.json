@@ -1,0 +1,101 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Licentivo Launch System API",
+    "version": "0.2.0-dev",
+    "description": "System-endpoint subset only. Account, commerce, payment, and licensing routes exist in the application but are not yet covered by this incomplete specification.",
+    "license": { "name": "MIT", "identifier": "MIT" }
+  },
+  "servers": [{ "url": "http://localhost:8080" }],
+  "paths": {
+    "/healthz": {
+      "get": {
+        "operationId": "getLiveness",
+        "summary": "Process liveness, independent of database readiness",
+        "responses": {
+          "200": {
+            "description": "The HTTP process is running",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HealthResponse" } } }
+          }
+        }
+      }
+    },
+    "/readyz": {
+      "get": {
+        "operationId": "getReadiness",
+        "summary": "Check MySQL connectivity and required GORM tables",
+        "responses": {
+          "200": {
+            "description": "The database is ready; this does not certify payment or licensing acceptance",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ReadinessResponse" } } }
+          },
+          "503": {
+            "description": "The database is unconfigured, unavailable, or missing required tables",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ReadinessResponse" } } }
+          }
+        }
+      }
+    },
+    "/api/v1/system/status": {
+      "get": {
+        "operationId": "getSystemStatus",
+        "summary": "Expose version and implementation scope without configuration or credentials",
+        "responses": {
+          "200": {
+            "description": "Current development phase and implementation scope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["data", "request_id"],
+                  "properties": {
+                    "request_id": { "$ref": "#/components/schemas/RequestID" },
+                    "data": {
+                      "type": "object",
+                      "required": ["product", "version", "phase", "sales_enabled", "implemented"],
+                      "properties": {
+                        "product": { "const": "Licentivo Launch" },
+                        "version": { "type": "string" },
+                        "phase": { "const": "local-development" },
+                        "sales_enabled": { "const": false },
+                        "implemented": { "type": "array", "items": { "type": "string" } }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "RequestID": { "type": "string", "pattern": "^[a-f0-9]{32}$", "description": "Also returned in the X-Request-ID response header" },
+      "HealthResponse": {
+        "type": "object",
+        "required": ["data", "request_id"],
+        "properties": {
+          "request_id": { "$ref": "#/components/schemas/RequestID" },
+          "data": { "type": "object", "required": ["status"], "properties": { "status": { "const": "ok" } } }
+        }
+      },
+      "ReadinessResponse": {
+        "type": "object",
+        "required": ["data", "request_id"],
+        "properties": {
+          "request_id": { "$ref": "#/components/schemas/RequestID" },
+          "data": {
+            "type": "object",
+            "required": ["status"],
+            "properties": {
+              "status": { "enum": ["ready", "not_ready"] },
+              "code": { "enum": ["DATABASE_NOT_CONFIGURED", "DATABASE_UNAVAILABLE", "DATABASE_SCHEMA_NOT_READY"] }
+            }
+          }
+        }
+      }
+    }
+  }
+}

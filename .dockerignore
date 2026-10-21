@@ -1,0 +1,15 @@
+.cache
+.git
+.env
+.env.*
+bin
+data
+*.log
+.local
+artifacts
+examples/vendor
+**/obj
+**/bin
+**/__pycache__
+*.launchbackup
+*.secrets.json

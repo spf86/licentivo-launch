@@ -1,0 +1,50 @@
+# Development deployment scaffold. Configure HTTPS before production.
+x-launch: &launch
+  build: .
+  image: licentivo-launch:dev
+  environment:
+    LAUNCH_ENV: ${LAUNCH_ENV:-development}
+    LAUNCH_HTTP_ADDR: 0.0.0.0:8080
+    LAUNCH_PUBLIC_URL: ${LAUNCH_PUBLIC_URL:-http://localhost:8080}
+    LAUNCH_DATABASE_DSN: ${MYSQL_USER:-launch}:${MYSQL_PASSWORD:?Set MYSQL_PASSWORD}@tcp(mysql:3306)/${MYSQL_DATABASE:-launch}
+    LAUNCH_MASTER_KEY: ${LAUNCH_MASTER_KEY:?Generate LAUNCH_MASTER_KEY with launch keygen}
+    LAUNCH_SETUP_TOKEN: ${LAUNCH_SETUP_TOKEN:-}
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-launch}
+      MYSQL_USER: ${MYSQL_USER:-launch}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Set MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: [CMD-SHELL, 'MYSQL_PWD="$$MYSQL_PASSWORD" mysql --protocol=TCP -h127.0.0.1 -u"$$MYSQL_USER" -D"$$MYSQL_DATABASE" -e "SELECT 1" >/dev/null 2>&1']
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+    restart: unless-stopped
+  app:
+    <<: *launch
+    command: [serve]
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: [CMD, /launch, check]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+volumes:
+  mysql-data:
