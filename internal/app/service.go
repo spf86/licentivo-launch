@@ -195,11 +195,12 @@ func audit(tx *gorm.DB, actor, action, objectType, objectID, reason string) erro
 }
 
 type UserView struct {
-	ID         string `json:"id"`
-	Email      string `json:"email"`
-	Verified   bool   `json:"verified"`
-	Role       string `json:"role"`
-	FullAccess bool   `json:"full_access"`
+	ID                     string `json:"id"`
+	Email                  string `json:"email"`
+	Verified               bool   `json:"verified"`
+	Role                   string `json:"role"`
+	FullAccess             bool   `json:"full_access"`
+	PasswordChangeRequired bool   `json:"password_change_required"`
 }
 type Principal struct {
 	User    storage.User
@@ -210,11 +211,13 @@ type Principal struct {
 func (p Principal) View() UserView {
 	return viewUser(p.User, p.Role)
 }
-func (p Principal) CanManage() bool { return p.Role == "admin" || p.Role == "operations" }
-func (p Principal) IsAdmin() bool   { return p.Role == "admin" }
+func (p Principal) CanManage() bool {
+	return !p.User.PasswordChangeRequired && (p.Role == "admin" || p.Role == "operations")
+}
+func (p Principal) IsAdmin() bool { return !p.User.PasswordChangeRequired && p.Role == "admin" }
 
 func viewUser(user storage.User, role string) UserView {
-	return UserView{ID: user.ID, Email: user.Email, Verified: user.EmailVerifiedAt != nil, Role: role, FullAccess: role == "admin"}
+	return UserView{ID: user.ID, Email: user.Email, Verified: user.EmailVerifiedAt != nil, Role: role, FullAccess: role == "admin" && !user.PasswordChangeRequired, PasswordChangeRequired: user.PasswordChangeRequired}
 }
 
 func permissionsForRole(role string) json.RawMessage {

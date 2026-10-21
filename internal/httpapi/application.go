@@ -109,6 +109,10 @@ func (a *application) route(mux *http.ServeMux, pattern string, authenticated bo
 					return
 				}
 			}
+			if p.User.PasswordChangeRequired && pattern != "GET /api/v1/me" && pattern != "POST /api/v1/me/password" && pattern != "POST /api/v1/auth/logout" {
+				apiFail(w, r, &app.Error{Status: 403, Code: "PASSWORD_CHANGE_REQUIRED", Message: "请先修改初始密码再使用管理功能"})
+				return
+			}
 		}
 		result, err := fn(w, r, p)
 		if err != nil {

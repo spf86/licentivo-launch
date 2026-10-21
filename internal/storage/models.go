@@ -35,15 +35,16 @@ type SecretRecord struct {
 func (SecretRecord) TableName() string { return "secret_records" }
 
 type User struct {
-	ID              string     `gorm:"column:id;type:char(36) CHARACTER SET ascii COLLATE ascii_bin;primaryKey;autoIncrement:false"`
-	Email           string     `gorm:"column:email;type:varchar(254);not null"`
-	EmailKey        string     `gorm:"column:email_key;type:varchar(254);not null;uniqueIndex:uq_users_email_key"`
-	PasswordHash    string     `gorm:"column:password_hash;type:varchar(512) CHARACTER SET ascii COLLATE ascii_bin;not null"`
-	EmailVerifiedAt *time.Time `gorm:"column:email_verified_at;type:datetime(6)"`
-	Status          string     `gorm:"column:status;type:enum('active','disabled','closed');not null;default:'active'"`
-	DisabledReason  *string    `gorm:"column:disabled_reason;type:varchar(512)"`
-	CreatedAt       time.Time  `gorm:"column:created_at;type:datetime(6);not null;default:CURRENT_TIMESTAMP(6)"`
-	UpdatedAt       time.Time  `gorm:"column:updated_at;type:datetime(6);not null;default:CURRENT_TIMESTAMP(6)"`
+	ID                     string     `gorm:"column:id;type:char(36) CHARACTER SET ascii COLLATE ascii_bin;primaryKey;autoIncrement:false"`
+	Email                  string     `gorm:"column:email;type:varchar(254);not null"`
+	EmailKey               string     `gorm:"column:email_key;type:varchar(254);not null;uniqueIndex:uq_users_email_key"`
+	PasswordHash           string     `gorm:"column:password_hash;type:varchar(512) CHARACTER SET ascii COLLATE ascii_bin;not null"`
+	PasswordChangeRequired bool       `gorm:"column:password_change_required;type:boolean;not null;default:false"`
+	EmailVerifiedAt        *time.Time `gorm:"column:email_verified_at;type:datetime(6)"`
+	Status                 string     `gorm:"column:status;type:enum('active','disabled','closed');not null;default:'active'"`
+	DisabledReason         *string    `gorm:"column:disabled_reason;type:varchar(512)"`
+	CreatedAt              time.Time  `gorm:"column:created_at;type:datetime(6);not null;default:CURRENT_TIMESTAMP(6)"`
+	UpdatedAt              time.Time  `gorm:"column:updated_at;type:datetime(6);not null;default:CURRENT_TIMESTAMP(6)"`
 }
 
 func (User) TableName() string { return "users" }

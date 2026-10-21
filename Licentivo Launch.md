@@ -8,6 +8,8 @@ Audience: product owners, software merchants, developers, testers, and deploymen
 
 This English edition preserves the original requirements and acceptance scope. Requirements describe intended behavior, not proof of implementation. The original single-product scope has since expanded to multiple products. Consult [README](README.md), [progress](docs/progress.md), and the [current management API contract](docs/licentivo-contract.md) for implemented behavior and limitations.
 
+The v0.2.0-beta.1 first-run flow supersedes the original setup concept: the server creates a fixed initial administrator, then requires a password change before granting administration. No setup token is needed. See the [binary installation guide](docs/binary-installation.md).
+
 Launch is an open source, independently deployed software storefront, account, sales, and licensing integration system. A merchant configures its own brand, products, plans, payment accounts, and Licentivo connection. Customers register and purchase on the merchant website, then sign in to the software. The normal purchase flow creates/manages licenses in the background without requiring manual license-key entry.
 
 The goals are faster Licentivo integration and merchant ownership of customer/sales data. Each merchant has an instance and database. This is not a hosted multi-merchant SaaS, and it does not centrally synchronize customer accounts, orders, or contact information to Licentivo.
@@ -363,7 +365,7 @@ Exact routes belong in a maintained OpenAPI. Responses use understandable state,
 9. Audit manual grant/suspend/restore/refund/revoke/sensitive export with actor/reason/object/change.
 10. Preserve financial/order history; correct with explicit records, not overwritten sale amounts.
 11. Isolate test/live/demo data and credentials; public demos cannot use real customer data or live payment accounts.
-12. Public packages must exclude real secrets, production default passwords, customer databases, and private backups.
+12. Public packages must exclude real deployment secrets, customer databases, and private backups. The documented initial administrator password is restricted to first-login password replacement and must be changed before administration is available.
 
 These controls support data and transaction correctness. They do not claim that clients cannot be modified or that long-offline devices can be revoked instantly.
 

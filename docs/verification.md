@@ -29,3 +29,9 @@ Docker/Compose was not run because Docker was unavailable. A real Licentivo cata
 ## Public source preparation, 2026-10-21
 
 `go test ./...`, `go vet ./...`, and `node --check internal/httpapi/web/app.js` passed. This run did not enable MySQL integration tests or real provider calls. All repository Markdown and configuration documentation was checked for remaining Chinese text, and relative Markdown links were checked for existing local targets. Publication files were checked to exclude private development configuration, local database files, uploads, backups, binaries, caches, and screenshots. The source includes the notices for all server dependencies listed in `go.mod`.
+
+## Initial-account and release verification, 2026-10-21
+
+The isolated MySQL test suite passed with a separate bootstrap test database. It covers concurrent first starts creating one administrator, direct initial login without a setup token, blocked administration/desktop access before a password change, rejection of an unchanged/short replacement, old-session revocation, old-password rejection, and preservation of the changed password on a later start. The CLI initialization test verifies an independent generated master key and refusal to overwrite an existing configuration.
+
+The release builder targets Windows amd64/arm64 and Linux amd64/arm64 with CGO disabled. It packages only the executable, English installation text, a public configuration example, version/source information, and license notices, and writes SHA-256 checksums. Windows amd64 can be smoke-tested on the development host; Linux and ARM64 execution is not claimed as natively verified there.

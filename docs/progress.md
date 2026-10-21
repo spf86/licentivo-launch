@@ -5,7 +5,7 @@ Documentation prepared for public source publication on 2026-10-21. The implemen
 ## Implemented and locally verified
 
 - Go, GORM, MySQL, automatic schema creation from Go models, and the MIT license.
-- One-time setup-token administrator initialization that cannot be repeated after installation.
+- Automatic first-start administrator (`admin@example.com` / `LaunchAdmin123!`) with mandatory password change, API enforcement, and preservation of existing installations. No setup token is needed.
 - Argon2id email/password accounts, website cookies/CSRF, separate desktop Bearer sessions, and session revocation.
 - Email verification, password reset, and email changes with expiring one-time credentials and sensitive-change session invalidation.
 - Encrypted durable email jobs, leases, backoff, and retries; configurable Resend SMTP TLS/STARTTLS and a real administrator test-email action.

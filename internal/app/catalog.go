@@ -250,20 +250,19 @@ func (s *Service) RollbackPlan(ctx context.Context, p Principal, planID, version
 }
 
 type SiteView struct {
-	Installed            bool              `json:"installed"`
-	SetupTokenConfigured bool              `json:"setup_token_configured"`
-	Brand                Brand             `json:"brand"`
-	Product              *ProductView      `json:"product"`
-	Products             []ProductView     `json:"products"`
-	Plans                []PlanView        `json:"plans"`
-	Environment          string            `json:"environment"`
-	SalesEnabled         bool              `json:"sales_enabled"`
-	PaymentProviders     []string          `json:"payment_providers"`
-	Locale               string            `json:"locale"`
-	SourceLocale         string            `json:"source_locale"`
-	SupportedLocales     []LocaleOption    `json:"supported_locales"`
-	TranslationReady     bool              `json:"translation_ready"`
-	UI                   map[string]string `json:"ui"`
+	Installed        bool              `json:"installed"`
+	Brand            Brand             `json:"brand"`
+	Product          *ProductView      `json:"product"`
+	Products         []ProductView     `json:"products"`
+	Plans            []PlanView        `json:"plans"`
+	Environment      string            `json:"environment"`
+	SalesEnabled     bool              `json:"sales_enabled"`
+	PaymentProviders []string          `json:"payment_providers"`
+	Locale           string            `json:"locale"`
+	SourceLocale     string            `json:"source_locale"`
+	SupportedLocales []LocaleOption    `json:"supported_locales"`
+	TranslationReady bool              `json:"translation_ready"`
+	UI               map[string]string `json:"ui"`
 }
 
 func (s *Service) Site(ctx context.Context, environment, productSlug, requestedLocale string) (SiteView, error) {
@@ -275,7 +274,7 @@ func (s *Service) Site(ctx context.Context, environment, productSlug, requestedL
 		return SiteView{}, ErrStorage
 	}
 	source, locale := requestedContentLocale(s.db.WithContext(ctx), requestedLocale)
-	view := SiteView{Installed: settings.InstallationCompletedAt != nil, SetupTokenConfigured: s.config.SetupToken != "", Products: []ProductView{}, Plans: []PlanView{}, PaymentProviders: []string{}, Environment: environment, Locale: locale, SourceLocale: source, SupportedLocales: supportedLocales(), TranslationReady: true, UI: builtInUIStrings(locale)}
+	view := SiteView{Installed: settings.InstallationCompletedAt != nil, Products: []ProductView{}, Plans: []PlanView{}, PaymentProviders: []string{}, Environment: environment, Locale: locale, SourceLocale: source, SupportedLocales: supportedLocales(), TranslationReady: true, UI: builtInUIStrings(locale)}
 	if json.Unmarshal(settings.Brand, &view.Brand) != nil {
 		return view, ErrStorage
 	}

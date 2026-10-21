@@ -194,8 +194,11 @@ function authPage(kind){
  main.innerHTML=`<section class="panel"><p class="eyebrow">${esc(t("section.account","账号"))}</p><h1>${esc(meta[0])}</h1><p class="hint">${esc(meta[1])}</p><form data-form="${kind}">${field(t("auth.email","邮箱"),"email","","email","required autocomplete=username maxlength=254")}${kind!=="forgot"?field(t("auth.password","密码"),"password","","password",`required ${kind==="register"?"minlength=12 autocomplete=new-password":"autocomplete=current-password"} maxlength=128`):""}${formError}<button>${esc(meta[2])}</button></form><p class="form-foot">${kind==="login"?'<a href="#/register">'+esc(t("auth.create","创建账号"))+'</a> · <a href="#/forgot">'+esc(t("auth.forgot_link","忘记密码"))+'</a>':'<a href="#/login">'+esc(t("auth.back_login","返回登录"))+'</a>'}</p></section>`;
 }
 function setup(){
- if(state.site.installed){main.innerHTML=empty("安装已完成","初始化入口已关闭，请登录管理员账号。")+'<div class="actions"><a class="button" href="#/login">登录</a></div>';return}
- main.innerHTML=`<section class="panel wide"><p class="eyebrow">First launch</p><h1>为你的产品启航</h1><p>设置品牌和首个管理员。初始化令牌用于确认你拥有服务器控制权。</p>${!state.site.setup_token_configured?'<div class="notice warning">请先在服务器设置 LAUNCH_SETUP_TOKEN 并重启服务。可使用 launch keygen 生成独立令牌。</div>':""}<form data-form="setup">${field("初始化令牌","setup_token","","password","required autocomplete=off minlength=32 maxlength=256")}${field("品牌名称","brand_name","","text","required minlength=2 maxlength=160")}${field("管理员邮箱","email","","email","required autocomplete=username")}${field("管理员密码","password","","password","required minlength=12 maxlength=128 autocomplete=new-password")}${formError}<button ${!state.site.setup_token_configured?"disabled":""}>创建管理员并完成初始化</button></form></section>`;
+ if(state.site.installed){authPage("login");return}
+ main.innerHTML=empty("Server configuration required","Configure MySQL and the instance master key, then restart Launch. The initial administrator is created automatically before the server starts.");
+}
+function initialPasswordChange(){
+ main.innerHTML=`<section class="panel"><p class="eyebrow">Complete installation</p><h1>Change the initial password</h1><p>Choose your own password to unlock administration.</p><p>${esc(state.user.email)}</p><form data-form="initial-password">${field("Current password","current_password","","password","required autocomplete=current-password maxlength=128")}${field("New password","new_password","","password","required minlength=12 maxlength=128 autocomplete=new-password")}${field("Confirm new password","confirm_password","","password","required minlength=12 maxlength=128 autocomplete=new-password")}${formError}<button>Save password and sign in again</button></form></section>`;
 }
 function emailLink(){
  const reset=state.linkAction==="reset";
@@ -448,6 +451,7 @@ async function render(){
  try{
   await refresh();nav();
   if(!state.site.installed){setup();return}
+  if(state.user?.password_change_required){initialPasswordChange();return}
   switch(route[0]){case "setup":setup();break;case "login":case "register":case "forgot":authPage(route[0]);break;case "email-link":if(state.linkToken)emailLink();else main.innerHTML=empty(t("error.link_closed","链接已关闭"),t("error.link_closed_body","请重新打开邮件中的链接。"));break;case "product":await productPage(route[1]);break;case "download":await downloadPage(route[1]);break;case "docs":route[1]?await docsPage(route[1],route[2]):docsDirectory(state.site);break;case "account":await account();break;case "admin":await admin(route[1]);break;case "checkout":await checkoutPage(route[1],route[2]);break;case "order":await orderPage(route[1]);break;case "change":await changePage(route[1],route[2]);break;case "devices":await devicesPage(route[1],route[2]);break;default:home()}
  }catch(error){main.innerHTML=`<section class="panel wide"><h1>${esc(t("error.service_preparing","服务正在准备"))}</h1><p>${esc(error.message)}</p></section>`}
 }
@@ -508,7 +512,7 @@ document.addEventListener("submit",async event=>{
    case "order-reconcile":await api("/admin/orders/"+encodeURIComponent(values.order_id)+"/reconcile","POST",{reason:values.reason});toast("已核对原交易");await admin("orders");break;
    case "entitlement-hold":await api("/admin/entitlements/"+encodeURIComponent(values.entitlement_id)+"/hold","POST",{hold:values.hold==="true",reason:values.reason});toast("授权状态变更已排队");await admin("operations");break;
    case "user-status":await api("/admin/users/"+encodeURIComponent(values.user_id)+"/status","POST",{status:values.status,reason:values.reason});toast("账号状态已更新");await admin("users");break;
-   case "setup":await api("/setup","POST",values);toast("管理员已创建，请登录");navigate("login");break;
+   case "initial-password":if(values.new_password!==values.confirm_password)throw new Error("The new passwords do not match.");await api("/me/password","POST",{current_password:values.current_password,new_password:values.new_password});state.user=null;toast("Password changed. Sign in with your new password.");navigate("login");break;
    case "login":await api("/auth/login","POST",{...values,kind:"website"});await refresh();navigate(state.returnTo||(state.user.role==="customer"?"account":"admin"));state.returnTo=null;break;
    case "register":await api("/auth/register","POST",values);toast(t("toast.registration_sent","如信息有效，验证邮件会发送至该地址"));navigate("login");break;
    case "forgot":await api("/auth/email","POST",{email:values.email,kind:"reset"});toast(t("toast.reset_sent","如账号有效，重置邮件会发送至该地址"));break;

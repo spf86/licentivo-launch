@@ -29,7 +29,7 @@ Set-Location licentivo-launch
 go build -trimpath -o bin/launch.exe ./cmd/launch
 ```
 
-This repository publishes source. Do not assume a prebuilt executable or container release exists unless one is listed in the repository's Releases section.
+Ready-to-run Windows and Linux packages for amd64 and arm64 are available from [GitHub Releases](https://github.com/spf86/licentivo-launch/releases). They include an executable, English installation instructions, a public configuration example, and license notices. Follow [binary-installation.md](binary-installation.md) to run without installing Go. Container images are not published by this release.
 
 ## Prepare MySQL
 
@@ -44,18 +44,14 @@ No SQL schema files are required. GORM's Go models create and update tables when
 ## First run on Windows
 
 ```powershell
-New-Item -ItemType Directory -Path .local/dev -Force | Out-Null
-Copy-Item config/launch-config.example.json .local/dev/launch-config.json
-./bin/launch.exe keygen
-./bin/launch.exe keygen
+./bin/launch.exe init
 ```
 
 Edit `.local/dev/launch-config.json`:
 
 1. Replace `LAUNCH_DATABASE_DSN` with your own connection string.
-2. Put the first generated key in `LAUNCH_MASTER_KEY`.
-3. Put the second, independently generated value in `LAUNCH_SETUP_TOKEN`.
-4. Check the listener, public URL, and upload directory.
+2. Keep the automatically generated `LAUNCH_MASTER_KEY`.
+3. Check the listener, public URL, and upload directory.
 
 Start the application:
 
@@ -63,17 +59,14 @@ Start the application:
 ./bin/launch.exe dev
 ```
 
-Open `http://localhost:18080/#/setup`. Use the setup token and create your own administrator. A fresh installation has no default administrator or password. After setup, remove `LAUNCH_SETUP_TOKEN` from the private file and restart.
+Open `http://localhost:18080/#/login`. A new database automatically receives the initial account `admin@example.com` with password `LaunchAdmin123!`. The first login requires a different password of 12-128 bytes. Sign in again with the replacement password to access administration. Complete this step on localhost before exposing a public origin. No setup token or restart after password change is required. Existing administrators are not reset.
 
 For daily development, run `go run ./cmd/launch dev` or `./scripts/dev.ps1`. Both use the existing configured database. The script builds the executable; it does not initialize a disposable MySQL instance.
 
 ## First run on Linux or macOS
 
 ```sh
-mkdir -p .local/dev
-cp config/launch-config.example.json .local/dev/launch-config.json
-./bin/launch keygen
-./bin/launch keygen
+./bin/launch init
 ```
 
 Edit the copied JSON file as described above, then:
@@ -82,7 +75,7 @@ Edit the copied JSON file as described above, then:
 ./bin/launch dev
 ```
 
-Complete `http://localhost:18080/#/setup`, remove the setup token from the private configuration, and restart. Local build instructions are provided for these systems; the historical verification record includes a Linux cross-build, not a full Linux deployment acceptance test.
+Open `http://localhost:18080/#/login`, sign in with `admin@example.com` / `LaunchAdmin123!`, and complete the required password change. The default listener is loopback. The Linux binaries are cross-built with CGO disabled; Linux and ARM64 runtime acceptance remains dependent on the target machine.
 
 ## Environment-only configuration
 
@@ -94,7 +87,6 @@ export LAUNCH_HTTP_ADDR=127.0.0.1:8080
 export LAUNCH_PUBLIC_URL=http://localhost:8080
 export LAUNCH_DATABASE_DSN='launch:YOUR_DATABASE_PASSWORD@tcp(127.0.0.1:3306)/launch'
 export LAUNCH_MASTER_KEY='YOUR_PERSISTENT_GENERATED_MASTER_KEY'
-export LAUNCH_SETUP_TOKEN='YOUR_SEPARATE_GENERATED_SETUP_TOKEN'
 export LAUNCH_UPLOAD_DIR='/srv/licentivo-launch/uploads'
 ./bin/launch serve
 ```
@@ -167,7 +159,7 @@ Copy-Item .env.example .env
 docker compose up --build -d
 ```
 
-The template builds the Go server, waits for the MySQL health check, and publishes the application at `http://localhost:8080`. MySQL data is stored in the `mysql-data` volume. Set a separate setup token for first-time administrator creation.
+The template builds the Go server, waits for the MySQL health check, and publishes the application at `http://localhost:8080`. MySQL data is stored in the `mysql-data` volume. The initial administrator is created automatically; use the first-login password-change flow. Optional `LAUNCH_ADMIN_EMAIL` and `LAUNCH_ADMIN_PASSWORD` override the initial account only on a new database.
 
 The application filesystem is read-only and the default upload directory is not a persistent writable mount. Before using installer or document-image uploads, add a dedicated upload bind mount or volume, set `LAUNCH_UPLOAD_DIR` to its container path, and grant write access to the image's UID/GID `65532`. For a bind mount, prepare permissions on the Docker host. Retain that directory with your database backups.
 

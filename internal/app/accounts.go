@@ -24,48 +24,84 @@ type BootstrapInput struct {
 
 func (s *Service) Bootstrap(ctx context.Context, in BootstrapInput) error {
 	if s.config.SetupToken == "" {
-		return problem(503, "SETUP_TOKEN_REQUIRED", "请在服务器设置 LAUNCH_SETUP_TOKEN 后重启")
+		return problem(410, "SETUP_AUTOMATIC", "初始管理员由服务器自动创建，请直接登录")
 	}
 	if subtle.ConstantTimeCompare(security.Digest(in.Token), security.Digest(s.config.SetupToken)) != 1 {
 		return ErrForbidden
 	}
+	created, err := s.createInitialAdministrator(ctx, in, false)
+	if err == nil && !created {
+		return problem(409, "ALREADY_INSTALLED", "安装已完成，初始化入口已关闭")
+	}
+	return err
+}
+
+const DefaultAdminEmail = "admin@example.com"
+const DefaultAdminPassword = "LaunchAdmin123!"
+
+// EnsureInitialAdministrator runs only on the server before HTTP is exposed.
+// The instance row lock makes concurrent starts create at most one account.
+func (s *Service) EnsureInitialAdministrator(ctx context.Context, address, password string) (bool, error) {
+	var settings storage.InstanceSettings
+	if err := s.db.WithContext(ctx).First(&settings, "id = ?", 1).Error; err != nil {
+		return false, ErrStorage
+	}
+	if settings.InstallationCompletedAt != nil {
+		return false, nil
+	}
+	if address == "" {
+		address = DefaultAdminEmail
+	}
+	if password == "" {
+		password = DefaultAdminPassword
+	}
+	return s.createInitialAdministrator(ctx, BootstrapInput{Email: address, Password: password, BrandName: "Licentivo Launch"}, true)
+}
+
+func (s *Service) createInitialAdministrator(ctx context.Context, in BootstrapInput, requirePasswordChange bool) (bool, error) {
 	address, err := email(in.Email)
 	if err != nil {
-		return err
+		return false, err
 	}
 	if len(strings.TrimSpace(in.BrandName)) < 2 || len(in.BrandName) > 160 {
-		return ErrInvalid
+		return false, ErrInvalid
 	}
 	password, err := security.HashPassword(in.Password)
 	if err != nil {
-		return problem(400, "PASSWORD_INVALID", "密码长度应为 12–128 字节")
+		return false, problem(400, "PASSWORD_INVALID", "密码长度应为 12–128 字节")
 	}
 	id, err := newID()
 	if err != nil {
-		return err
+		return false, err
 	}
-	return databaseError(s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+	created := false
+	err = s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var settings storage.InstanceSettings
 		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&settings, "id = ?", 1).Error; err != nil {
 			return err
 		}
 		if settings.InstallationCompletedAt != nil {
-			return problem(409, "ALREADY_INSTALLED", "安装已完成，初始化入口已关闭")
+			return nil
 		}
 		at := now()
-		user := storage.User{ID: id, Email: address, EmailKey: address, PasswordHash: password, Status: "active", EmailVerifiedAt: &at}
+		user := storage.User{ID: id, Email: address, EmailKey: address, PasswordHash: password, PasswordChangeRequired: requirePasswordChange, Status: "active", EmailVerifiedAt: &at}
 		if err := tx.Create(&user).Error; err != nil {
 			return err
 		}
 		if err := tx.Create(&storage.StaffAccount{UserID: id, Role: "admin", Permissions: permissionsForRole("admin")}).Error; err != nil {
 			return err
 		}
-		brand := Brand{Name: strings.TrimSpace(in.BrandName), Tagline: "从产品到第一次使用", SupportEmail: address, Theme: "forest"}
+		brand := Brand{Name: strings.TrimSpace(in.BrandName), Tagline: "From purchase to first use", SupportEmail: address, Theme: "forest"}
 		if err := tx.Model(&settings).Updates(map[string]any{"brand": marshal(brand), "installation_completed_at": at}).Error; err != nil {
 			return err
 		}
-		return audit(tx, id, "setup.complete", "instance", settings.InstanceRef, "")
-	}))
+		if err := audit(tx, id, "setup.complete", "instance", settings.InstanceRef, ""); err != nil {
+			return err
+		}
+		created = true
+		return nil
+	})
+	return created && err == nil, databaseError(err)
 }
 
 type SessionGrant struct {
@@ -93,6 +129,9 @@ func (s *Service) Login(ctx context.Context, address, password, kind string) (Se
 	valid := security.VerifyPassword(hash, password)
 	if !valid || parseErr != nil || err != nil || user.Status != "active" {
 		return SessionGrant{}, problem(401, "LOGIN_FAILED", "邮箱或密码不正确，或账号暂不可用")
+	}
+	if kind == "desktop" && user.PasswordChangeRequired {
+		return SessionGrant{}, problem(403, "PASSWORD_CHANGE_REQUIRED", "请先在网站修改初始密码")
 	}
 	token, err := security.Token()
 	if err != nil {
@@ -336,6 +375,9 @@ func (s *Service) ChangePassword(ctx context.Context, p Principal, current, repl
 	if !security.VerifyPassword(p.User.PasswordHash, current) {
 		return problem(401, "PASSWORD_INCORRECT", "当前密码不正确")
 	}
+	if current == replacement {
+		return problem(400, "PASSWORD_UNCHANGED", "新密码必须与当前密码不同")
+	}
 	hash, err := security.HashPassword(replacement)
 	if err != nil {
 		return problem(400, "PASSWORD_INVALID", "密码长度应为 12–128 字节")
@@ -348,7 +390,7 @@ func (s *Service) ChangePassword(ctx context.Context, p Principal, current, repl
 		if user.PasswordHash != p.User.PasswordHash || user.Status != "active" {
 			return ErrUnauthorized
 		}
-		if err := tx.Model(&user).Update("password_hash", hash).Error; err != nil {
+		if err := tx.Model(&user).Updates(map[string]any{"password_hash": hash, "password_change_required": false}).Error; err != nil {
 			return err
 		}
 		at := now()

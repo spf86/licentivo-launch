@@ -71,17 +71,20 @@ $taskPassword = [Guid]::NewGuid().ToString('N') + [Guid]::NewGuid().ToString('N'
 $taskDatabase = 'launch_test_' + [Guid]::NewGuid().ToString('N')
 $taskAppDatabase = $taskDatabase + '_app'
 $taskRestoreDatabase = $taskDatabase + '_restore'
+$taskBootstrapDatabase = $taskDatabase + '_bootstrap'
 $taskPreviewDatabase = $taskDatabase + '_preview'
 $taskInitFile = Join-Path $taskRun 'initialize-test.sql'
 $taskInitSQL = "ALTER USER 'root'@'localhost' IDENTIFIED BY '$taskPassword';`nCREATE DATABASE $taskDatabase CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;`nCREATE DATABASE $taskAppDatabase CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;`nCREATE USER 'launch_test'@'127.0.0.1' IDENTIFIED BY '$taskPassword';`nGRANT ALL ON $taskDatabase.* TO 'launch_test'@'127.0.0.1';`nGRANT ALL ON $taskAppDatabase.* TO 'launch_test'@'127.0.0.1';`n"
 [IO.File]::WriteAllText($taskInitFile, $taskInitSQL, [Text.UTF8Encoding]::new($false))
 [IO.File]::AppendAllText($taskInitFile, "CREATE DATABASE $taskRestoreDatabase CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;`nGRANT ALL ON $taskRestoreDatabase.* TO 'launch_test'@'127.0.0.1';`n", [Text.UTF8Encoding]::new($false))
 [IO.File]::AppendAllText($taskInitFile, "CREATE DATABASE $taskPreviewDatabase CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;`nGRANT ALL ON $taskPreviewDatabase.* TO 'launch_test'@'127.0.0.1';`n", [Text.UTF8Encoding]::new($false))
+[IO.File]::AppendAllText($taskInitFile, "CREATE DATABASE $taskBootstrapDatabase CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;`nGRANT ALL ON $taskBootstrapDatabase.* TO 'launch_test'@'127.0.0.1';`n", [Text.UTF8Encoding]::new($false))
 $taskServerArgs = @('--no-defaults', ('--basedir="' + $taskBase + '"'), ('--datadir="' + $taskData + '"'), '--bind-address=127.0.0.1', "--port=$taskPort", '--mysqlx=OFF', '--skip-name-resolve', ('--init-file="' + $taskInitFile + '"'), '--console')
 $taskServer = Start-Process -FilePath $taskMySQLD -ArgumentList $taskServerArgs -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $taskRun 'server.out') -RedirectStandardError (Join-Path $taskRun 'server.err')
 $taskPreviousDSN = $env:LAUNCH_TEST_DATABASE_DSN
 $taskPreviousAppDSN = $env:LAUNCH_TEST_APP_DATABASE_DSN
 $taskPreviousRestoreDSN = $env:LAUNCH_TEST_RESTORE_DATABASE_DSN
+$taskPreviousBootstrapDSN = $env:LAUNCH_TEST_BOOTSTRAP_DATABASE_DSN
 $taskTestExit = 1
 $taskPreviewProcess = $null
 try {
@@ -100,6 +103,7 @@ try {
     $env:LAUNCH_TEST_DATABASE_DSN = "launch_test:$taskPassword@tcp(127.0.0.1:$taskPort)/$taskDatabase"
     $env:LAUNCH_TEST_APP_DATABASE_DSN = "launch_test:$taskPassword@tcp(127.0.0.1:$taskPort)/$taskAppDatabase"
     $env:LAUNCH_TEST_RESTORE_DATABASE_DSN = "launch_test:$taskPassword@tcp(127.0.0.1:$taskPort)/$taskRestoreDatabase"
+    $env:LAUNCH_TEST_BOOTSTRAP_DATABASE_DSN = "launch_test:$taskPassword@tcp(127.0.0.1:$taskPort)/$taskBootstrapDatabase"
     Push-Location -LiteralPath $taskRoot
     try {
         go test ./... -count=1
@@ -137,7 +141,6 @@ try {
 			# Windows can prefer ::1 for localhost while the preview intentionally
 			# listens on IPv4. Use the literal address for script-owned requests.
 			$taskPreviewAPIURL = "http://127.0.0.1:$PreviewPort"
-			$taskPreviewToken = [Guid]::NewGuid().ToString('N') + [Guid]::NewGuid().ToString('N')
             $taskPreviewInfo = [Diagnostics.ProcessStartInfo]::new((Join-Path $taskRoot 'bin\launch.exe'))
             $taskPreviewInfo.UseShellExecute = $false
             $taskPreviewInfo.CreateNoWindow = $true
@@ -149,7 +152,8 @@ try {
             $taskPreviewInfo.Environment['LAUNCH_MASTER_KEY'] = [Convert]::ToBase64String([byte[]](1..32 | ForEach-Object { 9 }))
             $taskPreviewInfo.Environment['LAUNCH_PUBLIC_URL'] = $taskPreviewURL
             $taskPreviewInfo.Environment['LAUNCH_HTTP_ADDR'] = "127.0.0.1:$PreviewPort"
-            $taskPreviewInfo.Environment['LAUNCH_SETUP_TOKEN'] = $taskPreviewToken
+            $taskPreviewInfo.Environment['LAUNCH_ADMIN_EMAIL'] = 'owner@example.invalid'
+            $taskPreviewInfo.Environment['LAUNCH_ADMIN_PASSWORD'] = 'owner-password-for-tests'
             $taskPreviewProcess = [Diagnostics.Process]::Start($taskPreviewInfo)
 
 			$taskPreviewReady = $false
@@ -168,15 +172,7 @@ try {
 			$taskRequestBodyPath = Join-Path $taskRun 'preview-request.json'
 			$taskCookiePath = Join-Path $taskRun 'preview-cookies.txt'
 			$taskSite = (& curl.exe --fail-with-body --silent --show-error --max-time 10 --url "$taskPreviewAPIURL/api/v1/site?environment=sandbox") | ConvertFrom-Json
-			if (-not $taskSite.data.installed) {
-				$taskSetupBody = @{
-					setup_token = $taskPreviewToken
-					email = 'owner@example.invalid'
-					password = 'owner-password-for-tests'
-					brand_name = 'Updated Brand'
-				} | ConvertTo-Json
-				Invoke-TaskJson -Method Post -Uri "$taskPreviewAPIURL/api/v1/setup" -Headers $taskHeaders -Body $taskSetupBody -BodyPath $taskRequestBodyPath | Out-Null
-
+			if (-not $PreviewRestore) {
 				$taskLoginBody = @{ email = 'owner@example.invalid'; password = 'owner-password-for-tests'; kind = 'website' } | ConvertTo-Json
 				Invoke-TaskJson -Method Post -Uri "$taskPreviewAPIURL/api/v1/auth/login" -Headers $taskHeaders -Body $taskLoginBody -BodyPath $taskRequestBodyPath -CookiePath $taskCookiePath | Out-Null
 				$taskCSRFCookie = Get-Content -LiteralPath $taskCookiePath | ForEach-Object {
@@ -185,6 +181,12 @@ try {
 				} | Select-Object -First 1
 				if (-not $taskCSRFCookie) { throw 'Preview login did not return a CSRF cookie.' }
 				$taskAdminHeaders = @{ Origin = $taskPreviewURL; 'X-CSRF-Token' = $taskCSRFCookie }
+				$taskChangeBody = @{ current_password = 'owner-password-for-tests'; new_password = 'owner-password-changed-for-tests' } | ConvertTo-Json
+				Invoke-TaskJson -Method Post -Uri "$taskPreviewAPIURL/api/v1/me/password" -Headers $taskAdminHeaders -Body $taskChangeBody -BodyPath $taskRequestBodyPath -CookiePath $taskCookiePath | Out-Null
+				$taskLoginBody = @{ email = 'owner@example.invalid'; password = 'owner-password-changed-for-tests'; kind = 'website' } | ConvertTo-Json
+				Invoke-TaskJson -Method Post -Uri "$taskPreviewAPIURL/api/v1/auth/login" -Headers $taskHeaders -Body $taskLoginBody -BodyPath $taskRequestBodyPath -CookiePath $taskCookiePath | Out-Null
+				$taskCSRFCookie = Get-Content -LiteralPath $taskCookiePath | ForEach-Object { $taskFields = $_ -split "`t"; if ($taskFields.Count -ge 7 -and $taskFields[5] -eq 'launch_csrf') { $taskFields[6] } } | Select-Object -First 1
+				$taskAdminHeaders['X-CSRF-Token'] = $taskCSRFCookie
 
 				$taskBrandBody = @{ name = 'Updated Brand'; tagline = ''; description = ''; support_email = 'support@example.invalid'; logo_data_url = ''; theme = 'forest' } | ConvertTo-Json
 				Invoke-TaskJson -Method Put -Uri "$taskPreviewAPIURL/api/v1/admin/brand" -Headers $taskAdminHeaders -Body $taskBrandBody -BodyPath $taskRequestBodyPath -CookiePath $taskCookiePath | Out-Null
@@ -204,7 +206,7 @@ try {
 			}
 
 			Write-Output "Clean preview: $taskPreviewURL"
-			Write-Output 'Preview login: owner@example.invalid / owner-password-for-tests'
+			Write-Output 'Preview login: owner@example.invalid / owner-password-changed-for-tests'
             $taskPreviewProcess.WaitForExit()
         }
     } finally { Pop-Location }
@@ -212,6 +214,7 @@ try {
     $env:LAUNCH_TEST_DATABASE_DSN = $taskPreviousDSN
     $env:LAUNCH_TEST_APP_DATABASE_DSN = $taskPreviousAppDSN
     $env:LAUNCH_TEST_RESTORE_DATABASE_DSN = $taskPreviousRestoreDSN
+    $env:LAUNCH_TEST_BOOTSTRAP_DATABASE_DSN = $taskPreviousBootstrapDSN
     Stop-TaskProcess $taskPreviewProcess
     Stop-TaskProcess $taskServer
 	Stop-TaskMySQLProcess $taskData

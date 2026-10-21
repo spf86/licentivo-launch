@@ -6,7 +6,7 @@ Give customers a branded place to discover your software, create an account, pur
 
 Built with **Go, GORM, MySQL, and embedded HTML/CSS/JavaScript**. Released under the [MIT license](LICENSE).
 
-[Licentivo website](https://www.licentivo.com/) · [Installation](docs/installation.md) · [Configuration](docs/configuration.md) · [Application integration](docs/software-sdk-integration.md) · [Development status](docs/progress.md)
+[Download binaries](https://github.com/spf86/licentivo-launch/releases) · [Licentivo website](https://www.licentivo.com/) · [Installation](docs/installation.md) · [Configuration](docs/configuration.md) · [Application integration](docs/software-sdk-integration.md)
 
 ## Why use Launch?
 
@@ -19,7 +19,7 @@ Built with **Go, GORM, MySQL, and embedded HTML/CSS/JavaScript**. Released under
 
 ## Current status
 
-This is a **development release**. The source includes the workflows below and local automated verification, but it is not a claim of production readiness. Live sales remain gated. Real Stripe/PayPal sandbox transactions, email delivery, translation quality, complete payment-to-desktop activation, and Linux/Compose operation still require deployment-specific acceptance testing. See [progress](docs/progress.md) and the [verification record](docs/verification.md).
+This is a **beta development release**. The source includes the workflows below and local automated verification, but it is not a claim of production readiness. Live sales remain gated. Real Stripe/PayPal sandbox transactions, email delivery, translation quality, complete payment-to-desktop activation, and Linux/Compose operation still require deployment-specific acceptance testing. See [progress](docs/progress.md) and the [verification record](docs/verification.md).
 
 The customer website has ten locales. The administration interface currently uses Simplified Chinese; repository documentation and setup instructions are in English.
 
@@ -54,6 +54,8 @@ Licentivo receives the data required for licensing, such as opaque customer refe
 
 ## Quick start from source
 
+For ready-to-run Windows and Linux packages, see [GitHub Releases](https://github.com/spf86/licentivo-launch/releases) and the [binary installation guide](docs/binary-installation.md). Both **amd64** and **arm64** are provided for each operating system. No Go or Node.js installation is needed to run a binary package; MySQL is still required.
+
 ### Prerequisites
 
 - Go **1.26 or newer** (the project has been built with Go 1.26.6).
@@ -72,14 +74,13 @@ On Windows, use `go build -o bin/launch.exe ./cmd/launch` and invoke `.\bin\laun
 
 ### 2. Create private configuration
 
-Generate **two different** random values:
+Initialize a private configuration with an automatically generated master key:
 
 ```sh
-./bin/launch keygen
-./bin/launch keygen
+./bin/launch init
 ```
 
-Copy [config/launch-config.example.json](config/launch-config.example.json) to `.local/dev/launch-config.json`. Create `.local/dev` first. Replace the database address/password, master key, and setup token placeholders with your own values. Keep the master key: the same value is needed to decrypt existing secrets after a restart or restore. The private `.local` directory is excluded from Git.
+Edit `LAUNCH_DATABASE_DSN` in `.local/dev/launch-config.json` with your MySQL address, database, username, and password. Keep the generated master key: the same value is needed after a restart or restore. The private `.local` directory is excluded from Git. `init` refuses to overwrite an existing configuration. A [manual template](config/launch-config.example.json) is also available.
 
 ### 3. Start and install
 
@@ -87,7 +88,14 @@ Copy [config/launch-config.example.json](config/launch-config.example.json) to `
 ./bin/launch dev
 ```
 
-Open **http://localhost:18080/#/setup** and complete the one-time administrator setup with your setup token. There is no preinstalled administrator account in a fresh clone. Remove `LAUNCH_SETUP_TOKEN` from the private configuration after setup, then restart.
+The first database startup automatically creates this initial administrator:
+
+| Field | Initial value |
+| --- | --- |
+| Email | `admin@example.com` |
+| Password | `LaunchAdmin123!` |
+
+Open **http://localhost:18080/#/login**. Your first sign-in opens a required password-change form. Choose a different password of 12-128 bytes, then sign in again. Administration and desktop sessions stay blocked until the change completes. Complete this local first-login step before publishing the site. No installation token is required. Existing installations retain their accounts and passwords.
 
 Go/GORM creates and maintains the tables at startup. There is no separate SQL migration command. `dev` connects to the configured database; it does not launch MySQL.
 
@@ -139,6 +147,7 @@ Backup, restore, upgrade, and monitoring procedures are in the [installation gui
 
 | Command | Purpose |
 | --- | --- |
+| `launch init` | Create a private local configuration with a new master key, without overwriting existing configuration |
 | `launch dev` | Read `.local/dev/launch-config.json` and start using the configured MySQL database |
 | `launch serve` | Start the server; create/update tables when a database is configured |
 | `launch check` | Check database connectivity and required tables without modifying the schema |

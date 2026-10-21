@@ -25,7 +25,7 @@ import (
 	"licentivo-launch/internal/storage"
 )
 
-var version = "0.2.0-dev"
+var version = "0.2.0-beta.1"
 
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stderr, nil))
@@ -56,7 +56,14 @@ func run(logger *slog.Logger) error {
 		command = "serve"
 	}
 	if len(os.Args) > 2 && command != "backup" && command != "restore" || (command == "backup" || command == "restore") && len(os.Args) != 3 {
-		return errors.New("usage: launch [serve|dev|check|keygen|version] or launch [backup|restore] PATH")
+		return errors.New("usage: launch [init|serve|dev|check|keygen|version] or launch [backup|restore] PATH")
+	}
+	if command == "init" {
+		if err := initializeConfiguration("."); err != nil {
+			return err
+		}
+		fmt.Fprintln(os.Stdout, "Created .local/dev/launch-config.json with a persistent master key. Set LAUNCH_DATABASE_DSN in that file, then run: launch dev")
+		return nil
 	}
 	if command == "keygen" {
 		var key [32]byte
@@ -71,7 +78,7 @@ func run(logger *slog.Logger) error {
 		return nil
 	}
 	if command != "serve" && command != "check" && command != "backup" && command != "restore" {
-		return errors.New("usage: launch [serve|dev|check|keygen|version]")
+		return errors.New("usage: launch [init|serve|dev|check|keygen|version]")
 	}
 	lookup, err := config.Lookup(os.Getenv)
 	if err != nil {
@@ -110,14 +117,13 @@ func run(logger *slog.Logger) error {
 		cancel()
 		if err != nil {
 			if errors.Is(err, storage.ErrUnavailable) {
-				return errors.New("无法连接 MySQL，请检查网络或远程数据库服务")
+				return errors.New("could not connect to MySQL; check the configured database server and network")
 			}
 			return err
 		}
 		logger.Info("database tables initialized")
 		service, err = app.New(context.Background(), db, app.Config{
 			PublicURL:           cfg.PublicURL,
-			SetupToken:          cfg.SetupToken,
 			UploadDir:           cfg.UploadDir,
 			MasterKey:           cfg.MasterKey,
 			TLSListenerEnabled:  cfg.HTTPSAddr != "",
@@ -125,6 +131,20 @@ func run(logger *slog.Logger) error {
 		})
 		if err != nil {
 			return err
+		}
+		created, err := service.EnsureInitialAdministrator(context.Background(), cfg.AdminEmail, cfg.AdminPassword)
+		if err != nil {
+			return err
+		}
+		if created {
+			address, password := cfg.AdminEmail, cfg.AdminPassword
+			if address == "" {
+				address = app.DefaultAdminEmail
+			}
+			if password == "" {
+				password = app.DefaultAdminPassword
+			}
+			fmt.Fprintf(os.Stdout, "Initial administrator account created.\nEmail: %s\nPassword: %s\nSign in at %s/#/login and change this password to unlock administration.\n", address, password, cfg.PublicURL)
 		}
 	}
 	publicURLProvider := func() string { return cfg.PublicURL }

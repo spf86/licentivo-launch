@@ -11,24 +11,26 @@ import (
 
 // Config is deliberately not serializable: it contains database credentials.
 type Config struct {
-	Environment string
-	HTTPAddr    string
-	HTTPSAddr   string
-	PublicURL   string
-	DatabaseDSN string
-	MasterKey   []byte
-	SetupToken  string
-	UploadDir   string
+	Environment   string
+	HTTPAddr      string
+	HTTPSAddr     string
+	PublicURL     string
+	DatabaseDSN   string
+	MasterKey     []byte
+	AdminEmail    string
+	AdminPassword string
+	UploadDir     string
 }
 
 func Load(getenv func(string) string) (Config, error) {
 	c := Config{
-		Environment: value(getenv("LAUNCH_ENV"), "development"),
-		HTTPAddr:    value(getenv("LAUNCH_HTTP_ADDR"), "127.0.0.1:8080"),
-		HTTPSAddr:   strings.TrimSpace(getenv("LAUNCH_HTTPS_ADDR")),
-		PublicURL:   value(getenv("LAUNCH_PUBLIC_URL"), "http://localhost:8080"),
-		DatabaseDSN: getenv("LAUNCH_DATABASE_DSN"),
-		SetupToken:  getenv("LAUNCH_SETUP_TOKEN"),
+		Environment:   value(getenv("LAUNCH_ENV"), "development"),
+		HTTPAddr:      value(getenv("LAUNCH_HTTP_ADDR"), "127.0.0.1:8080"),
+		HTTPSAddr:     strings.TrimSpace(getenv("LAUNCH_HTTPS_ADDR")),
+		PublicURL:     value(getenv("LAUNCH_PUBLIC_URL"), "http://localhost:8080"),
+		DatabaseDSN:   getenv("LAUNCH_DATABASE_DSN"),
+		AdminEmail:    getenv("LAUNCH_ADMIN_EMAIL"),
+		AdminPassword: getenv("LAUNCH_ADMIN_PASSWORD"),
 	}
 	uploadDir, err := filepath.Abs(value(getenv("LAUNCH_UPLOAD_DIR"), filepath.Join(".local", "uploads")))
 	if err != nil {
@@ -67,9 +69,6 @@ func Load(getenv func(string) string) (Config, error) {
 	}
 	if c.DatabaseDSN != "" && len(c.MasterKey) != 32 {
 		return c, errors.New("LAUNCH_MASTER_KEY is required when the database is configured; generate it with launch keygen")
-	}
-	if c.SetupToken != "" && (len(c.SetupToken) < 32 || len(c.SetupToken) > 256) {
-		return c, errors.New("LAUNCH_SETUP_TOKEN must contain 32–256 characters")
 	}
 	return c, nil
 }

@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Licentivo Launch System API",
-    "version": "0.2.0-dev",
+    "version": "0.2.0-beta.1",
     "description": "System-endpoint subset only. Account, commerce, payment, and licensing routes exist in the application but are not yet covered by this incomplete specification.",
     "license": { "name": "MIT", "identifier": "MIT" }
   },
