@@ -6,10 +6,10 @@ Download a package from [Licentivo Launch releases](https://github.com/spf86/lic
 
 | Operating system / processor | Package suffix |
 | --- | --- |
-| Windows, Intel/AMD x64 | `windows_amd64.zip` |
-| Windows, ARM64 | `windows_arm64.zip` |
-| Linux, x86-64 | `linux_amd64.tar.gz` |
-| Linux, AArch64 | `linux_arm64.tar.gz` |
+| Windows, Intel/AMD x64 | [windows_amd64.zip](https://github.com/spf86/licentivo-launch/releases/download/v0.2.0-beta.1/licentivo-launch_0.2.0-beta.1_windows_amd64.zip) |
+| Windows, ARM64 | [windows_arm64.zip](https://github.com/spf86/licentivo-launch/releases/download/v0.2.0-beta.1/licentivo-launch_0.2.0-beta.1_windows_arm64.zip) |
+| Linux, x86-64 | [linux_amd64.tar.gz](https://github.com/spf86/licentivo-launch/releases/download/v0.2.0-beta.1/licentivo-launch_0.2.0-beta.1_linux_amd64.tar.gz) |
+| Linux, AArch64 | [linux_arm64.tar.gz](https://github.com/spf86/licentivo-launch/releases/download/v0.2.0-beta.1/licentivo-launch_0.2.0-beta.1_linux_arm64.tar.gz) |
 
 `amd64` means x86-64 and works on compatible Intel and AMD processors. `arm64` means 64-bit ARM. Use the operating-system and architecture combination that matches your machine. MySQL may run locally or on a reachable separate server.
 
@@ -64,7 +64,7 @@ Open **http://localhost:18080/#/login** on the server. The first start against a
 
 The first login opens **Change the initial password**. Enter the current password and a different new password of 12-128 bytes, confirm it, and save. Sign in again with your new password. Administration and desktop sessions remain blocked until the change is complete. The old password and old sessions stop working after the change.
 
-Complete this first-login step on localhost before exposing the public site. **No installation/setup token is required.** Existing installations keep their current administrator accounts and passwords. Optional `LAUNCH_ADMIN_EMAIL` and `LAUNCH_ADMIN_PASSWORD` values can select the initial account on a fresh database only; they do not reset an installed account.
+Complete this first-login step on localhost before exposing the public site. Existing installations keep their current administrator accounts and passwords. Optional `LAUNCH_ADMIN_EMAIL` and `LAUNCH_ADMIN_PASSWORD` values can select the initial account on a fresh database only; they do not reset an installed account.
 
 ## What the commands do
 

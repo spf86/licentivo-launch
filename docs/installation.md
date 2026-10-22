@@ -1,35 +1,14 @@
 # Installation and operations
 
-This guide covers a source installation of Licentivo Launch. The project is a development release; complete the external-service acceptance checks before collecting live payments.
+This guide starts with a ready-to-run Licentivo Launch release package. The project is a development release; complete the external-service acceptance checks before collecting live payments.
 
-## Requirements
+## Download the server package
 
-- Go 1.26+ to build the server.
-- MySQL 8.0.16+ and an empty application database.
-- A dedicated database account that can create and alter application tables.
-- A persistent directory for uploads and a securely retained instance master key.
-- A domain and HTTPS for public deployments.
-- Merchant-owned Licentivo, payment, email, and optional DeepL accounts.
+Choose a Windows or Linux package for amd64 or arm64 from [GitHub Releases](https://github.com/spf86/licentivo-launch/releases/tag/v0.2.0-beta.1), then extract it. The package includes the executable, installation guide, public configuration example and license notices.
 
-The embedded frontend needs no separate web build or Node server. Node.js is only needed for optional JavaScript syntax checks.
+You need MySQL 8.0.16+, an empty database and an account permitted to create/alter application tables. Go, Git, Node.js and a compiler are not required to run the package. The [binary guide](binary-installation.md) lists direct downloads, architecture selection and checksum verification.
 
-## Download and build
-
-```sh
-git clone https://github.com/spf86/licentivo-launch.git
-cd licentivo-launch
-go build -trimpath -o bin/launch ./cmd/launch
-```
-
-On Windows:
-
-```powershell
-git clone https://github.com/spf86/licentivo-launch.git
-Set-Location licentivo-launch
-go build -trimpath -o bin/launch.exe ./cmd/launch
-```
-
-Ready-to-run Windows and Linux packages for amd64 and arm64 are available from [GitHub Releases](https://github.com/spf86/licentivo-launch/releases). They include an executable, English installation instructions, a public configuration example, and license notices. Follow [binary-installation.md](binary-installation.md) to run without installing Go. Container images are not published by this release.
+Use the extracted directory as the working directory for the commands below. For public hosting, also prepare a domain, HTTPS and persistent upload storage. Service accounts can be connected after the site starts.
 
 ## Prepare MySQL
 
@@ -44,7 +23,7 @@ No SQL schema files are required. GORM's Go models create and update tables when
 ## First run on Windows
 
 ```powershell
-./bin/launch.exe init
+./launch.exe init
 ```
 
 Edit `.local/dev/launch-config.json`:
@@ -56,23 +35,23 @@ Edit `.local/dev/launch-config.json`:
 Start the application:
 
 ```powershell
-./bin/launch.exe dev
+./launch.exe dev
 ```
 
-Open `http://localhost:18080/#/login`. A new database automatically receives the initial account `admin@example.com` with password `LaunchAdmin123!`. The first login requires a different password of 12-128 bytes. Sign in again with the replacement password to access administration. Complete this step on localhost before exposing a public origin. No setup token or restart after password change is required. Existing administrators are not reset.
+Open `http://localhost:18080/#/login`. A new database automatically receives the initial account `admin@example.com` with password `LaunchAdmin123!`. The first login requires a different password of 12-128 bytes. Sign in again with the replacement password to access administration. Complete this step on localhost before exposing a public origin. No restart after password change is required. Existing administrators are not reset.
 
-For daily development, run `go run ./cmd/launch dev` or `./scripts/dev.ps1`. Both use the existing configured database. The script builds the executable; it does not initialize a disposable MySQL instance.
+For subsequent starts, return to the same extracted directory and run `./launch.exe dev`. The existing configuration, database and administrator password are retained. Source development is covered in the optional build section below.
 
-## First run on Linux or macOS
+## First run on Linux
 
 ```sh
-./bin/launch init
+./launch init
 ```
 
 Edit the copied JSON file as described above, then:
 
 ```sh
-./bin/launch dev
+./launch dev
 ```
 
 Open `http://localhost:18080/#/login`, sign in with `admin@example.com` / `LaunchAdmin123!`, and complete the required password change. The default listener is loopback. The Linux binaries are cross-built with CGO disabled; Linux and ARM64 runtime acceptance remains dependent on the target machine.
@@ -88,7 +67,7 @@ export LAUNCH_PUBLIC_URL=http://localhost:8080
 export LAUNCH_DATABASE_DSN='launch:YOUR_DATABASE_PASSWORD@tcp(127.0.0.1:3306)/launch'
 export LAUNCH_MASTER_KEY='YOUR_PERSISTENT_GENERATED_MASTER_KEY'
 export LAUNCH_UPLOAD_DIR='/srv/licentivo-launch/uploads'
-./bin/launch serve
+./launch serve
 ```
 
 Create the upload directory with write access for the application user. Avoid storing real secrets in shell history; use an access-restricted service environment file or private JSON file for an installed service. The binary does not automatically source `.env`.
@@ -151,6 +130,21 @@ This service definition is an example requiring validation on the target host. W
 
 For built-in HTTPS, configure a separate `LAUNCH_HTTPS_ADDR`, upload a certificate through system settings, and follow [ssl-https.md](ssl-https.md).
 
+## Building from source (optional)
+
+Use this path when developing or modifying Launch. It requires Go 1.26+ and Git. Ordinary installations can use the release package above.
+
+```sh
+git clone https://github.com/spf86/licentivo-launch.git
+cd licentivo-launch
+go build -trimpath -o launch ./cmd/launch
+./launch init
+# Edit LAUNCH_DATABASE_DSN in .local/dev/launch-config.json.
+./launch dev
+```
+
+On Windows build with `go build -trimpath -o launch.exe ./cmd/launch`, then use `.\launch.exe init` and `.\launch.exe dev`. The frontend is embedded; it does not need a separate build or Node.js server.
+
 ## Docker Compose development template
 
 ```powershell
@@ -184,7 +178,7 @@ Compose/MySQL 8.4 container operation has not yet been validated in the recorded
 
 ```powershell
 $env:LAUNCH_CONFIG_FILE = (Resolve-Path .local/dev/launch-config.json).Path
-./bin/launch.exe check
+./launch.exe check
 ```
 
 ## Backup and restore
@@ -195,13 +189,13 @@ With your private configuration selected:
 
 ```powershell
 $env:LAUNCH_BACKUP_PASSPHRASE = 'YOUR_SEPARATE_BACKUP_PASSPHRASE'
-./bin/launch.exe backup 'D:\Backups\launch.launchbackup'
+./launch.exe backup 'D:\Backups\launch.launchbackup'
 ```
 
 For restore, configure a **new empty database**, the required recovery settings, and the same backup passphrase, then:
 
 ```powershell
-./bin/launch.exe restore 'D:\Backups\launch.launchbackup'
+./launch.exe restore 'D:\Backups\launch.launchbackup'
 ```
 
 Restore the uploads and verify decryption, accounts, history, and license associations. The CLI also writes a private `PATH.secrets.json` recovery configuration next to the archive. Protect this file: it contains credentials and is ignored by Git. A restored instance must use the original master key; the restore command can recover it from the encrypted backup when the configured master key is empty, and rejects a different configured key. The application keeps restored transactions paused until an administrator reconciles payments/refunds/licensing changes after the backup point and explicitly releases the pause. Rehearse restoration before relying on a backup.

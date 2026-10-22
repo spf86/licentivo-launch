@@ -52,64 +52,71 @@ Automatic recurring billing, partial refunds, and additional payment providers a
 
 Licentivo receives the data required for licensing, such as opaque customer references and device/runtime metadata. Launch does not send customer passwords, contact details, or complete orders to Licentivo. Payment providers receive the information needed to process the merchant's transactions.
 
-## Quick start from source
+## Install the release package
 
-For ready-to-run Windows and Linux packages, see [GitHub Releases](https://github.com/spf86/licentivo-launch/releases) and the [binary installation guide](docs/binary-installation.md). Both **amd64** and **arm64** are provided for each operating system. No Go or Node.js installation is needed to run a binary package; MySQL is still required.
+Download the package for your server from [GitHub Releases](https://github.com/spf86/licentivo-launch/releases/tag/v0.2.0-beta.1) and extract it. **Running the package requires MySQL 8.0.16+; Go, Git, Node.js and a compiler are not required.**
 
-### Prerequisites
+| Server | Package |
+| --- | --- |
+| Windows, Intel/AMD x64 | [windows_amd64.zip](https://github.com/spf86/licentivo-launch/releases/download/v0.2.0-beta.1/licentivo-launch_0.2.0-beta.1_windows_amd64.zip) |
+| Windows, ARM64 | [windows_arm64.zip](https://github.com/spf86/licentivo-launch/releases/download/v0.2.0-beta.1/licentivo-launch_0.2.0-beta.1_windows_arm64.zip) |
+| Linux, Intel/AMD x64 | [linux_amd64.tar.gz](https://github.com/spf86/licentivo-launch/releases/download/v0.2.0-beta.1/licentivo-launch_0.2.0-beta.1_linux_amd64.tar.gz) |
+| Linux, ARM64 | [linux_arm64.tar.gz](https://github.com/spf86/licentivo-launch/releases/download/v0.2.0-beta.1/licentivo-launch_0.2.0-beta.1_linux_arm64.tar.gz) |
 
-- Go **1.26 or newer** (the project has been built with Go 1.26.6).
-- MySQL **8.0.16 or newer**, an empty database, and a database user allowed to create and alter tables.
-- Git. Node.js is optional for JavaScript syntax checks; it is not needed to serve the website.
+`amd64` works on compatible Intel and AMD 64-bit processors. Choose the package for the machine hosting Launch. Customer installer platforms are configured separately in the storefront. Prebuilt server packages are currently provided for Windows and Linux.
 
-### 1. Download and build
+### 1. Create configuration
 
-```sh
-git clone https://github.com/spf86/licentivo-launch.git
-cd licentivo-launch
-go build -o bin/launch ./cmd/launch
+Prepare an empty MySQL database and a dedicated database user. In the extracted folder containing the executable, run:
+
+```powershell
+# Windows PowerShell
+.\launch.exe init
+notepad .local\dev\launch-config.json
 ```
 
-On Windows, use `go build -o bin/launch.exe ./cmd/launch` and invoke `.\bin\launch.exe` in the commands below.
-
-### 2. Create private configuration
-
-Initialize a private configuration with an automatically generated master key:
-
 ```sh
-./bin/launch init
+# Linux
+./launch init
+nano .local/dev/launch-config.json
 ```
 
-Edit `LAUNCH_DATABASE_DSN` in `.local/dev/launch-config.json` with your MySQL address, database, username, and password. Keep the generated master key: the same value is needed after a restart or restore. The private `.local` directory is excluded from Git. `init` refuses to overwrite an existing configuration. A [manual template](config/launch-config.example.json) is also available.
+Change only `LAUNCH_DATABASE_DSN` to match your database, for example:
 
-### 3. Start and install
-
-```sh
-./bin/launch dev
+```text
+launch:YOUR_DATABASE_PASSWORD@tcp(127.0.0.1:3306)/launch
 ```
 
-The first database startup automatically creates this initial administrator:
+Save the file. `init` has already generated and saved the instance master key. Keep that key and the configuration for future starts and upgrades. The command refuses to overwrite an existing configuration.
+
+### 2. Start Launch
+
+```powershell
+# Windows PowerShell
+.\launch.exe dev
+```
+
+```sh
+# Linux
+./launch dev
+```
+
+`dev` loads `.local/dev/launch-config.json` and connects to your configured MySQL database. It maintains application tables automatically; it does not install or start MySQL. Leave the terminal open while using this foreground server.
+
+### 3. Sign in and change the initial password
+
+Open **http://localhost:18080/#/login** on the machine running Launch:
 
 | Field | Initial value |
 | --- | --- |
 | Email | `admin@example.com` |
 | Password | `LaunchAdmin123!` |
 
-Open **http://localhost:18080/#/login**. Your first sign-in opens a required password-change form. Choose a different password of 12-128 bytes, then sign in again. Administration and desktop sessions stay blocked until the change completes. Complete this local first-login step before publishing the site. No installation token is required. Existing installations retain their accounts and passwords.
+Enter a different password of 12–128 bytes in the required first-login form, save, and sign in again. Complete this local step before exposing the site publicly. Existing installations keep their accounts and passwords.
 
-Go/GORM creates and maintains the tables at startup. There is no separate SQL migration command. `dev` connects to the configured database; it does not launch MySQL.
+To start again later, open the same extracted folder and run the same `dev` command. Keep `.local`, the original master key, MySQL data and uploaded files when replacing the executable.
 
-The server then runs at **http://localhost:18080**. On Windows, `scripts/dev.ps1` is an optional build-and-run wrapper. Use `Ctrl+C` to stop a foreground process.
-
-For complete PowerShell and Linux examples, deployment, service setup, and troubleshooting, see the [installation guide](docs/installation.md).
-
-### Preview without a database
-
-```sh
-go run ./cmd/launch
-```
-
-With no database configuration in the process environment, this serves the uninstalled interface at `http://localhost:8080`. `/healthz` returns 200; `/readyz` returns 503 until a database is configured. Accounts, purchases, and administration require a configured database.
+See [binary installation](docs/binary-installation.md) for checksum verification, and [installation and operations](docs/installation.md) for HTTPS, service startup, backups and upgrades.
 
 ## Configure your services
 
@@ -156,7 +163,22 @@ Backup, restore, upgrade, and monitoring procedures are in the [installation gui
 | `launch backup PATH` | Write an encrypted backup using `LAUNCH_BACKUP_PASSPHRASE` |
 | `launch restore PATH` | Restore into an empty database; reconcile transactions before releasing the restore pause |
 
-Commands shown as `launch` refer to your built executable, for example `./bin/launch` or `.\bin\launch.exe`. `dev` automatically selects the local JSON file; other commands need `LAUNCH_CONFIG_FILE` or equivalent process variables.
+Commands shown as `launch` refer to the executable in your extracted package, for example `./launch` or `.\launch.exe`. `dev` automatically selects the local JSON file; other commands need `LAUNCH_CONFIG_FILE` or equivalent process variables.
+
+## Build from source (optional)
+
+Use this path when developing or modifying Launch. It requires Go 1.26+ and Git. Ordinary installations can use the release package above.
+
+```sh
+git clone https://github.com/spf86/licentivo-launch.git
+cd licentivo-launch
+go build -trimpath -o launch ./cmd/launch
+./launch init
+# Edit LAUNCH_DATABASE_DSN in .local/dev/launch-config.json.
+./launch dev
+```
+
+On Windows build with `go build -trimpath -o launch.exe ./cmd/launch`, then use `.\launch.exe init` and `.\launch.exe dev`. The frontend is embedded; it does not need a separate build or Node.js server.
 
 ## Development and verification
 
