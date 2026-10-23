@@ -56,14 +56,14 @@ Licentivo receives the data required for licensing, such as opaque customer refe
 
 ## Install the release package
 
-Download the package for your server from [GitHub Releases](https://github.com/spf86/licentivo-launch/releases/tag/v0.2.0-beta.2) and extract it. **Running the package requires MySQL 8.0.16+; Go, Git, Node.js and a compiler are not required.**
+Download the package for your server from [GitHub Releases](https://github.com/spf86/licentivo-launch/releases/tag/v0.3.0-beta) and extract it. **Running the package requires MySQL 8.0.16+; Go, Git, Node.js and a compiler are not required.**
 
 | Server | Package |
 | --- | --- |
-| Windows, Intel/AMD x64 | [windows_amd64.zip](https://github.com/spf86/licentivo-launch/releases/download/v0.2.0-beta.2/licentivo-launch_0.2.0-beta.2_windows_amd64.zip) |
-| Windows, ARM64 | [windows_arm64.zip](https://github.com/spf86/licentivo-launch/releases/download/v0.2.0-beta.2/licentivo-launch_0.2.0-beta.2_windows_arm64.zip) |
-| Linux, Intel/AMD x64 | [linux_amd64.tar.gz](https://github.com/spf86/licentivo-launch/releases/download/v0.2.0-beta.2/licentivo-launch_0.2.0-beta.2_linux_amd64.tar.gz) |
-| Linux, ARM64 | [linux_arm64.tar.gz](https://github.com/spf86/licentivo-launch/releases/download/v0.2.0-beta.2/licentivo-launch_0.2.0-beta.2_linux_arm64.tar.gz) |
+| Windows, Intel/AMD x64 | [windows_amd64.zip](https://github.com/spf86/licentivo-launch/releases/download/v0.3.0-beta/licentivo-launch_0.3.0-beta_windows_amd64.zip) |
+| Windows, ARM64 | [windows_arm64.zip](https://github.com/spf86/licentivo-launch/releases/download/v0.3.0-beta/licentivo-launch_0.3.0-beta_windows_arm64.zip) |
+| Linux, Intel/AMD x64 | [linux_amd64.tar.gz](https://github.com/spf86/licentivo-launch/releases/download/v0.3.0-beta/licentivo-launch_0.3.0-beta_linux_amd64.tar.gz) |
+| Linux, ARM64 | [linux_arm64.tar.gz](https://github.com/spf86/licentivo-launch/releases/download/v0.3.0-beta/licentivo-launch_0.3.0-beta_linux_arm64.tar.gz) |
 
 `amd64` works on compatible Intel and AMD 64-bit processors. Choose the package for the machine hosting Launch. Customer installer platforms are configured separately in the storefront. Prebuilt server packages are currently provided for Windows and Linux.
 

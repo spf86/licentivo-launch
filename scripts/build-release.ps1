@@ -1,7 +1,7 @@
 #Requires -Version 7.4
 param(
     [ValidatePattern('^[0-9]+\.[0-9]+\.[0-9]+(?:-[A-Za-z0-9.-]+)?$')]
-    [string]$Version = '0.2.0-beta.2',
+    [string]$Version = '0.3.0-beta',
     [string]$OutputDirectory = ''
 )
 
