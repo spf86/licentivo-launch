@@ -2,9 +2,9 @@
 
 Release: [Launch SDK v0.1.2](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.2), source commit `ac983627784de4ca38c2e71e85b60526bb046251`.
 
-Status: **8/9 public installation checks passed**. Go Modules, PyPI, NuGet, npm, crates.io and RubyGems are published and verified. C and C++ downloads are published on GitHub Releases and verified against relocated Windows amd64 GNU installations. Maven Central public propagation and installation checks remain pending; do not treat its registry coordinate as available yet. The matching Java JAR can be downloaded from the GitHub release while Central propagates.
+Status: **9/9 public installation checks passed**. Go Modules, PyPI, NuGet, Maven Central, npm, crates.io and RubyGems are published and verified. C and C++ downloads are published on GitHub Releases and verified against relocated Windows amd64 GNU installations. Every language's documented public installation method is available and verified.
 
-Maven Central deployment `cac96184-c336-4799-a759-9d59a73d3d95` was validated and publishing was confirmed; public repository propagation and independent installation checks are still pending.
+Maven Central deployment `cac96184-c336-4799-a759-9d59a73d3d95` is publicly available. The JAR and POM match the reviewed GitHub artifacts. Detached signatures for the JAR, POM, sources and Javadoc verified against release key `C3332760927486E96AB75E753619EE6EFA7EC061`; the public version index includes 0.1.2. An independent JDK 17 consumer compiled and executed the actual generated Java connection function.
 
 Each 0.1.2 package embeds official Licentivo SDK 0.11.1 and the default Launch adapter. SDK 0.11.1 fixes C/C++ CMake consumption across curl config-package and FindCURL discovery modes by resolving the installed dependency through `CURL::libcurl`. Applications do not need to add compatibility aliases. Matching compiler, architecture and curl runtime/development dependencies remain required.
 

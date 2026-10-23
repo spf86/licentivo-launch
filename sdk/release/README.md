@@ -15,7 +15,7 @@ configuration file or manual entry of two internal product IDs is required.
 
 ## Install into your application
 
-Version: **0.1.2**, with official SDK **0.11.1**. **8/9 public installation checks passed**: Go, Python, C#, Node.js/TypeScript, Rust, Ruby, C and C++. Maven Central public propagation is pending, so its registry coordinate below is not available yet. Java files are available in the [GitHub release](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.2). See the [0.1.2 publication record](docs/publication-0.1.2.md), [publication status](docs/registry-status.json) and [verification receipt](docs/registry-verification.json).
+Version: **0.1.2**, with official SDK **0.11.1**. **9/9 public installation checks passed**: Go, Python, C#, Java, Node.js/TypeScript, Rust, Ruby, C and C++. All registry commands below are publicly available and verified; native and offline files are in the [GitHub release](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.2). See the [0.1.2 publication record](docs/publication-0.1.2.md), [publication status](docs/registry-status.json) and [verification receipt](docs/registry-verification.json).
 
 This update fixes C/C++ CMake package consumption across curl discovery modes. The licensing protocol and client API are unchanged.
 
@@ -24,7 +24,7 @@ This update fixes C/C++ CMake package consumption across curl discovery modes. T
 | Go | `go get github.com/spf86/licentivo-launch-sdk/pkg/launchclient@v0.1.2` | [Go](pkg/launchclient/README.md) |
 | Python | `python -m pip install "licentivo-launch==0.1.2"` | [Python](sdk/python/README.md) |
 | C# | `dotnet add package Licentivo.Launch --version 0.1.2` | [.NET](sdk/csharp/README.md) |
-| Java | Maven Central pending: `com.licentivo.launch:launch-client:0.1.2`; use the release JAR for now | [Java](sdk/java/README.md) |
+| Java | Maven/Gradle: `com.licentivo.launch:launch-client:0.1.2` | [Java](sdk/java/README.md) |
 | Node.js / TypeScript | `npm install @licentivo/launch@0.1.2` | [Node.js](sdk/javascript/README.md) |
 | Rust | `cargo add licentivo-launch@=0.1.2` | [Rust](sdk/rust/README.md) |
 | Ruby | `gem install licentivo-launch --version 0.1.2` | [Ruby](sdk/ruby/README.md) |

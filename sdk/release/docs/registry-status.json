@@ -4,10 +4,10 @@
   "source_commit": "ac983627784de4ca38c2e71e85b60526bb046251",
   "repository": "https://github.com/spf86/licentivo-launch-sdk",
   "release": "https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.2",
-  "verified_at": "2026-10-23T13:54:58.544830+00:00",
-  "public_installations_verified": 8,
+  "verified_at": "2026-10-23T13:59:29.268644+00:00",
+  "public_installations_verified": 9,
   "total_languages": 9,
-  "all_nine_published_and_installed": false,
+  "all_nine_published_and_installed": true,
   "github_release_published": true,
   "registries": {
     "go": {
@@ -57,13 +57,14 @@
     "java": {
       "package": "com.licentivo.launch:launch-client",
       "version": "0.1.2",
-      "url": "https://repo.maven.apache.org/maven2/com/licentivo/launch/launch-client/0.1.2/",
+      "url": "https://repo.maven.apache.org/maven2/com/licentivo/launch/launch-client/0.1.2/launch-client-0.1.2.jar",
       "installation": "com.licentivo.launch:launch-client:0.1.2",
-      "status": "pending",
-      "install_verified": false,
+      "status": "published",
+      "install_verified": true,
       "github_download_available": true,
-      "pending_reason": "Maven Central deployment cac96184-c336-4799-a759-9d59a73d3d95 was validated and publishing was confirmed; public repository propagation and independent installation verification remain pending.",
-      "deployment_id": "cac96184-c336-4799-a759-9d59a73d3d95"
+      "deployment_id": "cac96184-c336-4799-a759-9d59a73d3d95",
+      "verified_at": "2026-10-23T13:59:29.268644+00:00",
+      "verification_receipt": "registry-verification.json"
     },
     "rust": {
       "package": "licentivo-launch",

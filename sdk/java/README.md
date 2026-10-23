@@ -1,7 +1,5 @@
 # Launch Java 0.1.2
 
-Publication status: Maven Central 0.1.2 is pending. Until the [publication status](https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/registry-status.json) records it as published, use `launch-client-0.1.2.jar` from the [GitHub release](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.2); the Maven/Gradle coordinate below is not yet a verified registry install.
-
 JDK 17+. Add Maven/Gradle dependency `com.licentivo.launch:launch-client:0.1.2` from Maven Central, or use only launch-client-0.1.2.jar from the matching GitHub release on your classpath. SDK 0.11.1 classes and notices are inside this JAR. No second SDK JAR or Maven dependency is required. Standard Java libraries provide the runtime dependencies.
 
 ## Direct initialization and manual lifecycle

@@ -27,7 +27,7 @@ Launch 只在浏览器中生成文本。它不会自动连接任何 AI 服务，
 
 ## 提示词会告诉 AI 在哪里下载 SDK
 
-当前 0.1.2 的 Go、Python、C#、Node.js/TypeScript、Rust、Ruby、C、C++ 公开安装验证已通过（8/9）。Maven Central 仍在公共同步阶段，Java 的注册表坐标暂不可用；此时请让 AI 使用 [v0.1.2 GitHub Release](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.2) 中的 Java JAR。同步和安装验证完成前不要把 Maven 坐标描述为已验证可用。
+当前 0.1.2 的九种语言公开安装验证已全部通过（9/9），下列注册表命令和原生下载均已验证。Java 的 Maven Central 文件及四份签名、Rust 的 crates.io 精确版本和全部后台生成的初始化代码也已完成独立消费者检查；[v0.1.2 GitHub Release](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.2) 同时提供原生包和离线文件。
 
 生成的提示词必须包含与所选语言对应的、固定版本的公开安装方式：
 

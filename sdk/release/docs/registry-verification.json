@@ -3,10 +3,10 @@
   "upstream_sdk_version": "0.11.1",
   "source_commit": "ac983627784de4ca38c2e71e85b60526bb046251",
   "release": "https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.2",
-  "verified_at": "2026-10-23T13:54:58.544830+00:00",
-  "public_installations_passed": 8,
+  "verified_at": "2026-10-23T13:59:29.268644+00:00",
+  "public_installations_passed": 9,
   "total_languages": 9,
-  "all_nine_published_and_installed": false,
+  "all_nine_published_and_installed": true,
   "installation_platform": "Windows amd64; GNU toolchain for native consumers",
   "requires_separate_official_sdk": false,
   "configuration_files_required": false,
@@ -114,11 +114,25 @@
     },
     "java": {
       "registry": "maven-central",
+      "package": "com.licentivo.launch:launch-client",
       "version": "0.1.2",
-      "result": "pending",
-      "direct_initialization": "not_run",
-      "pending_reason": "Maven Central deployment cac96184-c336-4799-a759-9d59a73d3d95 was validated and publishing was confirmed; public repository propagation and independent installation verification remain pending.",
-      "deployment_id": "cac96184-c336-4799-a759-9d59a73d3d95"
+      "result": "passed",
+      "sha256": "7c48b89ed7f5e0b97773e48dbd8a5f73be49e86715bcb7113dfa0ba3fca3fadc",
+      "direct_initialization": "passed",
+      "jar_and_pom_match_release": true,
+      "signed_publication_files_verified": 4,
+      "signing_key_fingerprint": "C3332760927486E96AB75E753619EE6EFA7EC061",
+      "version_metadata_verified": true,
+      "completed_at": "2026-10-23T13:59:29.268644+00:00",
+      "local_evidence": "artifacts/sdk-012-public-java/java/verification.json",
+      "deployment_id": "cac96184-c336-4799-a759-9d59a73d3d95",
+      "signed_artifacts": [
+        "launch-client-0.1.2.jar",
+        "launch-client-0.1.2.pom",
+        "launch-client-0.1.2-sources.jar",
+        "launch-client-0.1.2-javadoc.jar"
+      ],
+      "artifact_url": "https://repo.maven.apache.org/maven2/com/licentivo/launch/launch-client/0.1.2/launch-client-0.1.2.jar"
     },
     "rust": {
       "registry": "crates.io",
