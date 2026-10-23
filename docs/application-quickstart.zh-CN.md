@@ -35,7 +35,7 @@ Launch 自动取得当前站点地址、软件对应的授权产品信息和签�
 
 项目说明请用英文填写。复制提示词并提供现有工程与 Launch 接入包，由自己的 AI 工具完成集成。Launch 不向 AI 服务发送内容。未配置好软件时仍可生成明确标注不可用于真实登录的草稿，待后台设置完成后重新生成。
 
-详见 [AI 快速接入](ai-integration.md)。接入包版本为 `0.1.1`，内置官方 SDK `0.11.0`；公开源码、各语言安装方式和发布状态见 [Launch SDK 仓库](https://github.com/spf86/licentivo-launch-sdk)。不用 AI 时，按[手动开发指南](manual-integration.md)完成相同流程。
+详见 [AI 快速接入](ai-integration.md)。接入包版本为 `0.1.2`，内置官方 SDK `0.11.1`；公开源码、各语言安装方式和发布状态见 [Launch SDK 仓库](https://github.com/spf86/licentivo-launch-sdk)。不用 AI 时，按[手动开发指南](manual-integration.md)完成相同流程。
 
 ## 程序运行与验收
 

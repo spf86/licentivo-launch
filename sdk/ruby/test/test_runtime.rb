@@ -4,7 +4,7 @@
 require 'tmpdir'
 require_relative '../lib/licentivo_launch'
 require_relative '../lib/licentivo_launch/vendor/licentivo'
-raise 'expected official SDK 0.11.0' unless Licentivo::VERSION == '0.11.0'
+raise 'expected official SDK 0.11.1' unless Licentivo::VERSION == '0.11.1'
 def assert(value) = (raise 'assertion failed' unless value)
 Dir.mktmpdir('launch-ruby-runtime-') do |root|
   keypair = OpenSSL::PKey.generate_key('ED25519')

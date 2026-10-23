@@ -12,4 +12,4 @@ Windows clean-consumer checks and Linux source/signed-runtime checks passed 9/9.
 
 The original v0.1.0 tag and assets remain intact. The 0.1.1 packaging fix includes the TypeScript declaration file and rejects missing npm exports before publication.
 
-See [machine-readable status](registry-status.json), [installation evidence](registry-verification.json) and [manual integration](manual-integration.md). External merchant/payment/licensing acceptance remains deferred.
+See the archived [machine-readable status](registry-status-0.1.1.json), [installation evidence](registry-verification-0.1.1.json) and [manual integration](manual-integration.md). External merchant/payment/licensing acceptance remains deferred.

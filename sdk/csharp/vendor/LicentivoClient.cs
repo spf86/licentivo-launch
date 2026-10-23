@@ -62,7 +62,7 @@ public sealed partial class LicentivoClient : IAsyncDisposable {
             req.Headers.Add("Idempotency-Key",idem);
             try {
                 using var res=await http.SendAsync(req,HttpCompletionOption.ResponseHeadersRead,deadline.Token);
-
+                
                 await using var stream=await res.Content.ReadAsStreamAsync(deadline.Token);
                 using var memory=new MemoryStream();var buffer=new byte[4096];int n;
                 while ((n=await stream.ReadAsync(buffer,deadline.Token))>0) {

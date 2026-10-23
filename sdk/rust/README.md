@@ -1,6 +1,6 @@
-# Launch Rust 0.1.1
+# Launch Rust 0.1.2
 
-Rust 1.85+. Install from crates.io with `cargo add licentivo-launch@=0.1.1`. A downloaded .crate or source ZIP can also be used as a local path dependency. SDK 0.11.0 Rust bindings and C11 sources are embedded. build.rs compiles and links the core automatically; no separate licentivo crate or SDK link path is needed.
+Rust 1.85+. Install from crates.io with `cargo add licentivo-launch@=0.1.2`. A downloaded .crate or source ZIP can also be used as a local path dependency. SDK 0.11.1 Rust bindings and C11 sources are embedded. build.rs compiles and links the core automatically; no separate licentivo crate or SDK link path is needed.
 
 Windows uses the GNU/MinGW Rust toolchain. The Windows distribution bundles curl and copies DLLs beside Cargo executables/tests. Other operating systems use normal C11, curl and OpenSSL development libraries. Preserve Cargo.lock. Ordinary Rust dependencies are resolved by Cargo.
 

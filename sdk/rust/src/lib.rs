@@ -1,4 +1,4 @@
-//! Launch account lifecycle. All protected work is authorized by Licentivo 0.11.0.
+//! Launch account lifecycle. All protected work is authorized by Licentivo 0.11.1.
 //! Defaults to memory-only sessions; inject an OS-protected Store to remember login.
 mod store;
 mod transport;
@@ -18,7 +18,7 @@ pub use store::EncryptedFileStore;
 use time::{format_description::well_known::Rfc3339, OffsetDateTime};
 pub use transport::CurlTransport;
 
-pub const VERSION: &str = "0.1.1";
+pub const VERSION: &str = "0.1.2";
 #[derive(Debug, Clone)]
 pub struct Failure {
     pub code: String,

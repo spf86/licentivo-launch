@@ -87,7 +87,7 @@ public final class Client implements AutoCloseable {
                 if (e.getCause() instanceof IOException io) { last=io;continue; }
                 throw new IOException("runtime transport failed",e.getCause());
             }
-
+            
             String utf8;
             try { utf8=StandardCharsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.REPORT).decode(ByteBuffer.wrap(res.body())).toString(); }
             catch (CharacterCodingException e) { throw new IllegalArgumentException("invalid response UTF-8",e); }

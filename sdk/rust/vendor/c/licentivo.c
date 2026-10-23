@@ -290,7 +290,7 @@ static int write_state(const char*p,const cJSON*s){
 static int save(ln_client*c){const char*p=text(c->cfg,"cache_path");if(!p||!p[0])return 1;char h[65];if(!text(c->cfg,"license_key")[0])strcpy(h,text(c->auth,"source_hash"));else if(!hash(text(c->cfg,"license_key"),h))return 0;cJSON*s=cJSON_CreateObject();cJSON_AddNumberToObject(s,"version",1);cJSON_AddStringToObject(s,"license_hash",h);cJSON_AddItemToObject(s,"lease",cJSON_Duplicate(c->cached,1));cJSON_AddNumberToObject(s,"observed_at",(double)c->wall);int ok=write_state(p,s);cJSON_Delete(s);return ok;}
 static char*credential_path(ln_client*c){const char*p=text(c->cfg,"cache_path");if(!p||!p[0])return NULL;char*out=malloc(strlen(p)+18);if(out)sprintf(out,"%s.credential.json",p);return out;}
 static void load_credential(ln_client*c){
-
+ 
  char*p=credential_path(c);if(!p)return;char*b=readfile(p,LIMIT);free(p);if(!b)return;cJSON*s=ln_json(b);free(b);char h[65];int64_t version;int ok=hash(text(c->cfg,"license_key"),h)&&s&&num(s,"version",&version)&&version==1&&text(s,"origin")&&!strcmp(text(s,"origin"),text(c->cfg,"base_url"))&&device(text(s,"source_hash"))&&(!text(c->cfg,"license_key")[0]||!strcmp(text(s,"source_hash"),h))&&uuid(text(s,"request_id"))&&uuid(text(s,"session_id"));
  const char*ctx[]={"product_id","device_id"};for(int i=0;i<2;i++){const char*a=text(s,ctx[i]),*b=text(c->cfg,ctx[i]);if(!a||!b||strcmp(a,b))ok=0;}const char*k=text(s,"device_key");if(!k||(k[0]&&!credential_secret(k,"lv_dev_"))||(!text(c->cfg,"license_key")[0]&&!k[0]))ok=0;
  if(ok){c->auth=s;if(!k[0])strcpy(c->session,text(s,"session_id"));}else cJSON_Delete(s);

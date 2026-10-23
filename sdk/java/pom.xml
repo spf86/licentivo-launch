@@ -1,6 +1,6 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>com.licentivo.launch</groupId><artifactId>launch-client</artifactId><version>0.1.1</version>
+  <groupId>com.licentivo.launch</groupId><artifactId>launch-client</artifactId><version>0.1.2</version>
   <name>Licentivo Launch</name>
   <description>Launch merchant account login, verified license activation, scoped sessions and protected feature execution for Java 17 applications.</description>
   <url>https://github.com/spf86/licentivo-launch-sdk</url>

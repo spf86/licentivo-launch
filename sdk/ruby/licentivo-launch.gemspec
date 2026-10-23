@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 Gem::Specification.new do |spec|
   spec.name = 'licentivo-launch'
-  spec.version = '0.1.1'
+  spec.version = '0.1.2'
   spec.summary = 'Merchant account lifecycle with the official Licentivo runtime'
   spec.description = 'Login, scoped secure sessions, verified offline recovery and feature guards for Licentivo Launch.'
   spec.authors = ['Licentivo Launch contributors']

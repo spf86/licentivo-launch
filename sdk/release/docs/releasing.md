@@ -33,6 +33,13 @@ be new. Test built packages in fresh consumers before creating a Release; the
 PowerShell runner `scripts/test-managed-installations.ps1` covers the Windows
 nine-language distribution. Keep its evidence outside the public source tree.
 
+The package builder also runs `scripts/check-native-consumers.py` against the
+installed native package. It compiles and executes independent C and C++
+consumers in the default curl discovery mode and with `CURL_NO_CURL_CMAKE=ON`
+to force FindCURL module discovery. Both consumers require the exact Launch
+package version. These checks cover the SDK 0.11.1 curl target compatibility
+fix; keep compiler, architecture and runtime dependencies matched to the package.
+
 The source CI verifies all nine languages against local signed license fixtures,
 then builds and inspects their distributions. No test calls a real payment or
 production license-activation endpoint.

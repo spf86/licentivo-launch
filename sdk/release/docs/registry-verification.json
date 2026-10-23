@@ -1,90 +1,144 @@
 {
-  "version": "0.1.1",
-  "source_commit": "ee05e70fd67eafaca1a7ea2cbb619d0f501a2495",
-  "release": "https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.1",
-  "verified_at": "2026-10-23T10:29:19.238783+00:00",
-  "public_installations_passed": 9,
+  "version": "0.1.2",
+  "upstream_sdk_version": "0.11.1",
+  "source_commit": "ac983627784de4ca38c2e71e85b60526bb046251",
+  "release": "https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.2",
+  "verified_at": "2026-10-23T13:54:58.544830+00:00",
+  "public_installations_passed": 8,
   "total_languages": 9,
-  "all_nine_published_and_installed": true,
+  "all_nine_published_and_installed": false,
   "installation_platform": "Windows amd64; GNU toolchain for native consumers",
-  "linux_source_and_signed_runtime_checks": "9/9 passed",
-  "linux_ci_url": "https://github.com/spf86/licentivo-launch-sdk/actions/runs/39933895585",
   "requires_separate_official_sdk": false,
   "configuration_files_required": false,
   "results": {
+    "go": {
+      "registry": "go-modules",
+      "package": "github.com/spf86/licentivo-launch-sdk/pkg/launchclient",
+      "version": "0.1.2",
+      "result": "passed",
+      "sha256": "71cef06e6a79c324cc341849ef109572ed4c0875d14d43d542807a420b30b7e1",
+      "direct_initialization": "passed",
+      "module_sum": "h1:N0TOMDIgEJvBK7U6LmbOO6oDz8JdNwYtI8/3ot9QSbQ=",
+      "go_mod_sum": "h1:ixfE/uWZp0sHFNBm+/s6zPFegoZAZ/NhRoEDn7x2Y9Q=",
+      "proxy": "https://proxy.golang.org,direct",
+      "proxy_download_results": {
+        "info": "HTTP 404; standard direct fallback enabled",
+        "mod": "downloaded",
+        "zip": "downloaded"
+      },
+      "checksum_database": "sum.golang.org",
+      "go_mod_verify": "passed",
+      "local_replace": false,
+      "completed_at": "2026-10-23T13:37:23.194607+00:00",
+      "local_evidence": "artifacts/sdk-012-public-followup/go/verification.json"
+    },
     "python": {
       "registry": "pypi",
       "package": "licentivo-launch",
-      "version": "0.1.1",
-      "sha256": "8464e123b44da8cff86252d3dcbc994789532695c477f0966f152e61ac1112d2",
+      "version": "0.1.2",
+      "result": "passed",
+      "sha256": "f5338dd4557ae1b359f77345938e5216ac2bb0fd28ad9fa1f4b4221c05dcb475",
       "direct_initialization": "passed",
       "normal_dependency_install": "passed",
-      "isolated_venv": true
+      "isolated_venv": true,
+      "completed_at": "2026-10-23T13:37:43.716955+00:00",
+      "local_evidence": "artifacts/sdk-012-public-followup/python/verification.json"
     },
     "javascript": {
       "registry": "npm",
       "package": "@licentivo/launch",
-      "version": "0.1.1",
-      "sha256": "78c585c4a3e8b16b1b604df82b883b54db68def74236a1225a6f7607be84e40a",
+      "version": "0.1.2",
+      "result": "passed",
+      "sha256": "c7fa176d62d74c6362e22f887b018dcc3e1a5655c6aa5e0cfbade184b3ac9665",
       "direct_initialization": "passed",
-      "typescript": "passed"
-    },
-    "csharp": {
-      "registry": "nuget",
-      "package": "Licentivo.Launch",
-      "version": "0.1.1",
-      "direct_initialization": "passed",
-      "payload_files_identical": 8,
-      "repository_signature_present": true,
-      "sha256": "1a1b19455ec79e1499f54a5801bfd6837e2a4f7a06277a94bc8c6422134e6306"
-    },
-    "java": {
-      "registry": "maven-central",
-      "package": "com.licentivo.launch:launch-client",
-      "version": "0.1.1",
-      "source": "https://repo.maven.apache.org/maven2/com/licentivo/launch/launch-client/0.1.1/",
-      "sha256": "903f146d5d0519963d61697e211e7e2ae36555e70cead998abe760076d27f513",
-      "jar_and_pom_identical": true,
-      "signed_publication_files_verified": 8,
-      "version_metadata_verified": true,
-      "direct_initialization": "passed"
-    },
-    "rust": {
-      "registry": "crates.io",
-      "package": "licentivo-launch",
-      "version": "0.1.1",
-      "sha256": "5f7e8ef67fc19e1f6308ecb9f3f2c7b52d79b07b6720f7a25713ed2b23462e2a",
-      "direct_initialization": "passed"
+      "typescript": "passed",
+      "completed_at": "2026-10-23T13:34:00.729490+00:00",
+      "local_evidence": "artifacts/sdk-012-public-initial/javascript/verification.json"
     },
     "ruby": {
       "registry": "rubygems",
       "package": "licentivo-launch",
-      "version": "0.1.1",
+      "version": "0.1.2",
+      "result": "passed",
+      "sha256": "54c85160cf0caaec0f8948fa9b0a0b08e31809f973b4ed11737a5f15c6457fb1",
+      "direct_initialization": "passed",
       "platform": "x64-mingw-ucrt",
-      "sha256": "efa9f40b0eeb9661d96581185935b52161e1c99057632cbcffb970ec05721d2d",
-      "direct_initialization": "passed"
-    },
-    "go": {
-      "registry": "go-modules",
-      "package": "github.com/spf86/licentivo-launch-sdk/pkg/launchclient",
-      "version": "0.1.1",
-      "module_checksum": "h1:JrQOa6Kq068PyCBPiTnpEQ+ynI0TV2aN8XDDgYmzAGc=",
-      "direct_initialization": "passed"
+      "completed_at": "2026-10-23T13:38:56.613224+00:00",
+      "local_evidence": "artifacts/sdk-012-public-ruby/ruby/verification.json"
     },
     "c": {
-      "registry": "github-releases",
-      "version": "0.1.1",
-      "platform": "windows-amd64-gnu",
+      "registry": "github",
+      "package": "LicentivoLaunch::Account",
+      "version": "0.1.2",
+      "result": "passed",
+      "sha256": "34b6a799790290ed6b5a2d5b642858d5bd09801254f498cb8a8cf823c0c58d65",
       "direct_initialization": "passed",
-      "downloaded_release_checksums_verified": true
+      "verified_platform": "windows-amd64-gnu",
+      "relocated_installation": true,
+      "curl_discovery_modes": [
+        "default",
+        "module"
+      ],
+      "installed_c_and_cpp_checker": "passed",
+      "completed_at": "2026-10-23T13:34:36.599341+00:00",
+      "local_evidence": "artifacts/sdk-012-public-initial/c/verification.json"
     },
     "cpp": {
-      "registry": "github-releases",
-      "version": "0.1.1",
-      "platform": "windows-amd64-gnu",
+      "registry": "github",
+      "package": "LicentivoLaunch::CPP",
+      "version": "0.1.2",
+      "result": "passed",
+      "sha256": "34b6a799790290ed6b5a2d5b642858d5bd09801254f498cb8a8cf823c0c58d65",
       "direct_initialization": "passed",
-      "downloaded_release_checksums_verified": true
+      "verified_platform": "windows-amd64-gnu",
+      "relocated_installation": true,
+      "curl_discovery_modes": [
+        "default",
+        "module"
+      ],
+      "installed_c_and_cpp_checker": "passed",
+      "completed_at": "2026-10-23T13:35:16.862325+00:00",
+      "local_evidence": "artifacts/sdk-012-public-initial/cpp/verification.json"
+    },
+    "csharp": {
+      "registry": "nuget",
+      "package": "Licentivo.Launch",
+      "version": "0.1.2",
+      "result": "passed",
+      "sha256": "bfec4bb32a711925981a1ee1edc05fd0e7f5d0ed07509d364b8f936ff6e03170",
+      "direct_initialization": "passed",
+      "payload_files_identical": 9,
+      "repository_signature_present": true,
+      "completed_at": "2026-10-23T13:42:09.243266+00:00",
+      "local_evidence": "artifacts/sdk-012-public-nuget/csharp/verification.json"
+    },
+    "java": {
+      "registry": "maven-central",
+      "version": "0.1.2",
+      "result": "pending",
+      "direct_initialization": "not_run",
+      "pending_reason": "Maven Central deployment cac96184-c336-4799-a759-9d59a73d3d95 was validated and publishing was confirmed; public repository propagation and independent installation verification remain pending.",
+      "deployment_id": "cac96184-c336-4799-a759-9d59a73d3d95"
+    },
+    "rust": {
+      "registry": "crates.io",
+      "package": "licentivo-launch",
+      "version": "0.1.2",
+      "result": "passed",
+      "sha256": "e9f812979e4850c995c151810b843967cf317c6c48496b3b3d504c1b58c4e76c",
+      "direct_initialization": "passed",
+      "isolated_registry_cache": true,
+      "completed_at": "2026-10-23T13:54:58.544830+00:00",
+      "local_evidence": "artifacts/sdk-012-public-rust/rust/verification.json"
     }
   },
-  "external_acceptance_complete": false
+  "external_acceptance_complete": false,
+  "evidence_scope": "local_evidence paths are retained in the Launch maintainer workspace, not public downloads.",
+  "local_summary": "artifacts/sdk-012-public-summary.json",
+  "retained_attempts": [
+    "artifacts/sdk-012-public-initial/go/verification.json",
+    "artifacts/sdk-012-public-go-retry/go/verification.json",
+    "artifacts/sdk-012-public-followup/ruby/verification.json"
+  ],
+  "previous_version_receipt": "registry-verification-0.1.1.json"
 }

@@ -15,9 +15,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.*;
 
-/** Launch account lifecycle. Runtime authorization always belongs to Licentivo 0.11.0. */
+/** Launch account lifecycle. Runtime authorization always belongs to Licentivo 0.11.1. */
 public final class Launch implements AutoCloseable {
-    public static final String VERSION = "0.1.1";
+    public static final String VERSION = "0.1.2";
     private static final int LIMIT = 1 << 20;
     public static final class Failure extends Exception {
         public final String code, requestID;

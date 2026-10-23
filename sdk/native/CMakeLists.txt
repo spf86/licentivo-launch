@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.18)
-project(licentivo_launch VERSION 0.1.1 LANGUAGES C CXX)
+project(licentivo_launch VERSION 0.1.2 LANGUAGES C CXX)
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 set(LICENTIVO_LAUNCH_CURL_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/vendor/curl")

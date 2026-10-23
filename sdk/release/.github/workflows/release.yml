@@ -6,7 +6,7 @@ on:
       tag:
         description: Existing immutable release tag
         type: string
-        default: v0.1.1
+        default: v0.1.2
         required: true
       registry:
         description: Publish one configured registry
@@ -159,4 +159,5 @@ jobs:
       - name: Publish the verified Launch crate
         env:
           CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
-        run: cargo publish --manifest-path crate/licentivo-launch-0.1.1/Cargo.toml --locked
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: cargo publish --manifest-path "crate/licentivo-launch-${RELEASE_TAG#v}/Cargo.toml" --locked

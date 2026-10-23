@@ -1,12 +1,12 @@
-# Launch Python 0.1.1
+# Launch Python 0.1.2
 
 Python 3.10+. Install only Launch:
 
 ```sh
-python -m pip install licentivo-launch==0.1.1
+python -m pip install licentivo-launch==0.1.2
 ```
 
-From source use python -m pip install ./sdk/python. The wheel embeds SDK 0.11.0 and its default adapter; pip resolves the ordinary cryptography dependency. No separate licentivo-sdk installation or PYTHONPATH entry is needed.
+From source use python -m pip install ./sdk/python. The wheel embeds SDK 0.11.1 and its default adapter; pip resolves the ordinary cryptography dependency. No separate licentivo-sdk installation or PYTHONPATH entry is needed.
 
 ## Direct initialization and manual lifecycle
 

@@ -76,7 +76,7 @@ export class Client{
    let response, reader, chunks=[], bytes=0;
    try {
     response=await fetch(cfg.base_url.replace(/\/$/,'')+'/api/v1/'+op,{dispatcher:this.proxyAgent,method:'POST',headers:{'Content-Type':'application/json','Idempotency-Key':idem},body,redirect:'manual',signal:signal?AbortSignal.any([signal,timeout]):timeout});
-
+    
     reader=response.body?.getReader();
     if (reader) for (;;) {
      const {value,done}=await reader.read(); if (done) break;

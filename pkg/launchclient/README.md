@@ -1,6 +1,6 @@
-# Launch Go 0.1.1
+# Launch Go 0.1.2
 
-Go 1.26+. The public module is github.com/spf86/licentivo-launch-sdk; import github.com/spf86/licentivo-launch-sdk/pkg/launchclient. Install with go get github.com/spf86/licentivo-launch-sdk/pkg/launchclient@v0.1.1. A downloaded module ZIP can also be used with a local require/replace for the same module path. The official SDK 0.11.0 is embedded under Go's private internal boundary. No official SDK module, adapter copy or SDK import is needed.
+Go 1.26+. The public module is github.com/spf86/licentivo-launch-sdk; import github.com/spf86/licentivo-launch-sdk/pkg/launchclient. Install with go get github.com/spf86/licentivo-launch-sdk/pkg/launchclient@v0.1.2. A downloaded module ZIP can also be used with a local require/replace for the same module path. The official SDK 0.11.1 is embedded under Go's private internal boundary. No official SDK module, adapter copy or SDK import is needed.
 
 ## Direct initialization
 

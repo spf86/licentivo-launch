@@ -88,6 +88,7 @@ def main():
     if output.exists():
         raise ValueError('Choose a new output directory; release assets are immutable.')
     version = (ROOT / 'VERSION').read_text().strip()
+    upstream_version = (ROOT / 'sdk/UPSTREAM_VERSION').read_text().strip()
     if 'module ' + MODULE not in (ROOT / 'go.mod').read_text():
         raise ValueError('Build from the exported public client-only repository.')
     output.mkdir(parents=True)
@@ -103,7 +104,7 @@ def main():
         for language in ('rust', 'ruby', 'native'):
             copy_curl(args.curl_root, source / 'sdk' / language / 'vendor/curl')
         def record(language, artifact, source_archive, kind):
-            languages.append({'language': language, 'version': version, 'upstream_version': '0.11.0',
+            languages.append({'language': language, 'version': version, 'upstream_version': upstream_version,
                               'artifact': artifact, 'source_archive': source_archive, 'artifact_type': kind,
                               'sdk_managed': True, 'requires_separate_official_sdk': False,
                               'initialization': 'direct_parameters', 'configuration_files_required': False})
@@ -174,6 +175,10 @@ def main():
         run(*cmake)
         run('cmake', '--build', native_build, '--config', 'Release')
         run('cmake', '--install', native_build, '--config', 'Release')
+        consumer = [sys.executable, ROOT / 'scripts/check-native-consumers.py', '--prefix', prefix]
+        if windows:
+            consumer += ['--cc', args.cc]
+        run(*consumer)
         native_zip = f'licentivo-launch-native-{version}-' + ('windows-amd64-gnu.zip' if windows else 'linux-amd64.zip')
         archive(output / native_zip, prefix)
         for name in ('C', 'C++'):
@@ -184,7 +189,7 @@ def main():
         for language in ('rust', 'ruby', 'native'):
             copy_curl(args.curl_root, clean_source / 'sdk' / language / 'vendor/curl')
         archive(output / f'licentivo-launch-{version}-source.zip', clean_source)
-    inventory = {'schema_version': 2, 'wrapper_version': version, 'upstream_sdk_version': '0.11.0',
+    inventory = {'schema_version': 2, 'wrapper_version': version, 'upstream_sdk_version': upstream_version,
                  'sdk_dependency_management': 'embedded', 'requires_separate_official_sdk': False,
                  'initialization': 'direct_parameters', 'configuration_files_required': False,
                  'published': False, 'languages': languages, 'source_bundle': f'licentivo-launch-{version}-source.zip'}

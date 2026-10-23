@@ -6,12 +6,13 @@ import crypto from 'node:crypto';
 import {fileURLToPath} from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const source = path.resolve(process.argv[2] || path.join(root, 'examples/vendor/sdk'));
-if (fs.readFileSync(path.join(source, 'VERSION'), 'utf8').trim() !== '0.11.0') throw Error('Expected reviewed SDK 0.11.0');
+const upstreamVersion = fs.readFileSync(path.join(root, 'sdk/UPSTREAM_VERSION'), 'utf8').trim();
+if (fs.readFileSync(path.join(source, 'VERSION'), 'utf8').trim() !== upstreamVersion) throw Error(`Expected reviewed SDK ${upstreamVersion}`);
 const records = [];
 function copy(from, to, transform = value => value) {
   const input = path.join(source, from), output = path.join(root, to);
   fs.mkdirSync(path.dirname(output), {recursive:true});
-  const raw = fs.readFileSync(input), result = transform(raw.toString('utf8'));
+  const raw = fs.readFileSync(input), result = transform(raw.toString('utf8')).replace(/\r\n/g, '\n');
   fs.writeFileSync(output, result);
   records.push({source:from, destination:to.replaceAll('\\','/'), source_sha256:crypto.createHash('sha256').update(raw).digest('hex'), sha256:crypto.createHash('sha256').update(result).digest('hex')});
 }
@@ -57,5 +58,5 @@ fs.mkdirSync(path.join(root,rb,'licentivo/native'),{recursive:true});
 for (const name of ['CMakeLists.txt','LicentivoConfig.cmake.in','LICENSE','NOTICE','VERSION']) copy(name,`sdk/native/vendor/sdk/${name}`);
 tree('c','sdk/native/vendor/sdk/c',name=>/\.(c|h)$/.test(name)||/LICEN[CS]E|NOTICE/i.test(name));
 tree('cpp','sdk/native/vendor/sdk/cpp',name=>name.endsWith('.hpp'));
-fs.writeFileSync(path.join(root,'sdk/managed-sdk-manifest.json'),JSON.stringify({schema_version:1,sdk_version:'0.11.0',changes:'Only private import and native-library relocation; authorization and cryptographic logic are unchanged.',files:records},null,2)+'\n');
-console.log(`Embedded SDK 0.11.0: ${records.length} files, with source and destination SHA-256 records.`);
+fs.writeFileSync(path.join(root,'sdk/managed-sdk-manifest.json'),JSON.stringify({schema_version:1,sdk_version:upstreamVersion,changes:'Only private import and native-library relocation, with embedded text line endings normalized to LF; authorization and cryptographic logic are unchanged.',files:records},null,2)+'\n');
+console.log(`Embedded SDK ${upstreamVersion}: ${records.length} files, with source and destination SHA-256 records.`);

@@ -192,21 +192,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "65cd87c9a6d60536580b316ad985726104730a5151c99845f2490428ef91240a"
 
 [[package]]
-name = "licentivo"
-version = "0.11.0"
-dependencies = [
- "cc",
- "pkg-config",
- "serde_json",
-]
-
-[[package]]
 name = "licentivo-launch"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "aes-gcm",
  "base64",
- "licentivo",
+ "cc",
+ "pkg-config",
  "serde_json",
  "sha2",
  "time",

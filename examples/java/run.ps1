@@ -8,7 +8,7 @@ New-Item -ItemType Directory -Force -Path $output | Out-Null
 $sources = @(Get-ChildItem -LiteralPath (Join-Path $repository 'sdk/java/src') -Recurse -Filter '*.java' | ForEach-Object FullName)
 $sources += Join-Path $PSScriptRoot 'Main.java'
 & $javac --release 17 -encoding UTF-8 -d $output @sources
-if ($LASTEXITCODE -ne 0) { throw 'Java compilation failed; JDK 17+ and prepared SDK 0.11.0 are required.' }
+if ($LASTEXITCODE -ne 0) { throw 'Java compilation failed; JDK 17+ and the Launch SDK sources with embedded SDK 0.11.1 are required.' }
 $arguments = @('-cp',$output,'Main',$LaunchConfig,$ProductConfig)
 if ($Action) { $arguments += $Action }
 & $java @arguments
