@@ -166,6 +166,10 @@ button:disabled { opacity: .5; cursor: wait; }
 .plan-price-grid { display: grid; gap: 22px; }
 .plan-price-option { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; padding-bottom: 21px; border-bottom: 1px solid var(--line); }
 .plan-price-option:last-child { padding-bottom: 0; border-bottom: 0; }
+.plan-license-picker { display: grid; gap: 17px; }
+.plan-license-notice > p, [data-plan-pricing-notice] .notice > p { margin: 8px 0; }
+.plan-license-notice .actions, [data-plan-pricing-notice] .notice > button { margin-top: 10px; }
+[data-plan-pricing-notice] .summary-strip { align-items: center; flex-wrap: wrap; }
 .plan-wizard-footer { display: flex; justify-content: space-between; align-items: center; gap: 20px; border-top: 1px solid var(--line); }
 .plan-wizard-footer [data-plan-progress] { color: var(--muted); font-size: 12px; }
 .plan-wizard-footer [data-product-progress] { color: var(--muted); font-size: 12px; }

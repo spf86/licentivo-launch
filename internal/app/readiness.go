@@ -210,16 +210,19 @@ func (s *Service) OperationalReadiness(ctx context.Context, p Principal, run str
 
 	var mail storage.MailSettings
 	mailErr := s.db.WithContext(ctx).First(&mail, "id = ? AND enabled = true", mailSettingsID).Error
-	mailStatus, mailDetail := "warning", "尚未配置 Resend，或还没有发送真实测试邮件"
+	mailStatus, mailDetail := "ready", "邮件未启用，客户可直接注册、登录和购买"
+	if mailErr == nil {
+		mailStatus, mailDetail = "warning", "邮件已启用，请发送测试邮件确认发信正常"
+	}
 	if mailErr == nil && mail.LastCheckedAt != nil {
-		mailStatus, mailDetail = "ready", "真实测试邮件已由 Resend 接收"
+		mailStatus, mailDetail = "ready", "测试邮件已由 SMTP 服务器接收"
 		if mail.LastCheckError != nil {
 			mailStatus, mailDetail = "failed", *mail.LastCheckError
 		} else if at.Sub(*mail.LastCheckedAt) > 7*24*time.Hour {
 			mailStatus, mailDetail = "warning", "上次成功发信测试已超过 7 天"
 		}
 	}
-	checks = append(checks, readinessCheck("mail", "Resend 发信", mailStatus, mailDetail, "#/admin/settings", mail.LastCheckedAt))
+	checks = append(checks, readinessCheck("mail", "邮件（可选）", mailStatus, mailDetail, "#/admin/settings/mail", mail.LastCheckedAt))
 
 	var connection storage.LicentivoConnection
 	licenseStatus, licenseDetail := "warning", "尚未连接 Licentivo"
@@ -250,7 +253,7 @@ func (s *Service) OperationalReadiness(ctx context.Context, p Principal, run str
 	var accounts []storage.PaymentAccount
 	_ = s.db.WithContext(ctx).Where("enabled = true").Order("environment,provider").Find(&accounts).Error
 	if len(accounts) == 0 {
-		checks = append(checks, readinessCheck("payments", "Stripe / PayPal Webhook", "warning", "尚未配置收款账号和 Webhook", "#/admin/settings", nil))
+		checks = append(checks, readinessCheck("payments", "支付与退款通知", "warning", "尚未配置收款账号和 Webhook", "#/admin/settings/payments", nil))
 	} else {
 		status, detail := "ready", "支付账号可用，Webhook 已收到并验证事件"
 		var latest *time.Time
@@ -274,7 +277,7 @@ func (s *Service) OperationalReadiness(ctx context.Context, p Principal, run str
 				}
 			}
 		}
-		checks = append(checks, readinessCheck("payments", "Stripe / PayPal Webhook", status, detail, "#/admin/settings", latest))
+		checks = append(checks, readinessCheck("payments", "支付与退款通知", status, detail, "#/admin/settings/payments", latest))
 	}
 
 	report := OperationalReadiness{Checks: checks, Total: len(checks), GeneratedAt: at}

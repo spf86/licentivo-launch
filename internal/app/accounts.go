@@ -220,6 +220,10 @@ func (s *Service) Register(ctx context.Context, address, password string) error 
 		if err := tx.Create(&user).Error; err != nil {
 			return err
 		}
+		configured, err := emailVerificationRequired(tx)
+		if err != nil || !configured {
+			return err
+		}
 		return s.queueCredential(tx, user, "verify", normalized)
 	})
 	var mysqlConflict *Error
@@ -236,6 +240,19 @@ func (s *Service) RequestEmail(ctx context.Context, address, kind string) error 
 	}
 	if _, err := installed(s.db.WithContext(ctx)); err != nil {
 		return err
+	}
+	configured, err := s.mailConfigured(ctx)
+	if err != nil {
+		return err
+	}
+	if !configured {
+		return problem(409, "MAIL_NOT_CONFIGURED", "本站未启用邮件，请联系商家处理密码找回")
+	}
+	if kind == "verify" {
+		required, err := emailVerificationRequired(s.db.WithContext(ctx))
+		if err != nil || !required {
+			return err
+		}
 	}
 	normalized, err := email(address)
 	if err != nil {
@@ -352,6 +369,13 @@ func (s *Service) CompleteEmail(ctx context.Context, token, newPassword string) 
 }
 
 func (s *Service) ChangeEmail(ctx context.Context, p Principal, address, password string) error {
+	configured, mailErr := s.mailConfigured(ctx)
+	if mailErr != nil {
+		return mailErr
+	}
+	if !configured {
+		return problem(409, "MAIL_NOT_CONFIGURED", "本站未启用邮件，请联系商家修改账号邮箱")
+	}
 	if !security.VerifyPassword(p.User.PasswordHash, password) {
 		return problem(401, "PASSWORD_INCORRECT", "当前密码不正确")
 	}

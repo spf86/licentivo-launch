@@ -4,12 +4,12 @@ Launch supports TLS termination at Caddy, Nginx, a load balancer, or a cloud pla
 
 ## Enable built-in HTTPS
 
-Set a listener different from the HTTP listener in the process environment or private JSON file:
+Set a listener different from the HTTP listener in `config.yaml`:
 
-```text
-LAUNCH_HTTP_ADDR=0.0.0.0:8080
-LAUNCH_HTTPS_ADDR=0.0.0.0:8443
-LAUNCH_PUBLIC_URL=http://example.com:8080
+```yaml
+http_addr: "0.0.0.0:8080"
+https_addr: "0.0.0.0:8443"
+public_url: "http://example.com:8080"
 ```
 
 Listener addresses are startup configuration, so adding/changing a port requires a restart. Subsequent certificate replacement and public-protocol switching can be performed by an administrator without restarting.

@@ -18,7 +18,7 @@ var (
 	ErrSchema        = errors.New("database tables are not initialized")
 )
 
-func Open(dsn string) (*gorm.DB, error) {
+func mysqlConfiguration(dsn string) (*mysql.Config, error) {
 	if dsn == "" {
 		return nil, ErrNotConfigured
 	}
@@ -29,10 +29,23 @@ func Open(dsn string) (*gorm.DB, error) {
 	}
 	cfg.ParseTime, cfg.Loc, cfg.MultiStatements = true, time.UTC, false
 	cfg.Timeout, cfg.ReadTimeout, cfg.WriteTimeout = 3*time.Second, 5*time.Second, 5*time.Second
+	// Set the connection charset explicitly as well as the table charset. Keep
+	// an explicitly selected collation; the driver validates its compatibility.
+	if err := cfg.Apply(mysql.Charset("utf8mb4", cfg.Collation)); err != nil {
+		return nil, errors.New("invalid MySQL character set configuration")
+	}
 	if cfg.Params == nil {
 		cfg.Params = map[string]string{}
 	}
 	cfg.Params["time_zone"] = "'+00:00'"
+	return cfg, nil
+}
+
+func Open(dsn string) (*gorm.DB, error) {
+	cfg, err := mysqlConfiguration(dsn)
+	if err != nil {
+		return nil, err
+	}
 	connector, err := mysql.NewConnector(cfg)
 	if err != nil {
 		return nil, errors.New("invalid MySQL connection configuration")

@@ -10,17 +10,57 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"regexp"
+	"strconv"
 	"strings"
 	"time"
 )
 
 type APIError struct {
-	Code      string
-	Status    int
-	RequestID string
+	Code       string
+	Status     int
+	RequestID  string
+	RetryAfter time.Duration
 }
 
-func (e *APIError) Error() string { return "Launch: " + e.Code }
+func (e *APIError) Error() string { return "Launch: " + safeCode(e.Code) }
+
+var codePattern = regexp.MustCompile(`^[A-Z][A-Z0-9_]{0,63}$`)
+var requestIDPattern = regexp.MustCompile(`^[a-zA-Z0-9._:-]{1,128}$`)
+var productIDPattern = regexp.MustCompile(`^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$`)
+
+func safeCode(code string) string {
+	if codePattern.MatchString(code) {
+		return code
+	}
+	return "HTTP_ERROR"
+}
+func safeRequestID(id string) string {
+	if requestIDPattern.MatchString(id) {
+		return id
+	}
+	return ""
+}
+
+// TransportError preserves cancellation and network causes without including
+// request URLs, passwords, or bearer tokens in its display text.
+type TransportError struct{ Cause error }
+
+func (e *TransportError) Error() string { return "merchant service is unavailable" }
+func (e *TransportError) Unwrap() error { return e.Cause }
+
+var ErrInvalidResponse = errors.New("invalid merchant response")
+
+// ServiceUnavailable is deliberately narrow: authentication and entitlement
+// denials, malformed responses and canceled requests must never trigger offline fallback.
+func ServiceUnavailable(err error) bool {
+	var transport *TransportError
+	if errors.As(err, &transport) {
+		return !errors.Is(err, context.Canceled)
+	}
+	var api *APIError
+	return errors.As(err, &api) && api.Status >= 500 && api.Status <= 599
+}
 
 type User struct {
 	ID       string `json:"id"`
@@ -32,6 +72,14 @@ type Credential struct {
 	LicenseKey string     `json:"license_key"`
 	ValidUntil *time.Time `json:"valid_until"`
 	Version    uint64     `json:"version"`
+}
+
+// Session contains secrets. Store it only through a protected SessionStore;
+// never print or serialize it into application logs.
+type Session struct {
+	AccessToken string    `json:"access_token"`
+	User        User      `json:"user"`
+	ExpiresAt   time.Time `json:"expires_at"`
 }
 type Client struct {
 	base  string
@@ -55,6 +103,9 @@ func New(origin string, allowLocalHTTP bool) (*Client, error) {
 // does not imply trust in that caller's user ID or product entitlements.
 func (c *Client) WithToken(token string) *Client { clone := *c; clone.token = token; return &clone }
 func (c *Client) call(ctx context.Context, method, path string, input, out any) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	var raw []byte
 	var err error
 	if input != nil {
@@ -73,12 +124,21 @@ func (c *Client) call(ctx context.Context, method, path string, input, out any) 
 	}
 	response, err := c.http.Do(r)
 	if err != nil {
-		return errors.New("merchant service is unavailable")
+		if ctx.Err() != nil {
+			return ctx.Err()
+		}
+		return &TransportError{Cause: err}
 	}
 	defer response.Body.Close()
 	body, err := io.ReadAll(io.LimitReader(response.Body, (1<<20)+1))
-	if err != nil || len(body) > 1<<20 {
-		return errors.New("invalid merchant response")
+	if err != nil {
+		if ctx.Err() != nil {
+			return ctx.Err()
+		}
+		return &TransportError{Cause: err}
+	}
+	if len(body) > 1<<20 {
+		return ErrInvalidResponse
 	}
 	var envelope struct {
 		Data  json.RawMessage `json:"data"`
@@ -87,31 +147,30 @@ func (c *Client) call(ctx context.Context, method, path string, input, out any) 
 		} `json:"error"`
 		RequestID string `json:"request_id"`
 	}
-	if json.Unmarshal(body, &envelope) != nil {
-		return errors.New("invalid merchant response")
-	}
+	decodeErr := json.Unmarshal(body, &envelope)
 	if response.StatusCode < 200 || response.StatusCode >= 300 {
-		return &APIError{envelope.Error.Code, response.StatusCode, envelope.RequestID}
+		return &APIError{Code: safeCode(envelope.Error.Code), Status: response.StatusCode, RequestID: safeRequestID(envelope.RequestID), RetryAfter: retryAfter(response.Header.Get("Retry-After"), time.Now())}
 	}
-	if out != nil && json.Unmarshal(envelope.Data, out) != nil {
-		return errors.New("invalid merchant response")
+	if decodeErr != nil || out != nil && json.Unmarshal(envelope.Data, out) != nil {
+		return ErrInvalidResponse
 	}
 	return nil
 }
 func (c *Client) Login(ctx context.Context, email, password string) (User, error) {
-	var grant struct {
-		AccessToken string `json:"access_token"`
-		User        User   `json:"user"`
-	}
+	grant, err := c.LoginSession(ctx, email, password)
+	return grant.User, err
+}
+func (c *Client) LoginSession(ctx context.Context, email, password string) (Session, error) {
+	var grant Session
 	err := c.call(ctx, "POST", "/auth/login", map[string]string{"email": email, "password": password, "kind": "desktop"}, &grant)
 	if err != nil {
-		return User{}, err
+		return Session{}, err
 	}
 	if grant.AccessToken == "" || grant.User.ID == "" {
-		return User{}, errors.New("merchant did not issue a software session")
+		return Session{}, errors.New("merchant did not issue a software session")
 	}
 	c.token = grant.AccessToken
-	return grant.User, nil
+	return grant, nil
 }
 func (c *Client) CurrentUser(ctx context.Context) (User, error) {
 	var result struct {
@@ -121,8 +180,11 @@ func (c *Client) CurrentUser(ctx context.Context) (User, error) {
 	return result.User, err
 }
 func (c *Client) Credential(ctx context.Context, product, environment string) (Credential, error) {
-	if strings.ContainsAny(product, "/?#") || len(product) != 36 {
+	if !productIDPattern.MatchString(product) {
 		return Credential{}, errors.New("invalid product identifier")
+	}
+	if environment != "sandbox" && environment != "live" {
+		return Credential{}, errors.New("environment must be sandbox or live")
 	}
 	var result Credential
 	err := c.call(ctx, "POST", "/software/products/"+product+"/credential", map[string]string{"environment": environment}, &result)
@@ -130,6 +192,16 @@ func (c *Client) Credential(ctx context.Context, product, environment string) (C
 		return Credential{}, errors.New("credential belongs to a different product")
 	}
 	return result, err
+}
+
+func retryAfter(value string, now time.Time) time.Duration {
+	if seconds, err := strconv.ParseInt(value, 10, 32); err == nil && seconds > 0 {
+		return time.Duration(seconds) * time.Second
+	}
+	if deadline, err := http.ParseTime(value); err == nil && deadline.After(now) {
+		return deadline.Sub(now)
+	}
+	return 0
 }
 func (c *Client) SignOut(ctx context.Context) error {
 	err := c.call(ctx, "POST", "/auth/logout", struct{}{}, nil)

@@ -27,13 +27,26 @@ const (
 )
 
 type CheckoutRequest struct {
-	OperationID string
-	OrderID     string
-	Environment Environment
-	Amount      domain.Money
-	Description string
-	ReturnURL   string
-	CancelURL   string
+	OperationID       string
+	OrderID           string
+	Environment       Environment
+	Amount            domain.Money
+	Description       string
+	ReturnURL         string
+	CancelURL         string
+	CustomerID        string
+	CustomerEmail     string
+	NotifyURL         string
+	HostedCheckoutURL string
+	RequestedAt       time.Time
+}
+
+// RecoverablePaymentProvider has create endpoints without provider-enforced
+// idempotency. Callers must persist an attempt before submitting, and use these
+// read-only methods after any ambiguous result, including process restarts.
+type RecoverablePaymentProvider interface {
+	RecoverCheckout(context.Context, CheckoutRequest) (Checkout, error)
+	RecoverRefund(context.Context, RefundRequest) (Refund, error)
 }
 
 type Checkout struct {
@@ -56,6 +69,7 @@ type RefundRequest struct {
 	OperationID string
 	PaymentID   string
 	Amount      domain.Money
+	RequestedAt time.Time
 }
 
 type Refund struct {

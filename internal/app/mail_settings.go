@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net"
+	"strconv"
 	"strings"
 	"time"
 
@@ -17,24 +18,28 @@ import (
 const mailSettingsID uint8 = 1
 
 type MailSettingsInput struct {
-	Provider   string `json:"provider"`
-	From       string `json:"from"`
-	APIKey     string `json:"api_key,omitempty"`
-	Host       string `json:"host,omitempty"`
-	Port       string `json:"port,omitempty"`
-	Username   string `json:"username,omitempty"`
-	Encryption string `json:"encryption,omitempty"`
+	RequireVerification *bool  `json:"require_verification,omitempty"`
+	OrderNotifications  *bool  `json:"order_notifications,omitempty"`
+	Provider            string `json:"provider"`
+	From                string `json:"from"`
+	APIKey              string `json:"api_key,omitempty"`
+	Host                string `json:"host,omitempty"`
+	Port                string `json:"port,omitempty"`
+	Username            string `json:"username,omitempty"`
+	Encryption          string `json:"encryption,omitempty"`
 }
 
 type MailSettingsView struct {
-	Configured       bool   `json:"configured"`
-	Provider         string `json:"provider"`
-	From             string `json:"from"`
-	CredentialStored bool   `json:"credential_stored"`
-	Host             string `json:"host"`
-	Port             string `json:"port"`
-	Username         string `json:"username"`
-	Encryption       string `json:"encryption"`
+	RequireVerification bool   `json:"require_verification"`
+	OrderNotifications  bool   `json:"order_notifications"`
+	Configured          bool   `json:"configured"`
+	Provider            string `json:"provider"`
+	From                string `json:"from"`
+	CredentialStored    bool   `json:"credential_stored"`
+	Host                string `json:"host"`
+	Port                string `json:"port"`
+	Username            string `json:"username"`
+	Encryption          string `json:"encryption"`
 }
 
 func mailSettingsView(configured bool, from string, credentialStored bool, host, port, username, encryption string) MailSettingsView {
@@ -141,23 +146,46 @@ func (s *Service) MailSettings(ctx context.Context, p Principal) (MailSettingsVi
 	var saved storage.MailSettings
 	err := s.db.WithContext(ctx).First(&saved, "id = ?", mailSettingsID).Error
 	if err == nil {
-		return mailSettingsView(saved.Enabled, saved.From, saved.CredentialSecretID != "", saved.Host, saved.Port, saved.Username, saved.Encryption), nil
+		view := mailSettingsView(saved.Enabled, saved.From, saved.CredentialSecretID != "", saved.Host, saved.Port, saved.Username, saved.Encryption)
+		view.Provider = saved.Provider
+		view.RequireVerification = !saved.SkipEmailVerification
+		view.OrderNotifications = !saved.DisableOrderNotifications
+		if saved.Provider == "smtp" {
+			view.Port, view.Encryption = saved.Port, saved.Encryption
+		}
+		return view, nil
 	}
 	if !errors.Is(err, gorm.ErrRecordNotFound) {
 		return MailSettingsView{}, ErrStorage
 	}
-	return mailSettingsView(false, "", false, "smtp.resend.com", "465", "resend", "implicit_tls"), nil
+	view := mailSettingsView(false, "", false, "smtp.resend.com", "465", "resend", "implicit_tls")
+	view.RequireVerification, view.OrderNotifications = true, true
+	return view, nil
 }
 
 func (s *Service) SaveMailSettings(ctx context.Context, p Principal, in MailSettingsInput) (MailSettingsView, error) {
 	if !p.IsAdmin() {
 		return MailSettingsView{}, ErrForbidden
 	}
+	if in.Provider == "disabled" {
+		if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+			if err := tx.Model(&storage.MailSettings{}).Where("id = ?", mailSettingsID).Update("enabled", false).Error; err != nil {
+				return err
+			}
+			return audit(tx, p.User.ID, "mail.disable", "mail_settings", "1", "")
+		}); err != nil {
+			return MailSettingsView{}, databaseError(err)
+		}
+		return s.MailSettings(ctx, p)
+	}
 	if in.Provider == "" {
 		in.Provider = "resend"
 	}
-	if in.Provider != "resend" {
+	if in.Provider != "resend" && in.Provider != "smtp" {
 		return MailSettingsView{}, ErrInvalid
+	}
+	if in.Provider == "smtp" && (strings.TrimSpace(in.Host) == "" || strings.TrimSpace(in.Username) == "") {
+		return MailSettingsView{}, problem(400, "SMTP_CONFIG_REQUIRED", "请填写 SMTP 服务器和账号")
 	}
 	host, err := normalizeSMTPHost(in.Host)
 	if err != nil {
@@ -168,12 +196,15 @@ func (s *Service) SaveMailSettings(ctx context.Context, p Principal, in MailSett
 		return MailSettingsView{}, err
 	}
 	port, encryption, err := normalizeResendTransport(in.Port, in.Encryption)
+	if in.Provider == "smtp" {
+		port, encryption, err = normalizeSMTPTransport(in.Port, in.Encryption)
+	}
 	if err != nil {
 		return MailSettingsView{}, err
 	}
 	from, err := email(in.From)
 	if err != nil {
-		return MailSettingsView{}, problem(400, "MAIL_FROM_INVALID", "请填写 Resend 已验证域名下的完整发件邮箱")
+		return MailSettingsView{}, problem(400, "MAIL_FROM_INVALID", "请填写有效的发件人邮箱")
 	}
 	key := strings.TrimSpace(in.APIKey)
 	err = s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
@@ -183,35 +214,47 @@ func (s *Service) SaveMailSettings(ctx context.Context, p Principal, in MailSett
 			return findErr
 		}
 		secretID := current.CredentialSecretID
+		if current.Provider != in.Provider {
+			secretID = ""
+		}
 		if key != "" {
-			if !validResendKey(key) {
+			if in.Provider == "resend" && !validResendKey(key) {
 				return problem(400, "RESEND_KEY_INVALID", "请粘贴以 re_ 开头的 Resend API Key")
 			}
 			if _, configErr := mailer.NewSMTP(resendSMTPConfig(from, key, host, port, username, encryption)); configErr != nil {
 				return problem(400, "MAIL_CONFIG_INVALID", "邮件配置格式无效")
 			}
-			secretID, err = s.createSecret(tx, "resend_api_key", []byte(key))
+			if len(key) > 1024 || strings.ContainsAny(key, "\r\n") {
+				return ErrInvalid
+			}
+			secretID, err = s.createSecret(tx, "mail_credentials", []byte(key))
 			if err != nil {
 				return err
 			}
 		}
 		if secretID == "" {
-			return problem(400, "RESEND_KEY_REQUIRED", "首次配置时请填写 Resend API Key")
+			return problem(400, "MAIL_CREDENTIAL_REQUIRED", "首次配置该邮件服务时请填写 SMTP 密码或 API Key")
 		}
-		settings := storage.MailSettings{ID: mailSettingsID, Provider: "resend", From: from, Host: host, Port: port, Username: username, Encryption: encryption, CredentialSecretID: secretID, Enabled: true, UpdatedAt: now()}
+		if in.RequireVerification != nil {
+			current.SkipEmailVerification = !*in.RequireVerification
+		}
+		if in.OrderNotifications != nil {
+			current.DisableOrderNotifications = !*in.OrderNotifications
+		}
+		settings := storage.MailSettings{ID: mailSettingsID, Provider: in.Provider, From: from, Host: host, Port: port, Username: username, Encryption: encryption, CredentialSecretID: secretID, Enabled: true, SkipEmailVerification: current.SkipEmailVerification, DisableOrderNotifications: current.DisableOrderNotifications, UpdatedAt: now()}
 		if errors.Is(findErr, gorm.ErrRecordNotFound) {
 			if err := tx.Create(&settings).Error; err != nil {
 				return err
 			}
-		} else if err := tx.Model(&current).Updates(map[string]any{"provider": settings.Provider, "from_address": settings.From, "host": settings.Host, "port": settings.Port, "username": settings.Username, "encryption": settings.Encryption, "credential_secret_id": settings.CredentialSecretID, "enabled": true, "updated_at": settings.UpdatedAt}).Error; err != nil {
+		} else if err := tx.Model(&current).Updates(map[string]any{"provider": settings.Provider, "from_address": settings.From, "host": settings.Host, "port": settings.Port, "username": settings.Username, "encryption": settings.Encryption, "credential_secret_id": settings.CredentialSecretID, "enabled": true, "skip_email_verification": settings.SkipEmailVerification, "disable_order_notifications": settings.DisableOrderNotifications, "updated_at": settings.UpdatedAt}).Error; err != nil {
 			return err
 		}
-		return audit(tx, p.User.ID, "mail.configure", "mail_settings", "resend", "")
+		return audit(tx, p.User.ID, "mail.configure", "mail_settings", in.Provider, "")
 	})
 	if err != nil {
 		return MailSettingsView{}, databaseError(err)
 	}
-	return mailSettingsView(true, from, true, host, port, username, encryption), nil
+	return s.MailSettings(ctx, p)
 }
 
 func (s *Service) newMailSender(config mailer.Config) (mailer.Sender, error) {
@@ -227,7 +270,7 @@ func (s *Service) configuredMailSender(ctx context.Context) (mailer.Sender, erro
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
-	if err != nil || saved.Provider != "resend" {
+	if err != nil || saved.Provider != "resend" && saved.Provider != "smtp" {
 		return nil, ErrStorage
 	}
 	key, err := s.readSecret(ctx, saved.CredentialSecretID)
@@ -235,6 +278,9 @@ func (s *Service) configuredMailSender(ctx context.Context) (mailer.Sender, erro
 		return nil, err
 	}
 	port, encryption, transportErr := normalizeResendTransport(saved.Port, saved.Encryption)
+	if saved.Provider == "smtp" {
+		port, encryption, transportErr = normalizeSMTPTransport(saved.Port, saved.Encryption)
+	}
 	if transportErr != nil {
 		return nil, ErrStorage
 	}
@@ -251,12 +297,59 @@ func (s *Service) configuredMailSender(ctx context.Context) (mailer.Sender, erro
 }
 
 func (s *Service) mailConfigured(ctx context.Context) (bool, error) {
+	return mailEnabled(s.db.WithContext(ctx))
+}
+
+func mailEnabled(db *gorm.DB) (bool, error) {
 	var count int64
-	err := s.db.WithContext(ctx).Model(&storage.MailSettings{}).Where("id = ? AND enabled = true", mailSettingsID).Count(&count).Error
+	err := db.Model(&storage.MailSettings{}).Where("id = ? AND enabled = true", mailSettingsID).Count(&count).Error
 	if err != nil {
 		return false, ErrStorage
 	}
 	return count > 0, nil
+}
+
+func emailVerificationRequired(db *gorm.DB) (bool, error) {
+	var count int64
+	if err := db.Model(&storage.MailSettings{}).Where("id = ? AND enabled = true AND skip_email_verification = false", mailSettingsID).Count(&count).Error; err != nil {
+		return false, ErrStorage
+	}
+	return count > 0, nil
+}
+
+func (s *Service) requireVerifiedEmail(ctx context.Context, db *gorm.DB, user storage.User) error {
+	if user.EmailVerifiedAt != nil {
+		return nil
+	}
+	required, err := emailVerificationRequired(db.WithContext(ctx))
+	if err != nil {
+		return err
+	}
+	if required {
+		return problem(403, "EMAIL_VERIFICATION_REQUIRED", "请先验证邮箱")
+	}
+	return nil
+}
+func normalizeSMTPTransport(port, encryption string) (string, string, error) {
+	if port == "" {
+		if encryption == "implicit_tls" {
+			port = "465"
+		} else {
+			port = "587"
+		}
+	}
+	if encryption == "" {
+		if port == "465" {
+			encryption = "implicit_tls"
+		} else {
+			encryption = "starttls"
+		}
+	}
+	number, err := strconv.Atoi(port)
+	if err != nil || number < 1 || number > 65535 || encryption != "implicit_tls" && encryption != "starttls" {
+		return "", "", problem(400, "SMTP_TRANSPORT_INVALID", "SMTP 端口应为 1–65535，并使用 TLS 或 STARTTLS")
+	}
+	return port, encryption, nil
 }
 
 type MailCheckResult struct {
@@ -276,7 +369,7 @@ func (s *Service) CheckMail(ctx context.Context, p Principal, in MailCheckInput)
 		return MailCheckResult{}, ErrStorage
 	}
 	if sender == nil {
-		return MailCheckResult{}, problem(409, "RESEND_NOT_CONFIGURED", "请先保存 Resend API Key 和发件邮箱")
+		return MailCheckResult{}, problem(409, "MAIL_NOT_CONFIGURED", "请先启用邮件并保存 SMTP 凭证和发件邮箱")
 	}
 	to := strings.TrimSpace(in.To)
 	if to == "" {
@@ -292,15 +385,15 @@ func (s *Service) CheckMail(ctx context.Context, p Principal, in MailCheckInput)
 	}
 	deliveryCtx, cancel := context.WithTimeout(ctx, 20*time.Second)
 	err = sender.Send(deliveryCtx, mailer.Message{
-		To: to, Subject: "Licentivo Launch 邮件发送测试",
-		Body:           "这是一封 Resend 配置测试邮件。\n\n收到本邮件表示 Launch 已成功连接 Resend，并已把邮件交给 Resend 处理。",
+		To: to, Subject: "Licentivo Launch mail delivery test",
+		Body:           "This is a test message from Licentivo Launch. The configured SMTP server accepted the delivery.",
 		IdempotencyKey: "launch-mail-check/" + id,
 	})
 	cancel()
 	if err != nil {
-		message := "Resend rejected the test delivery"
+		message := "The SMTP server rejected the test delivery"
 		_ = s.db.WithContext(context.WithoutCancel(ctx)).Model(&storage.MailSettings{}).Where("id = ?", mailSettingsID).Updates(map[string]any{"last_check_error": message, "last_checked_at": now()}).Error
-		return MailCheckResult{}, problem(502, "RESEND_DELIVERY_FAILED", "Resend 连接、认证或发件地址检查失败，请核对 API Key、已验证域名和发件邮箱")
+		return MailCheckResult{}, problem(502, "MAIL_DELIVERY_FAILED", "邮件连接、认证或发件地址检查失败，请核对 SMTP 凭证和发件邮箱")
 	}
 	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if err := tx.Model(&storage.MailSettings{}).Where("id = ?", mailSettingsID).Updates(map[string]any{"last_checked_at": now(), "last_check_error": nil}).Error; err != nil {

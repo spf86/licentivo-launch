@@ -1,6 +1,6 @@
-# Resend email configuration
+# Email delivery, registration verification, and notifications
 
-Launch uses a persistent encrypted email queue for registration verification, password reset, and email-change confirmation. Temporary failures use backoff and retry. Other transactional notifications can reuse the connection and queue.
+Launch uses a persistent encrypted email queue for registration verification, password reset, and email-change confirmation. Temporary failures use backoff and retry. Payment confirmation, software-access readiness, refund confirmation, and invoice results use the same queue. Registration works without a mail provider.
 
 ## 1. Create an account
 
@@ -28,8 +28,8 @@ A separate key supports independent auditing, rotation, and revocation. See [API
 ## 4. Save the connection in Launch
 
 1. Sign in as an administrator.
-2. Open **System settings > Email settings**.
-3. Select an SMTP port and encryption mode. The default is **465 + implicit TLS**. Where 465 is unavailable, **587 + STARTTLS** is another supported choice.
+2. Open **System settings > Email and registration**.
+3. Select **Resend SMTP** and an SMTP port and encryption mode. The default is **465 + implicit TLS**. Where 465 is unavailable, **587 + STARTTLS** is another supported choice.
 4. Enter the sender and API key, then save.
 5. Enter a test recipient, send a test message, and check both the inbox and Resend delivery status.
 
@@ -49,7 +49,7 @@ Defaults follow the [Resend SMTP guide](https://resend.com/docs/send-with-smtp).
 
 1. Send a real test message through the saved connection. Success means the SMTP provider accepted the message; it does not guarantee inbox delivery.
 2. Inspect the recipient, sender, and delivery result in Resend's Emails page.
-3. Register a test customer with a mailbox you control.
+3. Enable **Verify email on registration** and register a test customer with a mailbox you control.
 4. Receive and complete the verification link.
 5. Request a password-reset email and confirm delivery and link validity.
 6. Check spam folders. Review SPF, DKIM, DMARC, and the sender subdomain when delivery is classified as spam.
@@ -72,3 +72,23 @@ Create a new key in Resend, save it in Launch, and verify delivery before removi
 | Change sender only | Enter the new address and save with the API key field empty |
 
 The setting names are described in English here; the administration UI currently uses Simplified Chinese.
+
+## Delivery and verification choices
+
+Email delivery and required verification are independent. On an existing installation, configuring email keeps required verification enabled by default. New configurations default to verification and transaction notifications enabled; administrators may turn either preference off. Preferences persist across restarts and provider changes.
+
+| Preference or event | When email is sent |
+| --- | --- |
+| Delivery disabled | No new email is queued. Customers may register, sign in, buy, and obtain their own software credential without verification. Password recovery and email changes require merchant assistance. |
+| Verify email on registration | When enabled, registration and resend requests queue a verification link. An unverified customer cannot purchase or obtain software credentials until verification completes. Turning this off allows direct registration and purchase without marking the address verified. |
+| Password recovery | A customer requests a password-reset link while delivery is enabled. This does not depend on required registration verification. |
+| Email change | A signed-in customer confirms their password and requests a new address. A confirmation link is sent to that address while delivery is enabled. |
+| Order and software notifications | When enabled, a confirmed payment, software access becoming active or being updated while active, or a confirmed full refund queues a notification. License keys and passwords are never included. |
+| Invoice result | An administrator issues or rejects the invoice request while delivery is enabled. |
+| Test delivery | An administrator explicitly sends a test message using the saved configuration. |
+
+Pending refund approval does not produce a refund-completed email. The account portal remains the source for current order, entitlement, refund, and invoice status. Queued deliveries retry after temporary failures; messages already queued before a preference changes are retained.
+
+## Use another SMTP provider
+
+Choose **Generic SMTP** in the same settings page. Enter the provider host, port, username, password, and sender address. TLS or STARTTLS is required, and ports 1-65535 are accepted. A Resend API key or `re_` prefix is not required. When switching providers, supply the new credentials; leaving the password blank preserves credentials only for the same provider. Verify actual delivery before requiring registration verification.

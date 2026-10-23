@@ -2,11 +2,14 @@ param([switch]$NoBuild)
 
 $ErrorActionPreference = 'Stop'
 $taskRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
-$taskConfig = Join-Path $taskRoot '.local\dev\launch-config.json'
+$taskConfig = $env:LAUNCH_CONFIG_FILE
+if (-not $taskConfig) {
+    $taskConfig = Join-Path $taskRoot 'config.yaml'
+}
 $taskBinary = Join-Path $taskRoot 'bin\launch.exe'
 
 if (-not (Test-Path -LiteralPath $taskConfig -PathType Leaf)) {
-    throw ('Missing private development configuration: ' + $taskConfig)
+    throw 'Missing private configuration. Run launch init and edit config.yaml.'
 }
 
 Push-Location -LiteralPath $taskRoot
@@ -25,7 +28,7 @@ try {
     if (-not (Test-Path -LiteralPath $taskBinary -PathType Leaf)) {
         throw 'The application binary is missing; run without -NoBuild once.'
     }
-    & $taskBinary dev
+    & $taskBinary dev --config $taskConfig
     exit $LASTEXITCODE
 } finally {
     Pop-Location

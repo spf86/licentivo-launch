@@ -119,6 +119,16 @@ func (a *application) route(mux *http.ServeMux, pattern string, authenticated bo
 			apiFail(w, r, err)
 			return
 		}
+		if raw, ok := result.(app.PaymentWebhookResponse); ok {
+			for name, values := range raw.Header {
+				for _, value := range values {
+					w.Header().Add(name, value)
+				}
+			}
+			w.Header().Set("Content-Type", "application/json; charset=utf-8")
+			_, _ = w.Write(raw.Body)
+			return
+		}
 		respond(w, r, 200, result)
 	})
 }
@@ -149,6 +159,9 @@ func apiFail(w http.ResponseWriter, r *http.Request, err error) {
 	if !errors.As(err, &business) {
 		business = &app.Error{Status: 503, Code: "SERVICE_UNAVAILABLE", Message: "服务暂不可用，请稍后重试"}
 	}
+	if business.Code == "ENTITLEMENT_PENDING" {
+		w.Header().Set("Retry-After", "3")
+	}
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(business.Status)
 	_ = json.NewEncoder(w).Encode(map[string]any{"error": map[string]string{"code": business.Code, "message": business.Message}, "request_id": w.Header().Get("X-Request-ID")})
@@ -172,6 +185,7 @@ func requestLocale(r *http.Request) string {
 
 func (a *application) register(mux *http.ServeMux) {
 	a.registerCommerce(mux)
+	a.registerIntegration(mux)
 	mux.HandleFunc("GET /api/v1/product-document-images/{id}", func(w http.ResponseWriter, r *http.Request) {
 		if a.service == nil {
 			apiFail(w, r, &app.Error{Status: 503, Code: "DATABASE_REQUIRED", Message: "请先配置数据库和主密钥并重启服务"})

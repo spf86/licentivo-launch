@@ -196,7 +196,27 @@ func (s *Service) processRefund(ctx context.Context) (bool, error) {
 		if external != nil {
 			changes["external_refund_id"] = *external
 		}
-		return databaseError(s.db.WithContext(c).Model(&r).Where("lease_token = ?", lease).Updates(changes).Error)
+		return databaseError(s.db.WithContext(c).Transaction(func(tx *gorm.DB) error {
+			if status == "failed" {
+				var payment storage.Payment
+				if err := tx.Select("order_id").First(&payment, "id = ?", r.PaymentID).Error; err != nil {
+					return err
+				}
+				// Release the order from refunding when the provider rejects the
+				// refund. Paid coverage remains valid until a confirmed refund.
+				if err := tx.Model(&storage.Order{}).Where("id = ? AND status = 'refunding'", payment.OrderID).Update("status", "paid").Error; err != nil {
+					return err
+				}
+			}
+			result := tx.Model(&r).Where("lease_token = ?", lease).Updates(changes)
+			if result.Error != nil {
+				return result.Error
+			}
+			if result.RowsAffected != 1 {
+				return ErrStorage
+			}
+			return nil
+		}))
 	}
 	var payment storage.Payment
 	var account storage.PaymentAccount
@@ -211,7 +231,21 @@ func (s *Service) processRefund(ctx context.Context) (bool, error) {
 	if r.ExternalRefundID != nil {
 		observed, err = provider.QueryRefund(ctx, *r.ExternalRefundID)
 	} else if r.ApprovedAt != nil && now().Before(r.ApprovedAt.Add(23*time.Hour)) {
-		observed, err = provider.Refund(ctx, ports.RefundRequest{OperationID: r.OperationID, PaymentID: *payment.ExternalTransactionID, Amount: domain.Money{Currency: payment.Currency, Minor: r.AmountMinor}})
+		request := ports.RefundRequest{OperationID: r.OperationID, PaymentID: *payment.ExternalTransactionID, Amount: domain.Money{Currency: payment.Currency, Minor: r.AmountMinor}}
+		request.RequestedAt = *r.ApprovedAt
+		if recoverable, ok := provider.(ports.RecoverablePaymentProvider); ok {
+			if r.SubmittedAt != nil {
+				observed, err = recoverable.RecoverRefund(ctx, request)
+			} else {
+				reserved := s.db.WithContext(ctx).Model(&storage.Refund{}).Where("id = ? AND lease_token = ? AND submitted_at IS NULL", r.ID, lease).Update("submitted_at", now())
+				if reserved.Error != nil || reserved.RowsAffected != 1 {
+					return true, finish("unknown", false, nil)
+				}
+				observed, err = provider.Refund(ctx, request)
+			}
+		} else {
+			observed, err = provider.Refund(ctx, request)
+		}
 	} else {
 		return true, finish("unknown", true, nil)
 	}
@@ -226,7 +260,9 @@ func (s *Service) processRefund(ctx context.Context) (bool, error) {
 		if observed.Status == ports.PaymentFailed {
 			state = "failed"
 		}
-		return true, finish(state, r.Attempts >= 12, &observed.ExternalID)
+		// Known pending refunds may need days of provider review. Exhaustion
+		// applies to unknown outcomes, never to a healthy approval queue.
+		return true, finish(state, observed.Status == ports.PaymentUnknown && r.Attempts >= 12, &observed.ExternalID)
 	}
 	// Lock in the same user/order/payment order as payment settlement.
 	var order storage.Order
@@ -266,6 +302,9 @@ func (s *Service) processRefund(ctx context.Context) (bool, error) {
 			return err
 		}
 		if err := s.recomputeEntitlement(tx, &e, nil, true); err != nil {
+			return err
+		}
+		if err := s.queueCustomerNotification(tx, user.ID, "Refund confirmed", "The payment provider confirmed the full refund for order "+order.ID+". The refunded software coverage has been removed. Bank or payment method processing may take additional time."); err != nil {
 			return err
 		}
 		return audit(tx, "", "refund.confirmed", "refund", r.ID, "")

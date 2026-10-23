@@ -1,6 +1,6 @@
-# Stripe and PayPal integration baseline
+# Payment integrations
 
-Stripe hosted Checkout, PayPal Orders/Capture, payment queries, refunds, and notification verification adapters are implemented. HTTP contract and local-ledger tests have passed. Real provider sandbox acceptance still requires merchant credentials.
+Stripe hosted Checkout, PayPal Orders/Capture, Waffo Payment API, and Paddle Billing adapters implement payment queries, full refunds, and notification verification. HTTP contract and isolated MySQL ledger tests have passed. Real provider sandbox acceptance still requires merchant credentials. Follow the [Waffo and Paddle setup guide](waffo-paddle.md) for their credentials, checkout pages, callback events, and recovery behavior.
 
 ## Shared ledger
 
@@ -10,7 +10,7 @@ The merchant owns the payment accounts. Each payment account binds `provider`, `
 
 The server creates price and entitlement snapshots from published plan versions. Amounts are integers in currency minor units. Historical baseline tests use USD. Validate supported currencies and decimal places in each adapter; do not assume every currency has two decimal places. PayPal decimal strings must convert exactly to/from integer minor units.
 
-Verification checks signatures, receiving account, environment, order relationship, amount, currency, and actual captured/paid state. A transaction deduplicates the event, records the payment, updates the order, appends paid coverage, and creates a stable licensing task before acknowledging the event. Unknown/out-of-order results are queried; late payment on a closed order requires reconciliation.
+The callback handler verifies the signature and environment, then durably stores and deduplicates the notification before acknowledging it. Background processing queries the provider and checks the receiving account, order relationship, amount, currency, and actual captured/paid state. A separate database transaction records a confirmed payment, updates the order, appends paid coverage, and creates a stable licensing task. Callback acknowledgement therefore confirms receipt, not completed payment fulfillment. Unknown/out-of-order results are queried; late payment on a closed order requires reconciliation.
 
 ## Stripe
 
@@ -30,4 +30,4 @@ Webhook verification binds the app, environment, and webhook ID. Use the officia
 
 Refund requests, submissions, and successful refunds are separate facts. Lock the original payment and enforce its refundable balance. Query an unknown refund outcome instead of submitting another refund. Only a trusted successful refund triggers entitlement recalculation; an upgrade refund must retain legitimate base-plan coverage.
 
-Accept both providers independently: creation, captured payment, incorrect amount, invalid signature, duplicate/out-of-order/missing events, payment queries, create-timeout recovery, full refund, refund-timeout recovery, and sandbox/live isolation. Missing credentials do not block local development, but that provider's external acceptance remains incomplete.
+Accept each provider independently: creation, captured payment, incorrect amount, invalid signature, duplicate/out-of-order/missing events, payment queries, create-timeout recovery, full refund, refund-timeout recovery, and sandbox/live isolation. Missing credentials do not block local development, but that provider's external acceptance remains incomplete.

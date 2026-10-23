@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -389,7 +390,10 @@ func (c *Client) CheckPolicy(ctx context.Context, in ports.PolicyCheck) error {
 		return ErrConflict
 	}
 	policy, err := c.policy(ctx, in.PolicyID)
-	if err != nil || policy.ID != in.PolicyID || policy.ProductID != in.ProductID || policy.Version != in.PolicyVersion {
+	if err != nil {
+		return err
+	}
+	if policy.ID != in.PolicyID || policy.ProductID != in.ProductID || policy.Version != in.PolicyVersion {
 		return ErrConflict
 	}
 	// A timed Licentivo policy may intentionally omit its default duration.
@@ -421,6 +425,44 @@ func (c *Client) Products(ctx context.Context) (json.RawMessage, error) {
 	var result json.RawMessage
 	err := c.call(ctx, "GET", "/api/v1/products?limit=100", nil, &result)
 	return result, err
+}
+
+func (c *Client) ProductPublicKeys(ctx context.Context, productID string) (map[string]string, error) {
+	if !uuidPattern.MatchString(productID) {
+		return nil, ErrConflict
+	}
+	var bundle struct {
+		ProductID string `json:"product_id"`
+		Keys      []struct {
+			ID        string `json:"key_id"`
+			Algorithm string `json:"algorithm"`
+			PublicKey string `json:"public_key"`
+			Active    bool   `json:"active"`
+		} `json:"keys"`
+	}
+	if err := c.call(ctx, "GET", "/api/v1/products/"+productID+"/signing-keys", nil, &bundle); err != nil {
+		return nil, err
+	}
+	if bundle.ProductID != productID || len(bundle.Keys) == 0 || len(bundle.Keys) > 32 {
+		return nil, ErrConflict
+	}
+	keys := make(map[string]string, len(bundle.Keys))
+	active := false
+	for _, key := range bundle.Keys {
+		decoded, err := base64.RawURLEncoding.Strict().DecodeString(key.PublicKey)
+		if key.ID == "" || len(key.ID) > 128 || strings.IndexFunc(key.ID, func(r rune) bool { return r < 32 || r == 127 }) >= 0 || key.Algorithm != "Ed25519" || err != nil || len(decoded) != 32 || base64.RawURLEncoding.EncodeToString(decoded) != key.PublicKey {
+			return nil, ErrConflict
+		}
+		if _, duplicate := keys[key.ID]; duplicate {
+			return nil, ErrConflict
+		}
+		keys[key.ID] = key.PublicKey
+		active = active || key.Active
+	}
+	if !active {
+		return nil, ErrConflict
+	}
+	return keys, nil
 }
 
 func (c *Client) Policies(ctx context.Context) (json.RawMessage, error) {

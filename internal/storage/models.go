@@ -249,7 +249,7 @@ func (PlanLicenseMapping) TableName() string { return "plan_license_mappings" }
 
 type PaymentAccount struct {
 	ID                     string        `gorm:"column:id;type:char(36) CHARACTER SET ascii COLLATE ascii_bin;primaryKey;autoIncrement:false;uniqueIndex:uq_payment_environment,priority:1"`
-	Provider               string        `gorm:"column:provider;type:enum('stripe','paypal');not null;uniqueIndex:uq_payment_merchant,priority:1"`
+	Provider               string        `gorm:"column:provider;type:enum('stripe','paypal','waffo','paddle');not null;uniqueIndex:uq_payment_merchant,priority:1"`
 	Environment            string        `gorm:"column:environment;type:enum('sandbox','live');not null;uniqueIndex:uq_payment_merchant,priority:2;uniqueIndex:uq_payment_environment,priority:2"`
 	MerchantRef            string        `gorm:"column:merchant_ref;type:varchar(128) CHARACTER SET ascii COLLATE ascii_bin;not null;uniqueIndex:uq_payment_merchant,priority:3"`
 	CredentialSecretID     string        `gorm:"column:credential_secret_id;type:char(36) CHARACTER SET ascii COLLATE ascii_bin;not null"`
@@ -292,6 +292,7 @@ type Order struct {
 func (Order) TableName() string { return "orders" }
 
 type Payment struct {
+	CheckoutAttemptedAt   *time.Time      `gorm:"type:datetime(6)"`
 	CheckoutURL           *string         `gorm:"type:text"`
 	CheckoutRequest       json.RawMessage `gorm:"type:json"`
 	CaptureOperationID    *string         `gorm:"type:char(36) CHARACTER SET ascii COLLATE ascii_bin"`
@@ -315,6 +316,7 @@ type Payment struct {
 func (Payment) TableName() string { return "payments" }
 
 type Refund struct {
+	SubmittedAt      *time.Time `gorm:"type:datetime(6)"`
 	LeaseToken       *string    `gorm:"type:char(36) CHARACTER SET ascii COLLATE ascii_bin"`
 	LeaseUntil       *time.Time `gorm:"type:datetime(6)"`
 	ApprovedAt       *time.Time `gorm:"type:datetime(6)"`

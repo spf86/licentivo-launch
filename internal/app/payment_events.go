@@ -16,24 +16,33 @@ import (
 	"licentivo-launch/internal/storage"
 )
 
+type PaymentWebhookResponse struct {
+	Body   []byte
+	Header http.Header
+}
+
 func (s *Service) ReceivePaymentEvent(ctx context.Context, accountID string, headers http.Header, body []byte) error {
+	_, err := s.ReceivePaymentWebhook(ctx, accountID, headers, body)
+	return err
+}
+func (s *Service) ReceivePaymentWebhook(ctx context.Context, accountID string, headers http.Header, body []byte) (PaymentWebhookResponse, error) {
 	var account storage.PaymentAccount
 	if s.db.WithContext(ctx).First(&account, "id = ?", accountID).Error != nil {
-		return ErrNotFound
+		return PaymentWebhookResponse{}, ErrNotFound
 	}
 	client, err := s.paymentProvider(ctx, account)
 	if err != nil {
-		return ErrStorage
+		return PaymentWebhookResponse{}, ErrStorage
 	}
 	event, err := client.VerifyWebhook(ctx, headers, body)
 	if err != nil {
-		return problem(400, "WEBHOOK_INVALID", "通知验证未通过")
+		return PaymentWebhookResponse{}, problem(400, "WEBHOOK_INVALID", "通知验证未通过")
 	}
 	if string(event.Environment) != account.Environment || event.ID == "" {
-		return ErrInvalid
+		return PaymentWebhookResponse{}, ErrInvalid
 	}
 	sum := sha256.Sum256(body)
-	return databaseError(s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+	err = databaseError(s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var previous storage.PaymentEvent
 		err := tx.First(&previous, "account_id = ? AND external_event_id = ?", accountID, event.ID).Error
 		if err == nil {
@@ -65,6 +74,16 @@ func (s *Service) ReceivePaymentEvent(ctx context.Context, accountID string, hea
 		}
 		return nil
 	}))
+	if err != nil {
+		return PaymentWebhookResponse{}, err
+	}
+	if acknowledger, ok := client.(interface {
+		WebhookAcknowledgement() ([]byte, http.Header, error)
+	}); ok {
+		body, header, err := acknowledger.WebhookAcknowledgement()
+		return PaymentWebhookResponse{body, header}, err
+	}
+	return PaymentWebhookResponse{}, nil
 }
 func (s *Service) ProcessPaymentEvent(ctx context.Context) (handled bool, processErr error) {
 	var row storage.PaymentEvent
@@ -103,8 +122,8 @@ func (s *Service) ProcessPaymentEvent(ctx context.Context) (handled bool, proces
 		return true, databaseError(s.db.WithContext(ctx).Model(&row).Update("status", "review").Error)
 	}
 	switch event.Kind {
-	case "checkout.session.completed", "checkout.session.async_payment_succeeded", "CHECKOUT.ORDER.APPROVED", "PAYMENT.CAPTURE.COMPLETED":
-	case "refund.created", "refund.updated", "PAYMENT.CAPTURE.REFUNDED":
+	case "checkout.session.completed", "checkout.session.async_payment_succeeded", "CHECKOUT.ORDER.APPROVED", "PAYMENT.CAPTURE.COMPLETED", "PAYMENT_NOTIFICATION", "transaction.completed", "transaction.paid", "transaction.updated", "transaction.canceled":
+	case "refund.created", "refund.updated", "PAYMENT.CAPTURE.REFUNDED", "REFUND_NOTIFICATION", "adjustment.created", "adjustment.updated":
 		return true, s.processRefundEvent(ctx, row, event)
 	default:
 		return true, databaseError(s.db.WithContext(ctx).Model(&row).Update("status", "review").Error)
@@ -208,21 +227,22 @@ func (s *Service) MyProducts(ctx context.Context, p Principal, requestedLocale s
 	return views, nil
 }
 func (s *Service) SoftwareCredential(ctx context.Context, p Principal, productID, environment string) (map[string]any, error) {
-	if p.Session.Kind != "desktop" {
-		return nil, ErrForbidden
+	status, entitlement, err := s.softwareStatus(ctx, p, productID, environment)
+	if err != nil {
+		return nil, err
 	}
-	if p.User.EmailVerifiedAt == nil {
-		return nil, problem(403, "EMAIL_VERIFICATION_REQUIRED", "请先验证邮箱")
-	}
-	var entitlement storage.Entitlement
-	if s.db.WithContext(ctx).First(&entitlement, "user_id = ? AND product_id = ? AND environment = ?", p.User.ID, productID, environment).Error != nil {
-		return nil, ErrNotFound
-	}
-	if entitlement.ManualHold || entitlement.Status != "active" || entitlement.AppliedVersion == 0 || entitlement.AppliedVersion != entitlement.DesiredVersion || entitlement.ValidFrom == nil || entitlement.ValidFrom.After(now()) || (entitlement.ValidUntil != nil && !entitlement.ValidUntil.After(now())) {
-		return nil, problem(403, "ENTITLEMENT_UNAVAILABLE", "软件权益尚未开通、已到期或暂不可用")
+	if status.Status != "ready" {
+		code := http.StatusForbidden
+		if status.Status == "not_purchased" {
+			code = http.StatusNotFound
+		}
+		return nil, problem(code, status.Code, status.Message)
 	}
 	var binding storage.LicenseBinding
-	if s.db.WithContext(ctx).First(&binding, "entitlement_id = ? AND replaced_at IS NULL", entitlement.ID).Error != nil {
+	if err := s.db.WithContext(ctx).First(&binding, "entitlement_id = ? AND replaced_at IS NULL", entitlement.ID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, problem(403, "ENTITLEMENT_PENDING", "软件凭证正在恢复，请稍后重试；持续未完成时请联系商家")
+		}
 		return nil, ErrStorage
 	}
 	key, err := s.readSecret(ctx, binding.CredentialSecretID)

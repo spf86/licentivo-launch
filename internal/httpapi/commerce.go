@@ -235,6 +235,13 @@ func (a *application) registerCommerce(mux *http.ServeMux) {
 		if err != nil {
 			return nil, app.ErrInvalid
 		}
-		return map[string]bool{"received": true}, a.service.ReceivePaymentEvent(r.Context(), r.PathValue("account"), r.Header, body)
+		response, err := a.service.ReceivePaymentWebhook(r.Context(), r.PathValue("account"), r.Header, body)
+		if err != nil {
+			return nil, err
+		}
+		if len(response.Body) > 0 {
+			return response, nil
+		}
+		return map[string]bool{"received": true}, nil
 	})
 }

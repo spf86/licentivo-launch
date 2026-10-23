@@ -71,8 +71,8 @@ func (s *Service) CreateOrder(ctx context.Context, p Principal, in CheckoutInput
 	if s.RecoveryRequired(ctx) {
 		return CheckoutView{}, problem(409, "RECOVERY_REVIEW_REQUIRED", "商家正在核对恢复后的交易，暂不能创建付款")
 	}
-	if p.User.EmailVerifiedAt == nil {
-		return CheckoutView{}, problem(403, "EMAIL_VERIFICATION_REQUIRED", "请先验证邮箱")
+	if err := s.requireVerifiedEmail(ctx, s.db, p.User); err != nil {
+		return CheckoutView{}, err
 	}
 	if in.Action == "" {
 		in.Action = "purchase"
@@ -88,7 +88,7 @@ func (s *Service) CreateOrder(ctx context.Context, p Principal, in CheckoutInput
 		return CheckoutView{}, ErrInvalid
 	}
 	in.PurchasePeriods = purchasePeriods
-	if in.Environment != "sandbox" && in.Environment != "live" || in.Provider != "stripe" && in.Provider != "paypal" || len(in.IdempotencyKey) < 16 || len(in.IdempotencyKey) > 80 {
+	if in.Environment != "sandbox" && in.Environment != "live" || in.Provider != "stripe" && in.Provider != "paypal" && in.Provider != "waffo" && in.Provider != "paddle" || len(in.IdempotencyKey) < 16 || len(in.IdempotencyKey) > 80 {
 		return CheckoutView{}, ErrInvalid
 	}
 	fingerprint := sha256.Sum256(marshal(in))
@@ -196,8 +196,8 @@ func (s *Service) CreateOrder(ctx context.Context, p Principal, in CheckoutInput
 		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&user, "id = ? AND status = 'active'", p.User.ID).Error; err != nil {
 			return ErrUnauthorized
 		}
-		if user.EmailVerifiedAt == nil {
-			return ErrForbidden
+		if err := s.requireVerifiedEmail(ctx, tx, user); err != nil {
+			return err
 		}
 		if err := tx.First(&existing, "user_id = ? AND environment = ? AND idempotency_key = ?", user.ID, in.Environment, in.IdempotencyKey).Error; err == nil {
 			if !bytes.Equal(existing.RequestHash, fingerprint[:]) {
@@ -276,6 +276,9 @@ func (s *Service) CreateOrder(ctx context.Context, p Principal, in CheckoutInput
 			return err
 		}
 		request := ports.CheckoutRequest{OperationID: operation, OrderID: order.ID, Environment: ports.Environment(in.Environment), Amount: domain.Money{Currency: version.Currency, Minor: amount}, Description: plan.Name, ReturnURL: s.PublicURL() + "/account?checkout=" + order.ID, CancelURL: s.PublicURL() + "/account?checkout=" + order.ID}
+		request.CustomerID, request.CustomerEmail, request.RequestedAt = user.ID, user.Email, at
+		request.NotifyURL = s.PublicURL() + "/api/v1/webhooks/payments/" + account.ID
+		request.HostedCheckoutURL = s.PublicURL() + "/pay/paddle/" + account.ID
 		return tx.Create(&storage.Payment{ID: paymentID, OrderID: order.ID, AccountID: account.ID, Environment: in.Environment, OperationID: operation, CaptureOperationID: &captureOperation, CheckoutRequest: marshal(request), Status: "creating", Currency: version.Currency, AmountMinor: amount, CreatedAt: at}).Error
 	})
 	if err != nil {
@@ -310,7 +313,24 @@ func (s *Service) resumeCheckout(ctx context.Context, order storage.Order) (Chec
 	if json.Unmarshal(payment.CheckoutRequest, &request) != nil {
 		return CheckoutView{}, ErrStorage
 	}
-	checkout, externalErr := client.CreateCheckout(ctx, request)
+	var checkout ports.Checkout
+	var externalErr error
+	if recoverable, ok := client.(ports.RecoverablePaymentProvider); ok {
+		// Reserve the sole create attempt durably before sending an API that
+		// has no idempotency guarantee. Concurrent requests and restarts query.
+		at := now()
+		reserved := s.db.WithContext(ctx).Model(&storage.Payment{}).Where("id = ? AND checkout_attempted_at IS NULL AND external_checkout_id IS NULL", payment.ID).Update("checkout_attempted_at", at)
+		if reserved.Error != nil {
+			return CheckoutView{}, ErrStorage
+		}
+		if reserved.RowsAffected == 1 {
+			checkout, externalErr = client.CreateCheckout(ctx, request)
+		} else {
+			checkout, externalErr = recoverable.RecoverCheckout(ctx, request)
+		}
+	} else {
+		checkout, externalErr = client.CreateCheckout(ctx, request)
+	}
 	if externalErr != nil {
 		at := now().Add(time.Minute)
 		_ = s.db.WithContext(ctx).Model(&payment).Updates(map[string]any{"status": "unknown", "next_check_at": at}).Error

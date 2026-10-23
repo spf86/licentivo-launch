@@ -3,6 +3,8 @@
 /data/
 /artifacts/
 /.env
+/config.yaml
+/config.yml
 /.env.*
 !/.env.example
 *.log
@@ -13,6 +15,9 @@ examples/vendor/
 **/licensed-report.txt
 *.launchbackup
 *.secrets.json
+*.secrets.yaml
+*.secrets.yml
+sdk/ruby/lib/licentivo_launch/vendor/licentivo/native/
 **/obj/
 **/bin/
 **/__pycache__/

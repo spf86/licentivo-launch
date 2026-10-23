@@ -83,7 +83,7 @@ func runArchive(parent context.Context, command, path string, lookup func(string
 	defer storage.Close(db)
 	if command == "backup" {
 		configuration := map[string]string{}
-		for _, key := range []string{"LAUNCH_ENV", "LAUNCH_HTTP_ADDR", "LAUNCH_PUBLIC_URL", "LAUNCH_DATABASE_DSN"} {
+		for _, key := range []string{"LAUNCH_ENV", "LAUNCH_HTTP_ADDR", "LAUNCH_HTTPS_ADDR", "LAUNCH_PUBLIC_URL", "LAUNCH_DATABASE_DSN", "LAUNCH_UPLOAD_DIR", "LAUNCH_ADMIN_EMAIL", "LAUNCH_ADMIN_PASSWORD"} {
 			configuration[key] = lookup(key)
 		}
 		configuration["LAUNCH_MASTER_KEY"] = base64.StdEncoding.EncodeToString(cfg.MasterKey)
@@ -121,19 +121,18 @@ func runArchive(parent context.Context, command, path string, lookup func(string
 	}
 	recovered["LAUNCH_MASTER_KEY"] = base64.StdEncoding.EncodeToString(snap.MasterKey)
 	recovered["LAUNCH_DATABASE_DSN"] = cfg.DatabaseDSN
-	recovered["LAUNCH_SETUP_TOKEN"] = ""
-	raw, err := json.MarshalIndent(recovered, "", "  ")
+	raw, err := config.MarshalStartup(recovered)
 	if err != nil {
 		return backup.ErrArchive
 	}
 	defer clear(raw)
 	// Preserve recovery material even if a subsequent database operation fails.
-	if err := privateFile(path+".secrets.json", raw); err != nil {
+	if err := privateFile(path+".secrets.yaml", raw); err != nil {
 		return err
 	}
 	if err := storage.RestoreSnapshot(ctx, db, snap); err != nil {
 		return err
 	}
-	logger.Info("backup restored; review transactions after the backup timestamp before resuming commerce", "backup_created_at", snap.CreatedAt, "configuration_file", path+".secrets.json")
+	logger.Info("backup restored; review transactions after the backup timestamp before resuming commerce", "backup_created_at", snap.CreatedAt, "configuration_file", path+".secrets.yaml")
 	return nil
 }

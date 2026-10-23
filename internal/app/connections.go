@@ -24,6 +24,10 @@ type PaymentSettings struct {
 	ClientID      string `json:"client_id,omitempty"`
 	ClientSecret  string `json:"client_secret,omitempty"`
 	WebhookID     string `json:"webhook_id,omitempty"`
+	PrivateKey    string `json:"private_key,omitempty"`
+	PublicKey     string `json:"public_key,omitempty"`
+	ClientToken   string `json:"client_token,omitempty"`
+	ProductID     string `json:"product_id,omitempty"`
 }
 
 func provider(config PaymentSettings) (ports.PaymentProvider, error) {
@@ -32,6 +36,12 @@ func provider(config PaymentSettings) (ports.PaymentProvider, error) {
 	}
 	if config.Provider == "paypal" {
 		return payments.NewPayPal(payments.PayPalConfig{ClientID: config.ClientID, ClientSecret: config.ClientSecret, MerchantRef: config.MerchantRef, WebhookID: config.WebhookID, Environment: ports.Environment(config.Environment)})
+	}
+	if config.Provider == "waffo" {
+		return payments.NewWaffo(payments.WaffoConfig{APIKey: config.APIKey, MerchantRef: config.MerchantRef, PrivateKey: config.PrivateKey, PublicKey: config.PublicKey, Environment: ports.Environment(config.Environment)})
+	}
+	if config.Provider == "paddle" {
+		return payments.NewPaddle(payments.PaddleConfig{APIKey: config.APIKey, WebhookSecret: config.WebhookSecret, MerchantRef: config.MerchantRef, ClientToken: config.ClientToken, ProductID: config.ProductID, Environment: ports.Environment(config.Environment)})
 	}
 	return nil, ErrInvalid
 }
@@ -78,6 +88,27 @@ func (s *Service) SavePaymentSettings(ctx context.Context, p Principal, in Payme
 	}
 	if in.Environment != "sandbox" && in.Environment != "live" {
 		return ErrInvalid
+	}
+	// Editing a saved account never exposes its credentials to the browser.
+	// Empty secret fields retain their encrypted values for this exact account.
+	var previous storage.PaymentAccount
+	findErr := s.db.WithContext(ctx).First(&previous, "provider = ? AND environment = ? AND merchant_ref = ?", in.Provider, in.Environment, in.MerchantRef).Error
+	if findErr == nil {
+		raw, err := s.readSecret(ctx, previous.CredentialSecretID)
+		if err != nil {
+			return err
+		}
+		var saved PaymentSettings
+		if json.Unmarshal(raw, &saved) != nil {
+			return ErrStorage
+		}
+		for _, pair := range [][2]*string{{&in.APIKey, &saved.APIKey}, {&in.WebhookSecret, &saved.WebhookSecret}, {&in.ClientID, &saved.ClientID}, {&in.ClientSecret, &saved.ClientSecret}, {&in.PrivateKey, &saved.PrivateKey}, {&in.PublicKey, &saved.PublicKey}, {&in.ClientToken, &saved.ClientToken}} {
+			if *pair[0] == "" {
+				*pair[0] = *pair[1]
+			}
+		}
+	} else if !errors.Is(findErr, gorm.ErrRecordNotFound) {
+		return ErrStorage
 	}
 	client, err := provider(in)
 	if err != nil {
@@ -261,10 +292,17 @@ func (s *Service) Connections(ctx context.Context, p Principal) (map[string]any,
 	pay := make([]map[string]any, 0, len(accounts))
 	licenses := make([]map[string]any, 0, 1)
 	for _, v := range accounts {
+		var settings PaymentSettings
+		if raw, err := s.readSecret(ctx, v.CredentialSecretID); err == nil {
+			_ = json.Unmarshal(raw, &settings)
+		}
 		pay = append(pay, map[string]any{
 			"id": v.ID, "provider": v.Provider, "environment": v.Environment,
 			"merchant_ref": v.MerchantRef, "enabled": v.Enabled,
-			"webhook_url": s.PublicURL() + "/api/v1/webhooks/payments/" + v.ID,
+			"webhook_url":     s.PublicURL() + "/api/v1/webhooks/payments/" + v.ID,
+			"last_checked_at": v.LastCheckedAt, "last_check_error": v.LastCheckError,
+			"api_version": settings.APIVersion, "product_id": settings.ProductID, "webhook_id": settings.WebhookID,
+			"checkout_page_url": s.PublicURL() + "/pay/paddle/" + v.ID,
 		})
 	}
 	if connection.ID != "" {

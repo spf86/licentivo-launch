@@ -1,0 +1,61 @@
+// Maintainer-only: embed the reviewed SDK into each Launch distribution.
+// Consumers install Launch; they never run this preparation step.
+import fs from 'node:fs';
+import path from 'node:path';
+import crypto from 'node:crypto';
+import {fileURLToPath} from 'node:url';
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const source = path.resolve(process.argv[2] || path.join(root, 'examples/vendor/sdk'));
+if (fs.readFileSync(path.join(source, 'VERSION'), 'utf8').trim() !== '0.11.0') throw Error('Expected reviewed SDK 0.11.0');
+const records = [];
+function copy(from, to, transform = value => value) {
+  const input = path.join(source, from), output = path.join(root, to);
+  fs.mkdirSync(path.dirname(output), {recursive:true});
+  const raw = fs.readFileSync(input), result = transform(raw.toString('utf8'));
+  fs.writeFileSync(output, result);
+  records.push({source:from, destination:to.replaceAll('\\','/'), source_sha256:crypto.createHash('sha256').update(raw).digest('hex'), sha256:crypto.createHash('sha256').update(result).digest('hex')});
+}
+function tree(from, to, accept = () => true, transform = value => value) {
+  for (const entry of fs.readdirSync(path.join(source, from), {withFileTypes:true})) {
+    const rel = `${from}/${entry.name}`, dest = `${to}/${entry.name}`;
+    if (entry.isDirectory()) {
+      if (!['bin','obj','target','__pycache__','node_modules','.git'].includes(entry.name)) tree(rel,dest,accept,transform);
+    } else if (accept(rel)) copy(rel,dest,transform);
+  }
+}
+function notices(to) {
+  copy('LICENSE',`${to}/LICENSE`); copy('NOTICE',`${to}/NOTICE`); copy('VERSION',`${to}/VERSION`);
+}
+const go = 'pkg/launchclient/internal/licentivo';
+for (const name of fs.readdirSync(path.join(source,'go'))) {
+  if (name.endsWith('.go') && !name.endsWith('_test.go')) copy(`go/${name}`,`${go}/${name}`,text => text.replaceAll('licentivo/sdk/go/internal/', 'licentivo-launch/pkg/launchclient/internal/licentivo/internal/'));
+}
+tree('go/internal',`${go}/internal`,name=>name.endsWith('.go') && !name.endsWith('_test.go'));
+notices(go);
+const py = 'sdk/python/src/licentivo_launch/_vendor';
+copy('python/licentivo.py',`${py}/licentivo.py`,text=>text.replace('import licentivo_tasks','from . import licentivo_tasks'));
+copy('python/licentivo_tasks.py',`${py}/licentivo_tasks.py`); notices(py);
+fs.writeFileSync(path.join(root,py,'__init__.py'),'"""Private, pinned Licentivo SDK implementation."""\n');
+const js = 'sdk/javascript/src/vendor';
+for (const name of ['licentivo.mjs','feature-tasks.mjs','quickstart.mjs','app.mjs']) copy(`javascript/${name}`,`${js}/${name}`);
+notices(js);
+for (const name of fs.readdirSync(path.join(source,'csharp'))) if (name.endsWith('.cs')) copy(`csharp/${name}`,`sdk/csharp/vendor/${name}`);
+notices('sdk/csharp/vendor');
+tree('java/src','sdk/java/src',name=>name.endsWith('.java'));
+notices('sdk/java/vendor');
+copy('rust/src/lib.rs','sdk/rust/vendor/rust/lib.rs');
+tree('c','sdk/rust/vendor/c',name=>/\.(c|h)$/.test(name)||/LICEN[CS]E|NOTICE/i.test(name));
+notices('sdk/rust/vendor');
+const rb = 'sdk/ruby/lib/licentivo_launch/vendor';
+copy('ruby/lib/licentivo.rb',`${rb}/licentivo.rb`,text=>text
+  .replace("ENV['LICENTIVO_NATIVE_LIBRARY'] || ",'')
+  .replace("path = [suffix, 'so', 'dll', 'dylib'].uniq.map { |ext| File.join(folder, \"licentivo_native.#{ext}\") }", "folders = [folder]\n        spec = Gem.loaded_specs['licentivo-launch'] if defined?(Gem)\n        folders << File.join(spec.extension_dir, 'licentivo_launch/vendor/licentivo/native') if spec\n        path = folders.product([suffix, 'so', 'dll', 'dylib'].uniq).map { |dir, ext| File.join(dir, \"licentivo_native.#{ext}\") }")
+  .replace('Licentivo native core is missing. Run ruby sdk/ruby/build_native.rb for a source bundle, or install the compiled gem. See sdk/ruby/README.md.', 'Launch private native core is missing. Install the Launch gem for your platform or build its source gem with the normal C11/curl development tools.'));
+tree('c','sdk/ruby/vendor/c',name=>/\.(c|h)$/.test(name)||/LICEN[CS]E|NOTICE/i.test(name));
+notices('sdk/ruby/vendor');
+fs.mkdirSync(path.join(root,rb,'licentivo/native'),{recursive:true});
+for (const name of ['CMakeLists.txt','LicentivoConfig.cmake.in','LICENSE','NOTICE','VERSION']) copy(name,`sdk/native/vendor/sdk/${name}`);
+tree('c','sdk/native/vendor/sdk/c',name=>/\.(c|h)$/.test(name)||/LICEN[CS]E|NOTICE/i.test(name));
+tree('cpp','sdk/native/vendor/sdk/cpp',name=>name.endsWith('.hpp'));
+fs.writeFileSync(path.join(root,'sdk/managed-sdk-manifest.json'),JSON.stringify({schema_version:1,sdk_version:'0.11.0',changes:'Only private import and native-library relocation; authorization and cryptographic logic are unchanged.',files:records},null,2)+'\n');
+console.log(`Embedded SDK 0.11.0: ${records.length} files, with source and destination SHA-256 records.`);

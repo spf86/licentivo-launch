@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"strings"
 	"sync/atomic"
 	"syscall"
@@ -25,7 +24,7 @@ import (
 	"licentivo-launch/internal/storage"
 )
 
-var version = "0.2.0-beta.1"
+var version = "0.2.0-beta.2"
 
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stderr, nil))
@@ -36,33 +35,37 @@ func main() {
 }
 
 func run(logger *slog.Logger) error {
-	command := "serve"
-	if len(os.Args) > 1 {
-		command = os.Args[1]
+	command, archivePath, configPath, err := parseCommand(os.Args[1:])
+	if err != nil {
+		return err
+	}
+	getenv := func(key string) string {
+		if key == "LAUNCH_CONFIG_FILE" && configPath != "" {
+			return configPath
+		}
+		return os.Getenv(key)
 	}
 	if command == "dev" {
-		if os.Getenv("LAUNCH_CONFIG_FILE") == "" {
-			path, err := filepath.Abs(filepath.Join(".local", "dev", "launch-config.json"))
+		if getenv("LAUNCH_CONFIG_FILE") == "" {
+			path, err := config.DefaultPath(".")
 			if err != nil {
-				return errors.New("could not resolve local development configuration")
+				return err
 			}
-			if _, err := os.Stat(path); err != nil {
-				return errors.New("local development configuration is missing: .local/dev/launch-config.json")
-			}
-			if err := os.Setenv("LAUNCH_CONFIG_FILE", path); err != nil {
-				return errors.New("could not select local development configuration")
+			if path == "" {
+				return errors.New("configuration is missing; run launch init and edit config.yaml")
 			}
 		}
 		command = "serve"
 	}
-	if len(os.Args) > 2 && command != "backup" && command != "restore" || (command == "backup" || command == "restore") && len(os.Args) != 3 {
-		return errors.New("usage: launch [init|serve|dev|check|keygen|version] or launch [backup|restore] PATH")
-	}
 	if command == "init" {
-		if err := initializeConfiguration("."); err != nil {
+		if err := initializeConfigurationAt(".", getenv("LAUNCH_CONFIG_FILE")); err != nil {
 			return err
 		}
-		fmt.Fprintln(os.Stdout, "Created .local/dev/launch-config.json with a persistent master key. Set LAUNCH_DATABASE_DSN in that file, then run: launch dev")
+		if getenv("LAUNCH_CONFIG_FILE") == "" {
+			fmt.Fprintln(os.Stdout, "Created config.yaml with a persistent master key. Edit database_dsn in that file, then run: launch serve")
+		} else {
+			fmt.Fprintln(os.Stdout, "Created private YAML configuration with a persistent master key. Edit database_dsn, then start with the same --config path or LAUNCH_CONFIG_FILE.")
+		}
 		return nil
 	}
 	if command == "keygen" {
@@ -77,15 +80,12 @@ func run(logger *slog.Logger) error {
 		fmt.Fprintln(os.Stdout, version)
 		return nil
 	}
-	if command != "serve" && command != "check" && command != "backup" && command != "restore" {
-		return errors.New("usage: launch [init|serve|dev|check|keygen|version]")
-	}
-	lookup, err := config.Lookup(os.Getenv)
+	lookup, err := config.Lookup(getenv)
 	if err != nil {
 		return err
 	}
 	if command == "backup" || command == "restore" {
-		return runArchive(context.Background(), command, os.Args[2], lookup, logger)
+		return runArchive(context.Background(), command, archivePath, lookup, logger)
 	}
 	cfg, err := config.Load(lookup)
 	if err != nil {

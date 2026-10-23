@@ -2,7 +2,10 @@ param(
     [string]$MySQLBin = 'C:\Program Files\MySQL\MySQL Server 8.0\bin',
     [switch]$Preview,
 	[int]$PreviewPort = 18080,
-	[string]$PreviewRestore = ''
+	[string]$PreviewRestore = '',
+	[switch]$KeepMySQL,
+	[switch]$SkipTests,
+	[switch]$DetachPreview
 )
 $ErrorActionPreference = 'Stop'
 function Stop-TaskProcess([Diagnostics.Process]$Process) {
@@ -72,6 +75,7 @@ $taskDatabase = 'launch_test_' + [Guid]::NewGuid().ToString('N')
 $taskAppDatabase = $taskDatabase + '_app'
 $taskRestoreDatabase = $taskDatabase + '_restore'
 $taskBootstrapDatabase = $taskDatabase + '_bootstrap'
+$taskProviderDatabase = $taskDatabase + '_providers'
 $taskPreviewDatabase = $taskDatabase + '_preview'
 $taskInitFile = Join-Path $taskRun 'initialize-test.sql'
 $taskInitSQL = "ALTER USER 'root'@'localhost' IDENTIFIED BY '$taskPassword';`nCREATE DATABASE $taskDatabase CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;`nCREATE DATABASE $taskAppDatabase CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;`nCREATE USER 'launch_test'@'127.0.0.1' IDENTIFIED BY '$taskPassword';`nGRANT ALL ON $taskDatabase.* TO 'launch_test'@'127.0.0.1';`nGRANT ALL ON $taskAppDatabase.* TO 'launch_test'@'127.0.0.1';`n"
@@ -79,12 +83,14 @@ $taskInitSQL = "ALTER USER 'root'@'localhost' IDENTIFIED BY '$taskPassword';`nCR
 [IO.File]::AppendAllText($taskInitFile, "CREATE DATABASE $taskRestoreDatabase CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;`nGRANT ALL ON $taskRestoreDatabase.* TO 'launch_test'@'127.0.0.1';`n", [Text.UTF8Encoding]::new($false))
 [IO.File]::AppendAllText($taskInitFile, "CREATE DATABASE $taskPreviewDatabase CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;`nGRANT ALL ON $taskPreviewDatabase.* TO 'launch_test'@'127.0.0.1';`n", [Text.UTF8Encoding]::new($false))
 [IO.File]::AppendAllText($taskInitFile, "CREATE DATABASE $taskBootstrapDatabase CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;`nGRANT ALL ON $taskBootstrapDatabase.* TO 'launch_test'@'127.0.0.1';`n", [Text.UTF8Encoding]::new($false))
+[IO.File]::AppendAllText($taskInitFile, "CREATE DATABASE $taskProviderDatabase CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;`nGRANT ALL ON $taskProviderDatabase.* TO 'launch_test'@'127.0.0.1';`n", [Text.UTF8Encoding]::new($false))
 $taskServerArgs = @('--no-defaults', ('--basedir="' + $taskBase + '"'), ('--datadir="' + $taskData + '"'), '--bind-address=127.0.0.1', "--port=$taskPort", '--mysqlx=OFF', '--skip-name-resolve', ('--init-file="' + $taskInitFile + '"'), '--console')
 $taskServer = Start-Process -FilePath $taskMySQLD -ArgumentList $taskServerArgs -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $taskRun 'server.out') -RedirectStandardError (Join-Path $taskRun 'server.err')
 $taskPreviousDSN = $env:LAUNCH_TEST_DATABASE_DSN
 $taskPreviousAppDSN = $env:LAUNCH_TEST_APP_DATABASE_DSN
 $taskPreviousRestoreDSN = $env:LAUNCH_TEST_RESTORE_DATABASE_DSN
 $taskPreviousBootstrapDSN = $env:LAUNCH_TEST_BOOTSTRAP_DATABASE_DSN
+$taskPreviousProviderDSN = $env:LAUNCH_TEST_PROVIDER_DATABASE_DSN
 $taskTestExit = 1
 $taskPreviewProcess = $null
 try {
@@ -104,10 +110,13 @@ try {
     $env:LAUNCH_TEST_APP_DATABASE_DSN = "launch_test:$taskPassword@tcp(127.0.0.1:$taskPort)/$taskAppDatabase"
     $env:LAUNCH_TEST_RESTORE_DATABASE_DSN = "launch_test:$taskPassword@tcp(127.0.0.1:$taskPort)/$taskRestoreDatabase"
     $env:LAUNCH_TEST_BOOTSTRAP_DATABASE_DSN = "launch_test:$taskPassword@tcp(127.0.0.1:$taskPort)/$taskBootstrapDatabase"
+    $env:LAUNCH_TEST_PROVIDER_DATABASE_DSN = "launch_test:$taskPassword@tcp(127.0.0.1:$taskPort)/$taskProviderDatabase"
+	$taskState=@{mysql_pid=$taskServer.Id; mysql_port=$taskPort; database_dsn=$env:LAUNCH_TEST_DATABASE_DSN; app_database_dsn=$env:LAUNCH_TEST_APP_DATABASE_DSN;restore_database_dsn=$env:LAUNCH_TEST_RESTORE_DATABASE_DSN;bootstrap_database_dsn=$env:LAUNCH_TEST_BOOTSTRAP_DATABASE_DSN;provider_database_dsn=$env:LAUNCH_TEST_PROVIDER_DATABASE_DSN}
+	[IO.File]::WriteAllText((Join-Path $taskRun 'run-state.json'),($taskState|ConvertTo-Json),[Text.UTF8Encoding]::new($false))
+	Write-Output ('Private test state: '+(Join-Path $taskRun 'run-state.json'))
     Push-Location -LiteralPath $taskRoot
     try {
-        go test ./... -count=1
-        $taskTestExit = $LASTEXITCODE
+		if($SkipTests){$taskTestExit=0}else{go test ./... -count=1; $taskTestExit=$LASTEXITCODE}
         if ($Preview -and $taskTestExit -eq 0) {
 			go build -o (Join-Path $taskRoot 'bin\launch.exe') ./cmd/launch
 			if ($LASTEXITCODE -ne 0) { throw 'Preview build failed.' }
@@ -207,7 +216,7 @@ try {
 
 			Write-Output "Clean preview: $taskPreviewURL"
 			Write-Output 'Preview login: owner@example.invalid / owner-password-changed-for-tests'
-            $taskPreviewProcess.WaitForExit()
+			if(-not $DetachPreview){$taskPreviewProcess.WaitForExit()}
         }
     } finally { Pop-Location }
 } finally {
@@ -215,8 +224,11 @@ try {
     $env:LAUNCH_TEST_APP_DATABASE_DSN = $taskPreviousAppDSN
     $env:LAUNCH_TEST_RESTORE_DATABASE_DSN = $taskPreviousRestoreDSN
     $env:LAUNCH_TEST_BOOTSTRAP_DATABASE_DSN = $taskPreviousBootstrapDSN
-    Stop-TaskProcess $taskPreviewProcess
-    Stop-TaskProcess $taskServer
-	Stop-TaskMySQLProcess $taskData
+    $env:LAUNCH_TEST_PROVIDER_DATABASE_DSN = $taskPreviousProviderDSN
+	if(-not $DetachPreview){Stop-TaskProcess $taskPreviewProcess}
+	if(-not $KeepMySQL){
+		Stop-TaskProcess $taskServer
+		Stop-TaskMySQLProcess $taskData
+	}else{Write-Output ('Test MySQL remains running on 127.0.0.1:'+ $taskPort)}
 }
 exit $taskTestExit

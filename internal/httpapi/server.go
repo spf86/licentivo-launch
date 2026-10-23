@@ -40,6 +40,7 @@ func Handler(options Options) http.Handler {
 	}
 	application := &application{service: options.App, publicURL: publicURLProvider, forceSecureCookies: options.SecureCookies}
 	application.register(mux)
+	application.registerPaddleCheckout(mux)
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
 		respond(w, r, http.StatusOK, map[string]any{"status": "ok"})
 	})

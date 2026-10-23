@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable>
+    <PackageId>Licentivo.Launch</PackageId><Version>0.1.1</Version>
+    <Description>Launch merchant accounts with official Licentivo runtime authorization.</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile><PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <Authors>Licentivo Launch</Authors>
+    <PackageProjectUrl>https://github.com/spf86/licentivo-launch-sdk</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/spf86/licentivo-launch-sdk</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>licentivo;launch;licensing;authentication;sdk</PackageTags>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="BouncyCastle.Cryptography" Version="2.6.2" />
+    <None Include="vendor/LICENSE;vendor/NOTICE;vendor/VERSION" Pack="true" PackagePath="third_party/licentivo/" />
+  </ItemGroup>
+  <ItemGroup><None Update="README.md" Pack="true" PackagePath="/" /></ItemGroup>
+</Project>

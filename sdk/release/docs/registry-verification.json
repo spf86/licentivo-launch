@@ -1,0 +1,90 @@
+{
+  "version": "0.1.1",
+  "source_commit": "ee05e70fd67eafaca1a7ea2cbb619d0f501a2495",
+  "release": "https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.1",
+  "verified_at": "2026-10-23T10:29:19.238783+00:00",
+  "public_installations_passed": 9,
+  "total_languages": 9,
+  "all_nine_published_and_installed": true,
+  "installation_platform": "Windows amd64; GNU toolchain for native consumers",
+  "linux_source_and_signed_runtime_checks": "9/9 passed",
+  "linux_ci_url": "https://github.com/spf86/licentivo-launch-sdk/actions/runs/39933895585",
+  "requires_separate_official_sdk": false,
+  "configuration_files_required": false,
+  "results": {
+    "python": {
+      "registry": "pypi",
+      "package": "licentivo-launch",
+      "version": "0.1.1",
+      "sha256": "8464e123b44da8cff86252d3dcbc994789532695c477f0966f152e61ac1112d2",
+      "direct_initialization": "passed",
+      "normal_dependency_install": "passed",
+      "isolated_venv": true
+    },
+    "javascript": {
+      "registry": "npm",
+      "package": "@licentivo/launch",
+      "version": "0.1.1",
+      "sha256": "78c585c4a3e8b16b1b604df82b883b54db68def74236a1225a6f7607be84e40a",
+      "direct_initialization": "passed",
+      "typescript": "passed"
+    },
+    "csharp": {
+      "registry": "nuget",
+      "package": "Licentivo.Launch",
+      "version": "0.1.1",
+      "direct_initialization": "passed",
+      "payload_files_identical": 8,
+      "repository_signature_present": true,
+      "sha256": "1a1b19455ec79e1499f54a5801bfd6837e2a4f7a06277a94bc8c6422134e6306"
+    },
+    "java": {
+      "registry": "maven-central",
+      "package": "com.licentivo.launch:launch-client",
+      "version": "0.1.1",
+      "source": "https://repo.maven.apache.org/maven2/com/licentivo/launch/launch-client/0.1.1/",
+      "sha256": "903f146d5d0519963d61697e211e7e2ae36555e70cead998abe760076d27f513",
+      "jar_and_pom_identical": true,
+      "signed_publication_files_verified": 8,
+      "version_metadata_verified": true,
+      "direct_initialization": "passed"
+    },
+    "rust": {
+      "registry": "crates.io",
+      "package": "licentivo-launch",
+      "version": "0.1.1",
+      "sha256": "5f7e8ef67fc19e1f6308ecb9f3f2c7b52d79b07b6720f7a25713ed2b23462e2a",
+      "direct_initialization": "passed"
+    },
+    "ruby": {
+      "registry": "rubygems",
+      "package": "licentivo-launch",
+      "version": "0.1.1",
+      "platform": "x64-mingw-ucrt",
+      "sha256": "efa9f40b0eeb9661d96581185935b52161e1c99057632cbcffb970ec05721d2d",
+      "direct_initialization": "passed"
+    },
+    "go": {
+      "registry": "go-modules",
+      "package": "github.com/spf86/licentivo-launch-sdk/pkg/launchclient",
+      "version": "0.1.1",
+      "module_checksum": "h1:JrQOa6Kq068PyCBPiTnpEQ+ynI0TV2aN8XDDgYmzAGc=",
+      "direct_initialization": "passed"
+    },
+    "c": {
+      "registry": "github-releases",
+      "version": "0.1.1",
+      "platform": "windows-amd64-gnu",
+      "direct_initialization": "passed",
+      "downloaded_release_checksums_verified": true
+    },
+    "cpp": {
+      "registry": "github-releases",
+      "version": "0.1.1",
+      "platform": "windows-amd64-gnu",
+      "direct_initialization": "passed",
+      "downloaded_release_checksums_verified": true
+    }
+  },
+  "external_acceptance_complete": false
+}

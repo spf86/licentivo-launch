@@ -10,6 +10,9 @@ func builtInUIStrings(locale string) map[string]string {
 	for key, value := range builtInUICatalogs[canonicalLocale(locale)] {
 		values[key] = value
 	}
+	for key, value := range registrationStrings(locale) {
+		values[key] = value
+	}
 	return values
 }
 

@@ -1,7 +1,7 @@
 #Requires -Version 7.4
 param(
     [ValidatePattern('^[0-9]+\.[0-9]+\.[0-9]+(?:-[A-Za-z0-9.-]+)?$')]
-    [string]$Version = '0.2.0-beta.1',
+    [string]$Version = '0.2.0-beta.2',
     [string]$OutputDirectory = ''
 )
 
@@ -37,9 +37,8 @@ try {
             Copy-Item -LiteralPath (Join-Path $taskRoot 'docs/binary-installation.md') -Destination (Join-Path $taskStage 'README.md')
             Copy-Item -LiteralPath (Join-Path $taskRoot 'docs/binary-installation.md') -Destination (Join-Path $taskStage 'INSTALL.md')
             Copy-Item -LiteralPath (Join-Path $taskRoot 'LICENSE') -Destination (Join-Path $taskStage 'LICENSE')
+            Copy-Item -LiteralPath (Join-Path $taskRoot 'config.example.yaml') -Destination (Join-Path $taskStage 'config.example.yaml')
             Copy-Item -LiteralPath (Join-Path $taskRoot 'third_party') -Destination (Join-Path $taskStage 'third_party') -Recurse
-            New-Item -ItemType Directory -Path (Join-Path $taskStage 'config') -Force | Out-Null
-            Copy-Item -LiteralPath (Join-Path $taskRoot 'config/launch-config.example.json') -Destination (Join-Path $taskStage 'config/launch-config.example.json')
             [IO.File]::WriteAllText((Join-Path $taskStage 'VERSION.txt'), "$Version`n", [Text.UTF8Encoding]::new($false))
             [IO.File]::WriteAllText((Join-Path $taskStage 'BUILD-INFO.txt'), "Version: $Version`nSource commit: $taskCommit`nOS: $taskOS`nArchitecture: $taskArch`nCGO_ENABLED: 0`n", [Text.UTF8Encoding]::new($false))
             if ($taskOS -eq 'windows') {

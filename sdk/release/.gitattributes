@@ -1,0 +1,8 @@
+* text=auto eol=lf
+*.dll binary
+*.a binary
+*.zip binary
+*.gem binary
+*.crate binary
+*.jar binary
+*.whl binary

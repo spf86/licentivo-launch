@@ -143,6 +143,9 @@ func (a *testApp) expect(w *httptest.ResponseRecorder, status int) {
 }
 func data[T any](t *testing.T, w *httptest.ResponseRecorder) T {
 	t.Helper()
+	if w.Code < 200 || w.Code >= 300 {
+		t.Fatalf("expected successful JSON response, HTTP %d: %s", w.Code, w.Body.String())
+	}
 	var result struct {
 		Data T `json:"data"`
 	}
@@ -316,7 +319,7 @@ func TestApplicationFlows(t *testing.T) {
 		t.Fatalf("test mail was sent to the wrong administrator: %+v", mailCheck)
 	}
 	mailRecorder.mu.Lock()
-	if len(mailRecorder.configs) != 1 || len(mailRecorder.messages) != 1 || mailRecorder.configs[0].Host != mailInput.Host || mailRecorder.configs[0].Port != "587" || mailRecorder.configs[0].Username != mailInput.Username || mailRecorder.configs[0].ImplicitTLS || mailRecorder.configs[0].Password != mailInput.APIKey || mailRecorder.messages[0].To != "deliverability@example.invalid" || !strings.Contains(mailRecorder.messages[0].Subject, "邮件发送测试") || !strings.HasPrefix(mailRecorder.messages[0].IdempotencyKey, "launch-mail-check/") {
+	if len(mailRecorder.configs) != 1 || len(mailRecorder.messages) != 1 || mailRecorder.configs[0].Host != mailInput.Host || mailRecorder.configs[0].Port != "587" || mailRecorder.configs[0].Username != mailInput.Username || mailRecorder.configs[0].ImplicitTLS || mailRecorder.configs[0].Password != mailInput.APIKey || mailRecorder.messages[0].To != "deliverability@example.invalid" || !strings.Contains(mailRecorder.messages[0].Subject, "mail delivery test") || !strings.HasPrefix(mailRecorder.messages[0].IdempotencyKey, "launch-mail-check/") {
 		mailRecorder.mu.Unlock()
 		t.Fatal("Resend connection check did not use the selected secure configuration")
 	}

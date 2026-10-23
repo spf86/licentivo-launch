@@ -77,6 +77,9 @@ func (s *Service) reconcilePayment(ctx context.Context, orderID string) error {
 		if err := s.applyPaidCoverage(tx, user, order, paidAt); err != nil {
 			return err
 		}
+		if err := s.queueCustomerNotification(tx, user.ID, "Payment confirmed", "Payment for order "+order.ID+" has been confirmed. Software access is being prepared. View the order in your account."); err != nil {
+			return err
+		}
 		return audit(tx, "", "payment.confirmed", "order", order.ID, "")
 	}))
 }
@@ -188,6 +191,11 @@ func (s *Service) ProcessAuthorization(ctx context.Context) (bool, error) {
 			}
 			if err := tx.Model(&entitlement).Updates(map[string]any{"applied_version": result.Version, "status": state}).Error; err != nil {
 				return err
+			}
+			if state == "active" {
+				if err := s.queueCustomerNotification(tx, entitlement.UserID, "Your software access is ready", "Your software access has been activated or updated. Sign in to your account to view your products, downloads, and access period."); err != nil {
+					return err
+				}
 			}
 		}
 		sealed, err := s.vault.Seal(marshal(map[string]any{"operation_id": result.OperationID, "license_id": result.LicenseID, "version": result.Version}), "sync-result:"+task.OperationID)

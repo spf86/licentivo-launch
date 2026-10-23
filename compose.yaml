@@ -6,7 +6,7 @@ x-launch: &launch
     LAUNCH_ENV: ${LAUNCH_ENV:-development}
     LAUNCH_HTTP_ADDR: 0.0.0.0:8080
     LAUNCH_PUBLIC_URL: ${LAUNCH_PUBLIC_URL:-http://localhost:8080}
-    LAUNCH_DATABASE_DSN: ${MYSQL_USER:-launch}:${MYSQL_PASSWORD:?Set MYSQL_PASSWORD}@tcp(mysql:3306)/${MYSQL_DATABASE:-launch}
+    LAUNCH_DATABASE_DSN: "${MYSQL_USER:-launch}:${MYSQL_PASSWORD:?Set MYSQL_PASSWORD}@tcp(mysql:3306)/${MYSQL_DATABASE:-launch}?parseTime=true&loc=UTC&charset=utf8mb4"
     LAUNCH_MASTER_KEY: ${LAUNCH_MASTER_KEY:?Generate LAUNCH_MASTER_KEY with launch keygen}
     LAUNCH_ADMIN_EMAIL: ${LAUNCH_ADMIN_EMAIL:-admin@example.com}
     LAUNCH_ADMIN_PASSWORD: ${LAUNCH_ADMIN_PASSWORD:-LaunchAdmin123!}

@@ -122,6 +122,12 @@ type PolicyCatalogProvider interface {
 	PolicyDefinition(context.Context, string) (PolicyDefinition, error)
 }
 
+// ProductPublicKeyProvider reads only the mapped product's signing public keys.
+// API credentials and signing private keys never enter application integrations.
+type ProductPublicKeyProvider interface {
+	ProductPublicKeys(context.Context, string) (map[string]string, error)
+}
+
 type PolicyCheck struct {
 	ProductID     string          `json:"product_id"`
 	PolicyID      string          `json:"policy_id"`

@@ -250,19 +250,21 @@ func (s *Service) RollbackPlan(ctx context.Context, p Principal, planID, version
 }
 
 type SiteView struct {
-	Installed        bool              `json:"installed"`
-	Brand            Brand             `json:"brand"`
-	Product          *ProductView      `json:"product"`
-	Products         []ProductView     `json:"products"`
-	Plans            []PlanView        `json:"plans"`
-	Environment      string            `json:"environment"`
-	SalesEnabled     bool              `json:"sales_enabled"`
-	PaymentProviders []string          `json:"payment_providers"`
-	Locale           string            `json:"locale"`
-	SourceLocale     string            `json:"source_locale"`
-	SupportedLocales []LocaleOption    `json:"supported_locales"`
-	TranslationReady bool              `json:"translation_ready"`
-	UI               map[string]string `json:"ui"`
+	MailEnabled               bool              `json:"mail_enabled"`
+	EmailVerificationRequired bool              `json:"email_verification_required"`
+	Installed                 bool              `json:"installed"`
+	Brand                     Brand             `json:"brand"`
+	Product                   *ProductView      `json:"product"`
+	Products                  []ProductView     `json:"products"`
+	Plans                     []PlanView        `json:"plans"`
+	Environment               string            `json:"environment"`
+	SalesEnabled              bool              `json:"sales_enabled"`
+	PaymentProviders          []string          `json:"payment_providers"`
+	Locale                    string            `json:"locale"`
+	SourceLocale              string            `json:"source_locale"`
+	SupportedLocales          []LocaleOption    `json:"supported_locales"`
+	TranslationReady          bool              `json:"translation_ready"`
+	UI                        map[string]string `json:"ui"`
 }
 
 func (s *Service) Site(ctx context.Context, environment, productSlug, requestedLocale string) (SiteView, error) {
@@ -275,6 +277,15 @@ func (s *Service) Site(ctx context.Context, environment, productSlug, requestedL
 	}
 	source, locale := requestedContentLocale(s.db.WithContext(ctx), requestedLocale)
 	view := SiteView{Installed: settings.InstallationCompletedAt != nil, Products: []ProductView{}, Plans: []PlanView{}, PaymentProviders: []string{}, Environment: environment, Locale: locale, SourceLocale: source, SupportedLocales: supportedLocales(), TranslationReady: true, UI: builtInUIStrings(locale)}
+	mailRequired, err := emailVerificationRequired(s.db.WithContext(ctx))
+	if err != nil {
+		return view, err
+	}
+	view.EmailVerificationRequired = mailRequired
+	view.MailEnabled, err = s.mailConfigured(ctx)
+	if err != nil {
+		return view, err
+	}
 	if json.Unmarshal(settings.Brand, &view.Brand) != nil {
 		return view, ErrStorage
 	}
@@ -716,10 +727,6 @@ func (s *Service) PublishPlan(ctx context.Context, p Principal, planID, versionI
 	if environment != "sandbox" && environment != "live" {
 		return ErrInvalid
 	}
-	mailConfigured, err := s.mailConfigured(ctx)
-	if err != nil {
-		return err
-	}
 	var candidate storage.PlanVersion
 	if err := s.db.WithContext(ctx).First(&candidate, "id = ? AND plan_id = ?", versionID, planID).Error; err != nil {
 		return databaseError(err)
@@ -733,13 +740,13 @@ func (s *Service) PublishPlan(ctx context.Context, p Principal, planID, versionI
 			caps, err := client.Capabilities(ctx)
 			var accounts int64
 			policyErr := checkPolicy(ctx, client, candidate, mapping, "")
-			if err == nil && caps.ValidateSales() == nil && policyErr == nil && mailConfigured && s.db.WithContext(ctx).Model(&storage.PaymentAccount{}).Where("environment = ? AND enabled = true", environment).Count(&accounts).Error == nil && accounts > 0 {
+			if err == nil && caps.ValidateSales() == nil && policyErr == nil && s.db.WithContext(ctx).Model(&storage.PaymentAccount{}).Where("environment = ? AND enabled = true", environment).Count(&accounts).Error == nil && accounts > 0 {
 				previewOnly = false
 			}
 		}
 	}
 	if environment == "live" && previewOnly {
-		return problem(409, "SALES_CONNECTION_REQUIRED", "正式发布前，请配置正式收款和邮件发送，并为套餐选择可自动发放的 Licentivo 授权")
+		return problem(409, "SALES_CONNECTION_REQUIRED", "正式发布前，请配置正式收款，并为套餐选择可自动发放的 Licentivo 授权")
 	}
 	return databaseError(s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var plan storage.Plan
@@ -857,9 +864,9 @@ func (s *Service) Dashboard(ctx context.Context, p Principal) (Dashboard, error)
 	licenseReady := counts["licensing"] > 0 && counts["mappings"] > 0
 	v.Readiness = []ReadinessItem{
 		{Key: "product", Label: "公开产品", Ready: counts["products"] > 0, Detail: "发布至少一个带介绍和下载信息的软件产品", Target: "#/admin/product"},
-		{Key: "mail", Label: "Resend 邮件", Ready: mailConfigured, Detail: "保存 Resend API Key、发件地址并发送测试邮件", Target: "#/admin/settings"},
+		{Key: "mail", Label: "邮件（可选）", Ready: true, Detail: "未启用邮件时允许直接注册；需要邮件时可配置 Resend 或 SMTP", Target: "#/admin/settings/mail"},
 		{Key: "licensing", Label: "Licentivo 授权", Ready: licenseReady, Detail: "连接管理 API，并让至少一个套餐选择授权策略", Target: "#/admin/settings"},
-		{Key: "sandbox_payment", Label: "测试收款", Ready: counts["sandbox_payments"] > 0, Detail: "配置 Stripe 或 PayPal 测试账号并完成一笔测试订单", Target: "#/admin/settings"},
+		{Key: "sandbox_payment", Label: "测试收款", Ready: counts["sandbox_payments"] > 0, Detail: "配置支付渠道，并完成一次测试付款和退款", Target: "#/admin/settings/payments"},
 		{Key: "translation", Label: "DeepL 多语言", Ready: counts["translation"] > 0, Detail: "连接 DeepL，自动生成其余九种语言", Target: "#/admin/settings"},
 		{Key: "live_payment", Label: "正式收款", Ready: counts["live_payments"] > 0, Detail: "验证并保存正式收款凭证和 Webhook", Target: "#/admin/settings"},
 		{Key: "live_plan", Label: "正式套餐", Ready: counts["live_plans"] > 0, Detail: "完成外部服务配置后，将套餐发布到正式环境", Target: "#/admin/plans"},

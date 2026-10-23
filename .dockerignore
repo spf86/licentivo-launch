@@ -1,6 +1,8 @@
 .cache
 .git
 .env
+/config.yaml
+/config.yml
 .env.*
 bin
 data
@@ -13,3 +15,5 @@ examples/vendor
 **/__pycache__
 *.launchbackup
 *.secrets.json
+*.secrets.yaml
+*.secrets.yml

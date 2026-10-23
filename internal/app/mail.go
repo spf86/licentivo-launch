@@ -15,7 +15,27 @@ import (
 
 type MailMessage = mailer.Message
 
+// Transactional messages never contain passwords, API keys, or license keys.
+func (s *Service) queueCustomerNotification(tx *gorm.DB, userID, subject, body string) error {
+	var count int64
+	if err := tx.Model(&storage.MailSettings{}).Where("id = ? AND enabled = true AND disable_order_notifications = false", mailSettingsID).Count(&count).Error; err != nil {
+		return err
+	}
+	if count == 0 {
+		return nil
+	}
+	var user storage.User
+	if err := tx.First(&user, "id = ?", userID).Error; err != nil {
+		return err
+	}
+	return s.queueMail(tx, MailMessage{To: user.Email, Subject: subject, Body: body + "\r\n\r\n" + s.PublicURL() + "/#/account"})
+}
+
 func (s *Service) queueMail(tx *gorm.DB, message MailMessage) error {
+	enabled, err := mailEnabled(tx)
+	if err != nil || !enabled {
+		return err
+	}
 	id, err := newID()
 	if err != nil {
 		return err

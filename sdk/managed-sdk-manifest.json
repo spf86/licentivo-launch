@@ -1,0 +1,649 @@
+{
+  "schema_version": 1,
+  "sdk_version": "0.11.0",
+  "changes": "Only private import and native-library relocation; authorization and cryptographic logic are unchanged.",
+  "files": [
+    {
+      "source": "go/advanced.go",
+      "destination": "pkg/launchclient/internal/licentivo/advanced.go",
+      "source_sha256": "614f6ace7499c10f043ac42eefbcc58e33b380cb8188d4898802e4726a5ffcf5",
+      "sha256": "ddaef7df7c29a790c9b03fd3b6515d6458aad3fae8c2c17fbf281ad98c13443a"
+    },
+    {
+      "source": "go/client.go",
+      "destination": "pkg/launchclient/internal/licentivo/client.go",
+      "source_sha256": "5f783b35f6e4ddf4c14a432b5c6b4f7772cf8b1413ef06c50d5a8fba6c8a39aa",
+      "sha256": "cce1d166175f562096f92a8f4a4bd2acbdbf8a28aa5f2a046666edbbb23d9571"
+    },
+    {
+      "source": "go/credential.go",
+      "destination": "pkg/launchclient/internal/licentivo/credential.go",
+      "source_sha256": "ef3589a3a4abf996282778746dd84c41b83774d80ada7fbc01e2342b33192adf",
+      "sha256": "ce8565809cc9c3d9887318cf5010505df012449d39a4dc6ae6ba93b9d2751761"
+    },
+    {
+      "source": "go/device.go",
+      "destination": "pkg/launchclient/internal/licentivo/device.go",
+      "source_sha256": "b52e3a7942da5575dec3b15d879b9e3fddf35032a20d05c3395248fabc0ddec3",
+      "sha256": "b52e3a7942da5575dec3b15d879b9e3fddf35032a20d05c3395248fabc0ddec3"
+    },
+    {
+      "source": "go/feature.go",
+      "destination": "pkg/launchclient/internal/licentivo/feature.go",
+      "source_sha256": "dc63ed0d02e6bc405801edadc73c36627dcae578c80e76d75847a5c3ec6ea022",
+      "sha256": "dc63ed0d02e6bc405801edadc73c36627dcae578c80e76d75847a5c3ec6ea022"
+    },
+    {
+      "source": "go/feature_tasks.go",
+      "destination": "pkg/launchclient/internal/licentivo/feature_tasks.go",
+      "source_sha256": "53c737e3476a231f060378b9a030990f02b5eff1eb1dd9cdc98df1a83f21642d",
+      "sha256": "53c737e3476a231f060378b9a030990f02b5eff1eb1dd9cdc98df1a83f21642d"
+    },
+    {
+      "source": "go/reservations.go",
+      "destination": "pkg/launchclient/internal/licentivo/reservations.go",
+      "source_sha256": "a683fb8fb3df7b388b8c755f138d5b93b7458d59e48f0ffcdbc750255f39e866",
+      "sha256": "a683fb8fb3df7b388b8c755f138d5b93b7458d59e48f0ffcdbc750255f39e866"
+    },
+    {
+      "source": "go/status.go",
+      "destination": "pkg/launchclient/internal/licentivo/status.go",
+      "source_sha256": "94f69d246ee23ba2d876337f21bfb8e00ed3b580811ad1fddb093cd10139b444",
+      "sha256": "551891dac84bf15bff10d514563f4f8e17803278ca073e81ad902804aae1040b"
+    },
+    {
+      "source": "go/internal/lease/lease.go",
+      "destination": "pkg/launchclient/internal/licentivo/internal/lease/lease.go",
+      "source_sha256": "361518ceb8762e795928eeefb8370b846b3cd325e24add84178f805a0bfc955a",
+      "sha256": "361518ceb8762e795928eeefb8370b846b3cd325e24add84178f805a0bfc955a"
+    },
+    {
+      "source": "LICENSE",
+      "destination": "pkg/launchclient/internal/licentivo/LICENSE",
+      "source_sha256": "5f8e7889da4da8c21039e762ccb1e90bf99de769ce148c37815a082dcf379a90",
+      "sha256": "5f8e7889da4da8c21039e762ccb1e90bf99de769ce148c37815a082dcf379a90"
+    },
+    {
+      "source": "NOTICE",
+      "destination": "pkg/launchclient/internal/licentivo/NOTICE",
+      "source_sha256": "bfe3b498186c6a0309d9fd793ea5ca5f2ab9f19330b40f3410ad6f312d5e0e28",
+      "sha256": "bfe3b498186c6a0309d9fd793ea5ca5f2ab9f19330b40f3410ad6f312d5e0e28"
+    },
+    {
+      "source": "VERSION",
+      "destination": "pkg/launchclient/internal/licentivo/VERSION",
+      "source_sha256": "795d6bc79574d2aec03ad9cfec404bb95083c9dd210e6521e0d4199772d28d44",
+      "sha256": "795d6bc79574d2aec03ad9cfec404bb95083c9dd210e6521e0d4199772d28d44"
+    },
+    {
+      "source": "python/licentivo.py",
+      "destination": "sdk/python/src/licentivo_launch/_vendor/licentivo.py",
+      "source_sha256": "ec3dee160f15d36573d2de3b2c3e4c92f0409c7335e664a8078c04e9d0472a18",
+      "sha256": "44641dc17c5f34b8b59041d08a6015e5cd0a5b76749db8e9748a8d745ef09a2b"
+    },
+    {
+      "source": "python/licentivo_tasks.py",
+      "destination": "sdk/python/src/licentivo_launch/_vendor/licentivo_tasks.py",
+      "source_sha256": "9d7f16d5c31ece707a57ea6221fbfeda46fcc82f9aead64be9de3988c009bdcc",
+      "sha256": "9d7f16d5c31ece707a57ea6221fbfeda46fcc82f9aead64be9de3988c009bdcc"
+    },
+    {
+      "source": "LICENSE",
+      "destination": "sdk/python/src/licentivo_launch/_vendor/LICENSE",
+      "source_sha256": "5f8e7889da4da8c21039e762ccb1e90bf99de769ce148c37815a082dcf379a90",
+      "sha256": "5f8e7889da4da8c21039e762ccb1e90bf99de769ce148c37815a082dcf379a90"
+    },
+    {
+      "source": "NOTICE",
+      "destination": "sdk/python/src/licentivo_launch/_vendor/NOTICE",
+      "source_sha256": "bfe3b498186c6a0309d9fd793ea5ca5f2ab9f19330b40f3410ad6f312d5e0e28",
+      "sha256": "bfe3b498186c6a0309d9fd793ea5ca5f2ab9f19330b40f3410ad6f312d5e0e28"
+    },
+    {
+      "source": "VERSION",
+      "destination": "sdk/python/src/licentivo_launch/_vendor/VERSION",
+      "source_sha256": "795d6bc79574d2aec03ad9cfec404bb95083c9dd210e6521e0d4199772d28d44",
+      "sha256": "795d6bc79574d2aec03ad9cfec404bb95083c9dd210e6521e0d4199772d28d44"
+    },
+    {
+      "source": "javascript/licentivo.mjs",
+      "destination": "sdk/javascript/src/vendor/licentivo.mjs",
+      "source_sha256": "70deb44453167cbcc044c50ea7d832b7fd95afd7fabcd01098481553d6415f52",
+      "sha256": "70deb44453167cbcc044c50ea7d832b7fd95afd7fabcd01098481553d6415f52"
+    },
+    {
+      "source": "javascript/feature-tasks.mjs",
+      "destination": "sdk/javascript/src/vendor/feature-tasks.mjs",
+      "source_sha256": "c0c8d6430e375349a40c5998d7dd0ac2b9a3184fd9c41c2c3d5665f8e506fcec",
+      "sha256": "c0c8d6430e375349a40c5998d7dd0ac2b9a3184fd9c41c2c3d5665f8e506fcec"
+    },
+    {
+      "source": "javascript/quickstart.mjs",
+      "destination": "sdk/javascript/src/vendor/quickstart.mjs",
+      "source_sha256": "a74073df8a67ec64d3df728b6e5f3538a1c1f855a8d9e62dfe37da95741b3c7d",
+      "sha256": "a74073df8a67ec64d3df728b6e5f3538a1c1f855a8d9e62dfe37da95741b3c7d"
+    },
+    {
+      "source": "javascript/app.mjs",
+      "destination": "sdk/javascript/src/vendor/app.mjs",
+      "source_sha256": "d2cef41cb96cd5a4e7c5c8ea005497ce0f4d65b83652ae962c0c8fce8c2b1d0f",
+      "sha256": "d2cef41cb96cd5a4e7c5c8ea005497ce0f4d65b83652ae962c0c8fce8c2b1d0f"
+    },
+    {
+      "source": "LICENSE",
+      "destination": "sdk/javascript/src/vendor/LICENSE",
+      "source_sha256": "5f8e7889da4da8c21039e762ccb1e90bf99de769ce148c37815a082dcf379a90",
+      "sha256": "5f8e7889da4da8c21039e762ccb1e90bf99de769ce148c37815a082dcf379a90"
+    },
+    {
+      "source": "NOTICE",
+      "destination": "sdk/javascript/src/vendor/NOTICE",
+      "source_sha256": "bfe3b498186c6a0309d9fd793ea5ca5f2ab9f19330b40f3410ad6f312d5e0e28",
+      "sha256": "bfe3b498186c6a0309d9fd793ea5ca5f2ab9f19330b40f3410ad6f312d5e0e28"
+    },
+    {
+      "source": "VERSION",
+      "destination": "sdk/javascript/src/vendor/VERSION",
+      "source_sha256": "795d6bc79574d2aec03ad9cfec404bb95083c9dd210e6521e0d4199772d28d44",
+      "sha256": "795d6bc79574d2aec03ad9cfec404bb95083c9dd210e6521e0d4199772d28d44"
+    },
+    {
+      "source": "csharp/Advanced.cs",
+      "destination": "sdk/csharp/vendor/Advanced.cs",
+      "source_sha256": "9547d67cf033bce78230aae40cf27ed7fd07c60622c1c551c1ffadb297d67d55",
+      "sha256": "9547d67cf033bce78230aae40cf27ed7fd07c60622c1c551c1ffadb297d67d55"
+    },
+    {
+      "source": "csharp/DeviceCredential.cs",
+      "destination": "sdk/csharp/vendor/DeviceCredential.cs",
+      "source_sha256": "179e142a1136f5fc1e73803e4b9be274e678d6b909603a6b769a49f23391659d",
+      "sha256": "179e142a1136f5fc1e73803e4b9be274e678d6b909603a6b769a49f23391659d"
+    },
+    {
+      "source": "csharp/Feature.cs",
+      "destination": "sdk/csharp/vendor/Feature.cs",
+      "source_sha256": "24820616f995761e2c9f80c31c3fe0d6045c82a02e951a85fb38a163f06d3c71",
+      "sha256": "24820616f995761e2c9f80c31c3fe0d6045c82a02e951a85fb38a163f06d3c71"
+    },
+    {
+      "source": "csharp/FeatureTasks.cs",
+      "destination": "sdk/csharp/vendor/FeatureTasks.cs",
+      "source_sha256": "1aefb9d9bda169ebdfff105bc04c528454e88fbc072e9b1dd09dff49109231a9",
+      "sha256": "1aefb9d9bda169ebdfff105bc04c528454e88fbc072e9b1dd09dff49109231a9"
+    },
+    {
+      "source": "csharp/LicentivoClient.cs",
+      "destination": "sdk/csharp/vendor/LicentivoClient.cs",
+      "source_sha256": "fbb77d7314aeab376cebdbaa68cd5c051ed63bfe08e8e3e7f5a0aec77ff6ea04",
+      "sha256": "fbb77d7314aeab376cebdbaa68cd5c051ed63bfe08e8e3e7f5a0aec77ff6ea04"
+    },
+    {
+      "source": "csharp/MachineIdentity.cs",
+      "destination": "sdk/csharp/vendor/MachineIdentity.cs",
+      "source_sha256": "de41e9f2ffcea1f25b88d4cc17c25c919fc3b739288987125bb301e020cd2cdf",
+      "sha256": "de41e9f2ffcea1f25b88d4cc17c25c919fc3b739288987125bb301e020cd2cdf"
+    },
+    {
+      "source": "csharp/Status.cs",
+      "destination": "sdk/csharp/vendor/Status.cs",
+      "source_sha256": "f23f3ecef25a3c1f6b73d0c02d612a7dfcb472233057b2949434b163d224b663",
+      "sha256": "f23f3ecef25a3c1f6b73d0c02d612a7dfcb472233057b2949434b163d224b663"
+    },
+    {
+      "source": "LICENSE",
+      "destination": "sdk/csharp/vendor/LICENSE",
+      "source_sha256": "5f8e7889da4da8c21039e762ccb1e90bf99de769ce148c37815a082dcf379a90",
+      "sha256": "5f8e7889da4da8c21039e762ccb1e90bf99de769ce148c37815a082dcf379a90"
+    },
+    {
+      "source": "NOTICE",
+      "destination": "sdk/csharp/vendor/NOTICE",
+      "source_sha256": "bfe3b498186c6a0309d9fd793ea5ca5f2ab9f19330b40f3410ad6f312d5e0e28",
+      "sha256": "bfe3b498186c6a0309d9fd793ea5ca5f2ab9f19330b40f3410ad6f312d5e0e28"
+    },
+    {
+      "source": "VERSION",
+      "destination": "sdk/csharp/vendor/VERSION",
+      "source_sha256": "795d6bc79574d2aec03ad9cfec404bb95083c9dd210e6521e0d4199772d28d44",
+      "sha256": "795d6bc79574d2aec03ad9cfec404bb95083c9dd210e6521e0d4199772d28d44"
+    },
+    {
+      "source": "java/src/licentivo/Capabilities.java",
+      "destination": "sdk/java/src/licentivo/Capabilities.java",
+      "source_sha256": "f4b20f80f1c91255d751380f1d88ca3342bd7ec49b0c54f6019ed5e741377640",
+      "sha256": "f4b20f80f1c91255d751380f1d88ca3342bd7ec49b0c54f6019ed5e741377640"
+    },
+    {
+      "source": "java/src/licentivo/Client.java",
+      "destination": "sdk/java/src/licentivo/Client.java",
+      "source_sha256": "3819e8ac55de37f583110f2591a035b5f8ddbe1c022a9734acc03c0b81948054",
+      "sha256": "3819e8ac55de37f583110f2591a035b5f8ddbe1c022a9734acc03c0b81948054"
+    },
+    {
+      "source": "java/src/licentivo/Demo.java",
+      "destination": "sdk/java/src/licentivo/Demo.java",
+      "source_sha256": "cc9aef6f5434b5e81f87452fbcad2692ce3196bc263c38de4c77d8655388d4eb",
+      "sha256": "cc9aef6f5434b5e81f87452fbcad2692ce3196bc263c38de4c77d8655388d4eb"
+    },
+    {
+      "source": "java/src/licentivo/DesktopDemo.java",
+      "destination": "sdk/java/src/licentivo/DesktopDemo.java",
+      "source_sha256": "1c2b8aeed0570d62aa0b70c8371d1093b0316d7d3b879e46049732a77e88119b",
+      "sha256": "1c2b8aeed0570d62aa0b70c8371d1093b0316d7d3b879e46049732a77e88119b"
+    },
+    {
+      "source": "java/src/licentivo/DeviceCredential.java",
+      "destination": "sdk/java/src/licentivo/DeviceCredential.java",
+      "source_sha256": "80f028bad1748692e0344612c8a637428385ac075d9a79a8b94fdb70d1002eb2",
+      "sha256": "80f028bad1748692e0344612c8a637428385ac075d9a79a8b94fdb70d1002eb2"
+    },
+    {
+      "source": "java/src/licentivo/FeatureTasks.java",
+      "destination": "sdk/java/src/licentivo/FeatureTasks.java",
+      "source_sha256": "bcf0615cc59f583fdbd08f02523f3305cb98a03b73aeb431c642a5a4cd41ff16",
+      "sha256": "bcf0615cc59f583fdbd08f02523f3305cb98a03b73aeb431c642a5a4cd41ff16"
+    },
+    {
+      "source": "java/src/licentivo/Json.java",
+      "destination": "sdk/java/src/licentivo/Json.java",
+      "source_sha256": "e91b12428507c0dd7ac9ad7db77d83ddbb848115bc57219df37d1156a6836b9d",
+      "sha256": "e91b12428507c0dd7ac9ad7db77d83ddbb848115bc57219df37d1156a6836b9d"
+    },
+    {
+      "source": "java/src/licentivo/MachineIdentity.java",
+      "destination": "sdk/java/src/licentivo/MachineIdentity.java",
+      "source_sha256": "2b50f35a52406d43f606e2b05339b663f4065f690c2651beab9222c08f1c7cfa",
+      "sha256": "2b50f35a52406d43f606e2b05339b663f4065f690c2651beab9222c08f1c7cfa"
+    },
+    {
+      "source": "java/src/licentivo/Quickstart.java",
+      "destination": "sdk/java/src/licentivo/Quickstart.java",
+      "source_sha256": "dafed0326625539bdc6754eb8656844683e88c38859e3c9b13ea509f1d812cd7",
+      "sha256": "dafed0326625539bdc6754eb8656844683e88c38859e3c9b13ea509f1d812cd7"
+    },
+    {
+      "source": "java/src/licentivo/RuntimePolicy.java",
+      "destination": "sdk/java/src/licentivo/RuntimePolicy.java",
+      "source_sha256": "8beb3c7a131278006efcc1a197fb4dbb883b8cd317643207787305d3a69a3f1f",
+      "sha256": "8beb3c7a131278006efcc1a197fb4dbb883b8cd317643207787305d3a69a3f1f"
+    },
+    {
+      "source": "java/src/licentivo/TestVectors.java",
+      "destination": "sdk/java/src/licentivo/TestVectors.java",
+      "source_sha256": "a2ad4e4629ce3d15815979e75faedd660979ee42cc02b5b22ad809f8a084b3d3",
+      "sha256": "a2ad4e4629ce3d15815979e75faedd660979ee42cc02b5b22ad809f8a084b3d3"
+    },
+    {
+      "source": "LICENSE",
+      "destination": "sdk/java/vendor/LICENSE",
+      "source_sha256": "5f8e7889da4da8c21039e762ccb1e90bf99de769ce148c37815a082dcf379a90",
+      "sha256": "5f8e7889da4da8c21039e762ccb1e90bf99de769ce148c37815a082dcf379a90"
+    },
+    {
+      "source": "NOTICE",
+      "destination": "sdk/java/vendor/NOTICE",
+      "source_sha256": "bfe3b498186c6a0309d9fd793ea5ca5f2ab9f19330b40f3410ad6f312d5e0e28",
+      "sha256": "bfe3b498186c6a0309d9fd793ea5ca5f2ab9f19330b40f3410ad6f312d5e0e28"
+    },
+    {
+      "source": "VERSION",
+      "destination": "sdk/java/vendor/VERSION",
+      "source_sha256": "795d6bc79574d2aec03ad9cfec404bb95083c9dd210e6521e0d4199772d28d44",
+      "sha256": "795d6bc79574d2aec03ad9cfec404bb95083c9dd210e6521e0d4199772d28d44"
+    },
+    {
+      "source": "rust/src/lib.rs",
+      "destination": "sdk/rust/vendor/rust/lib.rs",
+      "source_sha256": "cf9d28058681d8095d0960131bb2d34324decab1a54e039d18702d974ac5003a",
+      "sha256": "cf9d28058681d8095d0960131bb2d34324decab1a54e039d18702d974ac5003a"
+    },
+    {
+      "source": "c/app.c",
+      "destination": "sdk/rust/vendor/c/app.c",
+      "source_sha256": "475028c3ba0596a45d2e67e80b93ab4ac405a475024cec8a0482e25359c88234",
+      "sha256": "475028c3ba0596a45d2e67e80b93ab4ac405a475024cec8a0482e25359c88234"
+    },
+    {
+      "source": "c/demo.c",
+      "destination": "sdk/rust/vendor/c/demo.c",
+      "source_sha256": "a56cf82da3706b0fecb62040903dec49b4e0bc5d296ef23a6c3c3d4e3827d6ca",
+      "sha256": "a56cf82da3706b0fecb62040903dec49b4e0bc5d296ef23a6c3c3d4e3827d6ca"
+    },
+    {
+      "source": "c/feature_tasks.h",
+      "destination": "sdk/rust/vendor/c/feature_tasks.h",
+      "source_sha256": "3dc4df2eedfd56571d47404ad13a699ca2d4b5c8d775d36222f470903a3c60d4",
+      "sha256": "3dc4df2eedfd56571d47404ad13a699ca2d4b5c8d775d36222f470903a3c60d4"
+    },
+    {
+      "source": "c/licentivo.c",
+      "destination": "sdk/rust/vendor/c/licentivo.c",
+      "source_sha256": "cd8b6b4d03f10308e5c9711ce20229f12e83a6a3a50fb916a4f0deff5a5274fa",
+      "sha256": "cd8b6b4d03f10308e5c9711ce20229f12e83a6a3a50fb916a4f0deff5a5274fa"
+    },
+    {
+      "source": "c/licentivo.h",
+      "destination": "sdk/rust/vendor/c/licentivo.h",
+      "source_sha256": "8d1a41b2cc198772540a376d28b146d2e358d69b15b4035750e9e86c55a1979c",
+      "sha256": "8d1a41b2cc198772540a376d28b146d2e358d69b15b4035750e9e86c55a1979c"
+    },
+    {
+      "source": "c/quickstart.c",
+      "destination": "sdk/rust/vendor/c/quickstart.c",
+      "source_sha256": "ea07af987ac7f460c1657b28a10fbadd61175eff5346027dbf84595af418f892",
+      "sha256": "ea07af987ac7f460c1657b28a10fbadd61175eff5346027dbf84595af418f892"
+    },
+    {
+      "source": "c/test_vectors.c",
+      "destination": "sdk/rust/vendor/c/test_vectors.c",
+      "source_sha256": "85cc7f67756909c52a124713c00a51ebf89798a5e5b1a145b1d85e4ce52c3953",
+      "sha256": "85cc7f67756909c52a124713c00a51ebf89798a5e5b1a145b1d85e4ce52c3953"
+    },
+    {
+      "source": "c/vendor/cJSON-LICENSE",
+      "destination": "sdk/rust/vendor/c/vendor/cJSON-LICENSE",
+      "source_sha256": "a36dda207c36db5818729c54e7ad4e8b0c6fba847491ba64f372c1a2037b6d5c",
+      "sha256": "a36dda207c36db5818729c54e7ad4e8b0c6fba847491ba64f372c1a2037b6d5c"
+    },
+    {
+      "source": "c/vendor/cJSON.c",
+      "destination": "sdk/rust/vendor/c/vendor/cJSON.c",
+      "source_sha256": "298581a04a36c0165da4b0aade235c23088cb2faa58651d720ea2f3706ed0b0d",
+      "sha256": "298581a04a36c0165da4b0aade235c23088cb2faa58651d720ea2f3706ed0b0d"
+    },
+    {
+      "source": "c/vendor/cJSON.h",
+      "destination": "sdk/rust/vendor/c/vendor/cJSON.h",
+      "source_sha256": "25b0145150d500498e4d209cec69c18c42cf818bffcc54690be3b895a2a16dee",
+      "sha256": "25b0145150d500498e4d209cec69c18c42cf818bffcc54690be3b895a2a16dee"
+    },
+    {
+      "source": "c/vendor/monocypher-ed25519.c",
+      "destination": "sdk/rust/vendor/c/vendor/monocypher-ed25519.c",
+      "source_sha256": "97d581639dfa72be08a6d57deb7d79b736be001cb416819cab196d22559d242b",
+      "sha256": "97d581639dfa72be08a6d57deb7d79b736be001cb416819cab196d22559d242b"
+    },
+    {
+      "source": "c/vendor/monocypher-ed25519.h",
+      "destination": "sdk/rust/vendor/c/vendor/monocypher-ed25519.h",
+      "source_sha256": "3a3035181f991a158d0e1c7567258f0bae8ba0f1f23c5512b4a1db1b3c9730ce",
+      "sha256": "3a3035181f991a158d0e1c7567258f0bae8ba0f1f23c5512b4a1db1b3c9730ce"
+    },
+    {
+      "source": "c/vendor/Monocypher-LICENCE.md",
+      "destination": "sdk/rust/vendor/c/vendor/Monocypher-LICENCE.md",
+      "source_sha256": "a5781770269d2516e52ba4863f790c10a16da4089a1e81823aee19ff1e9026b0",
+      "sha256": "a5781770269d2516e52ba4863f790c10a16da4089a1e81823aee19ff1e9026b0"
+    },
+    {
+      "source": "c/vendor/monocypher.c",
+      "destination": "sdk/rust/vendor/c/vendor/monocypher.c",
+      "source_sha256": "02174117935699d418443c75a558a287deb06ef8cf7c1adced61d9047d2f323d",
+      "sha256": "02174117935699d418443c75a558a287deb06ef8cf7c1adced61d9047d2f323d"
+    },
+    {
+      "source": "c/vendor/monocypher.h",
+      "destination": "sdk/rust/vendor/c/vendor/monocypher.h",
+      "source_sha256": "fcaf6ed771358bb4f40fba016f6518ae86ec02b1b877d2cc35ad92d3a26fd7b3",
+      "sha256": "fcaf6ed771358bb4f40fba016f6518ae86ec02b1b877d2cc35ad92d3a26fd7b3"
+    },
+    {
+      "source": "LICENSE",
+      "destination": "sdk/rust/vendor/LICENSE",
+      "source_sha256": "5f8e7889da4da8c21039e762ccb1e90bf99de769ce148c37815a082dcf379a90",
+      "sha256": "5f8e7889da4da8c21039e762ccb1e90bf99de769ce148c37815a082dcf379a90"
+    },
+    {
+      "source": "NOTICE",
+      "destination": "sdk/rust/vendor/NOTICE",
+      "source_sha256": "bfe3b498186c6a0309d9fd793ea5ca5f2ab9f19330b40f3410ad6f312d5e0e28",
+      "sha256": "bfe3b498186c6a0309d9fd793ea5ca5f2ab9f19330b40f3410ad6f312d5e0e28"
+    },
+    {
+      "source": "VERSION",
+      "destination": "sdk/rust/vendor/VERSION",
+      "source_sha256": "795d6bc79574d2aec03ad9cfec404bb95083c9dd210e6521e0d4199772d28d44",
+      "sha256": "795d6bc79574d2aec03ad9cfec404bb95083c9dd210e6521e0d4199772d28d44"
+    },
+    {
+      "source": "ruby/lib/licentivo.rb",
+      "destination": "sdk/ruby/lib/licentivo_launch/vendor/licentivo.rb",
+      "source_sha256": "91fb17078169a51752c9b1a7cb737c308a3e238179bbe4bd985a658327408031",
+      "sha256": "f3682cd0666bf6edc9f18fd644c6eb9a578cb62088dc6af51f0528a39b487e48"
+    },
+    {
+      "source": "c/app.c",
+      "destination": "sdk/ruby/vendor/c/app.c",
+      "source_sha256": "475028c3ba0596a45d2e67e80b93ab4ac405a475024cec8a0482e25359c88234",
+      "sha256": "475028c3ba0596a45d2e67e80b93ab4ac405a475024cec8a0482e25359c88234"
+    },
+    {
+      "source": "c/demo.c",
+      "destination": "sdk/ruby/vendor/c/demo.c",
+      "source_sha256": "a56cf82da3706b0fecb62040903dec49b4e0bc5d296ef23a6c3c3d4e3827d6ca",
+      "sha256": "a56cf82da3706b0fecb62040903dec49b4e0bc5d296ef23a6c3c3d4e3827d6ca"
+    },
+    {
+      "source": "c/feature_tasks.h",
+      "destination": "sdk/ruby/vendor/c/feature_tasks.h",
+      "source_sha256": "3dc4df2eedfd56571d47404ad13a699ca2d4b5c8d775d36222f470903a3c60d4",
+      "sha256": "3dc4df2eedfd56571d47404ad13a699ca2d4b5c8d775d36222f470903a3c60d4"
+    },
+    {
+      "source": "c/licentivo.c",
+      "destination": "sdk/ruby/vendor/c/licentivo.c",
+      "source_sha256": "cd8b6b4d03f10308e5c9711ce20229f12e83a6a3a50fb916a4f0deff5a5274fa",
+      "sha256": "cd8b6b4d03f10308e5c9711ce20229f12e83a6a3a50fb916a4f0deff5a5274fa"
+    },
+    {
+      "source": "c/licentivo.h",
+      "destination": "sdk/ruby/vendor/c/licentivo.h",
+      "source_sha256": "8d1a41b2cc198772540a376d28b146d2e358d69b15b4035750e9e86c55a1979c",
+      "sha256": "8d1a41b2cc198772540a376d28b146d2e358d69b15b4035750e9e86c55a1979c"
+    },
+    {
+      "source": "c/quickstart.c",
+      "destination": "sdk/ruby/vendor/c/quickstart.c",
+      "source_sha256": "ea07af987ac7f460c1657b28a10fbadd61175eff5346027dbf84595af418f892",
+      "sha256": "ea07af987ac7f460c1657b28a10fbadd61175eff5346027dbf84595af418f892"
+    },
+    {
+      "source": "c/test_vectors.c",
+      "destination": "sdk/ruby/vendor/c/test_vectors.c",
+      "source_sha256": "85cc7f67756909c52a124713c00a51ebf89798a5e5b1a145b1d85e4ce52c3953",
+      "sha256": "85cc7f67756909c52a124713c00a51ebf89798a5e5b1a145b1d85e4ce52c3953"
+    },
+    {
+      "source": "c/vendor/cJSON-LICENSE",
+      "destination": "sdk/ruby/vendor/c/vendor/cJSON-LICENSE",
+      "source_sha256": "a36dda207c36db5818729c54e7ad4e8b0c6fba847491ba64f372c1a2037b6d5c",
+      "sha256": "a36dda207c36db5818729c54e7ad4e8b0c6fba847491ba64f372c1a2037b6d5c"
+    },
+    {
+      "source": "c/vendor/cJSON.c",
+      "destination": "sdk/ruby/vendor/c/vendor/cJSON.c",
+      "source_sha256": "298581a04a36c0165da4b0aade235c23088cb2faa58651d720ea2f3706ed0b0d",
+      "sha256": "298581a04a36c0165da4b0aade235c23088cb2faa58651d720ea2f3706ed0b0d"
+    },
+    {
+      "source": "c/vendor/cJSON.h",
+      "destination": "sdk/ruby/vendor/c/vendor/cJSON.h",
+      "source_sha256": "25b0145150d500498e4d209cec69c18c42cf818bffcc54690be3b895a2a16dee",
+      "sha256": "25b0145150d500498e4d209cec69c18c42cf818bffcc54690be3b895a2a16dee"
+    },
+    {
+      "source": "c/vendor/monocypher-ed25519.c",
+      "destination": "sdk/ruby/vendor/c/vendor/monocypher-ed25519.c",
+      "source_sha256": "97d581639dfa72be08a6d57deb7d79b736be001cb416819cab196d22559d242b",
+      "sha256": "97d581639dfa72be08a6d57deb7d79b736be001cb416819cab196d22559d242b"
+    },
+    {
+      "source": "c/vendor/monocypher-ed25519.h",
+      "destination": "sdk/ruby/vendor/c/vendor/monocypher-ed25519.h",
+      "source_sha256": "3a3035181f991a158d0e1c7567258f0bae8ba0f1f23c5512b4a1db1b3c9730ce",
+      "sha256": "3a3035181f991a158d0e1c7567258f0bae8ba0f1f23c5512b4a1db1b3c9730ce"
+    },
+    {
+      "source": "c/vendor/Monocypher-LICENCE.md",
+      "destination": "sdk/ruby/vendor/c/vendor/Monocypher-LICENCE.md",
+      "source_sha256": "a5781770269d2516e52ba4863f790c10a16da4089a1e81823aee19ff1e9026b0",
+      "sha256": "a5781770269d2516e52ba4863f790c10a16da4089a1e81823aee19ff1e9026b0"
+    },
+    {
+      "source": "c/vendor/monocypher.c",
+      "destination": "sdk/ruby/vendor/c/vendor/monocypher.c",
+      "source_sha256": "02174117935699d418443c75a558a287deb06ef8cf7c1adced61d9047d2f323d",
+      "sha256": "02174117935699d418443c75a558a287deb06ef8cf7c1adced61d9047d2f323d"
+    },
+    {
+      "source": "c/vendor/monocypher.h",
+      "destination": "sdk/ruby/vendor/c/vendor/monocypher.h",
+      "source_sha256": "fcaf6ed771358bb4f40fba016f6518ae86ec02b1b877d2cc35ad92d3a26fd7b3",
+      "sha256": "fcaf6ed771358bb4f40fba016f6518ae86ec02b1b877d2cc35ad92d3a26fd7b3"
+    },
+    {
+      "source": "LICENSE",
+      "destination": "sdk/ruby/vendor/LICENSE",
+      "source_sha256": "5f8e7889da4da8c21039e762ccb1e90bf99de769ce148c37815a082dcf379a90",
+      "sha256": "5f8e7889da4da8c21039e762ccb1e90bf99de769ce148c37815a082dcf379a90"
+    },
+    {
+      "source": "NOTICE",
+      "destination": "sdk/ruby/vendor/NOTICE",
+      "source_sha256": "bfe3b498186c6a0309d9fd793ea5ca5f2ab9f19330b40f3410ad6f312d5e0e28",
+      "sha256": "bfe3b498186c6a0309d9fd793ea5ca5f2ab9f19330b40f3410ad6f312d5e0e28"
+    },
+    {
+      "source": "VERSION",
+      "destination": "sdk/ruby/vendor/VERSION",
+      "source_sha256": "795d6bc79574d2aec03ad9cfec404bb95083c9dd210e6521e0d4199772d28d44",
+      "sha256": "795d6bc79574d2aec03ad9cfec404bb95083c9dd210e6521e0d4199772d28d44"
+    },
+    {
+      "source": "CMakeLists.txt",
+      "destination": "sdk/native/vendor/sdk/CMakeLists.txt",
+      "source_sha256": "98a36fdeaa9d7d68140ca1208fbb9f2ef456cc2b5a9e29acd666045d92b8f431",
+      "sha256": "98a36fdeaa9d7d68140ca1208fbb9f2ef456cc2b5a9e29acd666045d92b8f431"
+    },
+    {
+      "source": "LicentivoConfig.cmake.in",
+      "destination": "sdk/native/vendor/sdk/LicentivoConfig.cmake.in",
+      "source_sha256": "d37bcd6234738242b08b97be764aea07b39a899a01352234f7325962da1a451e",
+      "sha256": "d37bcd6234738242b08b97be764aea07b39a899a01352234f7325962da1a451e"
+    },
+    {
+      "source": "LICENSE",
+      "destination": "sdk/native/vendor/sdk/LICENSE",
+      "source_sha256": "5f8e7889da4da8c21039e762ccb1e90bf99de769ce148c37815a082dcf379a90",
+      "sha256": "5f8e7889da4da8c21039e762ccb1e90bf99de769ce148c37815a082dcf379a90"
+    },
+    {
+      "source": "NOTICE",
+      "destination": "sdk/native/vendor/sdk/NOTICE",
+      "source_sha256": "bfe3b498186c6a0309d9fd793ea5ca5f2ab9f19330b40f3410ad6f312d5e0e28",
+      "sha256": "bfe3b498186c6a0309d9fd793ea5ca5f2ab9f19330b40f3410ad6f312d5e0e28"
+    },
+    {
+      "source": "VERSION",
+      "destination": "sdk/native/vendor/sdk/VERSION",
+      "source_sha256": "795d6bc79574d2aec03ad9cfec404bb95083c9dd210e6521e0d4199772d28d44",
+      "sha256": "795d6bc79574d2aec03ad9cfec404bb95083c9dd210e6521e0d4199772d28d44"
+    },
+    {
+      "source": "c/app.c",
+      "destination": "sdk/native/vendor/sdk/c/app.c",
+      "source_sha256": "475028c3ba0596a45d2e67e80b93ab4ac405a475024cec8a0482e25359c88234",
+      "sha256": "475028c3ba0596a45d2e67e80b93ab4ac405a475024cec8a0482e25359c88234"
+    },
+    {
+      "source": "c/demo.c",
+      "destination": "sdk/native/vendor/sdk/c/demo.c",
+      "source_sha256": "a56cf82da3706b0fecb62040903dec49b4e0bc5d296ef23a6c3c3d4e3827d6ca",
+      "sha256": "a56cf82da3706b0fecb62040903dec49b4e0bc5d296ef23a6c3c3d4e3827d6ca"
+    },
+    {
+      "source": "c/feature_tasks.h",
+      "destination": "sdk/native/vendor/sdk/c/feature_tasks.h",
+      "source_sha256": "3dc4df2eedfd56571d47404ad13a699ca2d4b5c8d775d36222f470903a3c60d4",
+      "sha256": "3dc4df2eedfd56571d47404ad13a699ca2d4b5c8d775d36222f470903a3c60d4"
+    },
+    {
+      "source": "c/licentivo.c",
+      "destination": "sdk/native/vendor/sdk/c/licentivo.c",
+      "source_sha256": "cd8b6b4d03f10308e5c9711ce20229f12e83a6a3a50fb916a4f0deff5a5274fa",
+      "sha256": "cd8b6b4d03f10308e5c9711ce20229f12e83a6a3a50fb916a4f0deff5a5274fa"
+    },
+    {
+      "source": "c/licentivo.h",
+      "destination": "sdk/native/vendor/sdk/c/licentivo.h",
+      "source_sha256": "8d1a41b2cc198772540a376d28b146d2e358d69b15b4035750e9e86c55a1979c",
+      "sha256": "8d1a41b2cc198772540a376d28b146d2e358d69b15b4035750e9e86c55a1979c"
+    },
+    {
+      "source": "c/quickstart.c",
+      "destination": "sdk/native/vendor/sdk/c/quickstart.c",
+      "source_sha256": "ea07af987ac7f460c1657b28a10fbadd61175eff5346027dbf84595af418f892",
+      "sha256": "ea07af987ac7f460c1657b28a10fbadd61175eff5346027dbf84595af418f892"
+    },
+    {
+      "source": "c/test_vectors.c",
+      "destination": "sdk/native/vendor/sdk/c/test_vectors.c",
+      "source_sha256": "85cc7f67756909c52a124713c00a51ebf89798a5e5b1a145b1d85e4ce52c3953",
+      "sha256": "85cc7f67756909c52a124713c00a51ebf89798a5e5b1a145b1d85e4ce52c3953"
+    },
+    {
+      "source": "c/vendor/cJSON-LICENSE",
+      "destination": "sdk/native/vendor/sdk/c/vendor/cJSON-LICENSE",
+      "source_sha256": "a36dda207c36db5818729c54e7ad4e8b0c6fba847491ba64f372c1a2037b6d5c",
+      "sha256": "a36dda207c36db5818729c54e7ad4e8b0c6fba847491ba64f372c1a2037b6d5c"
+    },
+    {
+      "source": "c/vendor/cJSON.c",
+      "destination": "sdk/native/vendor/sdk/c/vendor/cJSON.c",
+      "source_sha256": "298581a04a36c0165da4b0aade235c23088cb2faa58651d720ea2f3706ed0b0d",
+      "sha256": "298581a04a36c0165da4b0aade235c23088cb2faa58651d720ea2f3706ed0b0d"
+    },
+    {
+      "source": "c/vendor/cJSON.h",
+      "destination": "sdk/native/vendor/sdk/c/vendor/cJSON.h",
+      "source_sha256": "25b0145150d500498e4d209cec69c18c42cf818bffcc54690be3b895a2a16dee",
+      "sha256": "25b0145150d500498e4d209cec69c18c42cf818bffcc54690be3b895a2a16dee"
+    },
+    {
+      "source": "c/vendor/monocypher-ed25519.c",
+      "destination": "sdk/native/vendor/sdk/c/vendor/monocypher-ed25519.c",
+      "source_sha256": "97d581639dfa72be08a6d57deb7d79b736be001cb416819cab196d22559d242b",
+      "sha256": "97d581639dfa72be08a6d57deb7d79b736be001cb416819cab196d22559d242b"
+    },
+    {
+      "source": "c/vendor/monocypher-ed25519.h",
+      "destination": "sdk/native/vendor/sdk/c/vendor/monocypher-ed25519.h",
+      "source_sha256": "3a3035181f991a158d0e1c7567258f0bae8ba0f1f23c5512b4a1db1b3c9730ce",
+      "sha256": "3a3035181f991a158d0e1c7567258f0bae8ba0f1f23c5512b4a1db1b3c9730ce"
+    },
+    {
+      "source": "c/vendor/Monocypher-LICENCE.md",
+      "destination": "sdk/native/vendor/sdk/c/vendor/Monocypher-LICENCE.md",
+      "source_sha256": "a5781770269d2516e52ba4863f790c10a16da4089a1e81823aee19ff1e9026b0",
+      "sha256": "a5781770269d2516e52ba4863f790c10a16da4089a1e81823aee19ff1e9026b0"
+    },
+    {
+      "source": "c/vendor/monocypher.c",
+      "destination": "sdk/native/vendor/sdk/c/vendor/monocypher.c",
+      "source_sha256": "02174117935699d418443c75a558a287deb06ef8cf7c1adced61d9047d2f323d",
+      "sha256": "02174117935699d418443c75a558a287deb06ef8cf7c1adced61d9047d2f323d"
+    },
+    {
+      "source": "c/vendor/monocypher.h",
+      "destination": "sdk/native/vendor/sdk/c/vendor/monocypher.h",
+      "source_sha256": "fcaf6ed771358bb4f40fba016f6518ae86ec02b1b877d2cc35ad92d3a26fd7b3",
+      "sha256": "fcaf6ed771358bb4f40fba016f6518ae86ec02b1b877d2cc35ad92d3a26fd7b3"
+    },
+    {
+      "source": "cpp/licentivo.hpp",
+      "destination": "sdk/native/vendor/sdk/cpp/licentivo.hpp",
+      "source_sha256": "d17eb8cef7952ec7c713f62563209af82db439af2f251d3f92865e11b633250d",
+      "sha256": "d17eb8cef7952ec7c713f62563209af82db439af2f251d3f92865e11b633250d"
+    }
+  ]
+}

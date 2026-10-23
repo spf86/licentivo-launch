@@ -103,6 +103,7 @@ func testCommerce(a *testApp, admin, customer *browser, credentials map[string]s
 		t.Fatalf("Licentivo policy was not copied into the plan snapshot: %+v", mappedRights)
 	}
 	a.expect(a.request("POST", "/api/v1/admin/plans/"+plan.ID+"/publish", map[string]string{"version_id": plan.VersionID, "environment": "sandbox"}, admin), 200)
+	testIntegrationWizard(a, admin, customer, plan)
 	site := data[app.SiteView](t, a.request("GET", "/api/v1/site?environment=sandbox", nil, nil))
 	if len(site.Plans) != 1 || site.Plans[0].PreviewOnly {
 		t.Fatal("configured sandbox did not become purchasable")
@@ -118,6 +119,7 @@ func testCommerce(a *testApp, admin, customer *browser, credentials map[string]s
 	if order.PurchasePeriods != 3 || order.AmountMinor != plan.PurchaseOptions[1].AmountMinor {
 		t.Fatalf("three-month checkout used the wrong server price: %+v", order)
 	}
+	testUnpaidSoftwareStatus(a, credentials, plan.ProductID)
 	w = a.request("POST", "/api/v1/orders", input, customer)
 	a.expect(w, 200)
 	replay := data[app.CheckoutView](t, w)
@@ -196,6 +198,7 @@ func testCommerce(a *testApp, admin, customer *browser, credentials map[string]s
 	if credential["license_key"] != "lv_lic_test_customer_only" {
 		t.Fatal("own credential was not restored")
 	}
+	testSoftwareStatus(a, customer, grant, product.ID)
 	paid = data[app.CheckoutView](t, a.request("GET", "/api/v1/orders/"+order.ID, nil, customer))
 	if paid.Fulfillment != "active" {
 		t.Fatal("completed task not reflected in order")
@@ -319,6 +322,12 @@ func (l *licenseDouble) Capabilities(context.Context) (ports.LicensingCapabiliti
 }
 func (l *licenseDouble) Products(context.Context) (json.RawMessage, error) {
 	return json.RawMessage(`{"items":[{"id":"11111111-1111-4111-8111-111111111111","name":"测试产品"}],"total":1}`), nil
+}
+func (l *licenseDouble) ProductPublicKeys(_ context.Context, product string) (map[string]string, error) {
+	if product != "11111111-1111-4111-8111-111111111111" {
+		return nil, errors.New("unexpected product")
+	}
+	return map[string]string{"test-key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"}, nil
 }
 func (l *licenseDouble) Policies(context.Context) (json.RawMessage, error) {
 	name := l.policyName

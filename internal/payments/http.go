@@ -24,9 +24,20 @@ func client() *http.Client {
 	return &http.Client{Timeout: 15 * time.Second, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
 }
 func request(ctx context.Context, c *http.Client, method, address, contentType string, body []byte, headers map[string]string, out any) error {
+	raw, _, err := requestRaw(ctx, c, method, address, contentType, body, headers)
+	if err != nil {
+		return err
+	}
+	if out != nil && json.Unmarshal(raw, out) != nil {
+		return ErrUncertain
+	}
+	return nil
+}
+
+func requestRaw(ctx context.Context, c *http.Client, method, address, contentType string, body []byte, headers map[string]string) ([]byte, http.Header, error) {
 	r, err := http.NewRequestWithContext(ctx, method, address, bytes.NewReader(body))
 	if err != nil {
-		return ErrRejected
+		return nil, nil, ErrRejected
 	}
 	if contentType != "" {
 		r.Header.Set("Content-Type", contentType)
@@ -36,29 +47,23 @@ func request(ctx context.Context, c *http.Client, method, address, contentType s
 	}
 	response, err := c.Do(r)
 	if err != nil {
-		return ErrUncertain
+		return nil, nil, ErrUncertain
 	}
 	defer response.Body.Close()
 	if response.StatusCode == 401 || response.StatusCode == 403 {
-		return ErrCredentials
+		return nil, nil, ErrCredentials
 	}
 	if response.StatusCode == 429 || response.StatusCode >= 500 {
-		return ErrUncertain
+		return nil, nil, ErrUncertain
 	}
 	if response.StatusCode < 200 || response.StatusCode >= 300 {
-		return ErrRejected
+		return nil, nil, ErrRejected
 	}
 	raw, err := io.ReadAll(io.LimitReader(response.Body, (1<<20)+1))
 	if err != nil || len(raw) > 1<<20 {
-		return ErrUncertain
+		return nil, nil, ErrUncertain
 	}
-	if out == nil {
-		return nil
-	}
-	if json.Unmarshal(raw, out) != nil {
-		return ErrUncertain
-	}
-	return nil
+	return raw, response.Header, nil
 }
 func encoded(v any) []byte { raw, _ := json.Marshal(v); return raw }
 func validID(value string) bool {

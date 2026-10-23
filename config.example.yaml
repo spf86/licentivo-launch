@@ -1,0 +1,14 @@
+# Public template only. Prefer `launch init` to generate config.yaml with a new key.
+# Keep the completed config.yaml private and retain master_key between upgrades.
+environment: development
+http_addr: "127.0.0.1:18080"
+https_addr: ""
+public_url: "http://localhost:18080"
+database_dsn: "launch:REPLACE_WITH_DATABASE_PASSWORD@tcp(127.0.0.1:3306)/launch"
+master_key: "REPLACE_WITH_OUTPUT_OF_LAUNCH_KEYGEN"
+upload_dir: ".local/uploads"
+# Optional initial administrator overrides; used only for a new database.
+admin_email: ""
+admin_password: ""
+# Optional separate passphrase for backup/restore, or use LAUNCH_BACKUP_PASSPHRASE.
+backup_passphrase: ""

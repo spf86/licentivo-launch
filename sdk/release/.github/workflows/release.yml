@@ -1,0 +1,162 @@
+name: Publish Launch packages
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing immutable release tag
+        type: string
+        default: v0.1.1
+        required: true
+      registry:
+        description: Publish one configured registry
+        type: choice
+        options: [pypi, nuget, rubygems, npm, crates]
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-${{ inputs.tag }}-${{ inputs.registry }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    uses: ./.github/workflows/ci.yml
+    with:
+      source_ref: ${{ inputs.tag }}
+
+  packages:
+    needs: verify
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          ref: ${{ inputs.tag }}
+      - name: Download and verify the exact release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          test "$RELEASE_TAG" = "v$(cat VERSION)"
+          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --dir dist
+          python scripts/verify-release.py --packages dist
+          mkdir pypi
+          cp dist/*.whl dist/*.tar.gz pypi/
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: verified-release
+          path: dist/*
+          if-no-files-found: error
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: pypi-distributions
+          path: pypi/*
+          if-no-files-found: error
+
+  pypi:
+    if: inputs.registry == 'pypi'
+    needs: packages
+    runs-on: ubuntu-24.04
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+        with:
+          name: pypi-distributions
+          path: dist
+      - uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e
+
+  nuget:
+    if: inputs.registry == 'nuget'
+    needs: packages
+    runs-on: ubuntu-24.04
+    environment: nuget
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68
+        with:
+          dotnet-version: '8.0.x'
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+        with:
+          name: verified-release
+          path: dist
+      - uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841
+        id: login
+        with:
+          user: spf86
+      - name: Publish the verified Launch package
+        env:
+          NUGET_API_KEY: ${{ steps.login.outputs.NUGET_API_KEY }}
+        run: dotnet nuget push dist/Licentivo.Launch.*.nupkg --source https://api.nuget.org/v3/index.json --api-key "$NUGET_API_KEY"
+
+  rubygems:
+    if: inputs.registry == 'rubygems'
+    needs: packages
+    runs-on: ubuntu-24.04
+    environment: rubygems
+    permissions:
+      id-token: write
+    steps:
+      - uses: ruby/setup-ruby@14594264cd68ce8a2345dd349bc3d138a4ef85c8
+        with:
+          ruby-version: '3.4'
+          bundler: none
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+        with:
+          name: verified-release
+          path: dist
+      - uses: rubygems/configure-rubygems-credentials@8674aee7f9f9055a8b771794d6f1e66b5fad36a9
+      - name: Publish source and tested platform gems
+        run: for package in dist/licentivo-launch-*.gem; do gem push "$package" --host https://rubygems.org; done
+
+  npm:
+    if: inputs.registry == 'npm'
+    needs: packages
+    runs-on: ubuntu-24.04
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          ref: ${{ inputs.tag }}
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: '24'
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+        with:
+          name: verified-release
+          path: dist
+      - name: Publish with the configured npm trusted publisher
+        run: npm publish dist/licentivo-launch-*.tgz --access public --ignore-scripts --provenance
+
+  crates:
+    if: inputs.registry == 'crates'
+    needs: packages
+    runs-on: ubuntu-24.04
+    environment: crates
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+        with:
+          name: verified-release
+          path: dist
+      - name: Install native build dependencies
+        run: sudo apt-get update -qq && sudo apt-get install -y libcurl4-openssl-dev libssl-dev
+      - name: Extract the checksummed crate
+        run: mkdir crate && tar -xzf dist/licentivo-launch-*.crate -C crate
+      - uses: rust-lang/crates-io-auth-action@3268eb413133e2960fa4ae0e963ca76380c54cd9
+        id: auth
+      - name: Publish the verified Launch crate
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
+        run: cargo publish --manifest-path crate/licentivo-launch-0.1.1/Cargo.toml --locked

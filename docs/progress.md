@@ -24,7 +24,7 @@ Documentation prepared for public source publication on 2026-10-21. The implemen
 - Separate customers and staff; administrator/operator/support roles, staff creation and disable/enable, and last-administrator protection. Disabled customer accounts trigger licensing suspension.
 - Safe-field CSV export, encrypted backup, empty-database restore, and a post-restore transaction pause.
 - Signed Licentivo events with remote verification, terminal revocation handling, and late-payment reconciliation.
-- C, C++, C#/.NET 8, Go, Python, and Web backend reference integrations. Local builds/syntax checks have passed; complete external SDK activation acceptance is pending.
+- Wrappers and examples for all nine official SDK languages: Go, Python, C#/.NET, Java, JavaScript/Node.js, Rust, Ruby, C and C++, plus a trusted Go Web backend. See the dated verification record for actual builds and test evidence; external commercial acceptance remains pending.
 - Desktop sidebar/workspace administration, complete plan tables, and keyboard navigation improvements.
 - Product documentation, product-specific policy pages, document images, and separate platform installer metadata/storage.
 - Removal of the global header documentation shortcut; product-specific documentation remains accessible from product pages.
@@ -44,7 +44,7 @@ Documentation prepared for public source publication on 2026-10-21. The implemen
 
 - Review the remaining administration pages, long lists, empty states, role failures, and full accessibility.
 - Complete concurrency boundaries and real SDK activation, restart, offline behavior, account switching, and each release target's acceptance matrix.
-- Expand the application OpenAPI specification; [openapi.json](openapi.json) currently covers only system endpoints.
+- Extend OpenAPI coverage beyond the current 18 system/account/integration/basic order operations to the remaining administrative and provider-webhook APIs.
 - Validate actual Docker/Compose and Linux operation, persistent upload mounts, backup drills, and performance.
 - Complete real Stripe, PayPal, Resend, and DeepL acceptance with merchant-supplied credentials.
 - Verify the complete test payment-to-license-to-application path. A successful catalog read is not license-issuance acceptance.

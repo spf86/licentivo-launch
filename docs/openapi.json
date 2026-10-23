@@ -1,12 +1,20 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Licentivo Launch System API",
-    "version": "0.2.0-beta.1",
-    "description": "System-endpoint subset only. Account, commerce, payment, and licensing routes exist in the application but are not yet covered by this incomplete specification.",
-    "license": { "name": "MIT", "identifier": "MIT" }
+    "title": "Licentivo Launch Integration API",
+    "version": "0.2.0-beta.2",
+    "description": "System, account, desktop licensing, integration wizard and basic purchase APIs. This is not the full staff administration/payment-webhook API. Runtime access must still pass the official Licentivo SDK. Email verification is required only when enabled by the merchant.",
+    "license": {
+      "name": "MIT",
+      "identifier": "MIT"
+    }
   },
-  "servers": [{ "url": "http://localhost:8080" }],
+  "servers": [
+    {
+      "url": "https://shop.example.com",
+      "description": "Replace with your merchant origin; HTTP is permitted only for loopback sandbox development."
+    }
+  ],
   "paths": {
     "/healthz": {
       "get": {
@@ -15,7 +23,13 @@
         "responses": {
           "200": {
             "description": "The HTTP process is running",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HealthResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -27,11 +41,23 @@
         "responses": {
           "200": {
             "description": "The database is ready; this does not certify payment or licensing acceptance",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ReadinessResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadinessResponse"
+                }
+              }
+            }
           },
           "503": {
             "description": "The database is unconfigured, unavailable, or missing required tables",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ReadinessResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadinessResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -47,18 +73,42 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["data", "request_id"],
+                  "required": [
+                    "data",
+                    "request_id"
+                  ],
                   "properties": {
-                    "request_id": { "$ref": "#/components/schemas/RequestID" },
+                    "request_id": {
+                      "$ref": "#/components/schemas/RequestID"
+                    },
                     "data": {
                       "type": "object",
-                      "required": ["product", "version", "phase", "sales_enabled", "implemented"],
+                      "required": [
+                        "product",
+                        "version",
+                        "phase",
+                        "sales_enabled",
+                        "implemented"
+                      ],
                       "properties": {
-                        "product": { "const": "Licentivo Launch" },
-                        "version": { "type": "string" },
-                        "phase": { "const": "local-development" },
-                        "sales_enabled": { "const": false },
-                        "implemented": { "type": "array", "items": { "type": "string" } }
+                        "product": {
+                          "const": "Licentivo Launch"
+                        },
+                        "version": {
+                          "type": "string"
+                        },
+                        "phase": {
+                          "const": "local-development"
+                        },
+                        "sales_enabled": {
+                          "const": false
+                        },
+                        "implemented": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
                       }
                     }
                   }
@@ -68,33 +118,2657 @@
           }
         }
       }
+    },
+    "/api/v1/auth/register": {
+      "post": {
+        "operationId": "registerCustomer",
+        "summary": "Register a customer; verification follows merchant email settings",
+        "tags": [
+          "Application integration"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "accepted": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "accepted"
+                      ]
+                    },
+                    "request_id": {
+                      "$ref": "#/components/schemas/RequestID"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "request_id"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid fields, product ID or environment.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "LOGIN_FAILED (login) or AUTH_REQUIRED (expired/revoked session). Clear rejected sessions; never fall back after an explicit denial.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, email verification required, initial password change required or explicit entitlement denial.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED; do not retry in a tight loop.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before another attempt. Respect this value and bound total retries.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Temporary service or database failure. Offline access is permitted only by a valid official SDK signed grant.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "password": {
+                    "type": "string",
+                    "writeOnly": true,
+                    "description": "12–128 UTF-8 bytes (the server counts bytes, not Unicode characters).",
+                    "x-minBytes": 12,
+                    "x-maxBytes": 128
+                  }
+                },
+                "required": [
+                  "email",
+                  "password"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "operationId": "login",
+        "summary": "Sign in to website or desktop",
+        "tags": [
+          "Application integration"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/SessionGrant"
+                    },
+                    "request_id": {
+                      "$ref": "#/components/schemas/RequestID"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "request_id"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid fields, product ID or environment.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "LOGIN_FAILED (login) or AUTH_REQUIRED (expired/revoked session). Clear rejected sessions; never fall back after an explicit denial.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, email verification required, initial password change required or explicit entitlement denial.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED; do not retry in a tight loop.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before another attempt. Respect this value and bound total retries.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Temporary service or database failure. Offline access is permitted only by a valid official SDK signed grant.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "description": "Set kind=desktop for applications and omit the browser Origin header. Website login sets cookies and omits access_token.",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "password": {
+                    "type": "string",
+                    "writeOnly": true
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "desktop",
+                      "website"
+                    ],
+                    "default": "website"
+                  }
+                },
+                "required": [
+                  "email",
+                  "password"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/email": {
+      "post": {
+        "operationId": "requestAccountEmail",
+        "summary": "Request a verification or password recovery email",
+        "tags": [
+          "Application integration"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "accepted": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "accepted"
+                      ]
+                    },
+                    "request_id": {
+                      "$ref": "#/components/schemas/RequestID"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "request_id"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid fields, product ID or environment.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "LOGIN_FAILED (login) or AUTH_REQUIRED (expired/revoked session). Clear rejected sessions; never fall back after an explicit denial.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, email verification required, initial password change required or explicit entitlement denial.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED; do not retry in a tight loop.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before another attempt. Respect this value and bound total retries.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Temporary service or database failure. Offline access is permitted only by a valid official SDK signed grant.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "verify",
+                      "reset"
+                    ]
+                  }
+                },
+                "required": [
+                  "email",
+                  "kind"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/complete-email": {
+      "post": {
+        "operationId": "completeAccountEmail",
+        "summary": "Complete a one-time email credential",
+        "tags": [
+          "Application integration"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "completed": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "completed"
+                      ]
+                    },
+                    "request_id": {
+                      "$ref": "#/components/schemas/RequestID"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "request_id"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid fields, product ID or environment.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "LOGIN_FAILED (login) or AUTH_REQUIRED (expired/revoked session). Clear rejected sessions; never fall back after an explicit denial.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, email verification required, initial password change required or explicit entitlement denial.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED; do not retry in a tight loop.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before another attempt. Respect this value and bound total retries.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Temporary service or database failure. Offline access is permitted only by a valid official SDK signed grant.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "writeOnly": true
+                  },
+                  "password": {
+                    "type": "string",
+                    "writeOnly": true
+                  }
+                },
+                "required": [
+                  "token"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me": {
+      "get": {
+        "operationId": "currentUser",
+        "summary": "Read the authenticated account",
+        "tags": [
+          "Application integration"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "user": {
+                          "$ref": "#/components/schemas/User"
+                        },
+                        "session_id": {
+                          "type": "string",
+                          "format": "uuid"
+                        }
+                      },
+                      "required": [
+                        "user",
+                        "session_id"
+                      ]
+                    },
+                    "request_id": {
+                      "$ref": "#/components/schemas/RequestID"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "request_id"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid fields, product ID or environment.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "LOGIN_FAILED (login) or AUTH_REQUIRED (expired/revoked session). Clear rejected sessions; never fall back after an explicit denial.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, email verification required, initial password change required or explicit entitlement denial.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED; do not retry in a tight loop.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before another attempt. Respect this value and bound total retries.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Temporary service or database failure. Offline access is permitted only by a valid official SDK signed grant.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "desktopBearer": []
+          },
+          {
+            "websiteCookie": []
+          }
+        ]
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "operationId": "logout",
+        "summary": "Revoke the current session; SDK close, local cleanup and device release remain distinct actions",
+        "tags": [
+          "Application integration"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "completed": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "completed"
+                      ]
+                    },
+                    "request_id": {
+                      "$ref": "#/components/schemas/RequestID"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "request_id"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid fields, product ID or environment.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "LOGIN_FAILED (login) or AUTH_REQUIRED (expired/revoked session). Clear rejected sessions; never fall back after an explicit denial.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, email verification required, initial password change required or explicit entitlement denial.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED; do not retry in a tight loop.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before another attempt. Respect this value and bound total retries.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Temporary service or database failure. Offline access is permitted only by a valid official SDK signed grant.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "desktopBearer": []
+          },
+          {
+            "websiteCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me/sessions": {
+      "get": {
+        "operationId": "listSessions",
+        "summary": "List active account sessions",
+        "tags": [
+          "Application integration"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/SessionView"
+                      }
+                    },
+                    "request_id": {
+                      "$ref": "#/components/schemas/RequestID"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "request_id"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid fields, product ID or environment.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "LOGIN_FAILED (login) or AUTH_REQUIRED (expired/revoked session). Clear rejected sessions; never fall back after an explicit denial.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, email verification required, initial password change required or explicit entitlement denial.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED; do not retry in a tight loop.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before another attempt. Respect this value and bound total retries.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Temporary service or database failure. Offline access is permitted only by a valid official SDK signed grant.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "desktopBearer": []
+          },
+          {
+            "websiteCookie": []
+          }
+        ]
+      }
+    },
+    "/api/v1/me/sessions/{id}": {
+      "delete": {
+        "operationId": "revokeSession",
+        "summary": "Revoke an owned session",
+        "tags": [
+          "Application integration"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "completed": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "completed"
+                      ]
+                    },
+                    "request_id": {
+                      "$ref": "#/components/schemas/RequestID"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "request_id"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid fields, product ID or environment.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "LOGIN_FAILED (login) or AUTH_REQUIRED (expired/revoked session). Clear rejected sessions; never fall back after an explicit denial.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, email verification required, initial password change required or explicit entitlement denial.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED; do not retry in a tight loop.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before another attempt. Respect this value and bound total retries.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Temporary service or database failure. Offline access is permitted only by a valid official SDK signed grant.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "security": [
+          {
+            "desktopBearer": []
+          },
+          {
+            "websiteCookie": []
+          }
+        ]
+      }
+    },
+    "/api/v1/software/products/{id}/credential": {
+      "post": {
+        "operationId": "softwareCredential",
+        "summary": "Get the authenticated customer’s synchronized product credential",
+        "tags": [
+          "Application integration"
+        ],
+        "responses": {
+          "200": {
+            "description": "Synchronized, active credential.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Credential"
+                    },
+                    "request_id": {
+                      "$ref": "#/components/schemas/RequestID"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "request_id"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid fields, product ID or environment.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "LOGIN_FAILED (login) or AUTH_REQUIRED (expired/revoked session). Clear rejected sessions; never fall back after an explicit denial.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "EMAIL_VERIFICATION_REQUIRED, ENTITLEMENT_PENDING, ENTITLEMENT_EXPIRED or ENTITLEMENT_SUSPENDED. Do not reuse an old license after a definitive denial.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before another attempt. Respect this value and bound total retries.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "ENTITLEMENT_NOT_PURCHASED or product not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED; do not retry in a tight loop.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before another attempt. Respect this value and bound total retries.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Temporary service or database failure. Offline access is permitted only by a valid official SDK signed grant.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Launch product ID, not the Licentivo product ID."
+          }
+        ],
+        "security": [
+          {
+            "desktopBearer": []
+          }
+        ],
+        "description": "Browser sessions cannot retrieve license keys. No client-selected user ID is accepted. 403 ENTITLEMENT_PENDING includes Retry-After: 3; retries must be bounded. EXPIRED/SUSPENDED require user action. 404 ENTITLEMENT_NOT_PURCHASED means no owned entitlement.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "environment": {
+                    "type": "string",
+                    "enum": [
+                      "sandbox",
+                      "live"
+                    ]
+                  }
+                },
+                "required": [
+                  "environment"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/software/products/{id}/status": {
+      "get": {
+        "operationId": "softwareStatus",
+        "summary": "Read actionable status for the authenticated customer and requested product",
+        "tags": [
+          "Application integration"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/EntitlementStatus"
+                    },
+                    "request_id": {
+                      "$ref": "#/components/schemas/RequestID"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "request_id"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid fields, product ID or environment.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "LOGIN_FAILED (login) or AUTH_REQUIRED (expired/revoked session). Clear rejected sessions; never fall back after an explicit denial.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, email verification required, initial password change required or explicit entitlement denial.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED; do not retry in a tight loop.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before another attempt. Respect this value and bound total retries.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Temporary service or database failure. Offline access is permitted only by a valid official SDK signed grant.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Launch product ID, not the Licentivo product ID."
+          },
+          {
+            "name": "environment",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "sandbox",
+                "live"
+              ],
+              "default": "live"
+            }
+          }
+        ],
+        "security": [
+          {
+            "desktopBearer": []
+          }
+        ],
+        "description": "This is purchase/synchronization information, not a runtime authorization grant."
+      }
+    },
+    "/api/v1/admin/integration/check": {
+      "post": {
+        "operationId": "checkApplicationIntegration",
+        "summary": "Automatically read the selected software mapping and signing public keys for direct SDK initialization",
+        "tags": [
+          "Application integration"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/IntegrationBundle"
+                    },
+                    "request_id": {
+                      "$ref": "#/components/schemas/RequestID"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "request_id"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid fields, product ID or environment.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "LOGIN_FAILED (login) or AUTH_REQUIRED (expired/revoked session). Clear rejected sessions; never fall back after an explicit denial.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, email verification required, initial password change required or explicit entitlement denial.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED; do not retry in a tight loop.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before another attempt. Respect this value and bound total retries.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Temporary service or database failure. Offline access is permitted only by a valid official SDK signed grant.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "desktopBearer": []
+          },
+          {
+            "websiteCookie": []
+          }
+        ],
+        "description": "Requires the admin role. Website callers must supply Origin and X-CSRF-Token. ready=false reports incomplete configuration; no secret fields are returned. licentivo_product_id may be empty in an incomplete report.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "product_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "environment": {
+                    "type": "string",
+                    "enum": [
+                      "sandbox",
+                      "live"
+                    ]
+                  },
+                  "language": {
+                    "type": "string",
+                    "enum": [
+                      "go",
+                      "python",
+                      "csharp",
+                      "java",
+                      "javascript",
+                      "rust",
+                      "ruby",
+                      "c",
+                      "cpp",
+                      "web"
+                    ]
+                  }
+                },
+                "required": [
+                  "product_id",
+                  "environment",
+                  "language"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orders": {
+      "post": {
+        "operationId": "createCheckout",
+        "summary": "Create or recover an owned checkout using a stable idempotency key",
+        "tags": [
+          "Application integration"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Checkout"
+                    },
+                    "request_id": {
+                      "$ref": "#/components/schemas/RequestID"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "request_id"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid fields, product ID or environment.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "LOGIN_FAILED (login) or AUTH_REQUIRED (expired/revoked session). Clear rejected sessions; never fall back after an explicit denial.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, email verification required, initial password change required or explicit entitlement denial.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED; do not retry in a tight loop.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before another attempt. Respect this value and bound total retries.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Temporary service or database failure. Offline access is permitted only by a valid official SDK signed grant.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "desktopBearer": []
+          },
+          {
+            "websiteCookie": []
+          }
+        ],
+        "description": "Prices are calculated on the server. Renewal and upgrade require a server-issued quote. Follow the hosted checkout; redirect return is not proof of payment.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "product_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "plan_version_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "environment": {
+                    "type": "string",
+                    "enum": [
+                      "sandbox",
+                      "live"
+                    ]
+                  },
+                  "provider": {
+                    "type": "string",
+                    "enum": [
+                      "stripe",
+                      "paypal",
+                      "waffo",
+                      "paddle"
+                    ]
+                  },
+                  "idempotency_key": {
+                    "type": "string",
+                    "description": "Stable operation identifier, 16–80 UTF-8 bytes. Reuse the same key for retries of the same operation.",
+                    "x-minBytes": 16,
+                    "x-maxBytes": 80
+                  },
+                  "purchase_periods": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "action": {
+                    "type": "string",
+                    "enum": [
+                      "purchase",
+                      "renew",
+                      "upgrade"
+                    ]
+                  },
+                  "quote_token": {
+                    "type": "string",
+                    "writeOnly": true
+                  }
+                },
+                "required": [
+                  "product_id",
+                  "plan_version_id",
+                  "environment",
+                  "provider",
+                  "idempotency_key"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orders/{id}": {
+      "get": {
+        "operationId": "getOrder",
+        "summary": "Read an owned order and fulfillment progress",
+        "tags": [
+          "Application integration"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Checkout"
+                    },
+                    "request_id": {
+                      "$ref": "#/components/schemas/RequestID"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "request_id"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid fields, product ID or environment.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "LOGIN_FAILED (login) or AUTH_REQUIRED (expired/revoked session). Clear rejected sessions; never fall back after an explicit denial.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, email verification required, initial password change required or explicit entitlement denial.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED; do not retry in a tight loop.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before another attempt. Respect this value and bound total retries.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Temporary service or database failure. Offline access is permitted only by a valid official SDK signed grant.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "desktopBearer": []
+          },
+          {
+            "websiteCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/orders/{id}/reconcile": {
+      "post": {
+        "operationId": "reconcileOrder",
+        "summary": "Query the payment provider for an owned order",
+        "tags": [
+          "Application integration"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Checkout"
+                    },
+                    "request_id": {
+                      "$ref": "#/components/schemas/RequestID"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "request_id"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid fields, product ID or environment.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "LOGIN_FAILED (login) or AUTH_REQUIRED (expired/revoked session). Clear rejected sessions; never fall back after an explicit denial.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, email verification required, initial password change required or explicit entitlement denial.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED; do not retry in a tight loop.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before another attempt. Respect this value and bound total retries.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Temporary service or database failure. Offline access is permitted only by a valid official SDK signed grant.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "desktopBearer": []
+          },
+          {
+            "websiteCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me/orders": {
+      "get": {
+        "operationId": "listOrders",
+        "summary": "List the current customer’s orders",
+        "tags": [
+          "Application integration"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Order"
+                      }
+                    },
+                    "request_id": {
+                      "$ref": "#/components/schemas/RequestID"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "request_id"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid fields, product ID or environment.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "LOGIN_FAILED (login) or AUTH_REQUIRED (expired/revoked session). Clear rejected sessions; never fall back after an explicit denial.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, email verification required, initial password change required or explicit entitlement denial.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED; do not retry in a tight loop.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before another attempt. Respect this value and bound total retries.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Temporary service or database failure. Offline access is permitted only by a valid official SDK signed grant.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "desktopBearer": []
+          },
+          {
+            "websiteCookie": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/integration/context": {
+      "get": {
+        "operationId": "getIntegrationContext",
+        "summary": "Read the configured merchant origin and fixed licensing origin",
+        "tags": [
+          "Application integration"
+        ],
+        "responses": {
+          "200": {
+            "description": "Public deployment context; no private startup settings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "merchant_origin": {
+                          "type": "string"
+                        },
+                        "licensing_origin": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "merchant_origin",
+                        "licensing_origin"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "request_id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid fields, product ID or environment.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "LOGIN_FAILED (login) or AUTH_REQUIRED (expired/revoked session). Clear rejected sessions; never fall back after an explicit denial.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, email verification required, initial password change required or explicit entitlement denial.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED; do not retry in a tight loop.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before another attempt. Respect this value and bound total retries.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Temporary service or database failure. Offline access is permitted only by a valid official SDK signed grant.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "desktopBearer": []
+          },
+          {
+            "websiteCookie": []
+          }
+        ],
+        "description": "Requires the admin role. Website callers must supply Origin and X-CSRF-Token. ready=false reports incomplete configuration; no secret fields are returned. licentivo_product_id may be empty in an incomplete report."
+      }
     }
   },
   "components": {
     "schemas": {
-      "RequestID": { "type": "string", "pattern": "^[a-f0-9]{32}$", "description": "Also returned in the X-Request-ID response header" },
+      "RequestID": {
+        "type": "string",
+        "pattern": "^[a-f0-9]{32}$",
+        "description": "Also returned in the X-Request-ID response header"
+      },
       "HealthResponse": {
         "type": "object",
-        "required": ["data", "request_id"],
+        "required": [
+          "data",
+          "request_id"
+        ],
         "properties": {
-          "request_id": { "$ref": "#/components/schemas/RequestID" },
-          "data": { "type": "object", "required": ["status"], "properties": { "status": { "const": "ok" } } }
+          "request_id": {
+            "$ref": "#/components/schemas/RequestID"
+          },
+          "data": {
+            "type": "object",
+            "required": [
+              "status"
+            ],
+            "properties": {
+              "status": {
+                "const": "ok"
+              }
+            }
+          }
         }
       },
       "ReadinessResponse": {
         "type": "object",
-        "required": ["data", "request_id"],
+        "required": [
+          "data",
+          "request_id"
+        ],
         "properties": {
-          "request_id": { "$ref": "#/components/schemas/RequestID" },
+          "request_id": {
+            "$ref": "#/components/schemas/RequestID"
+          },
           "data": {
             "type": "object",
-            "required": ["status"],
+            "required": [
+              "status"
+            ],
             "properties": {
-              "status": { "enum": ["ready", "not_ready"] },
-              "code": { "enum": ["DATABASE_NOT_CONFIGURED", "DATABASE_UNAVAILABLE", "DATABASE_SCHEMA_NOT_READY"] }
+              "status": {
+                "enum": [
+                  "ready",
+                  "not_ready"
+                ]
+              },
+              "code": {
+                "enum": [
+                  "DATABASE_NOT_CONFIGURED",
+                  "DATABASE_UNAVAILABLE",
+                  "DATABASE_SCHEMA_NOT_READY"
+                ]
+              }
             }
           }
         }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "message"
+            ]
+          },
+          "request_id": {
+            "$ref": "#/components/schemas/RequestID"
+          }
+        },
+        "required": [
+          "error",
+          "request_id"
+        ]
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "verified": {
+            "type": "boolean"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "customer",
+              "admin",
+              "operations",
+              "support"
+            ]
+          },
+          "full_access": {
+            "type": "boolean"
+          },
+          "password_change_required": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "verified",
+          "role",
+          "full_access",
+          "password_change_required"
+        ]
+      },
+      "SessionGrant": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/User"
+          },
+          "access_token": {
+            "type": "string",
+            "x-sensitive": true,
+            "description": "Only returned for desktop login. Treat as secret; never put in URLs or logs."
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "website",
+              "desktop"
+            ]
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "user",
+          "kind",
+          "expires_at"
+        ]
+      },
+      "Credential": {
+        "type": "object",
+        "properties": {
+          "product_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "license_key": {
+            "type": "string",
+            "x-sensitive": true,
+            "description": "For the official SDK only; never authorize access by inspecting this value."
+          },
+          "valid_until": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "product_id",
+          "license_key",
+          "valid_until",
+          "version"
+        ]
+      },
+      "EntitlementStatus": {
+        "type": "object",
+        "properties": {
+          "product_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "environment": {
+            "type": "string",
+            "enum": [
+              "sandbox",
+              "live"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ready",
+              "pending",
+              "expired",
+              "suspended",
+              "not_purchased"
+            ]
+          },
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "next_action": {
+            "type": "string"
+          },
+          "account_url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "valid_from": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "valid_until": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "synchronized": {
+            "type": "boolean"
+          },
+          "retry_after_seconds": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "max_retry_attempts": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "product_id",
+          "environment",
+          "status",
+          "code",
+          "message",
+          "next_action",
+          "account_url",
+          "synchronized",
+          "retry_after_seconds",
+          "max_retry_attempts"
+        ]
+      },
+      "PublicLaunchConfig": {
+        "type": "object",
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "merchant_origin": {
+            "type": "string",
+            "format": "uri"
+          },
+          "launch_product_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "licentivo_product_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "environment": {
+            "type": "string",
+            "enum": [
+              "sandbox",
+              "live"
+            ]
+          }
+        },
+        "required": [
+          "schema_version",
+          "merchant_origin",
+          "launch_product_id",
+          "licentivo_product_id",
+          "environment"
+        ],
+        "additionalProperties": false
+      },
+      "PublicProductConfig": {
+        "type": "object",
+        "description": "Sanitized public configuration. Signature key provenance must be verified by the merchant.",
+        "required": [
+          "product_id",
+          "trusted_keys",
+          "base_url"
+        ],
+        "properties": {
+          "product_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "trusted_keys": {
+            "type": "object",
+            "minProperties": 1,
+            "maxProperties": 32,
+            "additionalProperties": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{43}$"
+            },
+            "propertyNames": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Key identifiers are 1–128 UTF-8 bytes.",
+              "x-maxBytes": 128
+            }
+          },
+          "base_url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "app_version": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "IntegrationBundle": {
+        "type": "object",
+        "properties": {
+          "ready": {
+            "type": "boolean"
+          },
+          "config": {
+            "type": "object",
+            "properties": {
+              "schema_version": {
+                "type": "integer",
+                "const": 1
+              },
+              "merchant_origin": {
+                "type": "string",
+                "format": "uri"
+              },
+              "launch_product_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "licentivo_product_id": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  {
+                    "const": ""
+                  }
+                ],
+                "description": "Empty only when a failed check could not resolve a mapping."
+              },
+              "environment": {
+                "type": "string",
+                "enum": [
+                  "sandbox",
+                  "live"
+                ]
+              }
+            },
+            "required": [
+              "schema_version",
+              "merchant_origin",
+              "launch_product_id",
+              "licentivo_product_id",
+              "environment"
+            ],
+            "additionalProperties": false
+          },
+          "checks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code",
+                "status",
+                "message"
+              ]
+            }
+          },
+          "language": {
+            "type": "string",
+            "enum": [
+              "go",
+              "python",
+              "csharp",
+              "java",
+              "javascript",
+              "rust",
+              "ruby",
+              "c",
+              "cpp",
+              "web"
+            ]
+          },
+          "example_path": {
+            "type": "string"
+          },
+          "checked_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "product_config": {
+            "$ref": "#/components/schemas/PublicProductConfig"
+          }
+        },
+        "required": [
+          "ready",
+          "config",
+          "checks",
+          "language",
+          "example_path",
+          "checked_at"
+        ]
+      },
+      "Order": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "product_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "product_name": {
+            "type": "string"
+          },
+          "product_slug": {
+            "type": "string"
+          },
+          "plan_version_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "plan_name": {
+            "type": "string"
+          },
+          "plan_version": {
+            "type": "integer"
+          },
+          "action": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "amount_minor": {
+            "type": "integer"
+          },
+          "purchase_periods": {
+            "type": "integer"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "paid_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "environment": {
+            "type": "string",
+            "enum": [
+              "sandbox",
+              "live"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "product_id",
+          "product_name",
+          "product_slug",
+          "plan_version_id",
+          "plan_name",
+          "plan_version",
+          "action",
+          "status",
+          "currency",
+          "amount_minor",
+          "purchase_periods",
+          "created_at",
+          "paid_at",
+          "environment"
+        ]
+      },
+      "Checkout": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Order"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "checkout_url": {
+                "type": "string",
+                "format": "uri"
+              },
+              "fulfillment": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "fulfillment"
+            ]
+          }
+        ]
+      },
+      "SessionView": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "website",
+              "desktop"
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "current": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "created_at",
+          "expires_at",
+          "current"
+        ]
+      },
+      "PublicProductImport": {
+        "type": "object",
+        "description": "Launch public product configuration, populated from the official product ID and signing public keys. Legacy JSON with empty license_key/cache_path and false allow_http is accepted and stripped. Populated secrets and unknown fields are rejected.",
+        "required": [
+          "product_id",
+          "trusted_keys"
+        ],
+        "properties": {
+          "product_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "trusted_keys": {
+            "type": "object",
+            "minProperties": 1,
+            "maxProperties": 32,
+            "additionalProperties": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{43}$"
+            },
+            "propertyNames": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Key identifiers are 1–128 UTF-8 bytes.",
+              "x-maxBytes": 128
+            }
+          },
+          "base_url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "app_version": {
+            "type": "string",
+            "description": "At most 80 UTF-8 bytes.",
+            "x-maxBytes": 80
+          },
+          "license_key": {
+            "const": ""
+          },
+          "cache_path": {
+            "const": ""
+          },
+          "allow_http": {
+            "const": false
+          },
+          "device_name": {
+            "type": "string",
+            "maxLength": 128
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "securitySchemes": {
+      "desktopBearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Opaque desktop session from auth/login with kind=desktop."
+      },
+      "websiteCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "launch_session",
+        "description": "Browser session. Mutations also require matching Origin and X-CSRF-Token from launch_csrf."
       }
     }
   }

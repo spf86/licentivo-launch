@@ -4,9 +4,8 @@ go 1.26.0
 
 require (
 	licentivo-launch v0.0.0
-	licentivo/sdk/go v0.0.0
 )
 
-replace licentivo-launch => ../..
+require golang.org/x/sys v0.41.0 // indirect
 
-replace licentivo/sdk/go => ../vendor/sdk/go
+replace licentivo-launch => ../..

@@ -18,19 +18,21 @@ type EmailCredential struct {
 // credential. The credential is encrypted in SecretRecord with the instance
 // master key, just like payment and licensing credentials.
 type MailSettings struct {
-	ID                 uint8         `gorm:"primaryKey;autoIncrement:false"`
-	Provider           string        `gorm:"type:enum('resend');not null"`
-	From               string        `gorm:"column:from_address;type:varchar(254);not null"`
-	Host               string        `gorm:"type:varchar(253) CHARACTER SET ascii COLLATE ascii_bin;not null;default:'smtp.resend.com'"`
-	Port               string        `gorm:"type:varchar(5) CHARACTER SET ascii COLLATE ascii_bin;not null;default:'465'"`
-	Username           string        `gorm:"type:varchar(254);not null;default:'resend'"`
-	Encryption         string        `gorm:"type:enum('implicit_tls','starttls');not null;default:'implicit_tls'"`
-	CredentialSecretID string        `gorm:"type:char(36) CHARACTER SET ascii COLLATE ascii_bin;not null"`
-	Enabled            bool          `gorm:"not null;default:true"`
-	LastCheckedAt      *time.Time    `gorm:"type:datetime(6)"`
-	LastCheckError     *string       `gorm:"type:varchar(160)"`
-	UpdatedAt          time.Time     `gorm:"type:datetime(6);not null"`
-	Credential         *SecretRecord `gorm:"foreignKey:CredentialSecretID;constraint:fk_mail_settings_secret,OnUpdate:RESTRICT,OnDelete:RESTRICT"`
+	ID                        uint8         `gorm:"primaryKey;autoIncrement:false"`
+	Provider                  string        `gorm:"type:enum('resend','smtp');not null"`
+	From                      string        `gorm:"column:from_address;type:varchar(254);not null"`
+	Host                      string        `gorm:"type:varchar(253) CHARACTER SET ascii COLLATE ascii_bin;not null;default:'smtp.resend.com'"`
+	Port                      string        `gorm:"type:varchar(5) CHARACTER SET ascii COLLATE ascii_bin;not null;default:'465'"`
+	Username                  string        `gorm:"type:varchar(254);not null;default:'resend'"`
+	Encryption                string        `gorm:"type:enum('implicit_tls','starttls');not null;default:'implicit_tls'"`
+	CredentialSecretID        string        `gorm:"type:char(36) CHARACTER SET ascii COLLATE ascii_bin;not null"`
+	Enabled                   bool          `gorm:"not null;default:true"`
+	SkipEmailVerification     bool          `gorm:"not null;default:false"`
+	DisableOrderNotifications bool          `gorm:"not null;default:false"`
+	LastCheckedAt             *time.Time    `gorm:"type:datetime(6)"`
+	LastCheckError            *string       `gorm:"type:varchar(160)"`
+	UpdatedAt                 time.Time     `gorm:"type:datetime(6);not null"`
+	Credential                *SecretRecord `gorm:"foreignKey:CredentialSecretID;constraint:fk_mail_settings_secret,OnUpdate:RESTRICT,OnDelete:RESTRICT"`
 }
 
 func (MailSettings) TableName() string { return "mail_settings" }

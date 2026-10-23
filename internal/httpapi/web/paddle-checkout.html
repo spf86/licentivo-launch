@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Secure payment · Licentivo Launch</title>
+  <link rel="stylesheet" href="/assets/app.css">
+  <link rel="stylesheet" href="/assets/interface.css">
+  <script defer src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
+  <script defer src="/assets/paddle-checkout.js"></script>
+</head>
+<body data-token="{{.ClientToken}}" data-environment="{{.Environment}}" data-transaction="{{.TransactionID}}" data-return="{{.ReturnURL}}">
+  <main class="panel payment-page">
+    <p class="eyebrow">Secure checkout</p>
+    <h1>Complete your payment</h1>
+    <p>Pay securely with Paddle. Your software access will appear after the payment is confirmed.</p>
+    <p id="payment-status" role="status">Opening the payment form…</p>
+    <div class="actions"><button type="button" id="open-checkout">Open payment form</button><a class="button secondary" href="{{.ReturnURL}}">Return to your order</a></div>
+  </main>
+</body>
+</html>

@@ -1,0 +1,17 @@
+.cache/
+artifacts/
+dist/
+build/
+**/bin/
+**/obj/
+**/target/
+**/__pycache__/
+**/node_modules/
+*.egg-info/
+*.pyc
+*.log
+.env
+*.secrets.*
+launch-config.json
+product.json
+sdk/ruby/lib/licentivo_launch/vendor/licentivo/native/

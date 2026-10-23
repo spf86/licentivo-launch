@@ -39,9 +39,9 @@ Launch uses one Licentivo connection. Its sandbox/live labels distinguish paymen
 
 The service origin is fixed to `https://www.licentivo.com`. There is no administrator-defined licensing URL or licensing sandbox selector. See [licentivo-contract.md](licentivo-contract.md).
 
-## Resend: account email
+## Optional email: Resend or generic SMTP
 
-Launch's account-email integration uses [Resend](https://resend.com/) for verification, password reset, and email changes.
+Launch supports [Resend](https://resend.com/) and generic SMTP. Email delivery is optional. Registration verification and transaction notifications have independent switches; password recovery and email-change confirmation remain available whenever delivery is enabled.
 
 1. Create a [Resend account](https://resend.com/signup).
 2. Add a domain you control using the [domain guide](https://resend.com/docs/dashboard/domains/introduction), configure the supplied DNS records, and wait for verification.
@@ -54,6 +54,10 @@ Defaults are host `smtp.resend.com`, username `resend`, port `465`, and implicit
 
 ## External acceptance before launch
 
-Local test doubles verify requests, queues, encryption, and state changes; they do not establish that a third-party account works. Before live sales, verify real DeepL output, Stripe and PayPal test purchases/refunds, Licentivo license issuance, and Resend verification/password-reset delivery.
+Local test doubles verify requests, queues, encryption, and state changes; they do not establish that a third-party account works. Before live sales, verify configured-provider test purchases/refunds and Licentivo license issuance, plus real DeepL output and email verification/password-reset delivery when those services are enabled.
 
 Administration labels above are English descriptions of the settings; the current administration UI uses Simplified Chinese.
+
+## Waffo and Paddle
+
+Both providers are available under **System settings > Payments**, with separate sandbox and live credentials. Follow [Waffo and Paddle setup](waffo-paddle.md). Waffo uses the standard Payment API; Paddle uses Billing transactions and full-refund adjustments. Sandbox credentials were not available during local implementation, so real provider acceptance remains outstanding.
