@@ -20,7 +20,7 @@ internal sealed class OfficialRuntime(Config config) : IRuntime
     public async Task Start(CancellationToken ct) => await client.Start(ct: ct);
     public AuthorizationStatus Status() => client.Status();
     public Task RunFeature(string feature, Func<Task> action) => client.RunFeature(feature, action);
-    public Task Deactivate(CancellationToken ct) => client.Deactivate(ct);
+    public async Task Deactivate(CancellationToken ct){var result=await client.Logout(ct);if(result.StorageError!="")throw new LaunchException("SDK_LOGOUT_STORAGE_FAILED");if(result.RevocationPending)throw new LaunchException("DEVICE_REVOCATION_PENDING");}
     public ValueTask DisposeAsync() => client.DisposeAsync();
 }
 
@@ -38,7 +38,7 @@ public sealed class LaunchException : Exception
 /// <summary>Single-account lifecycle. Serialize calls from your application UI.</summary>
 public sealed class Application : IAsyncDisposable
 {
-    private sealed record Session(int Version, string Scope, string UserId, string AccessToken, string ExpiresAt, string LicenseKey);
+    private sealed record Session(int Version, string Scope, string UserId, string AccessToken, string ExpiresAt, string IdentityJson, bool LogoutPending = false);
     private readonly Config productConfig;
     private readonly string productId, environment, scope, cacheRoot;
     private readonly ISessionStore store;
@@ -48,6 +48,7 @@ public sealed class Application : IAsyncDisposable
     private Session? session;
     private string? cachePath;
     private bool disposed;
+    private bool accountCleared;
     public Application(string origin, string productId, Config productConfig, string environment = "live", ISessionStore? store = null, string? cacheDirectory = null, HttpMessageHandler? handler = null, Func<Config, IRuntime>? runtimeFactory = null)
     {
         var uri = new Uri(origin);
@@ -57,7 +58,7 @@ public sealed class Application : IAsyncDisposable
         this.productId = productId; this.environment = environment; this.productConfig = productConfig;
         this.store = store ?? new MemoryStore();
         this.runtimeFactory = runtimeFactory ?? (cfg => new OfficialRuntime(cfg));
-        scope = string.Join("\n", uri.GetLeftPart(UriPartial.Authority), productId, environment, productConfig.ProductId);
+        scope = "launch-account-v2\n" + string.Join("\n", uri.GetLeftPart(UriPartial.Authority), productId, environment, productConfig.ProductId);
         cacheRoot = cacheDirectory ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "LicentivoLaunch");
         http = new HttpClient(handler ?? new HttpClientHandler { AllowAutoRedirect = false }) { BaseAddress = uri, Timeout = TimeSpan.FromSeconds(15) };
     }
@@ -95,56 +96,46 @@ public sealed class Application : IAsyncDisposable
         catch (TaskCanceledException) when (!ct.IsCancellationRequested) { throw new LaunchException("NETWORK_UNAVAILABLE"); }
         catch (Exception e) when (e is JsonException or KeyNotFoundException or InvalidOperationException) { throw new LaunchException("INVALID_RESPONSE"); }
     }
-    private async Task<string> Credential(string token, int attempts, CancellationToken ct)
-    {
-        for (int attempt = 0; ; attempt++)
-        {
-            try
-            {
-                var own = await Call($"/software/products/{productId}/credential", new { environment }, token, ct);
-                if (!own.TryGetProperty("product_id", out var product) || product.ValueKind != JsonValueKind.String || product.GetString() != productId ||
-                    !own.TryGetProperty("license_key", out var key) || key.ValueKind != JsonValueKind.String || string.IsNullOrWhiteSpace(key.GetString()) ||
-                    !own.TryGetProperty("version", out var version) || version.ValueKind != JsonValueKind.Number || !version.TryGetUInt64(out var revision) || revision < 1) throw new LaunchException("CREDENTIAL_MISMATCH");
-                return key.GetString()!;
-            }
-            catch (LaunchException e) when (e.Code == "ENTITLEMENT_PENDING" && e.Status is 403 or 409 && e.RetryAfterSeconds <= 30 && attempt + 1 < attempts)
-            { await Task.Delay(TimeSpan.FromSeconds(Math.Max(3, e.RetryAfterSeconds > 0 ? e.RetryAfterSeconds : Math.Min(1 << attempt, 4))), ct); }
-        }
-    }
+    private async Task<JsonElement> Credential(string token,int attempts,CancellationToken ct){
+ var own=await Call($"/software/products/{productId}/identity",new {environment},token,ct);
+ if(own.GetProperty("product_id").GetString()!=productId||own.GetProperty("licentivo_product_id").GetString()!=productConfig.ProductId||own.GetProperty("environment").GetString()!=environment||!Guid.TryParse(own.GetProperty("launch_connection_id").GetString(),out _)||own.GetProperty("identity_token").GetString() is not {Length:>=32 and <=12288})throw new LaunchException("IDENTITY_MISMATCH");return own;
+ }
+ private static string PublicIdentity(JsonElement identity){var fields=JsonSerializer.Deserialize<Dictionary<string,JsonElement>>(identity.GetRawText())!;foreach(var key in fields.Keys.ToArray())if(!new[]{"product_id","licentivo_product_id","launch_connection_id","environment","expires_at"}.Contains(key))fields.Remove(key);return JsonSerializer.Serialize(fields);}
+ private Config RuntimeConfig(Session saved,string identity=""){using var context=JsonDocument.Parse(saved.IdentityJson);return productConfig with{LicenseKey="",LaunchConnectionId=context.RootElement.GetProperty("launch_connection_id").GetString()!,IdentityToken=identity,Environment=environment,CachePath=CacheFor(saved)};}
     private string CacheFor(Session saved)
     {
         var accountScope = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(scope + "\n" + saved.UserId))).ToLowerInvariant();
         return Path.Combine(cacheRoot, accountScope, "lease.json");
     }
-    private async Task Start(Session next, CancellationToken ct, bool offline = false)
-    {
-        ObjectDisposedException.ThrowIf(disposed, this);
-        if (runtime is not null) { await runtime.DisposeAsync(); runtime = null; }
-        ct.ThrowIfCancellationRequested();
-        string directory = Path.GetDirectoryName(CacheFor(next))!; Directory.CreateDirectory(directory);
-        if (!OperatingSystem.IsWindows()) File.SetUnixFileMode(directory, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
-        cachePath = Path.Combine(directory, "lease.json");
-        var client = runtimeFactory(productConfig with { LicenseKey = next.LicenseKey, CachePath = cachePath });
-        try { if (offline && !client.Status().Allowed) throw new LaunchException("OFFLINE_UNAVAILABLE"); await client.Start(ct); }
-        catch { await client.DisposeAsync(); throw; }
-        runtime = client; session = next;
-    }
+    private async Task Start(Session next,CancellationToken ct,bool offline=false,string identity=""){
+ ObjectDisposedException.ThrowIf(disposed,this);if(runtime is not null){await runtime.DisposeAsync();runtime=null;}
+ string directory=Path.GetDirectoryName(CacheFor(next))!;Directory.CreateDirectory(directory);if(!OperatingSystem.IsWindows())File.SetUnixFileMode(directory,UnixFileMode.UserRead|UnixFileMode.UserWrite|UnixFileMode.UserExecute);
+ cachePath=CacheFor(next);var client=runtimeFactory(RuntimeConfig(next,identity));try{await client.Start(ct);}catch{await client.DisposeAsync();throw;}runtime=client;session=next;accountCleared=false;
+ }
     public async Task Login(string email, string password, int pendingAttempts = 3, CancellationToken ct = default)
+    {
+        using var guard = await AccountGuard.Take(scope, ct);
+        await LoginCore(email, password, pendingAttempts, ct);
+    }
+    private async Task LoginCore(string email, string password, int pendingAttempts, CancellationToken ct)
     {
         ObjectDisposedException.ThrowIf(disposed, this);
         if (pendingAttempts is < 1 or > 5) throw new ArgumentOutOfRangeException(nameof(pendingAttempts));
-        await Logout(ct);
+        await LogoutCore(ct);
         var grant = await Call("/auth/login", new { email, password, kind = "desktop" }, "", ct);
         var token = grant.GetProperty("access_token").GetString()!;
+        session = new Session(2, scope, grant.GetProperty("user").GetProperty("id").GetString()!, token, grant.GetProperty("expires_at").GetString()!, "{}");
+        accountCleared=false;
         try
         {
-            var next = new Session(1, scope, grant.GetProperty("user").GetProperty("id").GetString()!, token, grant.GetProperty("expires_at").GetString()!, await Credential(token, pendingAttempts, ct));
-            await Start(next, ct); store.Save(scope, JsonSerializer.SerializeToUtf8Bytes(next));
+            var own=await Credential(token,pendingAttempts,ct);
+            var next = new Session(2, scope, grant.GetProperty("user").GetProperty("id").GetString()!, token, grant.GetProperty("expires_at").GetString()!, PublicIdentity(own));
+            session=next;await Start(next, ct,identity:own.GetProperty("identity_token").GetString()!); store.Save(scope, JsonSerializer.SerializeToUtf8Bytes(next));
         }
         catch
         {
-            try { await Call("/auth/logout", new { }, token, ct); } catch (LaunchException) { }
-            if (runtime is not null) await runtime.DisposeAsync(); runtime = null; session = null; throw;
+            try { if(session is not null || runtime is not null) await LogoutCore(CancellationToken.None); else await Call("/auth/logout",new{},token,CancellationToken.None); } catch { }
+            throw;
         }
     }
     private Session? Saved()
@@ -155,56 +146,45 @@ public sealed class Application : IAsyncDisposable
         try { next = JsonSerializer.Deserialize<Session>(saved) ?? throw new JsonException(); }
         catch (JsonException) { throw new LaunchException("INVALID_SAVED_SESSION"); }
         finally { CryptographicOperations.ZeroMemory(saved); }
-        if (next.Version != 1 || next.Scope != scope || string.IsNullOrEmpty(next.UserId) || string.IsNullOrEmpty(next.LicenseKey)) throw new LaunchException("INVALID_SAVED_SESSION");
+        if ((next.Version != 2 && !(next.Version == 3 && next.LogoutPending)) || next.Scope != scope || string.IsNullOrEmpty(next.AccessToken) || !next.LogoutPending && (string.IsNullOrEmpty(next.UserId) || string.IsNullOrEmpty(next.IdentityJson))) throw new LaunchException("INVALID_SAVED_SESSION");
         return next;
     }
-    public async Task<bool> Restore(CancellationToken ct = default)
-    {
-        ct.ThrowIfCancellationRequested();
-        if (runtime is not null) await runtime.DisposeAsync(); runtime = null; session = null;
-        var next = Saved(); if (next is null) return false;
-        if (!DateTimeOffset.TryParse(next.ExpiresAt, out var expires) || expires <= DateTimeOffset.UtcNow)
-        { await Forget(next); throw new LaunchException("SESSION_EXPIRED"); }
-        try
-        {
-            var current = await Call("/me", null, next.AccessToken, ct, get: true);
-            if (current.GetProperty("user").GetProperty("id").GetString() != next.UserId) throw new LaunchException("SESSION_REJECTED", 401);
-            next = next with { LicenseKey = await Credential(next.AccessToken, 3, ct) };
-        }
-        catch (LaunchException error)
-        {
-            if (error.Code == "NETWORK_UNAVAILABLE" || error.Status >= 500) { ct.ThrowIfCancellationRequested(); await Start(next, ct, offline: true); return true; }
-            if (error.Code != "ENTITLEMENT_PENDING" && (error.Status is 401 or 403 or 404 || error.Code is "ENTITLEMENT_EXPIRED" or "ENTITLEMENT_SUSPENDED" or "ENTITLEMENT_NOT_PURCHASED")) await Forget(next);
-            throw;
-        }
-        await Start(next, ct);
-        try { store.Save(scope, JsonSerializer.SerializeToUtf8Bytes(next)); }
-        catch { if (runtime is not null) await runtime.DisposeAsync(); runtime = null; session = null; throw; }
-        return true;
-    }
+    public async Task<bool> Restore(CancellationToken ct=default){using var guard=await AccountGuard.Take(scope,ct);return await RestoreCore(ct);}
+    private async Task<bool> RestoreCore(CancellationToken ct){
+ if(runtime is not null)await runtime.DisposeAsync();runtime=null;var next=session?.LogoutPending==true?session:Saved();session=null;next??=PendingAccounts().FirstOrDefault();if(next is null)return false;
+ var task=PendingAccounts().FirstOrDefault(value=>value.AccessToken==next.AccessToken);if(task is not null)next=task;
+ if(AccountGuard.HasIntent(scope,next.AccessToken))next=next with{Version=3,LogoutPending=true};
+ if(next.LogoutPending){session=next;await LogoutCore(ct);return false;}
+ await RetryOtherAccounts(next.AccessToken,ct);
+ if(!DateTimeOffset.TryParse(next.ExpiresAt,out var expires)||expires<=DateTimeOffset.UtcNow){await Forget(next);throw new LaunchException("SESSION_EXPIRED");}
+ JsonElement own;try{var current=await Call("/me",null,next.AccessToken,ct,get:true);if(current.GetProperty("user").GetProperty("id").GetString()!=next.UserId)throw new LaunchException("SESSION_REJECTED",401);own=await Credential(next.AccessToken,1,ct);}catch(LaunchException e){if(e.Status is 401 or 403)await Forget(next);throw;}
+ next=next with{IdentityJson=PublicIdentity(own)};await Start(next,ct,identity:own.GetProperty("identity_token").GetString()!);try{store.Save(scope,JsonSerializer.SerializeToUtf8Bytes(next));}catch{await Forget(next);throw;}return true;
+ }
     public Task RunFeature(string feature, Func<Task> action) => (runtime ?? throw new LaunchException("LOGIN_REQUIRED")).RunFeature(feature, action);
     public AuthorizationStatus? Status() => runtime?.Status();
-    public async Task ReleaseDevice(CancellationToken ct = default)
-    {
-        if (runtime is null) throw new LaunchException("LOGIN_REQUIRED");
-        await runtime.Deactivate(ct); await Logout(ct);
-    }
-    private async Task Forget(Session? saved)
-    {
-        if (runtime is not null) await runtime.DisposeAsync(); runtime = null; session = null;
-        store.Delete(scope);
-        var cache = saved is null ? cachePath : CacheFor(saved);
-        if (cache is not null) { File.Delete(cache); File.Delete(cache + ".credential.json"); }
-    }
-    public async Task Logout(CancellationToken ct = default)
-    {
-        Session? saved;
-        try { saved = session ?? Saved(); }
-        catch { await Forget(null); throw; }
-        var token = saved?.AccessToken ?? "";
-        await Forget(saved);
-        if (token != "") try { await Call("/auth/logout", new { }, token, ct); } catch (LaunchException) { }
-    }
+    public Task ReleaseDevice(CancellationToken ct=default)=>Logout(ct);
+    private async Task Forget(Session? saved){saved??=session;try{if(runtime is not null)await runtime.DisposeAsync();}finally{runtime=null;session=null;accountCleared=true;if(saved is not null)DeleteOwned(saved);}}
+    private sealed record AccountQueue(int Version, List<Session> Records);
+    private string QueueKey => scope+"\naccount-logout-queue-v1";
+    private List<Session> PendingAccounts(){var raw=store.Load(QueueKey);if(raw is null)return [];try{var queue=JsonSerializer.Deserialize<AccountQueue>(raw);if(queue is null||queue.Version!=1||queue.Records.Count>64||queue.Records.Any(value=>!value.LogoutPending||value.Scope!=scope||string.IsNullOrEmpty(value.AccessToken)))throw new LaunchException("INVALID_SAVED_SESSION");return queue.Records;}catch(JsonException){throw new LaunchException("INVALID_SAVED_SESSION");}finally{CryptographicOperations.ZeroMemory(raw);}}
+    private void UpdatePending(Session saved,bool remove=false){var records=PendingAccounts().Where(value=>value.AccessToken!=saved.AccessToken).ToList();if(!remove)records.Add(saved with{Version=3,LogoutPending=true});if(records.Count>64)throw new LaunchException("ACCOUNT_LOGOUT_QUEUE_FULL");if(records.Count==0){store.Delete(QueueKey);return;}var raw=JsonSerializer.SerializeToUtf8Bytes(new AccountQueue(1,records));try{if(raw.Length>60000)throw new LaunchException("ACCOUNT_LOGOUT_QUEUE_FULL");store.Save(QueueKey,raw);}finally{CryptographicOperations.ZeroMemory(raw);}}
+    private bool Owns(Session saved)=>Saved()?.AccessToken==saved.AccessToken;
+    private void DeleteOwned(Session saved){if(Owns(saved))store.Delete(scope);}
+    private void MarkLogout(Session saved){try{AccountGuard.Remember(scope,saved.AccessToken);}catch{}Exception? queueFailure=null;try{UpdatePending(saved);}catch(Exception e){queueFailure=e;}if(Owns(saved)){try{var raw=JsonSerializer.SerializeToUtf8Bytes(saved);try{store.Save(scope,raw);}finally{CryptographicOperations.ZeroMemory(raw);}return;}catch{try{DeleteOwned(saved);}catch{}}}if(queueFailure is not null)throw new LaunchException("ACCOUNT_LOGOUT_STORAGE_FAILED");}
+    private void FinishAccount(Session saved){DeleteOwned(saved);UpdatePending(saved,true);AccountGuard.ClearIntent(scope,saved.AccessToken);}
+    private async Task RetryOtherAccounts(string? skip,CancellationToken ct){foreach(var saved in PendingAccounts()){if(saved.AccessToken==skip)continue;try{await Call("/auth/logout",new{},saved.AccessToken,ct);}catch(LaunchException e)when(e.Status==401){}FinishAccount(saved);}}
+    public async Task Logout(CancellationToken ct=default){AccountGuard? guard=null;try{if(session is not null)try{AccountGuard.Remember(scope,session.AccessToken);}catch{}guard=await AccountGuard.Take(scope,CancellationToken.None);if(accountCleared&&session is null)await RetryOtherAccounts(null,ct);else await LogoutCore(ct);}catch{if(session is not null)session=session with{Version=3,LogoutPending=true};throw;}finally{try{if(runtime is not null){try{await runtime.Deactivate(CancellationToken.None);}catch{}await runtime.DisposeAsync();}runtime=null;}finally{guard?.Dispose();}}}
+    private async Task LogoutCore(CancellationToken ct){
+ Session? saved;try{saved=session??Saved()??PendingAccounts().FirstOrDefault();}catch{await Forget(null);throw;}Exception? failure=null,persistFailure=null,otherFailure=null;bool confirmed=true;
+ try{await RetryOtherAccounts(saved?.AccessToken,ct);}catch(Exception e){otherFailure=e;}
+ if(saved is not null){saved=saved with{Version=3,LogoutPending=true};session=saved;try{MarkLogout(saved);}catch(Exception e){persistFailure=e;}}
+ try{var active=Saved();if(runtime is null&&saved is not null&&(active is null||active.AccessToken==saved.AccessToken)&&saved.IdentityJson!="{}"&&!string.IsNullOrEmpty(saved.IdentityJson))runtime=runtimeFactory(RuntimeConfig(saved));if(runtime is not null)await runtime.Deactivate(ct);}catch(Exception e){failure=e;}
+ try{if(runtime is not null)await runtime.DisposeAsync();}catch(Exception e){failure??=e;}finally{runtime=null;}
+ if(saved is not null)try{await Call("/auth/logout",new{},saved.AccessToken,ct);}catch(Exception e){confirmed=e is LaunchException api&&api.Status==401;}
+ if(confirmed){if(saved is not null)FinishAccount(saved);await Forget(saved);}else if(persistFailure is not null)failure=new LaunchException("ACCOUNT_LOGOUT_STORAGE_FAILED");else failure??=new LaunchException("ACCOUNT_LOGOUT_PENDING");
+ failure??=otherFailure;
+ if(failure is not null)throw failure;
+ }
     public async ValueTask DisposeAsync()
     {
         if (disposed) return; disposed = true;

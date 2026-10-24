@@ -7,11 +7,11 @@ export interface PublicProductConfig {
   app_version?: string; allow_http?: boolean;
 }
 export interface User {id: string; email?: string; display_name?: string; [key: string]: unknown}
-export interface SessionState {user: User; expiresAt: string; offlineFallback: boolean}
+export interface SessionState {user: User; expiresAt: string}
 /** Secret record: never log it or serialize it outside an encrypted store. */
 export interface SavedSession {
-  version: 1; scope: string; user: User; token: string; expires_at: string;
-  credential: {product_id: string; license_key: string; version: number};
+  version: 2; scope: string; user: User; token: string; expires_at: string;
+  identityContext: {product_id: string; licentivo_product_id: string; launch_connection_id: string; environment: "sandbox" | "live"; expires_at: string};
 }
 export interface SessionStore {
   readonly persistent: boolean; readonly secure?: boolean;
@@ -46,12 +46,13 @@ export interface Runtime {
   start(onError?: (error: unknown) => void, signal?: AbortSignal): Promise<unknown>;
   runFeature<T>(name: string, action: () => T | Promise<T>): Promise<T>;
   deactivate(signal?: AbortSignal): Promise<unknown>;
+  logout?(signal?: AbortSignal): Promise<{local_complete: boolean; revocation_pending: boolean; storage_error?: string}>;
   close(): Promise<unknown>;
 }
 export interface Options {
   store?: SessionStore; cacheDir?: string; pendingAttempts?: number;
   transport?: (request: Request) => Promise<Response>;
-  runtimeFactory?: (config: PublicProductConfig & {license_key: string; cache_path: string}) => Runtime | Promise<Runtime>;
+  runtimeFactory?: (config: PublicProductConfig & {license_key: ""; identity_token: string; launch_connection_id: string; environment: "live" | "sandbox"; cache_path: string}) => Runtime | Promise<Runtime>;
   sleep?: (milliseconds: number, signal?: AbortSignal) => Promise<void>;
 }
 export class Application {

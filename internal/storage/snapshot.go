@@ -55,15 +55,17 @@ func MakeSnapshot(ctx context.Context, db *gorm.DB, key []byte, configuration ma
 // RestoreSnapshot refuses every nonempty target and restores in one transaction.
 // Worker leases and login tokens from an old backup cannot be reused as current.
 func RestoreSnapshot(ctx context.Context, db *gorm.DB, snap Snapshot) error {
-	if snap.Format != "licentivo-launch-backup-v1" || len(snap.MasterKey) != 32 || len(snap.Tables) != len(models()) {
-		return errors.New("unsupported or incomplete backup")
-	}
-	entries := map[string]json.RawMessage{}
-	for _, table := range snap.Tables {
-		if _, ok := entries[table.Name]; ok {
-			return errors.New("duplicate backup table")
+	tableNames := make([]string, 0, len(models()))
+	for _, model := range models() {
+		stmt := &gorm.Statement{DB: db}
+		if err := stmt.Parse(model); err != nil {
+			return err
 		}
-		entries[table.Name] = table.Rows
+		tableNames = append(tableNames, stmt.Schema.Table)
+	}
+	entries, err := snapshotEntries(snap, tableNames)
+	if err != nil {
+		return err
 	}
 	return db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		for _, model := range models() {
@@ -126,4 +128,35 @@ func RestoreSnapshot(ctx context.Context, db *gorm.DB, snap Snapshot) error {
 		// reconcile transactions after the backup timestamp before resuming workers.
 		return tx.Model(&InstanceSettings{}).Where("id = 1").Update("recovery_required", true).Error
 	})
+}
+
+// The reversal receipt table did not exist in earlier v1 archives. Only this
+// added table may be absent; all other completeness and duplicate checks stay.
+func snapshotEntries(snap Snapshot, tableNames []string) (map[string]json.RawMessage, error) {
+	if snap.Format != "licentivo-launch-backup-v1" || len(snap.MasterKey) != 32 {
+		return nil, errors.New("unsupported or incomplete backup")
+	}
+	known := make(map[string]bool, len(tableNames))
+	for _, name := range tableNames {
+		known[name] = true
+	}
+	entries := make(map[string]json.RawMessage, len(tableNames))
+	for _, table := range snap.Tables {
+		if !known[table.Name] {
+			return nil, errors.New("unknown backup table")
+		}
+		if _, exists := entries[table.Name]; exists {
+			return nil, errors.New("duplicate backup table")
+		}
+		entries[table.Name] = table.Rows
+	}
+	for _, name := range tableNames {
+		if _, exists := entries[name]; !exists {
+			if name != "payment_reversals" {
+				return nil, errors.New("backup table is missing")
+			}
+			entries[name] = json.RawMessage("[]")
+		}
+	}
+	return entries, nil
 }

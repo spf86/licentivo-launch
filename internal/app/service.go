@@ -44,6 +44,7 @@ type Config struct {
 	UploadDir             string
 	MailFactory           func(mailer.Config) (mailer.Sender, error)
 	PaymentFactory        func(context.Context, storage.PaymentAccount) (ports.PaymentProvider, error)
+	BridgeFactory         func(integrationKey string) (ports.LaunchBridge, error)
 	LicensingFactory      func(context.Context, storage.LicentivoConnection) (ports.LicensingProvider, error)
 	LicensingSetupFactory func(apiKey string) (LicentivoSetupProvider, error)
 	TranslationFactory    func(edition, apiKey string) (ports.Translator, error)

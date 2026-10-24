@@ -1,5 +1,7 @@
 # Application integration acceptance
 
+> Account-mode probes now obtain short-lived identity assertions. Negative Launch purchase status is purchase evidence only, not proof of Licentivo runtime denial. Runtime proof requires the official SDK probe; no production deployment or SDK publication is implied. See [account boundary](account-purchase-boundary.md).
+
 There are two separate evidence levels: controlled local automated checks and external merchant-sandbox probes. A test double, successful catalog read, generated configuration or passing health check never establishes real payment, license issuance or activation. External service configuration was explicitly deferred for this development iteration.
 
 ## Local automated checks

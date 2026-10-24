@@ -71,7 +71,10 @@ func testStaffAndExports(a *testApp, admin, customer *browser, credentials map[s
 				t.Fatalf("secret appeared in %s export", kind)
 			}
 		}
-		if export.Rows == 0 {
+		if kind == "bindings" && export.Rows != 0 {
+			t.Fatal("account purchases must not create long-key bindings")
+		}
+		if kind != "bindings" && export.Rows == 0 {
 			t.Fatal("export missing data")
 		}
 	}

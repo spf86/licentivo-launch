@@ -26,14 +26,6 @@ begin
             puts 'Memory session only. Restart requires login; no plaintext session file is written.'
             LicentivoLaunch::MemoryStore.new
           end
-  # Prefer an installed compiled gem. The prepared source fallback needs its
-  # native core built first, as described in sdk/ruby/README.md.
-  begin
-    require 'licentivo'
-  rescue LoadError
-    $LOAD_PATH.unshift(File.expand_path('../vendor/sdk/ruby/lib', __dir__))
-    require 'licentivo'
-  end
   token = LicentivoLaunch::CancellationToken.new
   Signal.trap('INT') { token.cancel }
   app = LicentivoLaunch::Application.from_files(*ARGV, store: store)
@@ -54,12 +46,12 @@ begin
     if options[:mode] == :release
       app.release_device(cancellation: token); puts 'Device released and local session removed.'
     else
-      puts(state[:offline_fallback] ? 'Signed in with a verified offline lease.' : 'Signed in; runtime started.')
+      puts 'Signed in; official SDK runtime started.'
       app.run_feature(options[:feature]) { puts 'Protected business callback executed.' } if options[:feature]
     end
   end
 rescue StandardError, LoadError => e
-  warn(e.respond_to?(:code) ? e.code : 'OPERATION_FAILED (check configuration and official native SDK installation)')
+  warn(e.respond_to?(:code) ? e.code : 'OPERATION_FAILED (check configuration and the Launch package native runtime)')
   exit_code = 1
 ensure
   app&.close

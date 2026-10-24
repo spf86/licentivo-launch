@@ -1,0 +1,521 @@
+{
+  "date": "2026-10-24",
+  "scope": "Authorization edge audit only; no business code edits or deployment",
+  "source_integrity": {
+    "launch": {
+      "files": 284,
+      "added": [
+        "internal/app/order_recovery.go",
+        "internal/app/quotes_test.go"
+      ],
+      "removed": [],
+      "changed": [
+        "internal/app/ledger.go",
+        "internal/app/operations.go",
+        "internal/app/purchase_sync.go",
+        "internal/app/purchase_sync_integration_test.go",
+        "internal/app/quotes.go"
+      ],
+      "unchanged": false
+    },
+    "licentivo": {
+      "files": 369,
+      "added": [
+        "internal/httpapi/launch_grant_replay_test.go",
+        "internal/httpapi/launch_restrictions.go",
+        "internal/httpapi/launch_restrictions_test.go",
+        "internal/httpapi/runtime_grant_replay_test.go",
+        "internal/httpapi/runtime_grants.go",
+        "internal/store/launch_restriction_migration.go",
+        "internal/store/launch_restriction_migration_test.go"
+      ],
+      "removed": [],
+      "changed": [
+        "internal/httpapi/launch.go",
+        "internal/httpapi/launch_runtime.go",
+        "internal/httpapi/runtime.go",
+        "internal/httpapi/runtime_check.go",
+        "internal/httpapi/runtime_check_test.go",
+        "internal/store/launch_models.go",
+        "internal/store/migrate.go"
+      ],
+      "unchanged": false
+    }
+  },
+  "go_tests": {
+    "lic-edge-probes.jsonl": {
+      "passed_records_including_subtests": 4,
+      "passed_top_level": 4,
+      "failed": [],
+      "skipped_test_cases": [],
+      "packages_without_test_files": [],
+      "packages": [
+        "licentivo/internal/httpapi"
+      ],
+      "pass_names": [
+        "TestEdgeProbeDuplicateReleaseCountsTwice",
+        "TestEdgeProbeLateSDKLogoutDestroysNewerCache",
+        "TestEdgeControlQueuedReleaseCannotTouchFreshGeneration",
+        "TestEdgeControlOfflineUnbindKeepsKnownDeadline"
+      ]
+    },
+    "launch-edge-probes.jsonl": {
+      "passed_records_including_subtests": 3,
+      "passed_top_level": 1,
+      "failed": [],
+      "skipped_test_cases": [],
+      "packages_without_test_files": [],
+      "packages": [
+        "licentivo-launch/pkg/launchclient"
+      ],
+      "pass_names": [
+        "TestEdgeProbeAccountBoundaries/store_save_failure_and_network_then_restart",
+        "TestEdgeProbeAccountBoundaries/old_instance_deletes_new_account_record",
+        "TestEdgeProbeAccountBoundaries"
+      ]
+    },
+    "lic-controls.jsonl": {
+      "passed_records_including_subtests": 45,
+      "passed_top_level": 30,
+      "failed": [],
+      "skipped_test_cases": [],
+      "packages_without_test_files": [],
+      "packages": [
+        "licentivo/internal/httpapi"
+      ],
+      "pass_names": [
+        "TestLaunchRenewalPreservesManualSuspension",
+        "TestLaunchRenewalPreservesManualFeatures/features_0",
+        "TestLaunchRenewalPreservesManualFeatures/features_1",
+        "TestLaunchRenewalPreservesManualFeatures",
+        "TestLaunchManualFeatureCapSurvivesPolicyChanges",
+        "TestLaunchMigrationPreservesManualAuthorization",
+        "TestLaunchCommercialSuspensionAndExpiryCanRenew/entitlement.suspended",
+        "TestLaunchCommercialSuspensionAndExpiryCanRenew/entitlement.expired",
+        "TestLaunchCommercialSuspensionAndExpiryCanRenew",
+        "TestLaunchManagedLicenseRejectsIndependentRenewal",
+        "TestLaunchLeaseHonorsPurchaseDeadlineInSDK",
+        "TestLaunchLeaseKeepsEarlierLicenseAndSessionDeadlines",
+        "TestLaunchRestrictionsIgnorePolicyDrift/entitlement.refunded/policy_version",
+        "TestLaunchRestrictionsIgnorePolicyDrift/entitlement.refunded/missing_mapping",
+        "TestLaunchRestrictionsIgnorePolicyDrift/entitlement.refunded/policy_mode",
+        "TestLaunchRestrictionsIgnorePolicyDrift/entitlement.suspended/policy_version",
+        "TestLaunchRestrictionsIgnorePolicyDrift/entitlement.suspended/missing_mapping",
+        "TestLaunchRestrictionsIgnorePolicyDrift/entitlement.suspended/policy_mode",
+        "TestLaunchRestrictionsIgnorePolicyDrift/entitlement.expired/policy_version",
+        "TestLaunchRestrictionsIgnorePolicyDrift/entitlement.expired/missing_mapping",
+        "TestLaunchRestrictionsIgnorePolicyDrift/entitlement.expired/policy_mode",
+        "TestLaunchRestrictionsIgnorePolicyDrift",
+        "TestLaunchDowngradeReconcilesExcessDevices",
+        "TestLaunchRenewalPreservesManualDeviceLimit",
+        "TestLaunchRestrictionsKeepOwnershipAndVersionChecks",
+        "TestLaunchRestrictionRetryAfterReview",
+        "TestLaunchMigrationPreservesManualDeviceLimit",
+        "TestLaunchManualDeviceLimitTracksCommercialCeiling",
+        "TestLaunchDowngradeRestoresMissingCapabilitiesSnapshot",
+        "TestLaunchSessionRevocationScopesAndReplay",
+        "TestLaunchAccountSessionRevocation/password_changed",
+        "TestLaunchAccountSessionRevocation/account_disabled",
+        "TestLaunchAccountSessionRevocation",
+        "TestLaunchRevocationBeforeFirstExchange",
+        "TestLaunchSessionRevocationAtomicRollback",
+        "TestLaunchAccountRevocationCutoffNeverMovesBackwards",
+        "TestLaunchSessionRevocationAccessAndValidation",
+        "TestLaunchSessionRevocationConcurrentRetries",
+        "TestLaunchAccountLogoutRemoteUnbindAndReplay",
+        "TestLaunchPendingLogoutCannotReleaseFreshLogin",
+        "TestLaunchDeviceReleaseReviewCannotBypassBindingVersion",
+        "TestLaunchExpiredSessionRequiresFreshLogin",
+        "TestLaunchCommerceVersionsIsolationAndRetry",
+        "TestLaunchMigrationPreservesRightsAndRejectsOldKeys",
+        "TestLaunchMigrationDoesNotReplaceFloatingPurchase"
+      ]
+    },
+    "launch-controls.jsonl": {
+      "passed_records_including_subtests": 14,
+      "passed_top_level": 14,
+      "failed": [],
+      "skipped_test_cases": [],
+      "packages_without_test_files": [
+        "licentivo-launch/pkg/launchclient/internal/licentivo",
+        "licentivo-launch/pkg/launchclient/internal/licentivo/internal/lease"
+      ],
+      "packages": [
+        "licentivo-launch/pkg/launchclient"
+      ],
+      "pass_names": [
+        "TestSoftwareAuthenticationAndErrorRedaction",
+        "TestOriginPolicy",
+        "TestIdentityIsEphemeralAndSDKDecidesFeatures",
+        "TestLogoutReleasesAndRetainsSDKJournal",
+        "TestCloseKeepsAccountAndDoesNotRelease",
+        "TestLaunchOutageNeverDecidesOfflineAuthorization",
+        "TestLogoutAfterRestartReopensSDKForRevocation",
+        "TestCanceledLogoutQueuesAccountAndStopsRuntime",
+        "TestAccountLogoutRetriesAfterRestartWithoutRestoringLogin",
+        "TestAccountSwitchReleasesOldDevice",
+        "TestSessionExpiryDoesNotOpenSDK",
+        "TestLaunchAccountLogoutRecovery",
+        "TestDPAPIStoreEncryptsAndBindsScope",
+        "TestOfficialSDKAccountExchangeAndLogout"
+      ]
+    },
+    "revalidation-lic.jsonl": {
+      "passed_records_including_subtests": 50,
+      "passed_top_level": 35,
+      "failed": [],
+      "skipped_test_cases": [],
+      "packages_without_test_files": [],
+      "packages": [
+        "licentivo/internal/httpapi"
+      ],
+      "pass_names": [
+        "TestEdgeProbeDuplicateReleaseCountsTwice",
+        "TestEdgeProbeLateSDKLogoutDestroysNewerCache",
+        "TestEdgeControlQueuedReleaseCannotTouchFreshGeneration",
+        "TestEdgeControlOfflineUnbindKeepsKnownDeadline",
+        "TestLaunchRenewalPreservesManualSuspension",
+        "TestLaunchRenewalPreservesManualFeatures/features_0",
+        "TestLaunchRenewalPreservesManualFeatures/features_1",
+        "TestLaunchRenewalPreservesManualFeatures",
+        "TestLaunchManualFeatureCapSurvivesPolicyChanges",
+        "TestLaunchMigrationPreservesManualAuthorization",
+        "TestLaunchCommercialSuspensionAndExpiryCanRenew/entitlement.suspended",
+        "TestLaunchCommercialSuspensionAndExpiryCanRenew/entitlement.expired",
+        "TestLaunchCommercialSuspensionAndExpiryCanRenew",
+        "TestLaunchManagedLicenseRejectsIndependentRenewal",
+        "TestLaunchLeaseHonorsPurchaseDeadlineInSDK",
+        "TestLaunchLeaseKeepsEarlierLicenseAndSessionDeadlines",
+        "TestLaunchRestrictionsIgnorePolicyDrift/entitlement.refunded/policy_version",
+        "TestLaunchRestrictionsIgnorePolicyDrift/entitlement.refunded/missing_mapping",
+        "TestLaunchRestrictionsIgnorePolicyDrift/entitlement.refunded/policy_mode",
+        "TestLaunchRestrictionsIgnorePolicyDrift/entitlement.suspended/policy_version",
+        "TestLaunchRestrictionsIgnorePolicyDrift/entitlement.suspended/missing_mapping",
+        "TestLaunchRestrictionsIgnorePolicyDrift/entitlement.suspended/policy_mode",
+        "TestLaunchRestrictionsIgnorePolicyDrift/entitlement.expired/policy_version",
+        "TestLaunchRestrictionsIgnorePolicyDrift/entitlement.expired/missing_mapping",
+        "TestLaunchRestrictionsIgnorePolicyDrift/entitlement.expired/policy_mode",
+        "TestLaunchRestrictionsIgnorePolicyDrift",
+        "TestLaunchDowngradeReconcilesExcessDevices",
+        "TestLaunchRenewalPreservesManualDeviceLimit",
+        "TestLaunchRestrictionsKeepOwnershipAndVersionChecks",
+        "TestLaunchRestrictionRetryAfterReview",
+        "TestLaunchMigrationPreservesManualDeviceLimit",
+        "TestLaunchManualDeviceLimitTracksCommercialCeiling",
+        "TestLaunchDowngradeRestoresMissingCapabilitiesSnapshot",
+        "TestLaunchSDKRetryRefreshesChangedGrant",
+        "TestLaunchSessionRevocationScopesAndReplay",
+        "TestLaunchAccountSessionRevocation/password_changed",
+        "TestLaunchAccountSessionRevocation/account_disabled",
+        "TestLaunchAccountSessionRevocation",
+        "TestLaunchRevocationBeforeFirstExchange",
+        "TestLaunchSessionRevocationAtomicRollback",
+        "TestLaunchAccountRevocationCutoffNeverMovesBackwards",
+        "TestLaunchSessionRevocationAccessAndValidation",
+        "TestLaunchSessionRevocationConcurrentRetries",
+        "TestLaunchAccountLogoutRemoteUnbindAndReplay",
+        "TestLaunchPendingLogoutCannotReleaseFreshLogin",
+        "TestLaunchDeviceReleaseReviewCannotBypassBindingVersion",
+        "TestLaunchExpiredSessionRequiresFreshLogin",
+        "TestLaunchCommerceVersionsIsolationAndRetry",
+        "TestLaunchMigrationPreservesRightsAndRejectsOldKeys",
+        "TestLaunchMigrationDoesNotReplaceFloatingPurchase"
+      ]
+    }
+  },
+  "real_joint": {
+    "passed_stages": 7,
+    "results": [
+      {
+        "message": "",
+        "status": "start",
+        "step": "initialize_real_launch"
+      },
+      {
+        "message": "Launch uses actual Licentivo management API and identity trust",
+        "status": "pass",
+        "step": "initialize_real_launch"
+      },
+      {
+        "message": "",
+        "status": "start",
+        "step": "publish_product_and_paid_plan"
+      },
+      {
+        "message": "Plan and policy mapping registered through actual API; payment settlement is simulated",
+        "status": "pass",
+        "step": "publish_product_and_paid_plan"
+      },
+      {
+        "message": "",
+        "status": "start",
+        "step": "purchase_and_absolute_dates"
+      },
+      {
+        "message": "Verified payment simulation reached actual Licentivo worker and applied snapshot",
+        "status": "pass",
+        "step": "purchase_and_absolute_dates"
+      },
+      {
+        "message": "",
+        "status": "start",
+        "step": "real_sdk_identity_exchange_and_feature"
+      },
+      {
+        "message": "Actual Go Launch SDK exchanged real identity and verified signed feature grant",
+        "status": "pass",
+        "step": "real_sdk_identity_exchange_and_feature"
+      },
+      {
+        "message": "",
+        "status": "start",
+        "step": "ordinary_close_and_restore"
+      },
+      {
+        "message": "Ordinary close retained binding and remembered account restored",
+        "status": "pass",
+        "step": "ordinary_close_and_restore"
+      },
+      {
+        "message": "",
+        "status": "start",
+        "step": "store_failure_and_both_logout_endpoints_unavailable"
+      },
+      {
+        "message": "EDGE_FINDING: after atomic account-store Save failure and both logout endpoints unavailable, a reconstructed Application restored the same unrevoked Launch login, fetched a fresh identity and executed the real official SDK protected export callback without a new login; device logout retry was still blocked",
+        "status": "pass",
+        "step": "store_failure_and_both_logout_endpoints_unavailable"
+      },
+      {
+        "message": "",
+        "status": "start",
+        "step": "complete"
+      },
+      {
+        "message": "Focused real-service edge reproduction complete; no business source modified",
+        "status": "pass",
+        "step": "complete"
+      }
+    ]
+  },
+  "proof_sha256": {
+    "source-baseline.json": "dd9adad0b841b56d129a5e3624c31ffad4f77b8ffb4eb7bd53918a8c40d91f51",
+    "lic_edge_probe_test.go": "880b4e013e25e764f78fd033480492181147535d91ca37837dd5029941898fc0",
+    "lic-overlay.json": "a3a4a309133931d43060e1a041387b872361bacf12cd2ff10e837d6cda120e38",
+    "launch_edge_probe_test.go": "fa052e3a6dd4365d6e85055e35aa67226500835195448b2eaa2005dcfdc1fb2c",
+    "launch-overlay.json": "2d9d5ae4e4fca5f8b5fe86551927c4d4d507e29b7eeba215dfcb6ffe86ba7133",
+    "joint-local.go": "d376610c5c180b0aa4d9ed308e983e8e657a8778f15e77df47903630556958dd",
+    "lic-edge-probes.jsonl": "8891b248be64b9e8d0607c9ddec9667c64a0444193edbd4bd6a8456644ba22fe",
+    "launch-edge-probes.jsonl": "cc5e9b68fd84c440a95bf1430442706e9af12a58c1ce7723aad1344ada47d555",
+    "lic-controls.jsonl": "9dfcc1748d032068511fb16bc623a89b3b5dd106af34e251a91db90ce9a29f08",
+    "launch-controls.jsonl": "7e3cc64c49386a7660c370001f757ca2910cc7746233faeb41a7f9640dc9ee77",
+    "local-run/joint-results.jsonl": "4ef48603256892c06c4b5f7acdb8101117a6a1ca2276c9cd8ab25ff0b86f2bd3",
+    "revalidation-source-snapshot.json": "1d5001de12cf01ab2adcdc078baf0bf1a3569deb925c787d9441b46347bf3a48",
+    "snapshot-overlay.json": "bfae3c19a151517c17c401ab7315a3a965848dc9750f9a73d63d1dfb47eef640",
+    "revalidation-lic.jsonl": "9505bcdc1ed5594666625d795dcaa6cc8d553c8895ed86f144a7cb29aa105292",
+    "revalidation-run/joint-results.jsonl": "4ef48603256892c06c4b5f7acdb8101117a6a1ca2276c9cd8ab25ff0b86f2bd3"
+  },
+  "cleanup": {
+    "licentivo": {
+      "local_licentivo_stopped": true
+    },
+    "frozen_licentivo": {
+      "local_licentivo_stopped": true
+    },
+    "mysql": {
+      "evidence_preserved": true,
+      "remote_device_accessed": false,
+      "audit_mysql_stopped": true,
+      "original_services_preserved": true
+    }
+  },
+  "frozen_licentivo_source": {
+    "captured_local_time": "2026-10-24T20:58:33.453121",
+    "files": 753,
+    "unchanged_during_copy": true,
+    "proof_sha256": "1d5001de12cf01ab2adcdc078baf0bf1a3569deb925c787d9441b46347bf3a48",
+    "relevant_source_sha256": {
+      "internal/httpapi/device_sessions.go": "93ddabe89a428709b18daddbf190cfc626ebb70c01f10615e9d3ead334d1be63",
+      "internal/httpapi/launch.go": "eb299e525e173339c3b30236dcaf7d1c0c137988ecb1911ea67d6c1835570afc",
+      "internal/httpapi/launch_runtime.go": "aca757d9258fc99992e19179ec7a13024c6807870b0f39891c9ce32137d68a28",
+      "internal/httpapi/launch_restrictions.go": "3390dd691db0e19fe0159e8a6ff17fd0476d93b70f8c6a4e5f2c4c291ede1ad6",
+      "internal/httpapi/runtime.go": "50d5bac5c966c68f304992c768a98b04350e1d7290c941b75d840082c2df71be",
+      "internal/httpapi/runtime_grants.go": "ce0c2f03fbf6c4b3dfcf49df137ef45e96f5989fe7a6d688b3225f72b9b3cb01",
+      "internal/httpapi/runtime_check.go": "6d00591387280f0e9640e849719c51fad9eb3f700043096168464c36748b06c4",
+      "sdk/go/logout.go": "ccb9789f7156825edf350a2c4f895b0597bfa9ab3b716ad107cc7552c807a62c",
+      "sdk/go/client.go": "6334ec579c36faf46e42523d6eb21e34049bd2bfde8c5c11672afd0899dff047",
+      "sdk/go/credential.go": "2a4df2699e6357d2004a518ed5dcf6ca396c4002ec098cd84653623a1d1ba284"
+    },
+    "changed_snapshot_files_after_tests": [],
+    "original_go_files_changed_after_snapshot": [
+      "internal/httpapi/launch_restrictions.go",
+      "internal/httpapi/runtime_check_test.go"
+    ],
+    "control_pass_records": 46,
+    "edge_pass_records": 4
+  },
+  "finding_source_checks": {
+    "pkg/launchclient/application.go": {
+      "sha256": "a49370470f027e6759bd0c8c42d509c208e7db29535f7711ecdf7d27e4ee3e8d",
+      "unchanged_from_initial_baseline": true
+    },
+    "pkg/launchclient/store.go": {
+      "sha256": "312e27d27b7b2d2cd15d84fb047fe94793fd29d412a8badfa7c4b1bfbfd0b4f2",
+      "unchanged_from_initial_baseline": true
+    },
+    "pkg/launchclient/internal/licentivo/logout.go": {
+      "sha256": "ccb9789f7156825edf350a2c4f895b0597bfa9ab3b716ad107cc7552c807a62c",
+      "unchanged_from_initial_baseline": true
+    },
+    "pkg/launchclient/internal/licentivo/credential.go": {
+      "sha256": "ba06a76a1745f44f91a2e16893371d374b7033b0c45484e361ecf25f9dd5e6d9",
+      "unchanged_from_initial_baseline": true
+    },
+    "licentivo/internal/httpapi/device_sessions.go": {
+      "sha256": "93ddabe89a428709b18daddbf190cfc626ebb70c01f10615e9d3ead334d1be63",
+      "matches_tested_frozen_snapshot": true
+    },
+    "licentivo/sdk/go/logout.go": {
+      "sha256": "ccb9789f7156825edf350a2c4f895b0597bfa9ab3b716ad107cc7552c807a62c",
+      "matches_tested_frozen_snapshot": true
+    },
+    "licentivo/sdk/go/client.go": {
+      "sha256": "6334ec579c36faf46e42523d6eb21e34049bd2bfde8c5c11672afd0899dff047",
+      "matches_tested_frozen_snapshot": true
+    },
+    "licentivo/sdk/go/credential.go": {
+      "sha256": "2a4df2699e6357d2004a518ed5dcf6ca396c4002ec098cd84653623a1d1ba284",
+      "matches_tested_frozen_snapshot": true
+    }
+  },
+  "frozen_real_joint": {
+    "passed_stages_including_completion": 7,
+    "functional_stages": 6,
+    "results": [
+      {
+        "message": "",
+        "status": "start",
+        "step": "initialize_real_launch"
+      },
+      {
+        "message": "Launch uses actual Licentivo management API and identity trust",
+        "status": "pass",
+        "step": "initialize_real_launch"
+      },
+      {
+        "message": "",
+        "status": "start",
+        "step": "publish_product_and_paid_plan"
+      },
+      {
+        "message": "Plan and policy mapping registered through actual API; payment settlement is simulated",
+        "status": "pass",
+        "step": "publish_product_and_paid_plan"
+      },
+      {
+        "message": "",
+        "status": "start",
+        "step": "purchase_and_absolute_dates"
+      },
+      {
+        "message": "Verified payment simulation reached actual Licentivo worker and applied snapshot",
+        "status": "pass",
+        "step": "purchase_and_absolute_dates"
+      },
+      {
+        "message": "",
+        "status": "start",
+        "step": "real_sdk_identity_exchange_and_feature"
+      },
+      {
+        "message": "Actual Go Launch SDK exchanged real identity and verified signed feature grant",
+        "status": "pass",
+        "step": "real_sdk_identity_exchange_and_feature"
+      },
+      {
+        "message": "",
+        "status": "start",
+        "step": "ordinary_close_and_restore"
+      },
+      {
+        "message": "Ordinary close retained binding and remembered account restored",
+        "status": "pass",
+        "step": "ordinary_close_and_restore"
+      },
+      {
+        "message": "",
+        "status": "start",
+        "step": "store_failure_and_both_logout_endpoints_unavailable"
+      },
+      {
+        "message": "EDGE_FINDING: after atomic account-store Save failure and both logout endpoints unavailable, a reconstructed Application restored the same unrevoked Launch login, fetched a fresh identity and executed the real official SDK protected export callback without a new login; device logout retry was still blocked",
+        "status": "pass",
+        "step": "store_failure_and_both_logout_endpoints_unavailable"
+      },
+      {
+        "message": "",
+        "status": "start",
+        "step": "complete"
+      },
+      {
+        "message": "Focused real-service edge reproduction complete; no business source modified",
+        "status": "pass",
+        "step": "complete"
+      }
+    ]
+  },
+  "audit_changes": {
+    "business_code_edited_by_this_audit": false,
+    "fixes_applied": false,
+    "deployed": false,
+    "sdk_published": false,
+    "git_committed_or_pushed": false,
+    "preexisting_and_concurrent_workspace_changes_preserved": true
+  },
+  "findings": [
+    {
+      "id": "AUTH-08",
+      "priority": "high_with_combined_failure",
+      "owner": [
+        "Launch SDK",
+        "Licentivo SDK"
+      ],
+      "confirmed": "Failed atomic account-store replacement plus both logout endpoints unavailable; reconstructed real SDK restores same account login and executes protected callback without new login."
+    },
+    {
+      "id": "AUTH-09",
+      "priority": "medium",
+      "owner": [
+        "Licentivo server"
+      ],
+      "confirmed": "Two distinct operation IDs for same pending activation generation cause two allowance debits but one actual deactivation; next real release enters manual review."
+    },
+    {
+      "id": "AUTH-10",
+      "priority": "medium",
+      "owner": [
+        "Launch SDK"
+      ],
+      "confirmed": "Stale Application logout overwrites and deletes newer shared secure-store login although newer server session remains valid."
+    },
+    {
+      "id": "AUTH-11",
+      "priority": "medium",
+      "owner": [
+        "Licentivo Go SDK"
+      ],
+      "confirmed": "Stale client logout preserves new binding remotely but deletes new local machine credential and lease; credential-only reconstruction cannot recover."
+    }
+  ],
+  "limitations": [
+    "Dynamic cross-service verification uses Go only.",
+    "Account-only probes use fake licensing Runtime; AUTH-08 protected execution is confirmed separately with real services and SDK.",
+    "Normal bounded offline lease use after remote unbind is expected and is not counted as a defect.",
+    "Concurrent source updates were observed. Conclusions are tied to recorded source fingerprints and frozen Licentivo snapshot.",
+    "Local revalidation database provisioning first encountered SQL authentication error 1045; final successful revalidation used two verified-empty reserved audit databases with existing test-user access. This is test infrastructure, not a product finding."
+  ],
+  "binary_sha256": {
+    "joint-local.exe": "a34ec3067837c12618b566e0bc41f7596d7fd8b7c6308625d7845c88b2b9fdc7",
+    "licentivo-local.exe": "8a355ea135af1aebd182f72cdba025905b7cc2669fb21a352b0d90b986cde367"
+  }
+}

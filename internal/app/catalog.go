@@ -735,16 +735,23 @@ func (s *Service) PublishPlan(ctx context.Context, p Principal, planID, versionI
 	var mapping storage.PlanLicenseMapping
 	var connection storage.LicentivoConnection
 	if s.db.WithContext(ctx).First(&mapping, "plan_version_id = ?", versionID).Error == nil && s.db.WithContext(ctx).First(&connection, "id = ?", mapping.ConnectionID).Error == nil {
-		client, err := s.licensingProvider(ctx, connection)
-		if err == nil {
-			caps, err := client.Capabilities(ctx)
-			var accounts int64
-			policyErr := checkPolicy(ctx, client, candidate, mapping, "")
-			if err == nil && caps.ValidateSales() == nil && policyErr == nil && s.db.WithContext(ctx).Model(&storage.PaymentAccount{}).Where("environment = ? AND enabled = true", environment).Count(&accounts).Error == nil && accounts > 0 {
-				previewOnly = false
-			}
+		var product storage.Product
+		if err := s.db.WithContext(ctx).First(&product, "id = ?", candidate.ProductID).Error; err != nil {
+			return databaseError(err)
+		}
+		remoteProduct, err := productRemoteID(s.db.WithContext(ctx), product, "")
+		if err != nil {
+			return databaseError(err)
+		}
+		if remoteProduct != "" && remoteProduct != mapping.RemoteProductID {
+			return productMappingConflict()
+		}
+		var accounts int64
+		if s.registerLaunchPlan(ctx, environment, candidate, mapping, true) == nil && s.db.WithContext(ctx).Model(&storage.PaymentAccount{}).Where("environment = ? AND enabled = true", environment).Count(&accounts).Error == nil && accounts > 0 {
+			previewOnly = false
 		}
 	}
+
 	if environment == "live" && previewOnly {
 		return problem(409, "SALES_CONNECTION_REQUIRED", "正式发布前，请配置正式收款，并为套餐选择可自动发放的 Licentivo 授权")
 	}
@@ -754,12 +761,27 @@ func (s *Service) PublishPlan(ctx context.Context, p Principal, planID, versionI
 			return err
 		}
 		var version storage.PlanVersion
-		if err := tx.First(&version, "id = ? AND plan_id = ?", versionID, planID).Error; err != nil {
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&version, "id = ? AND plan_id = ?", versionID, planID).Error; err != nil {
 			return err
+		}
+		if mapping.PlanVersionID != "" {
+			var current storage.PlanLicenseMapping
+			if tx.First(&current, "plan_version_id = ?", versionID).Error != nil || current.ConnectionID != mapping.ConnectionID || current.RemoteProductID != mapping.RemoteProductID || current.RemotePolicyID != mapping.RemotePolicyID || current.RemotePolicyVersion != mapping.RemotePolicyVersion {
+				return problem(409, "MAPPING_CHANGED", "套餐映射刚刚更新，请核对后重新发布")
+			}
 		}
 		var product storage.Product
 		if err := tx.First(&product, "id = ? AND status = 'published'", plan.ProductID).Error; err != nil {
 			return problem(409, "PRODUCT_NOT_PUBLISHED", "请先发布产品")
+		}
+		if mapping.PlanVersionID != "" {
+			remoteProduct, err := productRemoteID(tx, product, "")
+			if err != nil {
+				return err
+			}
+			if remoteProduct != "" && remoteProduct != mapping.RemoteProductID {
+				return productMappingConflict()
+			}
 		}
 		at := now()
 		publication := storage.PlanPublication{PlanID: planID, Environment: environment, VersionID: versionID, PreviewOnly: previewOnly, PublishedAt: at}

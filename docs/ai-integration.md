@@ -1,5 +1,7 @@
 # 使用 AI 接入 Licentivo Launch
 
+> 当前未发布改动采用账号身份交换，具体职责和迁移约束见 [购买期限与账号 SDK 边界](account-purchase-boundary.md)。Launch 计算购买期限；Licentivo SDK 执行授权。
+
 Launch 后台的 **运营工具 → AI 快速接入** 会生成一份可交给 AI 编程工具的英文任务说明。它使用当前商店、已有软件和已发布套餐的真实公开配置，并要求 AI 安装公开的 Launch 客户端包、调用真实 API、把权限检查放到业务操作中，再完成接入测试。
 
 程序接入页的 **接入检查与代码 / AI 快速接入** 导航也可进入同一功能。手动开发不需要使用 AI，可直接阅读 [九种语言手动接入指南](manual-integration.md)。
@@ -27,30 +29,32 @@ Launch 只在浏览器中生成文本。它不会自动连接任何 AI 服务，
 
 ## 提示词会告诉 AI 在哪里下载 SDK
 
+当前 0.1.3 的九种语言公开安装验证已全部通过（9/9），下列注册表命令和原生下载均已验证。Java 的 Maven Central 文件及四份签名、Rust 的 crates.io 精确版本和全部后台生成的初始化代码也已完成独立消费者检查；[v0.1.3 GitHub Release](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.3) 同时提供原生包和离线文件。
+
 生成的提示词必须包含与所选语言对应的、固定版本的公开安装方式：
 
 ```text
-Go:         go get github.com/spf86/licentivo-launch-sdk/pkg/launchclient@v0.1.1
-Python:     python -m pip install licentivo-launch==0.1.1
-C# / .NET: dotnet add package Licentivo.Launch --version 0.1.1
-Java:       com.licentivo.launch:launch-client:0.1.1
-Node.js:    npm install @licentivo/launch@0.1.1
-Rust:       cargo add licentivo-launch@=0.1.1
-Ruby:       gem install licentivo-launch --version 0.1.1
-C / C++:    https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.1
+Go:         go get github.com/spf86/licentivo-launch-sdk/pkg/launchclient@v0.1.3
+Python:     python -m pip install licentivo-launch==0.1.3
+C# / .NET: dotnet add package Licentivo.Launch --version 0.1.3
+Java:       com.licentivo.launch:launch-client:0.1.3
+Node.js:    npm install @licentivo/launch@0.1.3
+Rust:       cargo add licentivo-launch@=0.1.3
+Ruby:       gem install licentivo-launch --version 0.1.3
+C / C++:    https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.3
 ```
 
 公开源码、各语言 README 和当前发布状态位于：
 
 - [Licentivo Launch SDK 仓库](https://github.com/spf86/licentivo-launch-sdk)
-- [v0.1.1 GitHub Release](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.1)
+- [v0.1.3 GitHub Release](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.3)
 - [九种语言公开安装验证](https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/registry-verification.json)
 - [版本与包说明](integration-packages.md)
 - [九种语言手动接入指南](manual-integration.md)
 - [应用接入架构与安全要求](software-sdk-integration.md)
 - [接入验收清单](acceptance.md)
 
-只安装所选语言的 Launch 包。v0.1.1 已内置官方 Licentivo SDK v0.11.0、默认适配器和链接配置，不再单独安装第二份官方 SDK。
+只安装所选语言的 Launch 包。v0.1.3 已内置官方 Licentivo SDK v0.11.2、默认适配器和链接配置，不再单独安装第二份官方 SDK。
 
 ## 提示词会告诉 AI 如何接入
 
@@ -69,7 +73,7 @@ Connect/connect → Login or Restore → RunFeature → Logout / Close
 - `Login` 使用客户在当前商店注册的邮箱和密码取得该账号的产品凭据。
 - `Restore` 从安全存储恢复已记住的会话；没有会话时显示登录，明确拒绝不能当作离线成功。
 - `RunFeature` 必须包住导出、保存、渲染或后台任务等真实业务动作。只禁用按钮不能替代执行位置的检查。
-- `Logout` 清除账号会话；`Close` 是程序普通关闭；`ReleaseDevice` 是客户明确解绑设备。三者不能混用。
+- `Logout` 先调用官方 SDK 统一退出，再清理账号会话；`ReleaseDevice` 是同一明确退出流程的兼容入口。`Close` 普通关闭保留设备绑定。
 - 客户端对象应在应用运行期间保持存活，以便 SDK 执行心跳、浮动席位和运行时规则。
 
 Web 应用只在可信后端执行授权检查。Node.js / Electron 将凭据和 SDK 放在主进程或服务端，浏览器与渲染进程不保存授权秘密。
@@ -109,7 +113,7 @@ Launch 的公开配置检查、AI 草稿和本地编译都不能证明真实支�
 - 重启后只有成功恢复会话并通过授权检查时才能继续使用。
 - 有效离线策略可以工作，离线许可到期后拒绝；明确的 401/403/404 不降级为离线成功。
 - 功能次数只在业务成功时正确提交，失败与重试不会重复扣减。
-- 普通关闭不会误释放固定设备，退出账号会清理身份状态，明确释放设备会报告真实结果。
+- 普通关闭保留设备绑定；明确退出先调用官方 SDK 统一退出，保留待撤销日志并报告真实结果。
 - 浮动席位心跳在应用运行时持续，非正常退出后的回收时间符合当前授权策略。
 - 切换商店、账号、产品或环境不会复用另一身份的缓存。
 
@@ -117,7 +121,7 @@ Launch 的公开配置检查、AI 草稿和本地编译都不能证明真实支�
 
 ## 在源码分发包中使用提示词生成器
 
-`licentivo-launch-0.1.1-source.zip` 保留下列文件，便于在自己的工具中生成相同结构的提示词：
+`licentivo-launch-0.1.3-source.zip` 保留下列文件，便于在自己的工具中生成相同结构的提示词：
 
 - `internal/httpapi/web/integration-prompts.js`：不依赖页面或服务端的提示词生成模块；
 - `scripts/integration-prompts.test.mjs`：本地 Node 测试；

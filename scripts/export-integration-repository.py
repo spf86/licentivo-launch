@@ -59,6 +59,10 @@ def export(destination):
             # native source folders are permitted; private compiled Ruby files are not.
             if any(part in (EXCLUDED - {'native'}) or part.endswith('.egg-info') for part in rel.parts):
                 continue
+            # These suites exercise the merchant server and its private MySQL
+            # storage. They remain in the server repository, not client modules.
+            if relative == 'pkg/launchclient' and source.name.endswith('_integration_test.go'):
+                continue
             if source.is_file() and (source.suffix in EXTENSIONS or
                     source.name in {'LICENSE', 'NOTICE', 'VERSION', 'UPSTREAM_VERSION',
                                     'CMakeLists.txt', 'cJSON-LICENSE', 'Monocypher-LICENCE.md'}):

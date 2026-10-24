@@ -63,28 +63,18 @@ func (s *Service) SetUserStatus(ctx context.Context, p Principal, id, status, re
 		if staffCount != 0 {
 			return problem(409, "STAFF_ACCOUNT", "该账号属于网站人员，请在系统设置中管理")
 		}
+		if user.Status == status {
+			return nil
+		}
 		if err := tx.Model(&user).Updates(map[string]any{"status": status, "disabled_reason": reason}).Error; err != nil {
 			return err
 		}
 		if status == "disabled" {
-			if err := tx.Model(&storage.Session{}).Where("user_id = ? AND revoked_at IS NULL", id).Update("revoked_at", now()).Error; err != nil {
+			if err := s.revokeSessions(tx, id, "", now(), "account_disabled"); err != nil {
 				return err
-			}
-			var entitlements []storage.Entitlement
-			if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where("user_id = ?", id).Find(&entitlements).Error; err != nil {
-				return err
-			}
-			for _, e := range entitlements {
-				if err := tx.Model(&e).Updates(map[string]any{"manual_hold": true, "hold_reason": reason}).Error; err != nil {
-					return err
-				}
-				e.ManualHold = true
-				if err := s.recomputeEntitlement(tx, &e, nil, true); err != nil {
-					return err
-				}
 			}
 		}
-		// Restoring a login never silently clears a manual authorization hold.
+		// Enabling an account requires a fresh login after the remote cutoff.
 		return audit(tx, p.User.ID, "user."+status, "user", id, reason)
 	}))
 }

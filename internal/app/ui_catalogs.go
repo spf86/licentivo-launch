@@ -13,6 +13,9 @@ func builtInUIStrings(locale string) map[string]string {
 	for key, value := range registrationStrings(locale) {
 		values[key] = value
 	}
+	for key, value := range reversalStrings(locale) {
+		values[key] = value
+	}
 	return values
 }
 

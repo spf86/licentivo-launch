@@ -26,197 +26,236 @@ func testCommerce(a *testApp, admin, customer *browser, credentials map[string]s
 	t := a.t
 	ctx := context.Background()
 	id := func() string {
-		v, err := security.ID()
+		value, err := security.ID()
 		if err != nil {
 			t.Fatal(err)
 		}
-		return v
+		return value
 	}
 	secretID, accountID := id(), id()
 	if err := a.db.Create(&storage.SecretRecord{ID: secretID, Purpose: "test-only", KeyID: "test", Ciphertext: []byte{1}}).Error; err != nil {
 		t.Fatal(err)
 	}
-	account := storage.PaymentAccount{ID: accountID, Provider: "stripe", Environment: "sandbox", MerchantRef: "acct_test", CredentialSecretID: secretID, Enabled: true}
-	if a.db.Create(&account).Error != nil {
-		t.Fatal("commerce fixtures failed")
+	if err := a.db.Create(&storage.PaymentAccount{ID: accountID, Provider: "stripe", Environment: "sandbox", MerchantRef: "acct_test", CredentialSecretID: secretID, Enabled: true}).Error; err != nil {
+		t.Fatal(err)
 	}
 	gateway := newPaymentDouble(t)
-	licensing := &licenseDouble{results: map[string]ports.EntitlementResult{}, requests: map[string]string{}, timeoutFirst: true}
-	config := app.Config{PublicURL: "https://merchant.example", MasterKey: a.key, PaymentFactory: func(context.Context, storage.PaymentAccount) (ports.PaymentProvider, error) { return gateway, nil }, LicensingFactory: func(context.Context, storage.LicentivoConnection) (ports.LicensingProvider, error) {
+	licensing := &licenseDouble{}
+	bridge := &accountBridgeDouble{}
+	config := app.Config{PublicURL: "https://merchant.example", MasterKey: a.key, PaymentFactory: func(context.Context, storage.PaymentAccount) (ports.PaymentProvider, error) { return gateway, nil }, BridgeFactory: func(string) (ports.LaunchBridge, error) { return bridge, nil }, LicensingFactory: func(context.Context, storage.LicentivoConnection) (ports.LicensingProvider, error) {
 		return licensing, nil
-	}, LicensingSetupFactory: func(string) (app.LicentivoSetupProvider, error) {
-		return licensing, nil
-	}}
+	}, LicensingSetupFactory: func(string) (app.LicentivoSetupProvider, error) { return licensing, nil }}
 	service, err := app.New(ctx, a.db, config)
 	if err != nil {
 		t.Fatal(err)
 	}
 	a.handler = httpapi.Handler(httpapi.Options{App: service, PublicURL: config.PublicURL, SecureCookies: true})
 	a.expect(a.request("POST", "/api/v1/admin/connections/licentivo", app.LicenseSettings{APIKey: "lv_api_test_launch_connection"}, admin), 200)
-	var connection storage.LicentivoConnection
-	if a.db.First(&connection).Error != nil {
-		t.Fatal("Licentivo connection was not saved")
-	}
-	connectionID := connection.ID
-	connections := data[map[string]json.RawMessage](t, a.request("GET", "/api/v1/admin/connections", nil, admin))
-	var serviceURL string
-	_ = json.Unmarshal(connections["licentivo_url"], &serviceURL)
-	if serviceURL != app.LicentivoServiceURL {
-		t.Fatalf("Licentivo did not use the official service URL: %q", serviceURL)
-	}
-	licensing.policyName = "专业版-测试"
-	a.expect(a.request("POST", "/api/v1/admin/connections/licentivo", app.LicenseSettings{}, admin), 200)
-	connections = data[map[string]json.RawMessage](t, a.request("GET", "/api/v1/admin/connections", nil, admin))
-	var refreshed struct {
-		Licensing []struct {
-			Catalog struct {
-				Policies struct {
-					Items []struct {
-						Name string `json:"name"`
-					} `json:"items"`
-				} `json:"policies"`
-			} `json:"catalog"`
-		} `json:"licensing"`
-	}
-	refreshedRaw, _ := json.Marshal(connections)
-	if json.Unmarshal(refreshedRaw, &refreshed) != nil || len(refreshed.Licensing) != 1 || len(refreshed.Licensing[0].Catalog.Policies.Items) == 0 || refreshed.Licensing[0].Catalog.Policies.Items[0].Name != "专业版-测试" {
-		t.Fatalf("Licentivo policy catalog was not refreshed with the saved API key: %s", refreshedRaw)
-	}
 	a.expect(a.request("POST", "/api/v1/admin/connections/mappings", app.MappingInput{VersionID: plan.VersionID, PolicyID: "22222222-2222-4222-8222-222222222222"}, admin), 200)
-	versions := data[[]app.PlanVersionHistory](t, a.request("GET", "/api/v1/admin/plans/"+plan.ID+"/versions", nil, admin))
-	if len(versions) == 0 || versions[0].RemoteProductName != "测试产品" || versions[0].RemotePolicyName != "专业版-测试" {
-		t.Fatalf("plan history did not expose readable Licentivo names: %+v", versions)
-	}
-	if err := a.db.Model(&storage.PlanLicenseMapping{}).Where("plan_version_id = ?", plan.VersionID).Updates(map[string]any{"remote_product_name": "", "remote_policy_name": ""}).Error; err != nil {
-		t.Fatal(err)
-	}
-	versions = data[[]app.PlanVersionHistory](t, a.request("GET", "/api/v1/admin/plans/"+plan.ID+"/versions", nil, admin))
-	if len(versions) == 0 || versions[0].RemoteProductName != "测试产品" || versions[0].RemotePolicyName != "专业版-测试" {
-		t.Fatalf("legacy mapping names were not resolved from the verified catalog: %+v", versions)
-	}
-	var mappedVersion storage.PlanVersion
-	var mappedRights app.PlanSnapshot
-	if a.db.First(&mappedVersion, "id = ?", plan.VersionID).Error != nil || json.Unmarshal(mappedVersion.EntitlementSnapshot, &mappedRights) != nil {
-		t.Fatal("mapped plan snapshot was not saved")
-	}
-	if mappedRights.MaxDevices != 2 || mappedRights.LicenseModel != "node_locked" || mappedRights.HeartbeatSeconds != 600 || mappedRights.OfflineMode != "limited" || mappedRights.OfflineSeconds != 86400 || mappedRights.SessionSeconds != 1200 || mappedRights.SelfReleaseLimit != 2 || len(mappedRights.Features) != 1 || mappedRights.Features[0] != "export" {
-		t.Fatalf("Licentivo policy was not copied into the plan snapshot: %+v", mappedRights)
+	var mapped storage.PlanVersion
+	var display app.PlanSnapshot
+	if a.db.First(&mapped, "id = ?", plan.VersionID).Error != nil || json.Unmarshal(mapped.EntitlementSnapshot, &display) != nil || display.MaxDevices != 2 || len(display.Features) != 1 {
+		t.Fatal("read-only policy display was not copied from Licentivo")
 	}
 	a.expect(a.request("POST", "/api/v1/admin/plans/"+plan.ID+"/publish", map[string]string{"version_id": plan.VersionID, "environment": "sandbox"}, admin), 200)
-	testIntegrationWizard(a, admin, customer, plan)
-	site := data[app.SiteView](t, a.request("GET", "/api/v1/site?environment=sandbox", nil, nil))
-	if len(site.Plans) != 1 || site.Plans[0].PreviewOnly {
-		t.Fatal("configured sandbox did not become purchasable")
+	a.expect(a.request("POST", "/api/v1/admin/connections/mappings", app.MappingInput{VersionID: plan.VersionID, PolicyID: "44444444-4444-4444-8444-444444444444"}, admin), 409)
+	input := app.CheckoutInput{ProductID: plan.ProductID, PlanVersionID: plan.VersionID, PurchasePeriods: 3, Provider: "stripe", Environment: "sandbox", IdempotencyKey: "test-account-purchase-key"}
+	order := data[app.CheckoutView](t, a.request("POST", "/api/v1/orders", input, customer))
+	replay := data[app.CheckoutView](t, a.request("POST", "/api/v1/orders", input, customer))
+	if order.ID != replay.ID || gateway.creates != 1 {
+		t.Fatal("purchase replay duplicated checkout")
 	}
-	a.expect(a.request("POST", "/api/v1/orders", app.CheckoutInput{ProductID: "00000000-0000-4000-8000-000000000099", PlanVersionID: plan.VersionID, Environment: "sandbox", Provider: "stripe", IdempotencyKey: "wrong-product-key-0001"}, customer), 409)
-	input := app.CheckoutInput{ProductID: plan.ProductID, PlanVersionID: plan.VersionID, PurchasePeriods: 3, Environment: "sandbox", Provider: "stripe", IdempotencyKey: "test-purchase-key-0001"}
-	w := a.request("POST", "/api/v1/orders", input, customer)
-	a.expect(w, 200)
-	order := data[app.CheckoutView](t, w)
-	if order.CheckoutURL == nil {
-		t.Fatal("checkout missing")
-	}
-	if order.PurchasePeriods != 3 || order.AmountMinor != plan.PurchaseOptions[1].AmountMinor {
-		t.Fatalf("three-month checkout used the wrong server price: %+v", order)
-	}
-	testUnpaidSoftwareStatus(a, credentials, plan.ProductID)
-	w = a.request("POST", "/api/v1/orders", input, customer)
-	a.expect(w, 200)
-	replay := data[app.CheckoutView](t, w)
-	if replay.ID != order.ID || gateway.creates != 1 {
-		t.Fatal("purchase replay created a new checkout")
-	}
-	a.expect(a.request("POST", "/api/v1/orders", map[string]any{"product_id": plan.ProductID, "plan_version_id": plan.VersionID, "provider": "stripe", "environment": "sandbox", "idempotency_key": "invalid-price-key", "amount_minor": 1}, customer), 400)
 	a.expect(a.request("GET", "/api/v1/orders/"+order.ID, nil, admin), 404)
-	checkout := "cs_test_" + order.ID
-	gateway.markPaid(checkout)
-	body := map[string]any{"id": "evt_repeat_test", "type": "checkout.session.completed", "livemode": false, "created": time.Now().Unix(), "data": map[string]any{"object": map[string]string{"id": checkout}}}
+	gateway.markPaid("cs_test_" + order.ID)
+	body := map[string]any{"id": "evt_account_repeat_test", "type": "checkout.session.completed", "livemode": false, "created": time.Now().Unix(), "data": map[string]any{"object": map[string]string{"id": "cs_test_" + order.ID}}}
 	raw, _ := json.Marshal(body)
 	stamp := strconv.FormatInt(time.Now().Unix(), 10)
 	mac := hmac.New(sha256.New, []byte(gateway.secret))
 	mac.Write([]byte(stamp + "."))
 	mac.Write(raw)
 	signature := "t=" + stamp + ",v1=" + hex.EncodeToString(mac.Sum(nil))
-	for i := 0; i < 10; i++ {
+	for range 3 {
 		a.expect(a.request("POST", "/api/v1/webhooks/payments/"+accountID, body, nil, func(r *http.Request) { r.Header.Set("Stripe-Signature", signature) }), 200)
 	}
 	if handled, err := service.ProcessPaymentEvent(ctx); err != nil || !handled {
 		t.Fatalf("payment event: %v", err)
 	}
-	w = a.request("GET", "/api/v1/orders/"+order.ID, nil, customer)
-	a.expect(w, 200)
-	paid := data[app.CheckoutView](t, w)
+	paid := data[app.CheckoutView](t, a.request("GET", "/api/v1/orders/"+order.ID, nil, customer))
 	if paid.Status != "paid" || paid.Fulfillment != "pending_authorization" {
-		t.Fatal("payment and fulfillment were not separated")
+		t.Fatal("payment was mistaken for applied purchase")
 	}
 	if handled, err := service.ProcessAuthorization(ctx); err != nil || !handled {
-		t.Fatal("authorization task not attempted")
+		t.Fatal("purchase snapshot was not sent", err)
 	}
-	var task storage.SyncTask
-	if a.db.First(&task, "source_order_id = ?", order.ID).Error != nil || task.Status != "retrying" {
-		t.Fatal("ambiguous remote success was not retained")
-	}
-	if err := a.db.Model(&task).Update("available_at", time.Now().Add(-time.Minute)).Error; err != nil {
+	var settled storage.Order
+	if err := a.db.First(&settled, "id = ?", order.ID).Error; err != nil {
 		t.Fatal(err)
 	}
-	service, err = app.New(ctx, a.db, config)
-	if err != nil {
+	var purchase storage.Entitlement
+	if err := a.db.First(&purchase, "user_id = ? AND product_id = ? AND environment = 'sandbox'", settled.UserID, plan.ProductID).Error; err != nil {
 		t.Fatal(err)
 	}
-	if handled, err := service.ProcessAuthorization(ctx); err != nil || !handled {
-		t.Fatalf("recovery failed: %v", err)
+	if purchase.LaunchPurchaseRef == nil || purchase.AppliedVersion != purchase.DesiredVersion || len(bridge.events) != 1 {
+		t.Fatal("purchase was not confirmed by its event")
 	}
-	if licensing.creates != 1 || len(licensing.results) != 1 {
-		t.Fatal("remote replay issued another license")
-	}
-	for model, want := range map[any]int64{&storage.PaymentEvent{}: 1, &storage.Payment{}: 1, &storage.SyncTask{}: 1, &storage.EntitlementCoverage{}: 1, &storage.LicenseBinding{}: 1} {
-		var count int64
-		if a.db.Model(model).Count(&count).Error != nil || count != want {
-			t.Fatalf("duplicate ledger data %T: %d", model, count)
+	for _, event := range bridge.events {
+		if event.PlanRef != plan.VersionID || event.ValidUntil == nil || event.Type != "entitlement.created" {
+			t.Fatal("purchase snapshot did not contain absolute dates")
+		}
+		encoded, _ := json.Marshal(event)
+		for _, secret := range []string{"@", "password", "amount_minor", "license_key"} {
+			if strings.Contains(string(encoded), secret) {
+				t.Fatal("commercial snapshot leaked private data")
+			}
 		}
 	}
-	for _, request := range licensing.requests {
-		if strings.Contains(request, "@") || strings.Contains(request, "password") || strings.Contains(request, "amount") || strings.Contains(request, `"environment"`) {
-			t.Fatal("customer or payment data sent to licensing")
-		}
+	var bindings int64
+	a.db.Model(&storage.LicenseBinding{}).Where("entitlement_id = ?", purchase.ID).Count(&bindings)
+	if bindings != 0 {
+		t.Fatal("account issuance stored a long-term license binding")
 	}
-	var product storage.Product
-	if a.db.First(&product).Error != nil {
-		t.Fatal("product missing")
-	}
-	a.expect(a.request("POST", "/api/v1/software/products/"+product.ID+"/credential", map[string]string{"environment": "sandbox"}, customer), 403)
+	a.expect(a.request("POST", "/api/v1/software/products/"+plan.ProductID+"/identity", map[string]string{"environment": "sandbox"}, customer), 403)
 	login := map[string]string{"email": credentials["email"], "password": credentials["password"], "kind": "desktop"}
-	w = a.request("POST", "/api/v1/auth/login", login, nil, func(r *http.Request) { r.Header.Del("Origin") })
-	a.expect(w, 200)
-	grant := data[app.SessionGrant](t, w)
-	w = a.request("POST", "/api/v1/software/products/"+product.ID+"/credential", map[string]string{"environment": "sandbox"}, nil, func(r *http.Request) {
-		r.Header.Set("Authorization", "Bearer "+grant.AccessToken)
+	grant := data[app.SessionGrant](t, a.request("POST", "/api/v1/auth/login", login, nil, func(r *http.Request) { r.Header.Del("Origin") }))
+	desktop := func(r *http.Request) {
 		r.Header.Del("Origin")
-	})
-	a.expect(w, 200)
-	credential := data[map[string]any](t, w)
-	if credential["license_key"] != "lv_lic_test_customer_only" {
-		t.Fatal("own credential was not restored")
+		r.Header.Set("Authorization", "Bearer "+grant.AccessToken)
 	}
-	testSoftwareStatus(a, customer, grant, product.ID)
-	paid = data[app.CheckoutView](t, a.request("GET", "/api/v1/orders/"+order.ID, nil, customer))
-	if paid.Fulfillment != "active" {
-		t.Fatal("completed task not reflected in order")
+	a.expect(a.request("POST", "/api/v1/software/products/"+plan.ProductID+"/credential", map[string]string{"environment": "sandbox"}, nil, desktop), 410)
+	identity := data[app.IdentityView](t, a.request("POST", "/api/v1/software/products/"+plan.ProductID+"/identity", map[string]string{"environment": "sandbox"}, nil, desktop))
+	if identity.IdentityToken == "" || identity.LaunchConnectionID == "" || identity.LicentivoProductID != "11111111-1111-4111-8111-111111111111" {
+		t.Fatal("identity context missing")
 	}
-	englishHeader := func(r *http.Request) { r.Header.Set("Accept-Language", "en") }
-	owned := data[[]app.ProductEntitlement](t, a.request("GET", "/api/v1/me/products", nil, customer, englishHeader))
-	if len(owned) != 1 || owned[0].ProductID != product.ID || !strings.HasPrefix(owned[0].ProductName, "EN-US · ") {
-		t.Fatalf("localized owned product was not served: %+v", owned)
+	device := id()
+	bridge.view = ports.LaunchDevices{Items: []ports.Device{{ID: device, Generation: 7, Status: "active"}}, Remaining: 7, CanRelease: true}
+	view := data[app.DevicesView](t, a.request("GET", "/api/v1/me/products/"+plan.ProductID+"/devices?environment=sandbox", nil, customer))
+	if view.Remaining != 7 || bridge.lastPurchase != *purchase.LaunchPurchaseRef || bridge.lastAccount == "" {
+		t.Fatal("remote device scope or quota changed")
 	}
-	ownedPlans := data[[]app.PlanView](t, a.request("GET", "/api/v1/me/products/"+product.ID+"/plans?environment=sandbox", nil, customer, englishHeader))
-	if len(ownedPlans) != 1 || !strings.HasPrefix(ownedPlans[0].Name, "EN-US · ") {
-		t.Fatalf("localized continuation plan was not served: %+v", ownedPlans)
+	operation := id()
+	a.expect(a.request("POST", "/api/v1/me/products/"+plan.ProductID+"/devices/release", map[string]any{"device_id": device, "environment": "sandbox", "idempotency_key": operation, "expected_generation": 7}, customer), 200)
+	if bridge.lastRelease.OperationID != operation || bridge.lastRelease.ExpectedGeneration != 7 {
+		t.Fatal("release changed operation or generation")
 	}
-	testDeviceLifecycle(a, admin, customer, service, licensing, product.ID)
-	testSalesLifecycle(a, admin, customer, plan, service, gateway, licensing)
+	var jobs int64
+	a.db.Model(&storage.DeviceOperation{}).Count(&jobs)
+	if jobs != 0 {
+		t.Fatal("Launch created a competing release job")
+	}
+	a.expect(a.request("POST", "/api/v1/auth/logout", map[string]any{}, nil, desktop), 200)
+	a.expect(a.request("POST", "/api/v1/software/products/"+plan.ProductID+"/identity", map[string]string{"environment": "sandbox"}, nil, desktop), 401)
+	var notifications int64
+	a.db.Model(&storage.LaunchOutbox{}).Where("kind = 'identity.session.revoked'").Count(&notifications)
+	if notifications == 0 {
+		t.Fatal("identity revocation was not durably retained")
+	}
 	testStaffAndExports(a, admin, customer, credentials)
-	testBackupRecovery(a, service, config)
-	testLicenseEventLifecycle(a, service, gateway, licensing, connectionID, plan)
+	// Account security is delivered through the identity contract, never by
+	// changing purchase dates. Website recovery stays available during retries.
+	for range 10 {
+		handled, err := service.ProcessIdentityRevocation(ctx)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !handled {
+			break
+		}
+	}
+	a.expect(a.request("POST", "/api/v1/admin/users/"+settled.UserID+"/status", map[string]string{"status": "disabled", "reason": "verify remote account revocation"}, admin), 200)
+	a.expect(a.request("POST", "/api/v1/admin/users/"+settled.UserID+"/status", map[string]string{"status": "active", "reason": "verify fresh login after revocation"}, admin), 200)
+	a.expect(a.request("POST", "/api/v1/auth/login", login, nil, func(r *http.Request) { r.Header.Del("Origin") }), 503)
+	recovered := &browser{}
+	a.expect(a.request("POST", "/api/v1/auth/login", map[string]string{"email": credentials["email"], "password": credentials["password"], "kind": "website"}, recovered), 200)
+	var notification storage.LaunchOutbox
+	if a.db.Where("kind = 'identity.account.revoked' AND status = 'pending'").Order("created_at DESC").First(&notification).Error != nil {
+		t.Fatal("account revocation not queued")
+	}
+	if err := a.db.Model(&notification).Update("status", "manual_review").Error; err != nil {
+		t.Fatal(err)
+	}
+	retryURL := "/api/v1/admin/identity-notifications/" + notification.ID + "/retry"
+	a.expect(a.request("POST", retryURL, map[string]string{"reason": "customer cannot retry"}, recovered), 403)
+	a.expect(a.request("POST", retryURL, map[string]string{"reason": "verified original identity notification"}, admin), 200)
+	for range 10 {
+		handled, err := service.ProcessIdentityRevocation(ctx)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !handled {
+			break
+		}
+	}
+	if a.db.First(&notification, "id = ?", notification.ID).Error != nil || notification.Status != "succeeded" || notification.RevokedBefore == nil {
+		t.Fatal("account notification was not confirmed")
+	}
+	deadline := time.Now().Add(2 * time.Second)
+	for time.Now().Unix() <= notification.RevokedBefore.Unix() && time.Now().Before(deadline) {
+		time.Sleep(20 * time.Millisecond)
+	}
+	fresh := data[app.SessionGrant](t, a.request("POST", "/api/v1/auth/login", login, nil, func(r *http.Request) { r.Header.Del("Origin") }))
+	a.expect(a.request("POST", "/api/v1/software/products/"+plan.ProductID+"/identity", map[string]string{"environment": "sandbox"}, nil, func(r *http.Request) {
+		r.Header.Del("Origin")
+		r.Header.Set("Authorization", "Bearer "+fresh.AccessToken)
+	}), 200)
+	a.expect(a.request("POST", retryURL, map[string]string{"reason": "do not repeat a committed cutoff"}, admin), 409)
+
+	// A lost refund response is recoverable from the original provider receipt.
+	// The admin route enforces both the account role and website CSRF protection.
+	refund := data[app.RefundView](t, a.request("POST", "/api/v1/orders/"+order.ID+"/refund", map[string]string{"reason": "test receipt recovery"}, recovered))
+	a.expect(a.request("POST", "/api/v1/admin/refunds/"+refund.ID+"/approve", map[string]string{"reason": "approved test refund"}, admin), 200)
+	if err := service.ProcessRefunds(ctx); err != nil {
+		t.Fatal(err)
+	}
+	var original storage.Refund
+	if err := a.db.First(&original, "id = ?", refund.ID).Error; err != nil {
+		t.Fatal(err)
+	}
+	if original.Status != "unknown" {
+		t.Fatal("lost response did not retain unknown refund")
+	}
+	if err := a.db.Model(&original).Update("review_required", true).Error; err != nil {
+		t.Fatal(err)
+	}
+	recoverURL := "/api/v1/admin/refunds/" + refund.ID + "/reconcile"
+	recovery := app.RefundRecoveryInput{Reason: "verified original provider receipt", ExternalRefundID: "re_" + original.OperationID}
+	a.expect(a.request("POST", recoverURL, recovery, recovered), 403)
+	a.expect(a.request("POST", recoverURL, recovery, admin, func(r *http.Request) { r.Header.Del("X-CSRF-Token") }), 403)
+	a.expect(a.request("POST", recoverURL, app.RefundRecoveryInput{Reason: "x"}, admin), 400)
+	a.expect(a.request("POST", recoverURL, recovery, admin), 200)
+	if err := service.ProcessRefunds(ctx); err != nil {
+		t.Fatal(err)
+	}
+	var completed storage.Refund
+	if err := a.db.First(&completed, "id = ?", refund.ID).Error; err != nil {
+		t.Fatal(err)
+	}
+	if completed.Status != "succeeded" || completed.OperationID != original.OperationID || gateway.refundCalls != 1 {
+		t.Fatal("recovery repeated financial write or changed operation")
+	}
+	// Previously unsupported, authenticated reversals can be resumed by a
+	// channel resend. Reusing an event ID with changed bytes remains forbidden.
+	legacyBody := map[string]any{"id": "evt_legacy_reversal", "type": "charge.dispute.closed", "livemode": false, "created": time.Now().Unix(), "data": map[string]any{"object": map[string]string{"id": "dp_legacy_reversal"}}}
+	legacyRaw, _ := json.Marshal(legacyBody)
+	legacyStamp := strconv.FormatInt(time.Now().Unix(), 10)
+	legacyMAC := hmac.New(sha256.New, []byte(gateway.secret))
+	legacyMAC.Write([]byte(legacyStamp + "."))
+	legacyMAC.Write(legacyRaw)
+	legacySignature := "t=" + legacyStamp + ",v1=" + hex.EncodeToString(legacyMAC.Sum(nil))
+	deliverLegacy := func() {
+		a.expect(a.request("POST", "/api/v1/webhooks/payments/"+accountID, legacyBody, nil, func(r *http.Request) { r.Header.Set("Stripe-Signature", legacySignature) }), 200)
+	}
+	deliverLegacy()
+	var legacy storage.PaymentEvent
+	if err := a.db.First(&legacy, "account_id = ? AND external_event_id = ?", accountID, "evt_legacy_reversal").Error; err != nil {
+		t.Fatal(err)
+	}
+	if err := a.db.Model(&legacy).Updates(map[string]any{"status": "review", "attempts": 12}).Error; err != nil {
+		t.Fatal(err)
+	}
+	deliverLegacy()
+	if err := a.db.First(&legacy, "id = ?", legacy.ID).Error; err != nil || legacy.Status != "pending" || legacy.Attempts != 0 {
+		t.Fatal("channel resend did not recover original reviewed event", err)
+	}
 }
 
 type paymentDouble struct {

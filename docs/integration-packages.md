@@ -1,32 +1,36 @@
 # Launch application integration packages
 
-Launch **0.1.1** embeds official Licentivo SDK **0.11.0** for all **nine languages**. Install only the Launch package for your language. Its implementation, default adapter, license notices and SDK linking configuration are included. TypeScript declarations belong to JavaScript; the trusted Go Web backend is an extra example. Public sources, registry commands and per-language availability are maintained in the [Launch SDK repository](https://github.com/spf86/licentivo-launch-sdk) and its [publication status](https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/registry-status.json).
+Launch **0.1.3** embeds official Licentivo SDK **0.11.2** for all **nine languages**. Install only the Launch package for your language. Its implementation, default adapter, license notices and SDK linking configuration are included. TypeScript declarations belong to JavaScript; the trusted Go Web backend is an extra example. Public sources, registry commands and per-language availability are maintained in the [Launch SDK repository](https://github.com/spf86/licentivo-launch-sdk) and its [publication status](https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/registry-status.json).
+
+The 0.1.3 update carries the upstream C/C++ CMake fix for curl config-package and FindCURL consumers. The licensing protocol, application APIs and account lifecycle are unchanged. Existing applications can upgrade the Launch package and rebuild without changing their integration code. The [0.1.3 publication record](https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/publication-0.1.3.md) tracks public availability and clean installation verification separately from local builds.
 
 | Language | Single Launch artifact | Package source / API guide |
 | --- | --- | --- |
 | Go | Self-contained module ZIP | [pkg/launchclient](../pkg/launchclient/README.md) |
-| Python | licentivo_launch-0.1.1-py3-none-any.whl | [sdk/python](../sdk/python/README.md) |
-| C# / .NET 8 | Licentivo.Launch.0.1.1.nupkg | [sdk/csharp](../sdk/csharp/README.md) |
-| Java 17 | launch-client-0.1.1.jar and POM | [sdk/java](../sdk/java/README.md) |
-| JavaScript / Node.js | licentivo-launch-0.1.1.tgz | [sdk/javascript](../sdk/javascript/README.md) |
-| Rust | licentivo-launch-0.1.1.crate or source ZIP | [sdk/rust](../sdk/rust/README.md) |
+| Python | licentivo_launch-0.1.3-py3-none-any.whl | [sdk/python](../sdk/python/README.md) |
+| C# / .NET 8 | Licentivo.Launch.0.1.3.nupkg | [sdk/csharp](../sdk/csharp/README.md) |
+| Java 17 | launch-client-0.1.3.jar and POM | [sdk/java](../sdk/java/README.md) |
+| JavaScript / Node.js | licentivo-launch-0.1.3.tgz | [sdk/javascript](../sdk/javascript/README.md) |
+| Rust | licentivo-launch-0.1.3.crate or source ZIP | [sdk/rust](../sdk/rust/README.md) |
 | Ruby | Platform Launch gem or source gem | [sdk/ruby](../sdk/ruby/README.md) |
 | C | Launch native CMake installation ZIP | [sdk/native](../sdk/native/README.md) |
 | C++ | Same native archive, C++17 API | [sdk/native](../sdk/native/README.md) |
 
 ## Install from a public registry
 
+Public 0.1.3 installation checks passed for all nine languages: Go, Python, C#, Java, Node.js/TypeScript, Rust, Ruby, C and C++. The registry commands and native downloads below are publicly available and verified in independent consumers. The publication status records exact package checksums, installation results and platform limits.
+
 ```sh
-go get github.com/spf86/licentivo-launch-sdk/pkg/launchclient@v0.1.1
-python -m pip install licentivo-launch==0.1.1
-npm install @licentivo/launch@0.1.1
-dotnet add package Licentivo.Launch --version 0.1.1
-cargo add licentivo-launch@=0.1.1
-gem install licentivo-launch --version 0.1.1
+go get github.com/spf86/licentivo-launch-sdk/pkg/launchclient@v0.1.3
+python -m pip install licentivo-launch==0.1.3
+npm install @licentivo/launch@0.1.3
+dotnet add package Licentivo.Launch --version 0.1.3
+cargo add licentivo-launch@=0.1.3
+gem install licentivo-launch --version 0.1.3
 ```
 
-Java uses Maven/Gradle coordinates `com.licentivo.launch:launch-client:0.1.1`.
-C/C++ use the ABI-compatible native archive from the [versioned GitHub release](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.1).
+Java uses Maven/Gradle coordinates `com.licentivo.launch:launch-client:0.1.3`.
+C/C++ use the ABI-compatible native archive from the [versioned GitHub release](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.3).
 See the publication status for registry propagation and verification results.
 
 ## Install a downloaded distribution
@@ -34,10 +38,10 @@ See the publication status for registry propagation and verification results.
 Use the artifacts identified in integration-packages.json. Each language records sdk_managed: true and requires_separate_official_sdk: false. Verify SHA256SUMS before installation.
 
 ```powershell
-python -m pip install ./licentivo_launch-0.1.1-py3-none-any.whl
-npm install ./licentivo-launch-0.1.1.tgz
-dotnet add YOUR_PROJECT package Licentivo.Launch --version 0.1.1 --source YOUR_LOCAL_FEED
-gem install --local ./licentivo-launch-0.1.1-x64-mingw-ucrt.gem
+python -m pip install ./licentivo_launch-0.1.3-py3-none-any.whl
+npm install ./licentivo-launch-0.1.3.tgz
+dotnet add YOUR_PROJECT package Licentivo.Launch --version 0.1.3 --source YOUR_LOCAL_FEED
+gem install --local ./licentivo-launch-0.1.3-x64-mingw-ucrt.gem
 ```
 
 Java uses only the Launch JAR on its classpath; its POM has no official SDK dependency. Offline Go consumers can extract the module ZIP and use a local require/replace for `github.com/spf86/licentivo-launch-sdk`. Offline Rust consumers can extract the crate or source ZIP and add a local licentivo-launch path dependency. No official SDK package or checkout is needed.
@@ -53,7 +57,7 @@ licentivo_launch_link(myapp)
 
 Launch resolves its own SDK, transitive libraries and bundled Windows DLLs. Rust's build.rs compiles its embedded C core and copies bundled DLLs beside Cargo executables. Ruby's platform gem includes its private native core and runtime libraries; the source gem compiles the core automatically.
 
-Normal language toolchains and ordinary dependencies still apply: pip resolves cryptography, NuGet resolves BouncyCastle.Cryptography, and Cargo resolves ordinary Rust crates. Native archives cover Windows amd64 GNU and Linux amd64. Windows distributions include curl. Other operating systems use the complete source with a C11 compiler and normal OS curl/OpenSSL development libraries. SDK 0.11.0's Windows native core requires GNU/MinGW.
+Normal language toolchains and ordinary dependencies still apply: pip resolves cryptography, NuGet resolves BouncyCastle.Cryptography, and Cargo resolves ordinary Rust crates. Native archives cover Windows amd64 GNU and Linux amd64. Windows distributions include curl. Other operating systems use the complete source with a C11 compiler and normal OS curl/OpenSSL development libraries. SDK 0.11.2's Windows native core requires GNU/MinGW.
 
 ## Initialize the application
 

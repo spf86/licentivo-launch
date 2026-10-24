@@ -1,0 +1,238 @@
+{
+  "date": "2026-10-24",
+  "focus": "authorization",
+  "business_code_modified": false,
+  "deployed": false,
+  "environment": {
+    "database": "independent local MySQL 8.0.32",
+    "remote_device_accessed": false,
+    "test_injection": "Go build overlay; no business implementation overrides"
+  },
+  "findings": [
+    {
+      "id": "AUTH-01",
+      "owner": "Licentivo server",
+      "priority": "high",
+      "confirmed": [
+        "Manual suspended license changed to active by ordinary Launch renewal",
+        "Manually removed features restored to export/pro by renewal"
+      ]
+    },
+    {
+      "id": "AUTH-02",
+      "owner": "Licentivo server",
+      "priority": "high",
+      "confirmed": [
+        "Official Go SDK executed export after synchronized purchase expiry",
+        "Server heartbeat concurrently returned HTTP 403"
+      ],
+      "lease_overrun_seconds": 1185
+    },
+    {
+      "id": "AUTH-03",
+      "owner": "Launch server",
+      "priority": "medium",
+      "confirmed": [
+        "Two concurrent valid SaveMapping calls committed different remote product IDs for one Launch product",
+        "Published plan A purchase paid and snapshot applied",
+        "Identity selected unrelated newer draft B product",
+        "SDK rejected routing context mismatch"
+      ],
+      "impact": "legitimate customer authorization failure; no cross-account authorization bypass demonstrated"
+    }
+  ],
+  "reproduction_records": {
+    "probes.log": [
+      "authorization_audit_probe_test.go:35: AUTH_AUDIT_FINDING manual Licentivo suspension denied heartbeat, then ordinary Launch renewal reset license to active and fresh identity exchange succeeded",
+      "authorization_audit_probe_test.go:50: AUTH_AUDIT_FINDING ordinary Launch renewal restored manually removed license features: [\"export\", \"pro\"]",
+      "authorization_audit_probe_test.go:96: AUTH_AUDIT_FINDING SDK export executed after synchronized purchase expiry; server heartbeat rejected; signed lease expiry exceeds purchase by 1185 seconds"
+    ],
+    "launch-paid-probes.log": [
+      "authorization_audit_probe_test.go:198: AUTH_AUDIT_FINDING real purchase of plan A synchronized successfully; official SDK rejected unrelated draft product identity; concurrent valid SaveMapping requests both passed product consistency check; two licensing products committed for one Launch product; active customer identity routed to the unrelated higher-version draft"
+    ]
+  },
+  "controls": {
+    "lic-authorization-controls.jsonl": {
+      "passed": [
+        "TestAuthorizationAuditCrossProductMappingAccepted",
+        "TestLaunchSessionRevocationScopesAndReplay",
+        "TestLaunchAccountSessionRevocation/password_changed",
+        "TestLaunchAccountSessionRevocation/account_disabled",
+        "TestLaunchAccountSessionRevocation",
+        "TestLaunchRevocationBeforeFirstExchange",
+        "TestLaunchSessionRevocationAtomicRollback",
+        "TestLaunchAccountRevocationCutoffNeverMovesBackwards",
+        "TestLaunchSessionRevocationAccessAndValidation",
+        "TestLaunchSessionRevocationConcurrentRetries",
+        "TestLaunchAccountLogoutRemoteUnbindAndReplay",
+        "TestLaunchPendingLogoutCannotReleaseFreshLogin",
+        "TestLaunchDeviceReleaseReviewCannotBypassBindingVersion",
+        "TestLaunchExpiredSessionRequiresFreshLogin",
+        "TestLaunchCommerceVersionsIsolationAndRetry",
+        "TestLaunchMigrationPreservesRightsAndRejectsOldKeys",
+        "TestLaunchMigrationDoesNotReplaceFloatingPurchase",
+        "TestRuntimeCheckCompactReplayAndBilling",
+        "TestRuntimeCheckParallelAuthorizationAndAtomicQuota",
+        "TestRuntimeCheckLegacyRetryAndRetention",
+        "TestRuntimeCheckKeepsOneBillingModeDuringConfigurationChange",
+        "TestRuntimeCheckCacheCodecAndAccessSummaries",
+        "TestRuntimeCheckGoSDKAgainstActualBackend",
+        "TestRuntimeHeartbeatQueryBudget",
+        "TestRuntimeCredentialRevokedAfterInitialLookup",
+        "TestRuntimeLegacyWindowUsesReceiptsRatherThanRestartTime",
+        "TestRuntimeHeartbeatSharesDueRenewalWithActivityAndAPIMeter",
+        "TestRuntimeAtomicCapAndConcurrency",
+        "TestRuntimeReplayLeaseRotationReleaseAndExpiry",
+        "TestRuntimeCrossProductAndRevocation"
+      ],
+      "skipped": [
+        "TestRuntimeSoak"
+      ],
+      "failed": []
+    },
+    "launch-authorization-controls.jsonl": {
+      "passed": [
+        "TestIdentityIsEphemeralAndSDKDecidesFeatures",
+        "TestAccountSwitchReleasesOldDevice",
+        "TestIdentityMatchesLicentivoTypedAssertion",
+        "TestIdentityCannotExtendAnAccountSession",
+        "TestOfficialSDKAccountExchangeAndLogout",
+        "TestPurchaseSnapshotBridge/purchase_loses_response_and_recovers_after_restart",
+        "TestPurchaseSnapshotBridge/upgrade_and_refund_restore_the_paid_base",
+        "TestPurchaseSnapshotBridge/renewal_extends_absolute_end_and_refund_removes_only_the_extension",
+        "TestPurchaseSnapshotBridge/full_refund_and_repurchase_use_different_references",
+        "TestPurchaseSnapshotBridge/manual_review_is_not_reported_as_applied",
+        "TestPurchaseSnapshotBridge/outbox_preserves_one_version_per_purchase_under_concurrency",
+        "TestPurchaseSnapshotBridge/expiry_sends_an_explicit_absolute_state",
+        "TestPurchaseSnapshotBridge/perpetual_purchases_retain_a_null_end",
+        "TestPurchaseSnapshotBridge/legacy_migration_never_reads_or_returns_the_old_license_key",
+        "TestPurchaseSnapshotBridge/refund_supersedes_an_unresolved_older_delivery",
+        "TestPurchaseSnapshotBridge/lost_renewal_dispute_preserves_base_and_canonical_reversal_is_idempotent",
+        "TestPurchaseSnapshotBridge/pending_and_mismatched_disputes_cannot_remove_coverage",
+        "TestPurchaseSnapshotBridge/reversal_before_capture_callback_never_issues_positive_coverage",
+        "TestPurchaseSnapshotBridge/admin_can_resume_exhausted_refund_with_original_idempotent_request",
+        "TestPurchaseSnapshotBridge/expired_refund_recovery_requires_verified_original_receipt_and_performs_no_POST",
+        "TestPurchaseSnapshotBridge/single_logout_recovers_the_original_receipt_after_restart",
+        "TestPurchaseSnapshotBridge/account_cutoff_waits_for_both_environments_and_preserves_partial_receipt",
+        "TestPurchaseSnapshotBridge/mismatched_receipt_stays_blocked_until_audited_retry",
+        "TestPurchaseSnapshotBridge/preconnection_security_event_is_never_replayed_to_a_later_connection",
+        "TestPurchaseSnapshotBridge/website_logout_needs_no_licensing_notification",
+        "TestPurchaseSnapshotBridge"
+      ],
+      "skipped": [],
+      "failed": []
+    },
+    "lic-sdk-controls.jsonl": {
+      "passed": [
+        "TestSharedVectors/valid",
+        "TestSharedVectors/expired",
+        "TestSharedVectors/wrong_product",
+        "TestSharedVectors/wrong_device",
+        "TestSharedVectors/bad_signature",
+        "TestSharedVectors/unknown_key",
+        "TestSharedVectors/future_clock",
+        "TestSharedVectors/long_ttl",
+        "TestSharedVectors/missing_context",
+        "TestSharedVectors/bad_features",
+        "TestSharedVectors/duplicate_features",
+        "TestSharedVectors/wrong_inner_key",
+        "TestSharedVectors/unknown_field",
+        "TestSharedVectors/duplicate_field",
+        "TestSharedVectors/wrong_type",
+        "TestSharedVectors/limited_48h",
+        "TestSharedVectors/offline_shorter_than_heartbeat",
+        "TestSharedVectors/limited_no_timer",
+        "TestSharedVectors/permanent_with_heartbeat",
+        "TestSharedVectors/permanent_no_timer",
+        "TestSharedVectors/online_required_no_timer",
+        "TestSharedVectors/limited_ttl_overrun",
+        "TestSharedVectors/online_required_jitter_grace",
+        "TestSharedVectors/online_required_grace_boundary",
+        "TestSharedVectors/online_required_ttl_overrun",
+        "TestSharedVectors/invalid_heartbeat",
+        "TestSharedVectors/negative_heartbeat",
+        "TestSharedVectors/limited_zero_allowance",
+        "TestSharedVectors/unknown_offline_mode",
+        "TestSharedVectors/unknown_policy_field",
+        "TestSharedVectors/duplicate_policy_field",
+        "TestSharedVectors/wrong_policy_type",
+        "TestSharedVectors/node_capabilities",
+        "TestSharedVectors/floating_capabilities",
+        "TestSharedVectors/offline_file_context",
+        "TestSharedVectors/maintenance_included",
+        "TestSharedVectors/invalid_model",
+        "TestSharedVectors/invalid_session_id",
+        "TestSharedVectors/session_expired_early",
+        "TestSharedVectors/floating_no_timer",
+        "TestSharedVectors/floating_permanent_offline",
+        "TestSharedVectors/invalid_app_version",
+        "TestSharedVectors/maintenance_uncovered",
+        "TestSharedVectors/future_release",
+        "TestSharedVectors/invalid_offline_context",
+        "TestSharedVectors/unknown_capability_field",
+        "TestSharedVectors/duplicate_capability_field",
+        "TestSharedVectors/wrong_capability_type",
+        "TestSharedVectors",
+        "TestLaunchIdentityTrustAndValidity/future_login",
+        "TestLaunchIdentityTrustAndValidity/issuer",
+        "TestLaunchIdentityTrustAndValidity/no_login",
+        "TestLaunchIdentityTrustAndValidity/audience",
+        "TestLaunchIdentityTrustAndValidity/environment",
+        "TestLaunchIdentityTrustAndValidity/expired",
+        "TestLaunchIdentityTrustAndValidity/future",
+        "TestLaunchIdentityTrustAndValidity/long_assertion",
+        "TestLaunchIdentityTrustAndValidity/missing_nonce",
+        "TestLaunchIdentityTrustAndValidity/login_expired",
+        "TestLaunchIdentityTrustAndValidity",
+        "TestPasswordAndCipher",
+        "TestCSRFBoundToSession",
+        "TestIdentifiersAndTokens",
+        "TestRFC8032Vector",
+        "TestHeartbeatPermanentOfflineAndPolicyRestart",
+        "TestCacheFallbackDenialAndLicenseContext",
+        "TestMeteredCallbackCrashRecovery",
+        "TestHeartbeatDelayMinimum",
+        "TestRetryAfterAndHTMLProxyFailure/Too_Many_Requests",
+        "TestRetryAfterAndHTMLProxyFailure/Service_Unavailable",
+        "TestRetryAfterAndHTMLProxyFailure",
+        "TestStartupRefreshCanBeCanceledWithoutNetworkMutex",
+        "TestLogoutDuringIdentityExchangeNeverRestoresAuthority",
+        "TestProductInitializationDefaults"
+      ],
+      "skipped": [],
+      "failed": []
+    }
+  },
+  "source_integrity": {
+    "launch": {
+      "files": 281,
+      "changed": []
+    },
+    "licentivo": {
+      "files": 358,
+      "changed": []
+    }
+  },
+  "source_sha256": {
+    "launch": {
+      "internal/app/connections.go": "527b445b10d4227f8f05b158be46f021999d1a65484a796399bcfa0880bf7239",
+      "internal/app/identity.go": "570b8baac262ad1ac4aedfa109a4a0de0f5305088b1696dceb36598d8972915e",
+      "pkg/launchclient/runtime.go": "1d604cfe5a9173c3c897d4c5c46d9c3adc3b20080365302a52c3c92a65a5f933"
+    },
+    "licentivo": {
+      "internal/httpapi/launch.go": "d200397564bde6703f1c675fc88c7ad1f44a2b530e52b575e856202751875de2",
+      "internal/httpapi/resources.go": "3aca134a9bc381c83d49c1ef5d7ff7130aa156c3be5f3bbc3b0993a05c6720ac",
+      "internal/httpapi/runtime.go": "58c9914d421f538e069d2a92ce35bfefe6751277f7e7b541bf4199f0c271b459",
+      "internal/httpapi/launch_runtime.go": "fc71e4d4d62f8f8c1be66f99affd42724f2203caa0c950b7c7f0b53fa60b7b36",
+      "sdk/go/client.go": "6334ec579c36faf46e42523d6eb21e34049bd2bfde8c5c11672afd0899dff047",
+      "sdk/go/feature.go": "dc63ed0d02e6bc405801edadc73c36627dcae578c80e76d75847a5c3ec6ea022"
+    }
+  },
+  "cleanup": {
+    "audit_mysql_stopped": true,
+    "evidence_preserved": true,
+    "original_services_preserved": true,
+    "remote_device_accessed": false
+  },
+  "raw_evidence_directory": ".local/auth-audit-20261024/"
+}

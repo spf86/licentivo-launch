@@ -13,6 +13,8 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import uuid
+from threading import RLock
+from ._account_lock import account_serial, remember_intent, has_intent, clear_intent
 
 
 class APIError(Exception):
@@ -115,6 +117,7 @@ class Application:
     """
     def __init__(self, origin, product_id, product_config, environment="live", *,
                  store=None, cache_dir=None, runtime_factory=None, opener=None, sleep=time.sleep):
+        self._lifecycle_lock = RLock()
         parsed = urllib.parse.urlsplit(origin)
         if (environment not in ("sandbox", "live") or not parsed.hostname or parsed.username is not None
                 or parsed.password is not None or parsed.path not in ("", "/") or parsed.query or parsed.fragment
@@ -133,10 +136,12 @@ class Application:
             raise ValueError("Public runtime product and signing keys are required")
         self.store = store if store is not None else MemoryStore()
         self.cache_dir = Path(cache_dir or Path(os.getenv("LOCALAPPDATA") or os.getenv("XDG_CACHE_HOME") or Path.home() / ".cache") / "LicentivoLaunch")
-        self.scope = "\n".join((self.origin, self.product_id, environment, self.config["product_id"]))
+        self.scope = "\n".join(("launch-account-v2", self.origin, self.product_id, environment, self.config["product_id"]))
         self.runtime_factory, self.sleep = runtime_factory, sleep
         self.opener = opener or urllib.request.build_opener(_NoRedirect())
         self.session, self.runtime, self.cache_path = None, None, None
+        self._pending_logout = None
+        self._account_cleared = False
         self.closed = False
 
     @classmethod
@@ -189,123 +194,112 @@ class Application:
         except (ValueError, KeyError, TypeError):
             raise APIError("INVALID_RESPONSE") from None
 
-    def _credential(self, token, attempts):
-        for index in range(attempts):
-            try:
-                data = self._call("/software/products/" + self.product_id + "/credential", {"environment": self.environment}, token)
-                if (data.get("product_id") != self.product_id or not isinstance(data.get("license_key"), str)
-                        or not data["license_key"] or type(data.get("version")) is not int or data["version"] < 1):
-                    raise APIError("CREDENTIAL_MISMATCH")
-                return data["license_key"]
-            except APIError as error:
-                if error.code != "ENTITLEMENT_PENDING" or error.status not in (403, 409) or index + 1 == attempts or error.retry_after > 30:
-                    raise
-                self.sleep(max(3, error.retry_after or min(2 ** index, 4)))
+    def _credential(self, token, attempts=1):
+        own = self._call('/software/products/' + self.product_id + '/identity', {'environment': self.environment}, token)
+        if (own.get('product_id') != self.product_id or own.get('licentivo_product_id') != self.config['product_id']
+                or own.get('environment') != self.environment or not re.fullmatch(r'[a-fA-F0-9-]{36}', own.get('launch_connection_id', ''))
+                or not isinstance(own.get('identity_token'), str) or not 32 <= len(own['identity_token']) <= 12288):
+            raise APIError('IDENTITY_MISMATCH')
+        return own
 
     def _cache_for(self, session):
         scope = hashlib.sha256((self.scope + "\n" + session["user_id"]).encode()).hexdigest()
         return self.cache_dir / scope / "lease.json"
 
-    def _start(self, session, offline=False):
-        if self.closed:
-            raise RuntimeError("Application is closed")
-        if self.runtime:
-            self.runtime.close()
-            self.runtime = None
+    def _start(self, session, identity=None):
+        if self.closed: raise RuntimeError('Application is closed')
+        if self.runtime: self.runtime.close()
+        self.runtime = None
         directory = self._cache_for(session).parent
         directory.mkdir(mode=0o700, parents=True, exist_ok=True)
-        if os.name != "nt":
-            directory.chmod(0o700)
-        self.cache_path = directory / "lease.json"
-        config = self.config | {"license_key": session["license_key"], "cache_path": str(self.cache_path)}
+        if os.name != 'nt': directory.chmod(0o700)
+        self.cache_path = directory / 'lease.json'
+        identity = identity or session['identity_context']
+        config = self.config | {'license_key': '', 'identity_token': identity.get('identity_token', ''),
+                                'launch_connection_id': identity['launch_connection_id'], 'environment': self.environment,
+                                'cache_path': str(self.cache_path)}
         runtime = self.runtime_factory(config)
-        try:
-            if offline and not runtime.status()["allowed"]:
-                raise APIError("OFFLINE_UNAVAILABLE")
-            runtime.start()
+        try: runtime.start()
         except Exception:
             runtime.close()
             raise
         self.runtime, self.session = runtime, session
+        self._account_cleared = False
         return self
 
+    @account_serial
     def login(self, email, password, *, pending_attempts=3):
-        if self.closed:
-            raise RuntimeError("Application is closed")
-        if not 1 <= pending_attempts <= 5:
-            raise ValueError("pending_attempts must be between 1 and 5")
-        self.logout()
-        grant = self._call("/auth/login", {"email": email, "password": password, "kind": "desktop"})
-        token = grant["access_token"]
+        if self.closed: raise RuntimeError('Application is closed')
+        if not self.logout(): raise APIError('LOGOUT_PENDING')
+        grant = self._call('/auth/login', {'email': email, 'password': password, 'kind': 'desktop'})
+        token = grant['access_token']
+        self.session = {'version': 2, 'scope': self.scope, 'access_token': token,
+                        'user_id': grant.get('user', {}).get('id', ''), 'expires_at': grant.get('expires_at', ''),
+                        'identity_context': {}}
         try:
-            session = {"version": 1, "scope": self.scope, "access_token": token,
-                       "user_id": grant["user"]["id"], "expires_at": grant["expires_at"],
-                       "license_key": self._credential(token, pending_attempts)}
-            self._start(session)
+            identity = self._credential(token)
+            context = {k: identity[k] for k in ('product_id', 'licentivo_product_id', 'launch_connection_id', 'environment', 'expires_at')}
+            session = {'version': 2, 'scope': self.scope, 'access_token': token, 'user_id': grant['user']['id'],
+                       'expires_at': grant['expires_at'], 'identity_context': context}
+            self.session = session
+            self._start(session, identity)
             self.store.save(self.scope, json.dumps(session).encode())
             return self
         except Exception:
-            try:
-                self._call("/auth/logout", {}, token)
-            except APIError:
-                pass
-            if self.runtime:
-                self.runtime.close()
-            self.runtime, self.session = None, None
+            self.logout()
             raise
 
     def _saved(self):
-        if self.closed:
-            raise RuntimeError("Application is closed")
+        if self.closed: raise RuntimeError('Application is closed')
         raw = self.store.load(self.scope)
-        if raw is None:
-            return None
+        if raw is None: return None
         try:
-            session = json.loads(raw)
-            if (session["version"] != 1 or session["scope"] != self.scope or not session["user_id"]
-                    or not session["license_key"] or not isinstance(session["access_token"], str)):
-                raise ValueError()
-        except (ValueError, KeyError, TypeError):
-            raise APIError("INVALID_SAVED_SESSION") from None
-        return session
+            saved = json.loads(raw)
+            return self._validate_saved(saved)
+        except (ValueError, KeyError, TypeError): raise APIError('INVALID_SAVED_SESSION') from None
 
+    def _validate_saved(self, saved):
+        try:
+            if saved.get('logout_pending') is True:
+                if saved.get('version') not in (2, 3) or saved.get('scope') != self.scope or not isinstance(saved.get('access_token'), str) or not saved['access_token']:
+                    raise ValueError()
+                return saved
+            context = saved['identity_context']
+            if (saved['version'] != 2 or saved['scope'] != self.scope or not saved['user_id']
+                    or not isinstance(saved['access_token'], str) or context.get('identity_token')
+                    or context['product_id'] != self.product_id or context['environment'] != self.environment): raise ValueError()
+            return saved
+        except (ValueError, KeyError, TypeError): raise APIError('INVALID_SAVED_SESSION') from None
+
+    @account_serial
     def restore(self):
-        """Reconcile online; only an outage permits an already verified SDK cache."""
-        if self.runtime:
-            self.runtime.close()
+        pending = self._pending_logout
+        if self.runtime: self.runtime.close()
         self.runtime, self.session = None, None
-        session = self._saved()
-        if session is None:
+        saved = pending or self._saved()
+        tasks = self._pending_accounts()
+        saved = next((task for task in tasks if saved is None or task['access_token'] == saved['access_token']), saved)
+        if saved is None: return False
+        if has_intent(self.scope, saved['access_token']): saved = saved | {'version':3,'logout_pending':True}
+        if saved.get('logout_pending'):
+            self._pending_logout = saved
+            if not self.logout(): raise APIError('ACCOUNT_LOGOUT_PENDING')
             return False
+        self._retry_other_accounts(saved['access_token'])
+        expires = datetime.fromisoformat(saved['expires_at'].replace('Z', '+00:00'))
+        if expires.tzinfo is None or expires <= datetime.now(timezone.utc):
+            self._forget(saved)
+            raise APIError('SESSION_EXPIRED')
         try:
-            expires = datetime.fromisoformat(session["expires_at"].replace("Z", "+00:00"))
-            if expires.tzinfo is None:
-                raise ValueError()
-        except (ValueError, KeyError, TypeError, AttributeError):
-            self._forget(session)
-            raise APIError("INVALID_SAVED_SESSION") from None
-        if expires <= datetime.now(timezone.utc):
-            self._forget(session)
-            raise APIError("SESSION_EXPIRED")
-        try:
-            data = self._call("/me", None, session["access_token"], method="GET")
-            if data.get("user", {}).get("id") != session["user_id"]:
-                raise APIError("SESSION_REJECTED", 401)
-            session["license_key"] = self._credential(session["access_token"], 3)
+            me = self._call('/me', None, saved['access_token'], method='GET')
+            if me.get('user', {}).get('id') != saved['user_id']: raise APIError('SESSION_REJECTED', 401)
+            identity = self._credential(saved['access_token'])
         except APIError as error:
-            if error.code == "NETWORK_UNAVAILABLE" or error.status >= 500:
-                self._start(session, offline=True)
-                return True
-            if error.code != "ENTITLEMENT_PENDING" and (error.status in (401, 403, 404) or error.code in ("ENTITLEMENT_EXPIRED", "ENTITLEMENT_SUSPENDED", "ENTITLEMENT_NOT_PURCHASED")):
-                self._forget(session)
+            if error.status in (401, 403): self._forget(saved)
             raise
-        self._start(session)
-        try:
-            self.store.save(self.scope, json.dumps(session).encode())
-        except Exception:
-            self.runtime.close()
-            self.runtime, self.session = None, None
-            raise
+        saved['identity_context'] = {k: identity[k] for k in ('product_id', 'licentivo_product_id', 'launch_connection_id', 'environment', 'expires_at')}
+        self._start(saved, identity)
+        self.store.save(self.scope, json.dumps(saved).encode())
         return True
 
     def run_feature(self, name, action):
@@ -314,35 +308,121 @@ class Application:
         return self.runtime.run_feature(name, action)
 
     def release_device(self):
-        if not self.runtime:
-            raise APIError("LOGIN_REQUIRED")
-        self.runtime.deactivate()
-        self.logout()
+        return self.logout()
 
     def _forget(self, saved=None):
-        if self.runtime:
-            self.runtime.close()
-        self.runtime, self.session = None, None
-        self.store.delete(self.scope)
-        cache = self._cache_for(saved) if saved else self.cache_path
-        if cache:
-            cache.unlink(missing_ok=True)
-            Path(str(cache) + ".credential.json").unlink(missing_ok=True)
-
-    def logout(self):
+        saved = saved or self._pending_logout or self.session
         try:
-            saved = self.session or self._saved()
+            if self.runtime: self.runtime.close()
+        finally:
+            self.runtime, self.session = None, None
+            self._pending_logout = None
+            self._account_cleared = True
+            if saved: self._delete_owned(saved)
+        # The official SDK exclusively owns its cache and durable logout journal.
+
+    def _pending_key(self): return self.scope + '\naccount-logout-queue-v1'
+
+    def _pending_accounts(self):
+        raw = self.store.load(self._pending_key())
+        if raw is None: return []
+        try:
+            queue = json.loads(raw)
+            if queue['version'] != 1 or not isinstance(queue['records'], list) or len(queue['records']) > 64: raise ValueError()
+            for record in queue['records']:
+                if record.get('logout_pending') is not True: raise ValueError()
+                self._validate_saved(record)
+            return queue['records']
+        except (ValueError, KeyError, TypeError): raise APIError('INVALID_SAVED_SESSION') from None
+
+    def _update_pending(self, saved, remove=False):
+        records = [value for value in self._pending_accounts() if value['access_token'] != saved['access_token']]
+        if not remove: records.append(saved | {'version': 3, 'logout_pending': True})
+        if len(records) > 64 or len(json.dumps({'version': 1, 'records': records}).encode()) > 60000: raise APIError('ACCOUNT_LOGOUT_QUEUE_FULL')
+        if records: self.store.save(self._pending_key(), json.dumps({'version': 1, 'records': records}).encode())
+        else: self.store.delete(self._pending_key())
+
+    def _owns(self, saved):
+        raw = self.store.load(self.scope)
+        return raw is not None and json.loads(raw).get('access_token') == saved.get('access_token')
+
+    def _delete_owned(self, saved):
+        if self._owns(saved): self.store.delete(self.scope)
+
+    def _mark_logout(self, saved):
+        try: remember_intent(self.scope, saved['access_token'])
+        except OSError: pass
+        queue_failure = None
+        try: self._update_pending(saved)
+        except Exception as error: queue_failure = error
+        if self._owns(saved):
+            try:
+                self.store.save(self.scope, json.dumps(saved).encode())
+                return
+            except Exception:
+                try: self._delete_owned(saved)
+                except Exception: pass
+        if queue_failure: raise APIError('ACCOUNT_LOGOUT_STORAGE_FAILED') from None
+
+    def _finish_account(self, saved):
+        self._delete_owned(saved)
+        self._update_pending(saved, remove=True)
+        clear_intent(self.scope, saved['access_token'])
+
+    def _retry_other_accounts(self, skip):
+        for saved in self._pending_accounts():
+            if saved['access_token'] == skip: continue
+            try: self._call('/auth/logout', {}, saved['access_token'])
+            except APIError as error:
+                if error.status != 401: raise APIError('ACCOUNT_LOGOUT_PENDING') from None
+            self._finish_account(saved)
+
+    @account_serial
+    def logout(self):
+        if self._account_cleared and not self._pending_logout and not self.session:
+            self._retry_other_accounts(None)
+            return True
+        try: saved = self._pending_logout or self.session or self._saved()
         except Exception:
             self._forget()
             raise
-        token = saved.get("access_token", "") if saved else ""
-        self._forget(saved)
-        if token:
+        if saved is None: saved = next(iter(self._pending_accounts()), None)
+        failure, persist_failure, other_failure, pending = None, None, None, False
+        try: self._retry_other_accounts(saved['access_token'] if saved else None)
+        except Exception as error: other_failure = error
+        if saved:
+            saved['logout_pending'] = True
+            saved['version'] = 3
+            self._pending_logout, self.session = saved, None
+            try: self._mark_logout(saved)
+            except Exception as error: persist_failure = error
+        try:
+            active = self._saved()
+            if self.runtime is None and saved and saved.get('identity_context') and (active is None or active['access_token'] == saved['access_token']):
+                identity = saved['identity_context']
+                self.runtime = self.runtime_factory(self.config | {'license_key': '', 'identity_token': '',
+                    'launch_connection_id': identity['launch_connection_id'], 'environment': self.environment,
+                    'cache_path': str(self._cache_for(saved))})
+            if self.runtime:
+                result = self.runtime.logout() if hasattr(self.runtime, 'logout') else self.runtime.deactivate()
+                pending = isinstance(result, dict) and result.get('revocation_pending', False)
+                if isinstance(result, dict) and result.get('storage_error'): raise APIError('SDK_LOGOUT_STORAGE_FAILED')
+        except Exception as error: failure = error
+        finally:
             try:
-                self._call("/auth/logout", {}, token)
-            except APIError:
-                # Local logout succeeds offline; server bearer expires normally.
-                pass
+                if self.runtime: self.runtime.close()
+            finally: self.runtime = None
+        confirmed = True
+        if saved:
+            try: self._call('/auth/logout', {}, saved['access_token'])
+            except APIError as error: confirmed = error.status == 401
+        if confirmed:
+            if saved: self._finish_account(saved)
+            self._forget(saved)
+        if not confirmed and persist_failure: raise persist_failure
+        if failure: raise failure
+        if other_failure: raise other_failure
+        return confirmed and not pending
 
     def close(self):
         if self.closed:

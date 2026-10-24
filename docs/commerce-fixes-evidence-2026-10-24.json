@@ -1,0 +1,49 @@
+{
+  "date": "2026-10-24",
+  "source_sha256": {
+    "internal/app/purchase_sync.go": "5c70f14d8985135d99361a9cb0372ac20fbb38f9bd636061e6b99dd978c9ee29",
+    "internal/app/quotes.go": "bc1ec57fd7f980444b15caf957971080cf180b05f3e681f6c7e830323686b243",
+    "internal/app/ledger.go": "2c0d0bc0c190807f7cb3968361104e6e2b1793f3f0a5d7b01d5588a7bd7c8a40",
+    "internal/app/operations.go": "a9542d5688a22aaf71f488ac8d22473766aa4fea6f6f7ea30cd75ecbf2fd1b66",
+    "internal/app/order_recovery.go": "25e6de6d73282b3e09c9aa24295bcee33400fd6d29fc763825875d5ac286c8cb",
+    "internal/app/purchase_sync_integration_test.go": "ae5e9906bb94eec53b5585c4462d00918f0eea686631edf5a14904138b832189",
+    "internal/app/quotes_test.go": "615d0c661378bfde4a5982580dc1d9a5ff6cacb0fc41dd285d50d5a7fd668783"
+  },
+  "baseline": {
+    "three_period_upgrade": {
+      "got_minor": 1000,
+      "want_minor": 3000
+    },
+    "refund_blocked_by_reviewed_upgrade": true,
+    "natural_expiry_renewal_missing_coverage": true,
+    "admin_reconcile_did_not_recover_paid_review": true
+  },
+  "validation": {
+    "go_source": {
+      "command": "go test -mod=readonly -json ./cmd/... ./internal/... ./pkg/... -count=1 -timeout 240s",
+      "passed": 214,
+      "skipped": [
+        {
+          "package": "licentivo-launch/internal/app",
+          "test": "TestProductUploadRoundTrip"
+        },
+        {
+          "package": "licentivo-launch/pkg/launchclient",
+          "test": "TestLaunchAccountLogoutRecovery"
+        }
+      ],
+      "failed": [],
+      "packages": 14,
+      "unparsed": 0
+    },
+    "final_commerce": {
+      "command": "go test -mod=readonly ./internal/app -run ^(TestPurchaseSnapshotBridge|TestUpgradeUsesPurchasedIntervalPrices|TestUpgradeRejectsUnavailableOrCheaperInterval)$ -count=1 -v -timeout 120s",
+      "passed_records": 42,
+      "failed_records": 0
+    },
+    "go_vet_exit_code": 0,
+    "isolated_mysql_shutdown_complete": true,
+    "payment_and_licentivo_peers": "local contract test doubles"
+  },
+  "raw_evidence_directory": ".local/commerce-fix-20261024"
+}

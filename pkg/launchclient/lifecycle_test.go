@@ -14,321 +14,243 @@ import (
 )
 
 const testProduct = "11111111-1111-4111-8111-111111111111"
+const testRemote = "33333333-3333-4333-8333-333333333333"
+const testConnection = "22222222-2222-4222-8222-222222222222"
 
 type fakeRuntime struct {
-	offline                           bool
-	denied                            bool
-	started, closed, released, checks int
+	path                      string
+	started, released, closed int
 }
 
 func (r *fakeRuntime) Start(context.Context, func(error)) error { r.started++; return nil }
-func (r *fakeRuntime) CanStartOffline() bool                    { return r.offline }
-func (r *fakeRuntime) RunFeature(_ string, action func() error) error {
-	r.checks++
-	if r.denied {
-		return errors.New("SDK denial")
+func (r *fakeRuntime) RunFeature(f string, a func() error) error {
+	if f != "export" {
+		return errors.New("official SDK denied")
 	}
-	return action()
+	return a()
 }
-func (r *fakeRuntime) Deactivate(context.Context) error { r.released++; return nil }
-func (r *fakeRuntime) Close()                           { r.closed++ }
+func (r *fakeRuntime) Deactivate(context.Context) error {
+	r.released++
+	return os.WriteFile(r.path+".logout.json", []byte("SDK-owned unlink-only journal"), 0600)
+}
+func (r *fakeRuntime) Close() { r.closed++ }
 
 type lifecycleFixture struct {
-	app                  *Application
-	store                *MemoryStore
-	mode                 string
-	user                 string
-	offline              bool
-	logouts, credentials int
-	runtimes             []*fakeRuntime
-	configs              []RuntimeConfig
+	app        *Application
+	store      *MemoryStore
+	mode, user string
+	runtimes   []*fakeRuntime
+	configs    []RuntimeConfig
+	paths      []string
 }
 
 func newLifecycleFixture(t *testing.T) *lifecycleFixture {
 	t.Helper()
-	f := &lifecycleFixture{store: &MemoryStore{}, user: "account-a", offline: true}
-	app, err := NewApplication(Config{Origin: "https://merchant.example", ProductID: testProduct, Environment: "sandbox", Store: f.store, CacheDir: t.TempDir(), RetryPolicy: RetryPolicy{MaxAttempts: 3, InitialDelay: time.Nanosecond, MaxDelay: time.Millisecond}, RuntimeFactory: func(config RuntimeConfig) (Runtime, error) {
-		runtime := &fakeRuntime{offline: f.offline}
-		f.runtimes = append(f.runtimes, runtime)
-		f.configs = append(f.configs, config)
-		if err := os.WriteFile(config.CachePath, []byte("SDK-owned signed grant"), 0600); err != nil {
-			return nil, err
-		}
-		return runtime, nil
+	f := &lifecycleFixture{store: &MemoryStore{}, user: "account-a"}
+	a, e := NewApplication(Config{Origin: "https://merchant.example", ProductID: testProduct, Environment: "sandbox", Store: f.store, CacheDir: t.TempDir(), RuntimeFactory: func(c RuntimeConfig) (Runtime, error) {
+		r := &fakeRuntime{path: c.CachePath}
+		f.configs = append(f.configs, c)
+		f.runtimes = append(f.runtimes, r)
+		return r, nil
 	}})
-	if err != nil {
-		t.Fatal(err)
+	if e != nil {
+		t.Fatal(e)
 	}
-	f.app = app
-	app.client.http.Transport = transport(func(r *http.Request) (*http.Response, error) {
+	f.app = a
+	a.client.http.Transport = transport(func(r *http.Request) (*http.Response, error) {
+		f.paths = append(f.paths, r.URL.Path)
 		if f.mode == "offline" {
-			return nil, errors.New("network unavailable")
+			return nil, errors.New("offline")
+		}
+		if r.Context().Err() != nil {
+			return nil, r.Context().Err()
 		}
 		status := 200
 		var data any
 		switch r.URL.Path {
 		case "/api/v1/auth/login":
-			data = Session{AccessToken: "private-token", User: User{ID: f.user}, ExpiresAt: time.Now().Add(time.Hour)}
-		case "/api/v1/auth/logout":
-			f.logouts++
-			data = map[string]bool{"signed_out": true}
+			data = Session{AccessToken: "account-secret-" + hashScope(a.config.CacheDir) + "-" + f.user, User: User{ID: f.user}, ExpiresAt: time.Now().Add(time.Hour)}
 		case "/api/v1/me":
 			data = map[string]any{"user": User{ID: f.user}}
+		case "/api/v1/auth/logout":
+			data = map[string]bool{"signed_out": true}
 		default:
-			f.credentials++
-			data = Credential{ProductID: testProduct, LicenseKey: "private-license", Version: 1}
-		}
-		body, _ := json.Marshal(map[string]any{"data": data})
-		if f.mode != "" && r.URL.Path != "/api/v1/auth/logout" {
-			if f.mode == "unauthorized" {
-				status = 401
-				body = []byte(`{"error":{"code":"UNAUTHENTICATED"}}`)
-			} else if strings.Contains(r.URL.Path, "/credential") {
-				status = 403
-				body, _ = json.Marshal(map[string]any{"error": map[string]string{"code": f.mode}})
+			if strings.HasSuffix(r.URL.Path, "/credential") {
+				t.Fatal("legacy key request")
 			}
+			data = Identity{ProductID: testProduct, LicentivoProductID: testRemote, LaunchConnectionID: testConnection, Environment: "sandbox", IdentityToken: strings.Repeat("ephemeral-identity-", 4), ExpiresAt: time.Now().Add(time.Minute)}
 		}
-		return &http.Response{StatusCode: status, Header: make(http.Header), Body: io.NopCloser(strings.NewReader(string(body))), Request: r}, nil
+		raw, _ := json.Marshal(map[string]any{"data": data})
+		return &http.Response{StatusCode: status, Header: http.Header{}, Body: io.NopCloser(strings.NewReader(string(raw))), Request: r}, nil
 	})
-	t.Cleanup(app.Close)
+	t.Cleanup(a.Close)
 	return f
 }
-
 func (f *lifecycleFixture) login(t *testing.T) {
 	t.Helper()
-	if _, err := f.app.Login(context.Background(), "user@example.invalid", "password"); err != nil {
-		t.Fatal(err)
+	if _, e := f.app.Login(context.Background(), "a@example.invalid", "password"); e != nil {
+		t.Fatal(e)
 	}
 }
-
-func TestCloseRestoreAndOfflineRemainSDKAuthoritative(t *testing.T) {
+func TestIdentityIsEphemeralAndSDKDecidesFeatures(t *testing.T) {
 	f := newLifecycleFixture(t)
 	f.login(t)
-	f.app.Close()
-	if f.logouts != 0 || f.runtimes[0].released != 0 {
-		t.Fatal("Close signed out or released a node-locked device")
+	raw, e := f.store.Load(context.Background(), f.app.key)
+	if e != nil {
+		t.Fatal(e)
 	}
-	if _, err := f.store.Load(context.Background(), f.app.key); err != nil {
-		t.Fatal("Close forgot the session", err)
+	if strings.Contains(string(raw), "ephemeral-identity") || strings.Contains(string(raw), "license_key") {
+		t.Fatal("account store retained licensing secrets")
 	}
-	f.mode = "offline"
-	state, err := f.app.Restore(context.Background())
-	if err != nil || !state.OfflineFallback {
-		t.Fatal("signed SDK fallback unavailable", err)
+	if f.configs[0].Identity.IdentityToken == "" {
+		t.Fatal("identity not handed to official SDK")
 	}
-	last := f.runtimes[len(f.runtimes)-1]
-	last.denied = true
 	called := false
-	if err = f.app.RunFeature("export", func() error { called = true; return nil }); err == nil || called || last.checks != 1 {
-		t.Fatal("merchant metadata bypassed SDK feature denial")
-	}
-	if f.configs[0].CachePath != f.configs[1].CachePath {
-		t.Fatal("restore lost account scope")
-	}
-	f.app.Close()
-	f.offline = false
-	if _, err = f.app.Restore(context.Background()); !errors.Is(err, ErrOfflineUnavailable) {
-		t.Fatal("unsigned/missing grant accepted", err)
-	}
-	if f.runtimes[len(f.runtimes)-1].started != 0 {
-		t.Fatal("offline startup attempted without verified grant")
+	if e := f.app.RunFeature("not-owned", func() error { called = true; return nil }); e == nil || called {
+		t.Fatal("SDK denial bypassed")
 	}
 }
-
-func TestMerchantDenialsNeverFallBack(t *testing.T) {
-	for _, code := range []string{"unauthorized", "ENTITLEMENT_EXPIRED", "ENTITLEMENT_SUSPENDED", "ENTITLEMENT_NOT_PURCHASED"} {
-		t.Run(code, func(t *testing.T) {
-			f := newLifecycleFixture(t)
-			f.login(t)
-			f.app.Close()
-			f.mode = code
-			if _, err := f.app.Restore(context.Background()); err == nil {
-				t.Fatal("merchant denial ignored")
-			}
-			if len(f.runtimes) != 1 {
-				t.Fatal("SDK restored after authoritative denial")
-			}
-			if _, err := f.store.Load(context.Background(), f.app.key); !errors.Is(err, ErrNoSession) {
-				t.Fatal("denied session persisted")
-			}
-			if _, err := os.Stat(filepath.Dir(f.configs[0].CachePath)); !os.IsNotExist(err) {
-				t.Fatal("denied account cache retained")
-			}
-		})
+func TestLogoutReleasesAndRetainsSDKJournal(t *testing.T) {
+	f := newLifecycleFixture(t)
+	f.login(t)
+	path := f.configs[0].CachePath
+	if e := f.app.Logout(context.Background()); e != nil {
+		t.Fatal(e)
+	}
+	if f.runtimes[0].released != 1 {
+		t.Fatal("logout did not call SDK logout")
+	}
+	if _, e := os.Stat(path + ".logout.json"); e != nil {
+		t.Fatal("Launch deleted pending SDK journal", e)
+	}
+	if _, e := f.store.Load(context.Background(), f.app.key); !errors.Is(e, ErrNoSession) {
+		t.Fatal("account not cleared")
+	}
+	if e := f.app.RunFeature("export", func() error { return nil }); !errors.Is(e, ErrNotStarted) {
+		t.Fatal("local work retained")
 	}
 }
-
-func TestPendingRetryRetainsRememberedSession(t *testing.T) {
+func TestCloseKeepsAccountAndDoesNotRelease(t *testing.T) {
 	f := newLifecycleFixture(t)
 	f.login(t)
 	f.app.Close()
-	f.mode = "ENTITLEMENT_PENDING"
-	before := f.credentials
-	if _, err := f.app.Restore(context.Background()); err == nil {
-		t.Fatal("pending authorized")
+	if f.runtimes[0].released != 0 {
+		t.Fatal("ordinary close released device")
 	}
-	if f.credentials-before != 3 || len(f.runtimes) != 1 {
-		t.Fatal("unbounded retry or pending fallback")
+	if _, e := f.store.Load(context.Background(), f.app.key); e != nil {
+		t.Fatal(e)
 	}
-	if _, err := f.store.Load(context.Background(), f.app.key); err != nil {
-		t.Fatal("pending unnecessarily signed out", err)
+	if _, e := f.app.Restore(context.Background()); e != nil {
+		t.Fatal(e)
 	}
 }
-
-func TestLogoutClearsLocalStateEvenWithCanceledContext(t *testing.T) {
+func TestLaunchOutageNeverDecidesOfflineAuthorization(t *testing.T) {
 	f := newLifecycleFixture(t)
 	f.login(t)
 	f.app.Close()
-	// A fresh process has not loaded any account; cleanup still has to work.
+	f.mode = "offline"
+	if _, e := f.app.Restore(context.Background()); e == nil {
+		t.Fatal("Launch fabricated offline authorization")
+	}
+	if len(f.runtimes) != 1 {
+		t.Fatal("Launch chose offline startup")
+	}
+}
+func TestLogoutAfterRestartReopensSDKForRevocation(t *testing.T) {
+	f := newLifecycleFixture(t)
+	f.login(t)
+	path := f.configs[0].CachePath
+	f.app.Close()
 	f.app.record = rememberedSession{}
+	if e := f.app.Logout(context.Background()); e != nil {
+		t.Fatal(e)
+	}
+	if len(f.runtimes) != 2 || f.runtimes[1].released != 1 || f.configs[1].Identity.IdentityToken != "" {
+		t.Fatal("restart logout did not use SDK-owned credential")
+	}
+	if _, e := os.Stat(filepath.Dir(path)); e != nil {
+		t.Fatal("SDK directory deleted")
+	}
+}
+func TestCanceledLogoutQueuesAccountAndStopsRuntime(t *testing.T) {
+	f := newLifecycleFixture(t)
+	f.login(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
-	if err := f.app.Logout(ctx); !errors.Is(err, context.Canceled) {
-		t.Fatal("lost cancellation", err)
+	_ = f.app.Logout(ctx)
+	raw, e := f.store.Load(context.Background(), f.app.key)
+	var pending rememberedSession
+	if e != nil || json.Unmarshal(raw, &pending) != nil || !pending.LogoutPending {
+		t.Fatal("canceled logout lost its pending account task", e)
 	}
-	if _, err := f.store.Load(context.Background(), f.app.key); !errors.Is(err, ErrNoSession) {
-		t.Fatal("logout retained bearer")
-	}
-	if _, err := os.Stat(filepath.Dir(f.configs[0].CachePath)); !os.IsNotExist(err) {
-		t.Fatal("logout retained SDK credential")
-	}
-	if err := f.app.RunFeature("export", func() error { return nil }); !errors.Is(err, ErrNotStarted) {
-		t.Fatal("logout retained authorization")
+	if f.app.runtime != nil {
+		t.Fatal("canceled logout retained runtime")
 	}
 }
 
-func TestSessionExpiryAndAccountMismatch(t *testing.T) {
-	for _, mismatch := range []bool{false, true} {
-		t.Run(map[bool]string{true: "account", false: "expiry"}[mismatch], func(t *testing.T) {
-			f := newLifecycleFixture(t)
-			f.login(t)
-			f.app.Close()
-			if mismatch {
-				f.user = "account-b"
-			} else {
-				f.app.record.Session.ExpiresAt = time.Now().Add(-time.Second)
-				if err := f.app.save(context.Background()); err != nil {
-					t.Fatal(err)
-				}
-			}
-			_, err := f.app.Restore(context.Background())
-			if mismatch && !errors.Is(err, ErrSessionMismatch) || !mismatch && !errors.Is(err, ErrSessionExpired) {
-				t.Fatal(err)
-			}
-			if len(f.runtimes) != 1 {
-				t.Fatal("invalid session opened SDK")
-			}
-		})
-	}
-}
-
-func TestReleaseAndAccountCacheIsolation(t *testing.T) {
+func TestAccountLogoutRetriesAfterRestartWithoutRestoringLogin(t *testing.T) {
 	f := newLifecycleFixture(t)
 	f.login(t)
-	first := f.configs[0].CachePath
-	if err := f.app.ReleaseDevice(context.Background()); err != nil {
-		t.Fatal(err)
+	f.mode = "offline"
+	if e := f.app.Logout(context.Background()); !errors.Is(e, ErrAccountLogoutPending) {
+		t.Fatal("missing pending account status", e)
 	}
-	if f.runtimes[0].released != 1 || f.logouts != 1 {
-		t.Fatal("explicit release did not deactivate and revoke")
+	if e := f.app.RunFeature("export", func() error { t.Fatal("signed-out callback executed"); return nil }); !errors.Is(e, ErrNotStarted) {
+		t.Fatal("logout retained local execution", e)
 	}
+	f.app.Close()
+	restarted, e := NewApplication(f.app.config)
+	if e != nil {
+		t.Fatal(e)
+	}
+	restarted.client.http = f.app.client.http
+	t.Cleanup(restarted.Close)
+	before := len(f.paths)
+	if _, e := restarted.Restore(context.Background()); !errors.Is(e, ErrAccountLogoutPending) {
+		t.Fatal("restart did not retry the pending logout", e)
+	}
+	for _, path := range f.paths[before:] {
+		if path != "/api/v1/auth/logout" {
+			t.Fatal("pending login was reused", path)
+		}
+	}
+	f.mode = ""
+	before = len(f.paths)
+	if e := restarted.Logout(context.Background()); e != nil {
+		t.Fatal("recovered logout did not complete", e)
+	}
+	if len(f.paths) <= before || f.paths[before] != "/api/v1/auth/logout" {
+		t.Fatal("no account revocation request after recovery")
+	}
+	if _, e := f.store.Load(context.Background(), restarted.key); !errors.Is(e, ErrNoSession) {
+		t.Fatal("confirmed logout task was not removed", e)
+	}
+	if _, e := restarted.Restore(context.Background()); !errors.Is(e, ErrNoSession) {
+		t.Fatal("signed-out account restored", e)
+	}
+}
+func TestAccountSwitchReleasesOldDevice(t *testing.T) {
+	f := newLifecycleFixture(t)
+	f.login(t)
+	path := f.configs[0].CachePath
 	f.user = "account-b"
 	f.login(t)
-	if first == f.configs[1].CachePath {
-		t.Fatal("accounts share SDK cache")
-	}
-	copyConfig := f.app.config
-	copyConfig.Environment = "live"
-	other, err := NewApplication(copyConfig)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if _, err := other.Restore(context.Background()); !errors.Is(err, ErrNoSession) {
-		t.Fatal("environment reused sandbox session")
-	}
-	if other.cachePath(f.user) == f.app.cachePath(f.user) {
-		t.Fatal("environments share SDK cache")
+	if f.runtimes[0].released != 1 || path == f.configs[1].CachePath {
+		t.Fatal("account isolation/release failed")
 	}
 }
-
-func TestCredentialRetryBoundAndCancellation(t *testing.T) {
+func TestSessionExpiryDoesNotOpenSDK(t *testing.T) {
 	f := newLifecycleFixture(t)
-	f.mode = "ENTITLEMENT_PENDING"
-	ctx, cancel := context.WithCancel(context.Background())
-	cancel()
-	if _, err := f.app.client.CredentialWithRetry(ctx, testProduct, "sandbox", RetryPolicy{}); !errors.Is(err, context.Canceled) || f.credentials != 0 {
-		t.Fatal("canceled retry performed network work", err)
+	f.login(t)
+	f.app.record.Session.ExpiresAt = time.Now().Add(-time.Second)
+	if e := f.app.save(context.Background()); e != nil {
+		t.Fatal(e)
 	}
-	_, err := f.app.client.CredentialWithRetry(context.Background(), testProduct, "sandbox", RetryPolicy{MaxAttempts: 3, InitialDelay: time.Nanosecond, MaxDelay: time.Millisecond})
-	var api *APIError
-	if !errors.As(err, &api) || api.Code != "ENTITLEMENT_PENDING" || f.credentials != 3 {
-		t.Fatal("pending retry is not bounded", err)
+	f.app.Close()
+	if _, e := f.app.Restore(context.Background()); !errors.Is(e, ErrSessionExpired) {
+		t.Fatal(e)
 	}
-	f.mode = "ENTITLEMENT_EXPIRED"
-	f.credentials = 0
-	_, err = f.app.client.CredentialWithRetry(context.Background(), testProduct, "sandbox", RetryPolicy{})
-	if err == nil || f.credentials != 1 {
-		t.Fatal("permanent error retried")
-	}
-}
-
-func TestTransportErrorAndRetryAfter(t *testing.T) {
-	c, _ := New("https://merchant.example", false)
-	c.http.Transport = transport(func(r *http.Request) (*http.Response, error) {
-		return &http.Response{StatusCode: 503, Header: http.Header{"Retry-After": []string{"120"}}, Body: io.NopCloser(strings.NewReader("<html>upstream temporarily down</html>")), Request: r}, nil
-	})
-	_, err := c.CurrentUser(context.Background())
-	var api *APIError
-	if !errors.As(err, &api) || api.RetryAfter != 120*time.Second || !ServiceUnavailable(err) {
-		t.Fatal("proxy failure lost status or retry delay", err)
-	}
-	c.http.Transport = transport(func(r *http.Request) (*http.Response, error) { <-r.Context().Done(); return nil, r.Context().Err() })
-	ctx, cancel := context.WithCancel(context.Background())
-	cancel()
-	_, err = c.CurrentUser(ctx)
-	if !errors.Is(err, context.Canceled) || ServiceUnavailable(err) {
-		t.Fatal("cancellation enabled fallback", err)
-	}
-	if !ServiceUnavailable(&TransportError{Cause: context.DeadlineExceeded}) || ServiceUnavailable(context.DeadlineExceeded) {
-		t.Fatal("HTTP timeout confused with caller deadline")
-	}
-}
-
-func TestUnsafeResponseErrorCodeIsNeverDisplayed(t *testing.T) {
-	for _, code := range []string{"lv_lic_private-credential", "ERROR\nBearer private-token", strings.Repeat("A", 65)} {
-		c, _ := New("https://merchant.example", false)
-		c.http.Transport = transport(func(r *http.Request) (*http.Response, error) {
-			body, _ := json.Marshal(map[string]any{"error": map[string]string{"code": code}, "request_id": "Bearer private-token\n"})
-			return &http.Response{StatusCode: 403, Header: make(http.Header), Body: io.NopCloser(strings.NewReader(string(body))), Request: r}, nil
-		})
-		_, err := c.CurrentUser(context.Background())
-		var api *APIError
-		if !errors.As(err, &api) || api.Code != "HTTP_ERROR" || api.RequestID != "" || err.Error() != "Launch: HTTP_ERROR" {
-			t.Fatal("unsafe error response was retained", err)
-		}
-		if (&APIError{Code: code}).Error() != "Launch: HTTP_ERROR" {
-			t.Fatal("manually constructed error bypassed redaction")
-		}
-	}
-}
-
-func TestPendingRetryAfterAndCanceledWait(t *testing.T) {
-	c, _ := New("https://merchant.example", false)
-	calls := 0
-	c.http.Transport = transport(func(r *http.Request) (*http.Response, error) {
-		calls++
-		return &http.Response{StatusCode: 403, Header: http.Header{"Retry-After": []string{"30"}}, Body: io.NopCloser(strings.NewReader(`{"error":{"code":"ENTITLEMENT_PENDING"}}`)), Request: r}, nil
-	})
-	if _, err := c.CredentialWithRetry(context.Background(), testProduct, "sandbox", RetryPolicy{}); err == nil || calls != 1 {
-		t.Fatal("long Retry-After shortened or ignored")
-	}
-	c.http.Transport = transport(func(r *http.Request) (*http.Response, error) {
-		calls++
-		return &http.Response{StatusCode: 403, Header: make(http.Header), Body: io.NopCloser(strings.NewReader(`{"error":{"code":"ENTITLEMENT_PENDING"}}`)), Request: r}, nil
-	})
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Millisecond)
-	defer cancel()
-	if _, err := c.CredentialWithRetry(ctx, testProduct, "sandbox", RetryPolicy{}); !errors.Is(err, context.DeadlineExceeded) || calls != 2 {
-		t.Fatal("canceled retry timer kept polling", err)
+	if len(f.runtimes) != 1 {
+		t.Fatal("expired account opened SDK")
 	}
 }

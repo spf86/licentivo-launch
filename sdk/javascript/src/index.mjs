@@ -4,6 +4,7 @@ import {resolve, join, dirname} from 'node:path';
 import {homedir} from 'node:os';
 import {setTimeout as delay} from 'node:timers/promises';
 import {AsyncLocalStorage} from 'node:async_hooks';
+import {accountLock,rememberIntent,hasIntent,clearIntent} from './account-lock.mjs';
 
 const LIMIT = 1 << 20;
 const UUID = /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/;
@@ -100,14 +101,14 @@ const denied = error => error instanceof LaunchError && error.code !== 'ENTITLEM
 const unavailable = error => error instanceof LaunchError && (error.code === 'NETWORK_UNAVAILABLE' || error.status >= 500 && error.status <= 599);
 
 export class Application {
-  #config; #store; #transport; #factory; #root; #scope; #record = null; #runtime = null; #closed = false; #queue = Promise.resolve(); #wait; #attempts; #callbacks = new AsyncLocalStorage();
+  #config; #store; #transport; #factory; #root; #scope; #record = null; #runtime = null; #closed = false; #accountCleared=false; #queue = Promise.resolve(); #wait; #attempts; #callbacks = new AsyncLocalStorage();
   constructor(launch, product, options = {}) {
     this.#config = validateConfig(launch, product); this.#store = options.store ?? new MemoryStore();
     if (this.#store.persistent !== false && (this.#store.persistent !== true || this.#store.secure !== true)) throw new LaunchError('SECURE_STORE_REQUIRED');
     this.#transport = options.transport ?? defaultTransport;
     this.#factory = options.runtimeFactory ?? (async config => { const {Client} = await import('./vendor/licentivo.mjs'); return new Client(config); });
     this.#root = resolve(options.cacheDir ?? join(homedir(), '.cache', 'LicentivoLaunch'));
-    this.#scope = ['launch-session-v1',this.#config.launch.merchant_origin,launch.launch_product_id,launch.licentivo_product_id,launch.environment].join('\n');
+    this.#scope = ['launch-account-v2',this.#config.launch.merchant_origin,launch.launch_product_id,launch.licentivo_product_id,launch.environment].join('\n');
     this.#wait = options.sleep ?? (async (ms, signal) => { try { await delay(ms, undefined, {signal}); } catch { cancelled(signal); throw new LaunchError('CANCELLED'); } });
     this.#attempts = options.pendingAttempts ?? 5;
     if (!Number.isInteger(this.#attempts) || this.#attempts < 1 || this.#attempts > 5) throw new LaunchError('INVALID_RETRY_POLICY');
@@ -118,9 +119,11 @@ export class Application {
       {base_url:'https://www.licentivo.com',product_id:licentivoProductID,trusted_keys:trustedKeys}, options);
   }
   #serial(action) { if(this.#callbacks.getStore()) return Promise.reject(new LaunchError('WORKFLOW_BUSY')); const result = this.#queue.then(action); this.#queue = result.catch(() => {}); return result; }
+  #account(action,logout=false) {return this.#serial(async()=>{let unlock;if(logout&&this.#record?.token)try{await rememberIntent(this.#scope,this.#record.token);}catch{}try{unlock=await accountLock(this.#scope);return await action();}catch(error){if(logout&&!unlock&&this.#runtime)try{await (this.#runtime.logout?this.#runtime.logout():this.#runtime.deactivate());}catch{}if(logout||!unlock)await this.#stop();if(logout&&this.#record){this.#record.version=3;this.#record.logout_pending=true;}if(!unlock)throw new LaunchError('ACCOUNT_LOCK_BUSY');throw error;}finally{if(unlock)await unlock();}});}
   #open() { if (this.#closed) throw new LaunchError('APPLICATION_CLOSED'); }
   #cache(record) { return join(this.#root, hash(this.#scope), hash(record.user.id), 'lease.json'); }
-  #valid(record) { return record?.version === 1 && record.scope === this.#scope && UUID.test(record.user?.id) && /^[A-Za-z0-9_-]{43}$/.test(record.token) && typeof record.expires_at === 'string' && /(?:Z|[+-]\d\d:\d\d)$/.test(record.expires_at) && Number.isFinite(Date.parse(record.expires_at)) && record.credential?.product_id === this.#config.launch.launch_product_id && typeof record.credential.license_key === 'string' && !!record.credential.license_key; }
+  #valid(record) { return (record?.version === 2 || record?.version === 3 && record.logout_pending === true) && record.scope === this.#scope && typeof record.token === 'string' && !!record.token && !record.identityContext?.identity_token && (record.logout_pending === true || UUID.test(record.user?.id) && typeof record.expires_at === 'string' && Number.isFinite(Date.parse(record.expires_at)) && record.identityContext?.product_id === this.#config.launch.launch_product_id && record.identityContext.environment === this.#config.launch.environment); }
+  async #save() { const saved=clone(this.#record); if(saved.identityContext) delete saved.identityContext.identity_token; await this.#store.save(this.#scope,saved); }
   async #call(path, method = 'GET', body, signal, token = this.#record?.token) {
     cancelled(signal);
     const headers = {'Accept':'application/json','Content-Type':'application/json'}; if (token) headers.Authorization = 'Bearer ' + token;
@@ -137,61 +140,63 @@ export class Application {
     if (!data?.data || typeof data.data !== 'object') throw new LaunchError('INVALID_RESPONSE'); return data.data;
   }
   async #credential(signal) {
-    for (let attempt = 1; ; attempt++) {
-      try {
-        const result = await this.#call('/software/products/' + this.#config.launch.launch_product_id + '/credential', 'POST', {environment:this.#config.launch.environment}, signal);
-        if (result.product_id !== this.#config.launch.launch_product_id || typeof result.license_key !== 'string' || !result.license_key || !Number.isInteger(result.version) || result.version < 1) throw new LaunchError('CREDENTIAL_MISMATCH'); return result;
-      } catch (error) {
-        if (!(error instanceof LaunchError) || error.status !== 403 || error.code !== 'ENTITLEMENT_PENDING' || attempt >= this.#attempts || error.retryAfterSeconds > 30) throw error;
-        await this.#wait(Math.max(3,error.retryAfterSeconds)*1000,signal); cancelled(signal);
-      }
-    }
+    const result=await this.#call('/software/products/'+this.#config.launch.launch_product_id+'/identity','POST',{environment:this.#config.launch.environment},signal);
+    if(result.product_id!==this.#config.launch.launch_product_id || result.licentivo_product_id!==this.#config.product.product_id || result.environment!==this.#config.launch.environment || !UUID.test(result.launch_connection_id??'') || typeof result.identity_token!=='string' || result.identity_token.length<32 || result.identity_token.length>12288 || !(Date.parse(result.expires_at)>Date.now())) throw new LaunchError('IDENTITY_MISMATCH');
+    return result;
   }
-  async #start(offline, signal) {
-    cancelled(signal); const path = this.#cache(this.#record); await mkdir(dirname(path), {recursive:true,mode:0o700});
-    const runtime = await this.#factory({...clone(this.#config.product),license_key:this.#record.credential.license_key,cache_path:path});
-    try {
-      cancelled(signal);
-      if (offline) { const state = await runtime.status(); if (state?.allowed !== true || state.state !== 'offline_valid') throw new LaunchError('OFFLINE_UNAVAILABLE'); }
-      await runtime.start(() => {}, signal); cancelled(signal); this.#runtime = runtime;
-      return {user:clone(this.#record.user), expiresAt:this.#record.expires_at, offlineFallback:offline};
-    } catch (error) { await runtime.close(); throw error; }
+  async #start(identity,signal) {
+    cancelled(signal); const path=this.#cache(this.#record);await mkdir(dirname(path),{recursive:true,mode:0o700});
+    const runtime=await this.#factory({...clone(this.#config.product),license_key:'',identity_token:identity.identity_token??'',launch_connection_id:identity.launch_connection_id,environment:this.#config.launch.environment,cache_path:path});
+    try{await runtime.start(()=>{},signal);cancelled(signal);this.#runtime=runtime;return {user:clone(this.#record.user),expiresAt:this.#record.expires_at};}catch(error){await runtime.close();throw error;}
   }
   async #stop() { const runtime=this.#runtime; this.#runtime=null; if(runtime) await runtime.close(); }
-  async #clear(record=this.#record) {
-    try { await this.#stop(); } finally {
-      this.#record=null;
-      try { await this.#store.delete(this.#scope); } finally { if (UUID.test(record?.user?.id)) await rm(dirname(this.#cache(record)),{recursive:true,force:true}); }
-    }
-  }
+  async #clear(saved=this.#record) { try {await this.#stop();} finally {this.#record=null;this.#accountCleared=true;if(saved)await this.#deleteOwned(saved);} }
   async #saved() { let saved; try { saved=await this.#store.load(this.#scope); } catch(error) { await this.#clear(); throw error; } if(saved && !this.#valid(saved)) { await this.#clear(saved); throw new LaunchError('INVALID_SAVED_SESSION'); } return saved; }
+  #queueKey(){return this.#scope+'\naccount-logout-queue-v1';}
+  async #pending(){const queue=await this.#store.load(this.#queueKey());if(queue==null)return [];if(queue.version!==1||!Array.isArray(queue.records)||queue.records.length>64||queue.records.some(record=>!record.logout_pending||!this.#valid(record)))throw new LaunchError('INVALID_SAVED_SESSION');return queue.records;}
+  async #updatePending(record,remove=false){const records=(await this.#pending()).filter(value=>value.token!==record.token);if(!remove){const value=clone(record);value.version=3;value.logout_pending=true;if(value.identityContext)delete value.identityContext.identity_token;records.push(value);}if(records.length>64||Buffer.byteLength(JSON.stringify({version:1,records}))>60000)throw new LaunchError('ACCOUNT_LOGOUT_QUEUE_FULL');if(records.length)await this.#store.save(this.#queueKey(),{version:1,records});else await this.#store.delete(this.#queueKey());}
+  async #owns(record){const active=await this.#store.load(this.#scope);return !!record?.token&&active?.token===record.token;}
+  async #deleteOwned(record){if(await this.#owns(record))await this.#store.delete(this.#scope);}
+  async #mark(record){try{await rememberIntent(this.#scope,record.token);}catch{}let queueError,activeError;try{await this.#updatePending(record);}catch(error){queueError=error;}if(await this.#owns(record)){try{await this.#save();}catch(error){activeError=error;try{await this.#deleteOwned(record);}catch{}}if(!activeError||!queueError)return;}else if(!queueError)return;throw new LaunchError('ACCOUNT_LOGOUT_STORAGE_FAILED');}
+  async #finish(record){await this.#deleteOwned(record);await this.#updatePending(record,true);await clearIntent(this.#scope,record.token);}
+  async #retryOthers(skip,signal){for(const record of await this.#pending()){if(record.token===skip)continue;try{await this.#call('/auth/logout','POST',{},signal,record.token);}catch(error){if(error?.status!==401)throw new LaunchError('ACCOUNT_LOGOUT_PENDING');}await this.#finish(record);}}
   async #logout(signal) {
-    const saved=this.#record ?? await this.#saved(); await this.#clear(saved);
-    if (!saved) return true;
-    try { await this.#call('/auth/logout','POST',{},signal,saved.token); return true; } catch { return false; }
+    const saved=this.#record??await this.#saved()??(await this.#pending())[0];let releaseError,persistError,otherError,accountConfirmed=true,deviceConfirmed=true;
+    try{await this.#retryOthers(saved?.token,signal);}catch(error){otherError=error;}
+    if(saved){saved.logout_pending=true;saved.version=3;this.#record=saved;try{await this.#mark(saved);}catch(error){persistError=error;}}
+    try {
+      const active=await this.#store.load(this.#scope);
+      if(!this.#runtime && saved?.identityContext && (!active||active.token===saved.token)) this.#runtime=await this.#factory({...clone(this.#config.product),license_key:'',identity_token:'',launch_connection_id:saved.identityContext.launch_connection_id,environment:this.#config.launch.environment,cache_path:this.#cache(saved)});
+      if(this.#runtime){const result=await (this.#runtime.logout?this.#runtime.logout(signal):this.#runtime.deactivate(signal));deviceConfirmed=result?.revocation_pending!==true;if(result?.storage_error)throw new LaunchError('SDK_LOGOUT_STORAGE_FAILED');}
+    }catch(error){releaseError=error;}
+    try{await this.#stop();}catch(error){releaseError??=error;}
+    if(saved)try{await this.#call('/auth/logout','POST',{},signal,saved.token);}catch(error){accountConfirmed=error?.status===401;}
+    if(accountConfirmed){this.#record=null;this.#accountCleared=true;if(saved)await this.#finish(saved);}
+    if(!accountConfirmed&&persistError)throw persistError;if(releaseError)throw releaseError;if(otherError)throw otherError;return accountConfirmed&&deviceConfirmed;
   }
-  login(email,password,{signal}={}) { return this.#serial(async()=>{
-    this.#open(); cancelled(signal); await this.#logout(signal);
+  login(email,password,{signal}={}) { return this.#account(async()=>{
+    this.#open(); cancelled(signal); if(!await this.#logout(signal))throw new LaunchError('LOGOUT_PENDING');
     const grant=await this.#call('/auth/login','POST',{email,password,kind:'desktop'},signal);
-    this.#record={version:1,scope:this.#scope,user:grant.user,token:grant.access_token,expires_at:grant.expires_at};
+    this.#record={version:2,scope:this.#scope,user:grant.user,token:grant.access_token,expires_at:grant.expires_at};
+    this.#accountCleared=false;
     try {
       if (!UUID.test(grant.user?.id) || !/^[A-Za-z0-9_-]{43}$/.test(grant.access_token) || typeof grant.expires_at !== 'string' || !/(?:Z|[+-]\d\d:\d\d)$/.test(grant.expires_at) || !Number.isFinite(Date.parse(grant.expires_at)) || Date.parse(grant.expires_at)<=Date.now()) throw new LaunchError('INVALID_SESSION');
-      this.#record.credential=await this.#credential(signal); const state=await this.#start(false,signal); await this.#store.save(this.#scope,this.#record); return state;
+      const identity=await this.#credential(signal);this.#record.identityContext=Object.fromEntries(['product_id','licentivo_product_id','launch_connection_id','environment','expires_at'].map(key=>[key,identity[key]]));const state=await this.#start(identity,signal);await this.#save();return state;
     } catch(error) { await this.#logout(); throw error; }
   }); }
-  restore({signal}={}) { return this.#serial(async()=>{
-    this.#open(); cancelled(signal); await this.#stop(); this.#record=await this.#saved(); if(!this.#record) return null;
-    if(Date.parse(this.#record.expires_at)<=Date.now()) {await this.#clear(); throw new LaunchError('SESSION_EXPIRED');}
-    try {
-      const me=await this.#call('/me','GET',undefined,signal);
-      if(me.user?.id!==this.#record.user.id) throw new LaunchError('SESSION_MISMATCH',401);
-      this.#record.credential=await this.#credential(signal); this.#record.user=me.user;
-    } catch(error) { cancelled(signal); if(unavailable(error)) return this.#start(true,signal); if(denied(error)) await this.#clear(); throw error; }
-    try { const state=await this.#start(false,signal); await this.#store.save(this.#scope,this.#record); return state; }
-    catch(error) { await this.#clear(); throw error; }
-  }); }
+  restore({signal}={}) {return this.#account(async()=>{
+    this.#open();cancelled(signal);await this.#stop();this.#record=this.#record?.logout_pending?this.#record:await this.#saved();const pending=await this.#pending();const task=pending.find(value=>!this.#record||value.token===this.#record.token);if(task)this.#record=task;if(!this.#record)return null;
+    if(await hasIntent(this.#scope,this.#record.token)){this.#record.version=3;this.#record.logout_pending=true;}
+    if(this.#record.logout_pending){if(!await this.#logout(signal))throw new LaunchError('ACCOUNT_LOGOUT_PENDING');return null;}
+    this.#accountCleared=false;
+    await this.#retryOthers(this.#record.token,signal);
+    if(Date.parse(this.#record.expires_at)<=Date.now()){await this.#clear();throw new LaunchError('SESSION_EXPIRED');}
+    let identity;try{const me=await this.#call('/me','GET',undefined,signal);if(me.user?.id!==this.#record.user.id)throw new LaunchError('SESSION_MISMATCH',401);identity=await this.#credential(signal);this.#record.user=me.user;}catch(error){if(denied(error))await this.#clear();throw error;}
+    this.#record.identityContext=Object.fromEntries(['product_id','licentivo_product_id','launch_connection_id','environment','expires_at'].map(key=>[key,identity[key]]));
+    try{const state=await this.#start(identity,signal);await this.#save();return state;}catch(error){await this.#clear();throw error;}
+  });}
   runFeature(feature,action) { return this.#serial(async()=>{ this.#open(); if(!this.#runtime) throw new LaunchError('LOGIN_REQUIRED'); return this.#runtime.runFeature(feature,()=>this.#callbacks.run(true,action)); }); }
-  logout({signal}={}) { return this.#serial(async()=>{this.#open();return this.#logout(signal);}); }
-  releaseDevice({signal}={}) { return this.#serial(async()=>{this.#open();cancelled(signal);if(!this.#runtime) throw new LaunchError('LOGIN_REQUIRED'); try {await this.#runtime.deactivate(signal);} finally {await this.#logout(signal);} }); }
+  logout({signal}={}) { return this.#account(async()=>{this.#open();if(this.#accountCleared&&!this.#record){await this.#retryOthers(undefined,signal);return true;}return this.#logout(signal);},true); }
+  releaseDevice(options={}) {return this.logout(options).then(confirmed=>{if(!confirmed)throw new LaunchError('DEVICE_REVOCATION_PENDING');});}
   close() { return this.#serial(async()=>{if(this.#closed)return;this.#closed=true;await this.#stop();this.#record=null;}); }
 }

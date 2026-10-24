@@ -52,7 +52,7 @@ try {
       try{state=await app.login(email,password,{signal:controller.signal});}finally{password='';}
     }
     if(mode==='--release-device'){await app.releaseDevice({signal:controller.signal});console.log('Device released and local session removed.');}
-    else {console.log(`Signed in. ${state.offlineFallback?'Verified offline lease.':'Runtime started.'}`);if(feature)await app.runFeature(feature,()=>console.log('Protected business callback executed.'));}
+    else {console.log('Signed in; official SDK runtime started.');if(feature)await app.runFeature(feature,()=>console.log('Protected business callback executed.'));}
   }
 } catch(error) {console.error(error.code??'OPERATION_FAILED');process.exitCode=1;}
 finally {await app?.close();}

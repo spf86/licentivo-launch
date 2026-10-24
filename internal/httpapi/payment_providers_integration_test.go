@@ -258,7 +258,8 @@ func TestNewPaymentProvidersAndRegistrationWithoutMail(t *testing.T) {
 	defer func() { http.DefaultTransport = previous }()
 	licensing := &uniqueProviderLicenses{&licenseDouble{results: map[string]ports.EntitlementResult{}, requests: map[string]string{}}}
 	mailRecorder := &recordingMailSender{}
-	config := app.Config{PublicURL: "https://merchant.example", MasterKey: bytes.Repeat([]byte{39}, 32), UploadDir: t.TempDir(), MailFactory: mailRecorder.factory, LicensingFactory: func(context.Context, storage.LicentivoConnection) (ports.LicensingProvider, error) {
+	bridge := &accountBridgeDouble{}
+	config := app.Config{BridgeFactory: func(string) (ports.LaunchBridge, error) { return bridge, nil }, PublicURL: "https://merchant.example", MasterKey: bytes.Repeat([]byte{39}, 32), UploadDir: t.TempDir(), MailFactory: mailRecorder.factory, LicensingFactory: func(context.Context, storage.LicentivoConnection) (ports.LicensingProvider, error) {
 		return licensing, nil
 	}, LicensingSetupFactory: func(string) (app.LicentivoSetupProvider, error) { return licensing, nil }}
 	var service *app.Service
@@ -402,7 +403,7 @@ func TestNewPaymentProvidersAndRegistrationWithoutMail(t *testing.T) {
 			drainAuthorization()
 			desktop := map[string]string{"email": credentials["email"], "password": credentials["password"], "kind": "desktop"}
 			grant := data[app.SessionGrant](t, a.request("POST", "/api/v1/auth/login", desktop, nil, func(r *http.Request) { r.Header.Del("Origin") }))
-			a.expect(a.request("POST", "/api/v1/software/products/"+product.ID+"/credential", map[string]string{"environment": "sandbox"}, nil, func(r *http.Request) {
+			a.expect(a.request("POST", "/api/v1/software/products/"+product.ID+"/identity", map[string]string{"environment": "sandbox"}, nil, func(r *http.Request) {
 				r.Header.Del("Origin")
 				r.Header.Set("Authorization", "Bearer "+grant.AccessToken)
 			}), 200)

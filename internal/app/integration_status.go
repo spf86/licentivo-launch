@@ -27,7 +27,7 @@ type SoftwareStatus struct {
 }
 
 func entitlementStatus(row storage.Entitlement, at time.Time) SoftwareStatus {
-	v := SoftwareStatus{ProductID: row.ProductID, Environment: row.Environment, ValidFrom: row.ValidFrom, ValidUntil: row.ValidUntil, Synchronized: row.AppliedVersion > 0 && row.AppliedVersion == row.DesiredVersion}
+	v := SoftwareStatus{ProductID: row.ProductID, Environment: row.Environment, ValidFrom: row.ValidFrom, ValidUntil: row.ValidUntil, Synchronized: row.LaunchPurchaseRef != nil && row.AppliedVersion > 0 && row.AppliedVersion == row.DesiredVersion}
 	switch {
 	case row.ManualHold || row.Status == "revoked":
 		v.Status, v.Code, v.Message, v.NextAction = "suspended", "ENTITLEMENT_SUSPENDED", "软件授权已暂停，请联系商家查看原因", "contact_support"
@@ -39,7 +39,7 @@ func entitlementStatus(row storage.Entitlement, at time.Time) SoftwareStatus {
 		v.Status, v.Code, v.Message, v.NextAction = "pending", "ENTITLEMENT_PENDING", "软件授权正在开通或同步，请稍后重试；持续未完成时请联系商家", "retry"
 		v.RetryAfterSeconds, v.MaxRetryAttempts = 3, 5
 	default:
-		v.Status, v.Code, v.Message, v.NextAction = "ready", "ENTITLEMENT_READY", "软件授权已就绪", "activate"
+		v.Status, v.Code, v.Message, v.NextAction = "ready", "ENTITLEMENT_READY", "购买期限已同步，使用权限由软件内 Licentivo SDK 验证", "activate"
 	}
 	return v
 }

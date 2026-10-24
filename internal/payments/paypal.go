@@ -290,7 +290,11 @@ func (p *PayPal) VerifyWebhook(ctx context.Context, headers http.Header, body []
 		Kind     string    `json:"event_type"`
 		Created  time.Time `json:"create_time"`
 		Resource struct {
-			ID      string `json:"id"`
+			ID     string `json:"id"`
+			Amount struct {
+				Currency string `json:"currency_code"`
+				Value    string `json:"value"`
+			} `json:"amount"`
 			Related struct {
 				IDs struct {
 					OrderID string `json:"order_id"`
@@ -318,8 +322,40 @@ func (p *PayPal) VerifyWebhook(ctx context.Context, headers http.Header, body []
 		return ports.VerifiedEvent{}, ErrVerification
 	}
 	resource := event.Resource.ID
-	if event.Resource.Related.IDs.OrderID != "" && event.Kind != "PAYMENT.CAPTURE.REFUNDED" {
+	if event.Resource.Related.IDs.OrderID != "" && (event.Kind == "CHECKOUT.ORDER.APPROVED" || event.Kind == "PAYMENT.CAPTURE.COMPLETED") {
 		resource = event.Resource.Related.IDs.OrderID
 	}
-	return ports.VerifiedEvent{ID: event.ID, Kind: event.Kind, ResourceID: resource, Environment: p.config.Environment, OccurredAt: event.Created.UTC()}, nil
+	out := ports.VerifiedEvent{ID: event.ID, Kind: event.Kind, ResourceID: resource, Environment: p.config.Environment, OccurredAt: event.Created.UTC()}
+	if event.Kind == "PAYMENT.CAPTURE.REVERSED" {
+		amount, err := parsePayPalAmount(event.Resource.Amount.Currency, event.Resource.Amount.Value)
+		if err != nil {
+			return ports.VerifiedEvent{}, err
+		}
+		out.ReversalAmount = &amount
+	}
+	return out, nil
+}
+
+// NormalizeVerifiedPayPalReversal only normalizes a body whose signature was
+// already verified, including an authenticated event restored from storage.
+func NormalizeVerifiedPayPalReversal(event ports.VerifiedEvent, body []byte) (ports.VerifiedEvent, error) {
+	var in struct {
+		Resource struct {
+			ID     string `json:"id"`
+			Amount struct {
+				Currency string `json:"currency_code"`
+				Value    string `json:"value"`
+			} `json:"amount"`
+		} `json:"resource"`
+	}
+	if event.Kind != "PAYMENT.CAPTURE.REVERSED" || json.Unmarshal(body, &in) != nil || !validID(in.Resource.ID) {
+		return event, ErrVerification
+	}
+	amount, err := parsePayPalAmount(in.Resource.Amount.Currency, in.Resource.Amount.Value)
+	if err != nil {
+		return event, err
+	}
+	event.ResourceID = in.Resource.ID
+	event.ReversalAmount = &amount
+	return event, nil
 }

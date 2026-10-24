@@ -1,6 +1,7 @@
-//! Launch account lifecycle. All protected work is authorized by Licentivo 0.11.0.
+//! Launch account lifecycle. All protected work is authorized by Licentivo 0.11.2.
 //! Defaults to memory-only sessions; inject an OS-protected Store to remember login.
 mod store;
+mod account_lock;
 mod transport;
 #[allow(dead_code)]
 #[path = "../vendor/rust/lib.rs"]
@@ -18,7 +19,7 @@ pub use store::EncryptedFileStore;
 use time::{format_description::well_known::Rfc3339, OffsetDateTime};
 pub use transport::CurlTransport;
 
-pub const VERSION: &str = "0.1.1";
+pub const VERSION: &str = "0.1.3";
 #[derive(Debug, Clone)]
 pub struct Failure {
     pub code: String,
@@ -36,9 +37,6 @@ impl Failure {
             retry_after: Duration::ZERO,
             transport: false,
         }
-    }
-    fn unavailable(&self) -> bool {
-        self.transport || (500..600).contains(&self.status)
     }
     fn service() -> Self {
         let mut error = Self::new("SERVICE_UNAVAILABLE");
@@ -131,28 +129,17 @@ pub trait Runtime {
 pub trait RuntimeFactory {
     /// cached_only requires an existing, cryptographically verified SDK offline grant.
     fn open(&mut self, settings: &Value, cached_only: bool) -> Result<Box<dyn Runtime>, Failure>;
+    fn for_logout(&mut self, settings: &Value) -> Result<Box<dyn Runtime>, Failure> { self.open(settings, false) }
 }
 pub struct OfficialRuntimeFactory;
 struct OfficialRuntime {
     sdk: Option<licentivo::Client>,
 }
 impl RuntimeFactory for OfficialRuntimeFactory {
-    fn open(&mut self, settings: &Value, cached_only: bool) -> Result<Box<dyn Runtime>, Failure> {
-        if cached_only && !Path::new(text(settings, "cache_path")).is_file() {
-            return Err(Failure::new("OFFLINE_UNAVAILABLE"));
-        }
-        let sdk = licentivo::Client::open_config(&settings.to_string()).map_err(Failure::from)?;
-        if cached_only {
-            let state = sdk.status().map_err(Failure::from)?;
-            // open_config starts automatically. A fresh online activation does
-            // not qualify as restored offline state. The native core verifies
-            // signature, device/product binding, policy and expiry.
-            if state["allowed"] != true || state["state"] != "offline_valid" {
-                return Err(Failure::new("OFFLINE_UNAVAILABLE"));
-            }
-        }
-        Ok(Box::new(OfficialRuntime { sdk: Some(sdk) }))
-    }
+    fn open(&mut self, settings: &Value, _cached_only: bool) -> Result<Box<dyn Runtime>, Failure> {
+ let mut sdk=licentivo::Client::init_config(&settings.to_string()).map_err(Failure::from)?;sdk.start().map_err(Failure::from)?;Ok(Box::new(OfficialRuntime{sdk:Some(sdk)}))
+ }
+ fn for_logout(&mut self,settings:&Value)->Result<Box<dyn Runtime>,Failure>{let sdk=licentivo::Client::init_config(&settings.to_string()).map_err(Failure::from)?;Ok(Box::new(OfficialRuntime{sdk:Some(sdk)}))}
 }
 impl Runtime for OfficialRuntime {
     fn run_feature(
@@ -178,11 +165,10 @@ impl Runtime for OfficialRuntime {
         result.map_err(Failure::from)
     }
     fn release_device(&mut self) -> Result<(), Failure> {
-        self.sdk
-            .as_mut()
-            .ok_or_else(|| Failure::new("NOT_STARTED"))?
-            .deactivate()
-            .map_err(Failure::from)
+        let sdk = self.sdk.as_mut().ok_or_else(|| Failure::new("NOT_STARTED"))?;
+        sdk.logout().map_err(Failure::from)?;
+        if sdk.logout_pending() { return Err(Failure::new("DEVICE_REVOCATION_PENDING")); }
+        Ok(())
     }
     fn close(&mut self) {
         self.sdk.take();
@@ -272,9 +258,10 @@ pub struct Application {
     store: Box<dyn Store>,
     transport: Box<dyn Transport>,
     factory: Box<dyn RuntimeFactory>,
-    sleeper: Box<dyn Sleeper>,
+    _sleeper: Box<dyn Sleeper>,
     session: Option<Value>,
     runtime: Option<Box<dyn Runtime>>,
+    account_cleared: bool,
 }
 impl Application {
     pub fn connect(origin: &str, product_id: &str, licentivo_product_id: &str, trusted_keys: &[(&str, &str)], environment: &str) -> Result<Self, Failure> {
@@ -370,7 +357,7 @@ impl Application {
             std::env::current_dir()?.join(cache_root)
         };
         let scope = hash(&format!(
-            "launch-v1\n{}\n{}\n{}\n{}",
+            "launch-account-v2\n{}\n{}\n{}\n{}",
             config.merchant_origin,
             config.launch_product_id,
             config.licentivo_product_id,
@@ -384,9 +371,10 @@ impl Application {
             store,
             transport,
             factory,
-            sleeper,
+            _sleeper: sleeper,
             session: None,
             runtime: None,
+            account_cleared: false,
         })
     }
     fn call(
@@ -423,45 +411,16 @@ impl Application {
         }
         Ok(envelope["data"].clone())
     }
-    fn credential(&mut self) -> Result<Value, Failure> {
-        for attempt in 0..5 {
-            let token = self.token()?.to_string();
-            match self.call(
-                "POST",
-                &format!(
-                    "/software/products/{}/credential",
-                    self.config.launch_product_id
-                ),
-                Some(json!({"environment":self.config.environment})),
-                &token,
-            ) {
-                Ok(value) => {
-                    if text(&value, "product_id") != self.config.launch_product_id
-                        || text(&value, "license_key").is_empty()
-                    {
-                        return Err(Failure::new("INVALID_RESPONSE"));
-                    }
-                    return Ok(value);
-                }
-                Err(error) => {
-                    if error.code != "ENTITLEMENT_PENDING" || attempt == 4 {
-                        return Err(error);
-                    }
-                    let wait = Duration::from_secs(1 << attempt).max(error.retry_after);
-                    if wait > Duration::from_secs(10) {
-                        return Err(error);
-                    }
-                    self.sleeper.sleep(wait)?;
-                }
-            }
-        }
-        unreachable!()
-    }
+    fn credential(&mut self)->Result<Value,Failure>{
+ let token=self.token()?.to_string();let value=self.call("POST",&format!("/software/products/{}/identity",self.config.launch_product_id),Some(json!({"environment":self.config.environment})),&token)?;
+ if text(&value,"product_id")!=self.config.launch_product_id||text(&value,"licentivo_product_id")!=self.config.licentivo_product_id||text(&value,"environment")!=self.config.environment||!uuid(text(&value,"launch_connection_id"))||text(&value,"identity_token").len()<32{return Err(Failure::new("IDENTITY_MISMATCH"));}Ok(value)
+ }
     pub fn login(&mut self, email: &str, password: &str) -> Result<State, Failure> {
-        self.logout()?;
+        let _guard=account_lock::take(&self.scope)?;
+        self.logout_account()?;
         let result = self.login_inner(email, password);
         if result.is_err() {
-            let _ = self.logout();
+            let _ = self.logout_account();
         }
         result
     }
@@ -476,6 +435,7 @@ impl Application {
             return Err(Failure::new("INVALID_RESPONSE"));
         }
         self.session = Some(json!({"scope":self.scope,"grant":grant}));
+        self.account_cleared=false;
         self.require_fresh()?;
         let credential = self.credential()?;
         self.session.as_mut().unwrap()["credential"] = credential;
@@ -484,15 +444,20 @@ impl Application {
         Ok(state)
     }
     pub fn restore(&mut self) -> Result<State, Failure> {
+        let _guard=account_lock::take(&self.scope)?;
         self.close();
-        self.load()?;
+        if !self.session.as_ref().is_some_and(|s| s["logout_pending"] == true) {if let Err(error)=self.load(){if error.code!="NO_SESSION"{return Err(error);}self.session=self.pending_accounts()?.into_iter().next();if self.session.is_none(){return Err(error);}}}
+        let current=self.token()?.to_string();
+        if account_lock::has_intent(&self.scope,&current)?{self.session.as_mut().unwrap()["logout_pending"]=json!(true);}
+        if let Some(task)=self.pending_accounts()?.into_iter().find(|task|text(&task["grant"],"access_token")==current){self.session=Some(task);}
+        if self.session.as_ref().is_some_and(|s| s["logout_pending"] == true) {
+            self.logout_account()?;
+            return Err(Failure::new("NO_SESSION"));
+        }
+        self.retry_other_accounts(&current)?;
         self.require_fresh()?;
         let result = self.restore_online();
         match result {
-            Err(error) if error.unavailable() => {
-                self.close();
-                self.start(true)
-            }
             Err(error) => {
                 self.close();
                 if denied(&error) {
@@ -515,13 +480,13 @@ impl Application {
         self.save()?;
         Ok(state)
     }
-    fn start(&mut self, offline: bool) -> Result<State, Failure> {
+    fn start(&mut self, _offline: bool) -> Result<State, Failure> {
         let session = self
             .session
             .as_ref()
             .ok_or_else(|| Failure::new("NO_SESSION"))?;
         let mut settings = self.product.clone();
-        settings["license_key"] = session["credential"]["license_key"].clone();
+        settings["license_key"]=json!("");settings["identity_token"]=session["credential"].get("identity_token").cloned().unwrap_or(json!(""));settings["launch_connection_id"]=session["credential"]["launch_connection_id"].clone();settings["environment"]=json!(self.config.environment);
         let directory = self.cache_directory()?;
         private_directory(&directory)?;
         settings["cache_path"] = Value::String(
@@ -531,13 +496,13 @@ impl Application {
                 .ok_or_else(|| Failure::new("CONFIGURATION_ERROR"))?
                 .into(),
         );
-        self.runtime = Some(self.factory.open(&settings, offline)?);
+        self.runtime = Some(self.factory.open(&settings, false)?);
         let grant = &self.session.as_ref().unwrap()["grant"];
         Ok(State {
             user_id: text(&grant["user"], "id").into(),
             email: text(&grant["user"], "email").into(),
             expires_at: text(grant, "expires_at").into(),
-            offline_fallback: offline,
+            offline_fallback: false,
         })
     }
     pub fn run_feature<T, F: FnOnce() -> Result<T, Failure>>(
@@ -560,48 +525,29 @@ impl Application {
         })?;
         output.ok_or_else(|| Failure::new("FEATURE_DENIED"))
     }
-    pub fn release_device(&mut self) -> Result<(), Failure> {
-        let result = self
-            .runtime
-            .as_mut()
-            .ok_or_else(|| Failure::new("NOT_STARTED"))?
-            .release_device();
-        let cleanup = self.logout();
-        result.and(cleanup)
-    }
-    pub fn logout(&mut self) -> Result<(), Failure> {
-        let result = (|| {
-            if self.session.is_none() {
-                if let Err(error) = self.load() {
-                    if error.code != "NO_SESSION" {
-                        return Err(error);
-                    }
-                }
-            }
-            if self.session.is_some() {
-                let token = self.token()?.to_string();
-                if let Err(error) = self.call("POST", "/auth/logout", Some(json!({})), &token) {
-                    if error.status != 401 {
-                        return Err(error);
-                    }
-                }
-            }
-            Ok(())
-        })();
-        let cleanup = self.clear();
-        result.and(cleanup)
-    }
+    pub fn release_device(&mut self)->Result<(),Failure>{self.logout()}
+    pub fn logout(&mut self)->Result<(),Failure>{
+ if let Some(saved)=self.session.as_ref(){let _=account_lock::remember(&self.scope,text(&saved["grant"],"access_token"));}let guard=account_lock::take(&self.scope);let result=match guard{Ok(_guard)=>if self.account_cleared&&self.session.is_none(){self.retry_other_accounts("")}else{self.logout_account()},Err(error)=>Err(error)};if result.is_err(){if let Some(runtime)=self.runtime.as_mut(){let _=runtime.release_device();}}self.close();if result.is_err(){if let Some(saved)=self.session.as_mut(){saved["logout_pending"]=json!(true);}}result
+ }
+ fn logout_account(&mut self)->Result<(),Failure>{
+ if self.session.is_none(){if let Err(e)=self.load(){if e.code!="NO_SESSION"{let _=self.clear();return Err(e);}}}
+ if self.session.is_none(){self.session=self.pending_accounts()?.into_iter().next();}
+ let skip=self.session.as_ref().map(|s|text(&s["grant"],"access_token").to_string()).unwrap_or_default();let others=self.retry_other_accounts(&skip);
+ let persist=if let Some(session)=self.session.as_mut(){session["logout_pending"]=json!(true);self.mark_account_logout()}else{Ok(())};
+ let mut release=Ok(());
+ if self.session.is_some(){
+  let can_reopen=match self.active_account(){Ok(None)=>true,Ok(Some(active))=>text(&active["grant"],"access_token")==self.token()?,Err(_)=>false};
+  if self.runtime.is_none()&&can_reopen&&self.session.as_ref().unwrap()["credential"].is_object(){let mut settings=self.product.clone();let context=&self.session.as_ref().unwrap()["credential"];settings["license_key"]=json!("");settings["identity_token"]=json!("");settings["launch_connection_id"]=context["launch_connection_id"].clone();settings["environment"]=json!(self.config.environment);settings["cache_path"]=json!(self.cache_directory()?.join("lease.json").to_str().ok_or_else(||Failure::new("CONFIGURATION_ERROR"))?);match self.factory.for_logout(&settings){Ok(runtime)=>self.runtime=Some(runtime),Err(e)=>release=Err(e)}}
+  if let Some(runtime)=self.runtime.as_mut(){release=runtime.release_device();}
+ }
+ self.close();let account=if self.session.is_some(){let token=self.token()?.to_string();match self.call("POST","/auth/logout",Some(json!({})),&token){Err(e)if e.status!=401=>Err(e),_=>Ok(())}}else{Ok(())};let cleanup=if account.is_ok(){if let Some(saved)=self.session.clone(){self.finish_account(&saved)?;}self.clear()}else{persist};cleanup?;release?;account?;others
+ }
     pub fn close(&mut self) {
         if let Some(mut runtime) = self.runtime.take() {
             runtime.close();
         }
     }
-    fn save(&mut self) -> Result<(), Failure> {
-        let mut secret = self.session.as_ref().unwrap().to_string().into_bytes();
-        let result = self.store.save(&self.scope, &secret);
-        secret.fill(0);
-        result
-    }
+    fn save(&mut self)->Result<(),Failure>{let mut saved=self.session.as_ref().unwrap().clone();if let Some(context)=saved["credential"].as_object_mut(){context.retain(|key,_|["product_id","licentivo_product_id","launch_connection_id","environment","expires_at"].contains(&key.as_str()));}if saved["logout_pending"]==true{saved["version"]=json!(3);if let Some(context)=saved.as_object_mut().unwrap().remove("credential"){saved["logout_context"]=context;}}let mut secret=saved.to_string().into_bytes();let result=self.store.save(&self.scope,&secret);secret.fill(0);result}
     fn load(&mut self) -> Result<(), Failure> {
         let mut raw = self
             .store
@@ -613,12 +559,17 @@ impl Application {
             None
         };
         raw.fill(0);
-        let session = parsed.ok_or_else(|| Failure::new("SESSION_MISMATCH"))?;
+        let mut session = parsed.ok_or_else(|| Failure::new("SESSION_MISMATCH"))?;
+        if session["logout_pending"] == true && text(&session,"scope")==self.scope && !text(&session["grant"],"access_token").is_empty() {
+            if let Some(context)=session.as_object_mut().unwrap().remove("logout_context"){session["credential"]=context;}
+            self.session=Some(session);return Ok(());
+        }
         if text(&session, "scope") != self.scope
             || text(&session["grant"], "access_token").is_empty()
-            || text(&session["grant"]["user"], "id").is_empty()
+            || session["logout_pending"] != true && (text(&session["grant"]["user"], "id").is_empty()
             || text(&session["credential"], "product_id") != self.config.launch_product_id
-            || text(&session["credential"], "license_key").is_empty()
+            || text(&session["credential"], "licentivo_product_id") != self.config.licentivo_product_id || text(&session["credential"], "environment") != self.config.environment
+            || !text(&session["credential"], "identity_token").is_empty() || !uuid(text(&session["credential"], "launch_connection_id")))
         {
             return Err(Failure::new("SESSION_MISMATCH"));
         }
@@ -638,28 +589,17 @@ impl Application {
         }
         Ok(())
     }
-    fn clear(&mut self) -> Result<(), Failure> {
-        self.close();
-        let mut failure = None;
-        if self.session.is_some() {
-            match self.cache_directory() {
-                Ok(path) if path.starts_with(&self.cache_root) && path != self.cache_root => {
-                    if path.exists() {
-                        if let Err(error) = fs::remove_dir_all(path) {
-                            failure = Some(Failure::from(error));
-                        }
-                    }
-                }
-                _ => failure = Some(Failure::new("CACHE_SCOPE_ERROR")),
-            }
-        }
-        self.session = None;
-        let deleted = self.store.delete(&self.scope);
-        if let Some(error) = failure {
-            return Err(error);
-        }
-        deleted
-    }
+    fn clear(&mut self)->Result<(),Failure>{self.close();let saved=self.session.take();self.account_cleared=true;if let Some(saved)=saved{self.delete_owned(&saved)?;}Ok(())}
+    fn queue_key(&self)->String{format!("{}\naccount-logout-queue-v1",self.scope)}
+    fn active_account(&mut self)->Result<Option<Value>,Failure>{let Some(mut raw)=self.store.load(&self.scope)? else{return Ok(None)};let value=serde_json::from_slice::<Value>(&raw).map_err(|_|Failure::new("SESSION_MISMATCH"));raw.fill(0);let value=value?;if text(&value,"scope")!=self.scope{return Err(Failure::new("SESSION_MISMATCH"));}Ok(Some(value))}
+    fn owns(&mut self,saved:&Value)->Result<bool,Failure>{Ok(self.active_account()?.is_some_and(|active|text(&active["grant"],"access_token")==text(&saved["grant"],"access_token")))}
+    fn delete_owned(&mut self,saved:&Value)->Result<(),Failure>{if self.owns(saved)?{self.store.delete(&self.scope)?;}Ok(())}
+    fn public_account(saved:&Value)->Value{let mut clean=saved.clone();if let Some(context)=clean["credential"].as_object_mut(){context.retain(|key,_|["product_id","licentivo_product_id","launch_connection_id","environment","expires_at"].contains(&key.as_str()));}if clean["logout_pending"]==true{clean["version"]=json!(3);if let Some(context)=clean.as_object_mut().unwrap().remove("credential"){clean["logout_context"]=context;}}clean}
+    fn pending_accounts(&mut self)->Result<Vec<Value>,Failure>{let Some(mut raw)=self.store.load(&self.queue_key())? else{return Ok(vec![])};let parsed=serde_json::from_slice::<Value>(&raw).map_err(|_|Failure::new("SESSION_MISMATCH"));raw.fill(0);let value=parsed?;let records=value["records"].as_array().ok_or_else(||Failure::new("SESSION_MISMATCH"))?;if value["version"]!=1||records.len()>64{return Err(Failure::new("SESSION_MISMATCH"));}let mut result=vec![];for record in records{if record["logout_pending"]!=true||text(record,"scope")!=self.scope||text(&record["grant"],"access_token").is_empty(){return Err(Failure::new("SESSION_MISMATCH"));}let mut record=record.clone();if let Some(context)=record.as_object_mut().unwrap().remove("logout_context"){record["credential"]=context;}result.push(record);}Ok(result)}
+    fn update_pending(&mut self,saved:&Value,remove:bool)->Result<(),Failure>{let mut records=self.pending_accounts()?;records.retain(|record|text(&record["grant"],"access_token")!=text(&saved["grant"],"access_token"));if !remove{let mut record=saved.clone();record["logout_pending"]=json!(true);records.push(record);}if records.len()>64{return Err(Failure::new("ACCOUNT_LOGOUT_QUEUE_FULL"));}if records.is_empty(){return self.store.delete(&self.queue_key());}let records:Vec<Value>=records.iter().map(Self::public_account).collect();let mut raw=json!({"version":1,"records":records}).to_string().into_bytes();let result=if raw.len()>60000{Err(Failure::new("ACCOUNT_LOGOUT_QUEUE_FULL"))}else{self.store.save(&self.queue_key(),&raw)};raw.fill(0);result}
+    fn mark_account_logout(&mut self)->Result<(),Failure>{let saved=self.session.as_ref().unwrap().clone();let _=account_lock::remember(&self.scope,text(&saved["grant"],"access_token"));let queue=self.update_pending(&saved,false);if self.owns(&saved)?{if self.save().is_ok(){return Ok(());}let _=self.delete_owned(&saved);}queue.map_err(|_|Failure::new("ACCOUNT_LOGOUT_STORAGE_FAILED"))}
+    fn finish_account(&mut self,saved:&Value)->Result<(),Failure>{self.delete_owned(saved)?;self.update_pending(saved,true)?;account_lock::clear_intent(&self.scope,text(&saved["grant"],"access_token"))}
+    fn retry_other_accounts(&mut self,skip:&str)->Result<(),Failure>{for saved in self.pending_accounts()?{let token=text(&saved["grant"],"access_token");if token==skip{continue;}if let Err(error)=self.call("POST","/auth/logout",Some(json!({})),token){if error.status!=401{return Err(error);}}self.finish_account(&saved)?;}Ok(())}
     fn token(&self) -> Result<&str, Failure> {
         Ok(text(
             &self
@@ -849,3 +789,5 @@ fn private_directory(path: &Path) -> Result<(), Failure> {
 
 #[cfg(test)]
 mod tests;
+
+fn uuid(v:&str)->bool{v.len()==36&&v.bytes().enumerate().all(|(i,b)|if [8,13,18,23].contains(&i){b==b'-'}else{b.is_ascii_hexdigit()})}

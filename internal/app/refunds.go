@@ -228,24 +228,30 @@ func (s *Service) processRefund(ctx context.Context) (bool, error) {
 		return true, finish("unknown", r.Attempts >= 12, nil)
 	}
 	var observed ports.Refund
+	request := ports.RefundRequest{OperationID: r.OperationID, PaymentID: *payment.ExternalTransactionID, Amount: domain.Money{Currency: payment.Currency, Minor: r.AmountMinor}}
+	if r.ApprovedAt != nil {
+		request.RequestedAt = *r.ApprovedAt
+	}
+	var orderState storage.Order
+	if err := s.db.WithContext(ctx).Select("status").First(&orderState, "id = ?", payment.OrderID).Error; err != nil {
+		return true, finish("unknown", true, nil)
+	}
+	if orderState.Status == "reversed" {
+		return true, finish("unknown", true, nil)
+	}
 	if r.ExternalRefundID != nil {
 		observed, err = provider.QueryRefund(ctx, *r.ExternalRefundID)
+	} else if recoverable, ok := provider.(ports.RefundRecoveryProvider); ok && (r.SubmittedAt != nil || r.Status == "unknown") {
+		// Read-only recovery remains safe beyond a provider's POST replay window.
+		observed, err = recoverable.RecoverRefund(ctx, request)
 	} else if r.ApprovedAt != nil && now().Before(r.ApprovedAt.Add(23*time.Hour)) {
-		request := ports.RefundRequest{OperationID: r.OperationID, PaymentID: *payment.ExternalTransactionID, Amount: domain.Money{Currency: payment.Currency, Minor: r.AmountMinor}}
-		request.RequestedAt = *r.ApprovedAt
-		if recoverable, ok := provider.(ports.RecoverablePaymentProvider); ok {
-			if r.SubmittedAt != nil {
-				observed, err = recoverable.RecoverRefund(ctx, request)
-			} else {
-				reserved := s.db.WithContext(ctx).Model(&storage.Refund{}).Where("id = ? AND lease_token = ? AND submitted_at IS NULL", r.ID, lease).Update("submitted_at", now())
-				if reserved.Error != nil || reserved.RowsAffected != 1 {
-					return true, finish("unknown", false, nil)
-				}
-				observed, err = provider.Refund(ctx, request)
+		if r.SubmittedAt == nil {
+			reserved := s.db.WithContext(ctx).Model(&storage.Refund{}).Where("id = ? AND lease_token = ? AND submitted_at IS NULL", r.ID, lease).Update("submitted_at", now())
+			if reserved.Error != nil || reserved.RowsAffected != 1 {
+				return true, finish("unknown", false, nil)
 			}
-		} else {
-			observed, err = provider.Refund(ctx, request)
 		}
+		observed, err = provider.Refund(ctx, request)
 	} else {
 		return true, finish("unknown", true, nil)
 	}
@@ -291,17 +297,17 @@ func (s *Service) processRefund(ctx context.Context) (bool, error) {
 		if err := tx.Model(&current).Updates(map[string]any{"status": "succeeded", "external_refund_id": observed.ExternalID, "completed_at": at, "lease_token": nil, "lease_until": nil, "next_check_at": nil}).Error; err != nil {
 			return err
 		}
-		if err := tx.Model(&order).Updates(map[string]any{"status": "refunded"}).Error; err != nil {
+		if err := tx.Model(&order).Where("status <> 'reversed'").Updates(map[string]any{"status": "refunded"}).Error; err != nil {
 			return err
 		}
-		var e storage.Entitlement
-		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&e, "user_id = ? AND product_id = ? AND environment = ?", order.UserID, order.ProductID, order.Environment).Error; err != nil {
+		var purchase storage.Entitlement
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&purchase, "user_id = ? AND product_id = ? AND environment = ?", user.ID, order.ProductID, order.Environment).Error; err != nil {
 			return err
 		}
-		if err := tx.Model(&storage.EntitlementCoverage{}).Where("source_order_id = ? AND voided_at IS NULL", order.ID).Update("voided_at", at).Error; err != nil {
+		if err := tx.Model(&storage.EntitlementCoverage{}).Where("source_order_id = ? AND entitlement_id = ? AND voided_at IS NULL", order.ID, purchase.ID).Update("voided_at", at).Error; err != nil {
 			return err
 		}
-		if err := s.recomputeEntitlement(tx, &e, nil, true); err != nil {
+		if err := s.recomputeEntitlement(tx, &purchase, &order.ID, true); err != nil {
 			return err
 		}
 		if err := s.queueCustomerNotification(tx, user.ID, "Refund confirmed", "The payment provider confirmed the full refund for order "+order.ID+". The refunded software coverage has been removed. Bank or payment method processing may take additional time."); err != nil {

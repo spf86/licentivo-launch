@@ -1,0 +1,156 @@
+{
+  "date": "2026-10-24",
+  "issue": "AUTH-07",
+  "status": "fixed_locally_joint_verified_not_deployed",
+  "scope": "Launch account SDKs; no Launch or Licentivo server business code edited for this fix",
+  "behavior": [
+    "Persist a signed-out-only revocation task in the same protected Store before remote logout; it cannot restore a login.",
+    "Stop local protected use even when account logout is unavailable or cancelled.",
+    "Retry pending account logout through later Login, Restore or Logout calls, including reconstruction with a persistent Store.",
+    "Remove task only after successful account logout or authenticated HTTP 401; retain it on network, server, cancellation or ambiguous-response errors.",
+    "Keep official Licentivo SDK device credentials and logout journals owned by that SDK.",
+    "Signed-out records use private version 3; Java and Rust also remove the active credential shape so older SDKs cannot treat the task as a normal login."
+  ],
+  "source_tests": {
+    "source-regressions.jsonl": {
+      "passed_test_records": 185,
+      "failed_records": 0,
+      "skipped_tests": [
+        "TestMySQLBaseline",
+        "TestProductUploadRoundTrip",
+        "TestInitialAdministratorMustChangePasswordBeforeAdministration",
+        "TestNewPaymentProvidersAndRegistrationWithoutMail"
+      ]
+    },
+    "lic-authorization-controls.jsonl": {
+      "passed_test_records": 45,
+      "failed_records": 0,
+      "skipped_tests": []
+    }
+  },
+  "go_vet": "passed",
+  "language_tests": {
+    "go": "included in source suite, including real Launch HTTP and MySQL recovery regression",
+    "javascript": "10 tests passed",
+    "python": "8 tests passed, including Windows DPAPI and account restart recovery",
+    "csharp": "lifecycle, protected-store and account retry console regressions passed",
+    "java": "7 lifecycle/security groups passed",
+    "ruby": "13 Ruby wrapper tests passed",
+    "rust": [
+      "test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.48s\r",
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\r"
+    ],
+    "native_c_cpp": "real signed SDK, explicit logout, offline restart recovery, 401 and Windows DPAPI passed"
+  },
+  "joint": {
+    "business_stages": 15,
+    "stages": [
+      "initialize_real_launch",
+      "publish_product_and_paid_plan",
+      "purchase_and_absolute_dates",
+      "real_sdk_identity_exchange_and_feature",
+      "ordinary_close_and_restore",
+      "explicit_logout",
+      "account_logout_outage_and_restart",
+      "account_logout_lost_commit_reply",
+      "remote_release_and_stale_generation",
+      "renewal_and_refund",
+      "account_revocation_and_fresh_login",
+      "full_refund_denies_runtime",
+      "exhausted_refund_recovery_real_services",
+      "verified_pending_then_lost_dispute",
+      "long_documents_real_deepl_adapter"
+    ],
+    "real_components": [
+      "Launch HTTP and commerce services",
+      "Licentivo HTTP service and workers",
+      "MySQL 8.0.32",
+      "Go Launch SDK and its bundled official runtime",
+      "Windows DPAPI account Store"
+    ],
+    "simulated_components": [
+      "payment settlement and provider responses",
+      "DeepL translation"
+    ],
+    "account_fault_modes": [
+      "request rejected before server session revocation",
+      "server revoked session but response replaced with 503; subsequent 401 confirms revocation"
+    ]
+  },
+  "integrity": {
+    "launch_server_business_code_unchanged": true,
+    "bundled_official_sdk_manifest_files_verified": 115,
+    "changed_existing_launch_code_files": [
+      "pkg/launchclient/application.go",
+      "pkg/launchclient/lifecycle_test.go",
+      "sdk/csharp/Application.cs",
+      "sdk/csharp-tests/Program.cs",
+      "sdk/native/account.c",
+      "sdk/java/tests/LaunchTests.java",
+      "sdk/java/src/com/licentivo/launch/Launch.java",
+      "sdk/javascript/src/index.mjs",
+      "sdk/javascript/test/client.test.mjs",
+      "sdk/native/tests/application_test.c",
+      "sdk/native/tests/run.py",
+      "sdk/python/tests/test_client.py",
+      "sdk/python/src/licentivo_launch/client.py",
+      "sdk/ruby/lib/licentivo_launch.rb",
+      "sdk/ruby/test/test_client.rb",
+      "sdk/rust/src/lib.rs",
+      "sdk/rust/src/tests.rs"
+    ],
+    "native_example_matches_sdk": true
+  },
+  "cleanup": {
+    "owned_mysql_stopped": true,
+    "owned_licentivo_stopped": true,
+    "original_services_preserved": true,
+    "evidence_preserved": true
+  },
+  "deployment": {
+    "launch": false,
+    "licentivo": false,
+    "sdk_publication": false
+  },
+  "limitations": [
+    "MemoryStore does not survive a real process exit; restart recovery requires a persistent protected Store.",
+    "Pending retries run when the SDK next handles Login, Restore or Logout; the SDK does not schedule a new unattended background job.",
+    "Real joint service verification uses Go; other languages have local lifecycle and package regressions, not nine separate real-service deployments.",
+    "Four unrelated opt-in Go database tests were skipped as listed; they are not counted as passed.",
+    "Licentivo fixes are supplied by its owner and verified against current source; this task did not edit them."
+  ],
+  "files_sha256": {
+    "pkg/launchclient/application.go": "a49370470f027e6759bd0c8c42d509c208e7db29535f7711ecdf7d27e4ee3e8d",
+    "pkg/launchclient/lifecycle_test.go": "7e26eacbea760f89cb4a89f3ea725cf9cd7a22e77ec9f0755344314f8878c8ad",
+    "pkg/launchclient/logout_integration_test.go": "74af940c40fcfa007bfac95207790ba9d096cebc667ae3e9d2dd7daf5ab2a71a",
+    "sdk/javascript/src/index.mjs": "426b80471cdce7e124be818b15e81d7c934cccc4ee5e7e4aac58560da3e71d89",
+    "sdk/javascript/test/client.test.mjs": "4e5d1accdd0e182057afb92f97d9af60873c86cb3a5766435ae6cc10caf3498c",
+    "sdk/python/src/licentivo_launch/client.py": "e75a4cd533a04a5e2b37eec1a5d83cca397eba6e8582fee612f3429b01830818",
+    "sdk/python/tests/test_client.py": "7879215a5a90daf2dc1cdf8486ae23061c6742b1e7fd1c847be0ab85dfa2ba5a",
+    "sdk/csharp/Application.cs": "825e19fab40d81144418d1be4133c2bd83e0107d985e7cdc6c8a84f8e4f4c219",
+    "sdk/csharp-tests/Program.cs": "329c32f55618a3edd1d2e77415419964257ddd51b410ea6fbb0631919c6c6fa9",
+    "sdk/java/src/com/licentivo/launch/Launch.java": "29b340c6b9ad3ce8c6a4429956165b859133434500641f704e4d96e9d479fc3d",
+    "sdk/java/tests/LaunchTests.java": "7ba5de4ddb78ae739492612a18567d6bc1fbd3e0a98e67b7ae9f2299186f0ac1",
+    "sdk/ruby/lib/licentivo_launch.rb": "d92c12e4aa7bc0ec485b6adfd40ecf8153a53cc4fd7303d8e337a91697ef940c",
+    "sdk/ruby/test/test_client.rb": "5206fea404d4be9ccb3af307dec541f231581958c9408cf309b714b2cc92c929",
+    "sdk/rust/src/lib.rs": "2888004bf6ca81d9137005f69f28f1787dbefd7531723399a402f983a702b3a4",
+    "sdk/rust/src/tests.rs": "be9728a84293769198cfa755f934a763431cf30b0da3eb62b2e06e1c9b8a2a8d",
+    "sdk/native/account.c": "b40df69ec794abaac97bcfe64fdc694c820a993dfa9020763f1585b5c3cea0df",
+    "sdk/native/tests/application_test.c": "b5a26d1208ebb85b4a08655174c3dd14bdb410a248f40b88b47c8a3c426cc550",
+    "sdk/native/tests/run.py": "74fc248faf883cb69ac5b61b25c2033af737e5b27d77245271897e9f16470a32",
+    "examples/native/account.c": "b40df69ec794abaac97bcfe64fdc694c820a993dfa9020763f1585b5c3cea0df"
+  },
+  "logs_sha256": {
+    "javascript.log": "f9facdd4d63cdc18e2d4e831a6e01806280ad0543d1d10ff1d6dac18d5d75b82",
+    "python.log": "a3c61e4875e97d63d78288452497107fa89f83577d32d4e5ad43223c2ee69238",
+    "csharp.log": "95bef1a5f2ad2c94d7215a1ed05a02da3a7e98950c42c159630da48d3da74b49",
+    "java.log": "8ba6198fd41f67fb0da1140722262981f5d43ce53987d51b65de5a59ab77234d",
+    "ruby.log": "934c36a64fa8a693fe205b8be5223d4783603132c12a3a18ff6deeb956543ddb",
+    "rust.log": "78d44f7121b50e4ee1f0bb4fe23a4970c52219d7fbe140749ccbfa13f466c1d3",
+    "native.log": "8573b58cdc1070b245aed5a679d5cd19a59fae60d5a9cbd7b6a0089a91eb9f30",
+    "source-regressions.jsonl": "9aac1699a038519591771876b57c8f4ff0c159f4182e6df6c533660e94b178b0",
+    "lic-authorization-controls.jsonl": "131feb96d83e24140a8d3cf9324a0527adeef16f41c6308cc6f114f6e8e86a03",
+    "local-run/joint-results.jsonl": "b09e12964de07d2d7ad4681141fc77b84096ade1e028d8556c58308cea33fbb7"
+  },
+  "private_evidence_directory": ".local/logout-retry-fix-20261024/"
+}

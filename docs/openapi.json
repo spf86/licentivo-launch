@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Licentivo Launch Integration API",
-    "version": "0.3.0-beta",
+    "version": "0.3.1-beta",
     "description": "System, account, desktop licensing, integration wizard and basic purchase APIs. This is not the full staff administration/payment-webhook API. Runtime access must still pass the official Licentivo SDK. Email verification is required only when enabled by the merchant.",
     "license": {
       "name": "MIT",
@@ -1088,110 +1088,13 @@
     "/api/v1/software/products/{id}/credential": {
       "post": {
         "operationId": "softwareCredential",
-        "summary": "Get the authenticated customer’s synchronized product credential",
+        "summary": "Removed: account SDKs must use identity exchange",
         "tags": [
           "Application integration"
         ],
         "responses": {
-          "200": {
-            "description": "Synchronized, active credential.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "$ref": "#/components/schemas/Credential"
-                    },
-                    "request_id": {
-                      "$ref": "#/components/schemas/RequestID"
-                    }
-                  },
-                  "required": [
-                    "data",
-                    "request_id"
-                  ]
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid fields, product ID or environment.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "LOGIN_FAILED (login) or AUTH_REQUIRED (expired/revoked session). Clear rejected sessions; never fall back after an explicit denial.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "EMAIL_VERIFICATION_REQUIRED, ENTITLEMENT_PENDING, ENTITLEMENT_EXPIRED or ENTITLEMENT_SUSPENDED. Do not reuse an old license after a definitive denial.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "headers": {
-              "Retry-After": {
-                "description": "Seconds to wait before another attempt. Respect this value and bound total retries.",
-                "schema": {
-                  "type": "integer",
-                  "minimum": 0
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "ENTITLEMENT_NOT_PURCHASED or product not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "RATE_LIMITED; do not retry in a tight loop.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "headers": {
-              "Retry-After": {
-                "description": "Seconds to wait before another attempt. Respect this value and bound total retries.",
-                "schema": {
-                  "type": "integer",
-                  "minimum": 0
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Temporary service or database failure. Offline access is permitted only by a valid official SDK signed grant.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
+          "410": {
+            "description": "LICENSE_CREDENTIAL_REMOVED; no license key is returned"
           }
         },
         "parameters": [
@@ -1234,7 +1137,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": true
       }
     },
     "/api/v1/software/products/{id}/status": {
@@ -2122,6 +2026,200 @@
         ],
         "description": "Requires the admin role. Website callers must supply Origin and X-CSRF-Token. ready=false reports incomplete configuration; no secret fields are returned. licentivo_product_id may be empty in an incomplete report."
       }
+    },
+    "/api/v1/software/products/{id}/identity": {
+      "post": {
+        "operationId": "exchangeAccountIdentity",
+        "summary": "Get a short-lived account identity assertion for the official SDK",
+        "security": [
+          {
+            "desktopBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "environment"
+                ],
+                "properties": {
+                  "environment": {
+                    "type": "string",
+                    "enum": [
+                      "sandbox",
+                      "live"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Identity context only. Licentivo decides authorization.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/LaunchIdentity"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Account session rejected"
+          },
+          "503": {
+            "description": "Identity connection unavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/auth/identity-keys": {
+      "get": {
+        "operationId": "launchIdentityPublicKeys",
+        "summary": "Public pinned signing keys for Launch account identity",
+        "responses": {
+          "200": {
+            "description": "Ed25519 public keys; never private signing material"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/identity-notifications/{id}/retry": {
+      "post": {
+        "summary": "重试账号安全撤销通知（管理员）",
+        "security": [
+          {
+            "websiteCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "reason"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 500
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "原通知已安排重试"
+          },
+          "403": {
+            "description": "需要管理员权限"
+          },
+          "409": {
+            "description": "通知已完成或正在处理"
+          }
+        },
+        "operationId": "retryIdentityNotification"
+      }
+    },
+    "/api/v1/admin/refunds/{id}/reconcile": {
+      "post": {
+        "operationId": "reconcileRefund",
+        "summary": "核对并恢复原退款任务",
+        "description": "管理员核对原退款，验证渠道回执的原交易、金额和币种后恢复同一操作。无回执时仅在 Stripe/PayPal 原审批时间的 23 小时内重试原幂等请求；超过期限需提供原渠道退款编号。操作记入审计，不创建新的退款操作编号。",
+        "security": [
+          {
+            "websiteCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "reason"
+                ],
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 500
+                  },
+                  "external_refund_id": {
+                    "type": "string",
+                    "maxLength": 128
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "原任务已恢复排队"
+          },
+          "403": {
+            "description": "需要管理员权限和有效 CSRF 凭据"
+          },
+          "409": {
+            "description": "状态冲突、回执不匹配或需要原渠道退款编号"
+          },
+          "503": {
+            "description": "原渠道查询暂不可用"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2756,6 +2854,55 @@
           }
         },
         "additionalProperties": false
+      },
+      "LaunchIdentity": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "identity_token",
+          "token_type",
+          "product_id",
+          "licentivo_product_id",
+          "launch_connection_id",
+          "environment",
+          "audience",
+          "expires_at"
+        ],
+        "properties": {
+          "identity_token": {
+            "type": "string",
+            "description": "Short-lived identity assertion, at most 120 seconds; never a runtime grant."
+          },
+          "token_type": {
+            "type": "string"
+          },
+          "product_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "licentivo_product_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "launch_connection_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "environment": {
+            "type": "string",
+            "enum": [
+              "sandbox",
+              "live"
+            ]
+          },
+          "audience": {
+            "type": "string"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
       }
     },
     "securitySchemes": {

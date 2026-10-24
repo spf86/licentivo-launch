@@ -171,6 +171,13 @@ func (a *application) registerCommerce(mux *http.ServeMux) {
 		}
 		return map[string]bool{"queued": true}, a.service.ApproveRefund(r.Context(), p, r.PathValue("id"), in.Reason)
 	})
+	a.route(mux, "POST /api/v1/admin/refunds/{id}/reconcile", true, 5, func(w http.ResponseWriter, r *http.Request, p app.Principal) (any, error) {
+		var in app.RefundRecoveryInput
+		if err := input(w, r, &in); err != nil {
+			return nil, err
+		}
+		return map[string]bool{"queued": true}, a.service.ReconcileRefund(r.Context(), p, r.PathValue("id"), in)
+	})
 	a.route(mux, "POST /api/v1/orders", true, 10, func(w http.ResponseWriter, r *http.Request, p app.Principal) (any, error) {
 		var in app.CheckoutInput
 		if err := input(w, r, &in); err != nil {
@@ -228,6 +235,15 @@ func (a *application) registerCommerce(mux *http.ServeMux) {
 			return nil, err
 		}
 		return map[string]bool{"queued": true}, a.service.RetryAuthorization(r.Context(), p, r.PathValue("id"), in.Reason)
+	})
+	a.route(mux, "POST /api/v1/admin/identity-notifications/{id}/retry", true, 10, func(w http.ResponseWriter, r *http.Request, p app.Principal) (any, error) {
+		var in struct {
+			Reason string `json:"reason"`
+		}
+		if err := input(w, r, &in); err != nil {
+			return nil, err
+		}
+		return map[string]bool{"queued": true}, a.service.RetryIdentityRevocation(r.Context(), p, r.PathValue("id"), in.Reason)
 	})
 	a.route(mux, "POST /api/v1/webhooks/payments/{account}", false, 1200, func(w http.ResponseWriter, r *http.Request, p app.Principal) (any, error) {
 		r.Body = http.MaxBytesReader(w, r.Body, 1<<20)

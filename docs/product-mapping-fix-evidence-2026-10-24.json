@@ -1,0 +1,120 @@
+{
+  "date": "2026-10-24",
+  "issue": "AUTH-03",
+  "status": "fixed_locally_not_deployed",
+  "scope": "Launch product routing and mapping consistency; authorization remains with Licentivo and official SDK",
+  "source_packages": "./cmd/... ./internal/... ./pkg/...",
+  "source_tests": {
+    "passed_records_including_subtests": 192,
+    "failed_records": 0,
+    "skipped_tests": [
+      "TestProductUploadRoundTrip"
+    ],
+    "vet": "passed"
+  },
+  "negative_control": {
+    "result": "expected_failure",
+    "reason": "Both conflicting mappings committed with the audited original SaveMapping implementation",
+    "successful_saves": 2,
+    "conflicts": 0
+  },
+  "final_regression": {
+    "result": "passed_in_fresh_dedicated_mysql_schema",
+    "cases": [
+      "conflicting concurrent saves: one success and one HTTP 409 PRODUCT_MAPPING_CONFLICT",
+      "compatible concurrent saves: two successes",
+      "paid purchase synchronized before identity routing assertions",
+      "higher draft cannot redirect identity or break SDK initialization",
+      "legacy paid routing wins without canonical column value",
+      "ambiguous legacy routing rejected",
+      "product content edit retains canonical routing",
+      "conflicting draft publication rejected",
+      "conflicting historical publication cannot generate SDK product configuration",
+      "legacy SDK configuration check also uses paid routing"
+    ]
+  },
+  "real_service_joint": {
+    "result": "passed",
+    "stages": [
+      "initialize_real_launch",
+      "publish_product_and_paid_plan",
+      "purchase_and_absolute_dates",
+      "real_sdk_identity_exchange_and_feature",
+      "ordinary_close_and_restore",
+      "explicit_logout",
+      "remote_release_and_stale_generation",
+      "renewal_and_refund",
+      "account_revocation_and_fresh_login",
+      "full_refund_denies_runtime",
+      "exhausted_refund_recovery_real_services",
+      "verified_pending_then_lost_dispute",
+      "long_documents_real_deepl_adapter"
+    ],
+    "real_components": [
+      "Launch business services",
+      "Licentivo HTTP service and worker",
+      "MySQL 8.0.32",
+      "Go Launch SDK and official authorization runtime"
+    ],
+    "simulated_components": [
+      "payment gateway settlement",
+      "DeepL translation endpoint"
+    ],
+    "final_change_order": "Full source suite and real-service chain passed, then SDK configuration routing consistency was added and the dedicated mapping regression plus go vet passed again."
+  },
+  "cleanup": {
+    "owned_mysql_stopped": true,
+    "owned_licentivo_stopped": true,
+    "original_services_preserved": true,
+    "remote_device_accessed": false,
+    "evidence_preserved": true
+  },
+  "deployment": {
+    "launch": false,
+    "licentivo": false,
+    "sdk_publication": false
+  },
+  "limitations": [
+    "Historical data with multiple purchased remote products needs manual reconciliation; no purchase or license rewrites were performed.",
+    "No claim of real-service validation for all nine SDK languages.",
+    "Unrelated Licentivo AUTH-01 and AUTH-02 were not modified by this fix.",
+    "Mapping race and invalid-history regression uses actual Launch services and MySQL with a protocol simulator; the independent joint chain exercises real Licentivo and signed SDK execution."
+  ],
+  "files_sha256": {
+    "internal/app/connections.go": "3b8431313d42a2fedbab0834a723c72fa7404ffe87051b247af4e10262a8ae07",
+    "internal/app/product_mapping.go": "2f494defd6ae48709c6aef5015562d099d53e4558fb8aed6364b590c62fcb08a",
+    "internal/app/identity.go": "0d881f92c164b485b7d2c551d69c00ebd7cf8f2b46a15f67c900df7916ab5216",
+    "internal/app/catalog.go": "d4bbcd571930b679d7218194aa27cd34c08b9674c1a99d4d4b583c661aca5ccd",
+    "internal/app/integration.go": "766e1aaac45825c54c7b7d16d4bfbb051efdaec85ee00d777fb006bfe9bffda4",
+    "internal/storage/models.go": "ad09732f2975af5f0261ead5552f62e14d62e1c15fcda350f6975d8646994d84",
+    "internal/app/product_mapping_integration_test.go": "ddab1a632d5c3d0feac988225dcf508084db9ca7db6bb13a697b25168db900f2",
+    "internal/storage/mysql_integration_test.go": "09202c36d6140c6a44acc0c62b385ac730e1c51dad8179782d1cc30b5284dfdf"
+  },
+  "changes_from_pre_fix_audit_baseline": {
+    "launch": [
+      "internal/app/catalog.go",
+      "internal/app/connections.go",
+      "internal/app/identity.go",
+      "internal/app/integration.go",
+      "internal/storage/models.go",
+      "internal/storage/mysql_integration_test.go"
+    ],
+    "licentivo": [
+      "internal/httpapi/batches.go",
+      "internal/httpapi/launch.go",
+      "internal/httpapi/policy_sync.go",
+      "internal/httpapi/resources.go",
+      "internal/httpapi/runtime.go",
+      "internal/store/migrate.go",
+      "internal/store/models.go"
+    ]
+  },
+  "logs_sha256": {
+    "before-regression.log": "366f023e440ffd9c14310f3d31b4866b35d85f9ef09e54a760aa05f9a14b8fca",
+    "source-regressions.jsonl": "51e460df596e73c72df86271c91b912a304d4675e0b41805963685c2fe776d2f",
+    "final-mapping-regression.jsonl": "cf06306d3606f2be4042aeb54e4755a77f450180c92ee7f50dfd852340ddf0a4",
+    "local-run/joint-results.jsonl": "0318f574510e657998cbce4b7869a54707d2f411d20b7a7bface8cb6c1037635"
+  },
+  "private_evidence_directory": ".local/mapping-fix-20261024/",
+  "baseline_comparison_note": "Licentivo differences from the earlier audit baseline were made outside this Launch fix; their modification times preceded the tested Licentivo server build. This task did not edit Licentivo sources."
+}

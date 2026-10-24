@@ -11,36 +11,34 @@ import (
 )
 
 var (
-	ErrSessionExpired     = errors.New("remembered session expired; sign in again")
-	ErrSessionMismatch    = errors.New("remembered session does not match this account or product")
-	ErrOfflineUnavailable = errors.New("no valid signed SDK grant available for offline startup")
-	ErrNotStarted         = errors.New("application authorization is not started")
+	ErrSessionExpired            = errors.New("remembered account session expired; sign in again")
+	ErrSessionMismatch           = errors.New("remembered account does not match this merchant or product")
+	ErrOfflineUnavailable        = errors.New("Launch does not decide offline authorization; use the official Licentivo SDK")
+	ErrNotStarted                = errors.New("Licentivo runtime has not been started")
+	ErrRevocationPending         = errors.New("signed out locally; Licentivo device release is pending and retained by its SDK")
+	ErrAccountLogoutPending      = errors.New("signed out locally; Launch account logout is pending")
+	ErrAccountLogoutNotPersisted = errors.New("account logout retry could not be persisted; retry before closing this process")
 )
 
-// Runtime must delegate to the official Licentivo SDK. In particular,
-// CanStartOffline must inspect the SDK's cryptographically verified cached grant;
-// neither merchant expiry nor any boolean in a session file grants authorization.
+// Runtime is a thin delegation boundary to the official SDK. Launch never
+// examines a signed grant, device allowance, expiry, feature, or offline cache.
 type Runtime interface {
 	Start(context.Context, func(error)) error
-	CanStartOffline() bool
 	RunFeature(string, func() error) error
 	Deactivate(context.Context) error
 	Close()
 }
-
 type RuntimeConfig struct {
-	Credential  Credential
+	Identity    Identity
 	CachePath   string
 	User        User
 	Environment string
 }
-
 type Config struct {
 	Origin         string
 	ProductID      string
 	Environment    string
 	AllowLocalHTTP bool
-	// Nil Store is explicitly memory-only. Remembered login requires a protected store.
 	Store          SessionStore
 	CacheDir       string
 	Product        ProductConfig
@@ -48,211 +46,237 @@ type Config struct {
 	RetryPolicy    RetryPolicy
 	OnRuntimeError func(error)
 }
-
 type State struct {
 	User      User
 	ExpiresAt time.Time
-	// OfflineFallback means Launch could not be reached and the SDK verified a
-	// cached grant. It is informational; RunFeature always asks the SDK again.
-	OfflineFallback bool
 }
-
 type rememberedSession struct {
-	Version     int        `json:"version"`
-	Origin      string     `json:"origin"`
-	ProductID   string     `json:"product_id"`
-	Environment string     `json:"environment"`
-	Session     Session    `json:"session"`
-	Credential  Credential `json:"credential"`
+	Version     int     `json:"version"`
+	Origin      string  `json:"origin"`
+	ProductID   string  `json:"product_id"`
+	Environment string  `json:"environment"`
+	Session     Session `json:"session"`
+	// Only public routing context is retained; IdentityToken is always empty.
+	Identity Identity `json:"identity_context"`
+	// A pending record is an account revocation task, never a restorable login.
+	LogoutPending bool `json:"logout_pending,omitempty"`
 }
-
-// Application serializes login, restoration, protected work and shutdown.
-// Use an application-lifetime context for Login/Restore because the official
-// SDK uses it for its heartbeat. Close stops that runtime without signing out.
 type Application struct {
-	mu      sync.Mutex
-	config  Config
-	client  *Client
-	store   SessionStore
-	key     string
-	record  rememberedSession
-	runtime Runtime
+	mu             sync.Mutex
+	config         Config
+	client         *Client
+	store          SessionStore
+	key            string
+	record         rememberedSession
+	runtime        Runtime
+	accountCleared bool
 }
 
 func NewApplication(config Config) (*Application, error) {
-	client, err := New(config.Origin, config.AllowLocalHTTP && config.Environment == "sandbox")
-	if err != nil {
-		return nil, err
+	client, e := New(config.Origin, config.AllowLocalHTTP && config.Environment == "sandbox")
+	if e != nil {
+		return nil, e
 	}
-	if config.Environment != "sandbox" && config.Environment != "live" {
-		return nil, errors.New("environment must be sandbox or live")
-	}
-	if !productIDPattern.MatchString(config.ProductID) {
-		return nil, errors.New("invalid product identifier")
+	if config.Environment != "live" && config.Environment != "sandbox" || !productIDPattern.MatchString(config.ProductID) {
+		return nil, errors.New("invalid account configuration")
 	}
 	if config.RuntimeFactory == nil {
 		if !productIDPattern.MatchString(config.Product.ProductID) || len(config.Product.TrustedKeys) == 0 {
-			return nil, errors.New("public Product configuration is required")
+			return nil, errors.New("public product configuration is required")
 		}
-		config.RuntimeFactory = func(runtime RuntimeConfig) (Runtime, error) { return NewRuntime(config.Product, runtime) }
+		config.RuntimeFactory = func(r RuntimeConfig) (Runtime, error) { return NewRuntime(config.Product, r) }
 	}
 	if config.CacheDir == "" {
-		root, err := os.UserCacheDir()
-		if err != nil {
-			return nil, errors.New("could not resolve private application cache")
+		root, e := os.UserCacheDir()
+		if e != nil {
+			return nil, e
 		}
 		config.CacheDir = filepath.Join(root, "LicentivoLaunch", "runtime")
 	}
-	root, err := filepath.Abs(config.CacheDir)
-	if err != nil {
-		return nil, err
+	root, e := filepath.Abs(config.CacheDir)
+	if e != nil {
+		return nil, e
 	}
 	config.CacheDir = root
 	if config.Store == nil {
 		config.Store = &MemoryStore{}
 	}
 	config.Origin = client.base
-	return &Application{config: config, client: client, store: config.Store, key: "launch-session-v1\n" + client.base + "\n" + config.ProductID + "\n" + config.Environment + "\n" + config.Product.ProductID}, nil
+	return &Application{config: config, client: client, store: config.Store, key: "launch-account-v2\n" + client.base + "\n" + config.ProductID + "\n" + config.Environment + "\n" + config.Product.ProductID}, nil
 }
-
-func (a *Application) cachePath(userID string) string {
-	return filepath.Join(a.config.CacheDir, hashScope(a.key+"\n"+userID), "lease.json")
+func (a *Application) cachePath(user string) string {
+	return filepath.Join(a.config.CacheDir, hashScope(a.key+"\n"+user), "lease.json")
 }
-func (a *Application) valid(record rememberedSession) bool {
-	return record.Version == 1 && record.Origin == a.config.Origin && record.ProductID == a.config.ProductID && record.Environment == a.config.Environment && record.Session.User.ID != "" && record.Session.AccessToken != "" && record.Credential.ProductID == a.config.ProductID && record.Credential.LicenseKey != ""
+func (a *Application) valid(r rememberedSession) bool {
+	if (r.Version != 2 && !(r.Version == 3 && r.LogoutPending)) || r.Origin != a.config.Origin || r.ProductID != a.config.ProductID || r.Environment != a.config.Environment || r.Session.AccessToken == "" || r.Identity.IdentityToken != "" {
+		return false
+	}
+	return r.LogoutPending || r.Session.User.ID != "" && r.Identity.ProductID == a.config.ProductID && r.Identity.Environment == a.config.Environment && productIDPattern.MatchString(r.Identity.LaunchConnectionID) && productIDPattern.MatchString(r.Identity.LicentivoProductID)
 }
 func (a *Application) load(ctx context.Context) (rememberedSession, error) {
-	raw, err := a.store.Load(ctx, a.key)
-	if err != nil {
-		return rememberedSession{}, err
+	raw, e := a.store.Load(ctx, a.key)
+	if e != nil {
+		return rememberedSession{}, e
 	}
 	defer clear(raw)
-	var record rememberedSession
-	if json.Unmarshal(raw, &record) != nil || !a.valid(record) {
-		return rememberedSession{}, ErrSessionMismatch
+	var r rememberedSession
+	if json.Unmarshal(raw, &r) != nil || !a.valid(r) {
+		return r, ErrSessionMismatch
 	}
-	return record, nil
+	return r, nil
 }
 func (a *Application) save(ctx context.Context) error {
-	raw, err := json.Marshal(a.record)
-	if err != nil {
-		return err
+	r := a.record
+	r.Identity.IdentityToken = ""
+	raw, e := json.Marshal(r)
+	if e != nil {
+		return e
 	}
 	defer clear(raw)
 	return a.store.Save(ctx, a.key, raw)
 }
-
-func (a *Application) start(ctx context.Context, offline bool) (State, error) {
+func (a *Application) makeRuntime(identity Identity) (Runtime, error) {
 	path := a.cachePath(a.record.Session.User.ID)
-	if err := ProtectDirectory(filepath.Dir(path)); err != nil {
-		return State{}, err
+	if e := ProtectDirectory(filepath.Dir(path)); e != nil {
+		return nil, e
 	}
-	runtime, err := a.config.RuntimeFactory(RuntimeConfig{Credential: a.record.Credential, CachePath: path, User: a.record.Session.User, Environment: a.config.Environment})
-	if err != nil {
-		return State{}, err
-	}
-	if offline && !runtime.CanStartOffline() {
-		runtime.Close()
-		return State{}, ErrOfflineUnavailable
-	}
-	if err = runtime.Start(ctx, a.config.OnRuntimeError); err != nil {
-		runtime.Close()
-		return State{}, err
-	}
-	a.runtime = runtime
-	return State{User: a.record.Session.User, ExpiresAt: a.record.Session.ExpiresAt, OfflineFallback: offline}, nil
+	return a.config.RuntimeFactory(RuntimeConfig{Identity: identity, CachePath: path, User: a.record.Session.User, Environment: a.config.Environment})
 }
-
+func (a *Application) start(ctx context.Context, identity Identity) (State, error) {
+	r, e := a.makeRuntime(identity)
+	if e != nil {
+		return State{}, e
+	}
+	if e = r.Start(ctx, a.config.OnRuntimeError); e != nil {
+		r.Close()
+		return State{}, e
+	}
+	a.runtime = r
+	return State{a.record.Session.User, a.record.Session.ExpiresAt}, nil
+}
 func (a *Application) Login(ctx context.Context, email, password string) (State, error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	// Switching accounts cannot retain a previous account's running runtime.
-	if err := a.logoutLocked(ctx); err != nil {
-		return State{}, err
+	unlock, e := a.lockAccount(ctx)
+	if e != nil {
+		return State{}, e
 	}
-	session, err := a.client.LoginSession(ctx, email, password)
-	if err != nil {
-		return State{}, err
+	defer unlock()
+	if e := a.logoutLocked(ctx); e != nil {
+		return State{}, e
 	}
-	a.record = rememberedSession{Version: 1, Origin: a.config.Origin, ProductID: a.config.ProductID, Environment: a.config.Environment, Session: session}
-	if session.ExpiresAt.IsZero() || !session.ExpiresAt.After(time.Now()) {
+	session, e := a.client.LoginSession(ctx, email, password)
+	if e != nil {
+		return State{}, e
+	}
+	a.record = rememberedSession{Version: 2, Origin: a.config.Origin, ProductID: a.config.ProductID, Environment: a.config.Environment, Session: session}
+	a.accountCleared = false
+	if !session.ExpiresAt.After(time.Now()) {
 		return State{}, errors.Join(ErrSessionExpired, a.logoutLocked(ctx))
 	}
-	credential, err := a.client.CredentialWithRetry(ctx, a.config.ProductID, a.config.Environment, a.config.RetryPolicy)
-	if err != nil {
-		return State{}, errors.Join(err, a.logoutLocked(ctx))
+	identity, e := a.client.Identity(ctx, a.config.ProductID, a.config.Environment)
+	if e != nil {
+		return State{}, errors.Join(e, a.logoutLocked(ctx))
 	}
-	a.record.Credential = credential
-	state, err := a.start(ctx, false)
-	if err != nil {
-		return State{}, errors.Join(err, a.logoutLocked(ctx))
+	a.record.Identity = identity
+	a.record.Identity.IdentityToken = ""
+	state, e := a.start(ctx, identity)
+	if e != nil {
+		return State{}, errors.Join(e, a.logoutLocked(ctx))
 	}
-	if err = a.save(ctx); err != nil {
-		return State{}, errors.Join(err, a.logoutLocked(ctx))
+	if e = a.save(ctx); e != nil {
+		return State{}, errors.Join(e, a.logoutLocked(ctx))
 	}
 	return state, nil
 }
 
+// Restore authenticates the Launch account online. Authorization restoration
+// and offline startup, when needed, belong to the official SDK directly.
 func (a *Application) Restore(ctx context.Context) (State, error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
+	unlock, lockErr := a.lockAccount(ctx)
+	if lockErr != nil {
+		return State{}, lockErr
+	}
+	defer unlock()
 	if a.runtime != nil {
 		a.runtime.Close()
 		a.runtime = nil
 	}
-	record, err := a.load(ctx)
-	if err != nil {
-		return State{}, err
+	r := a.record
+	if !r.LogoutPending {
+		var e error
+		r, e = a.load(ctx)
+		if e != nil && !errors.Is(e, ErrNoSession) {
+			return State{}, e
+		}
+		pending, pendingErr := a.pendingAccounts(ctx)
+		if pendingErr != nil {
+			return State{}, pendingErr
+		}
+		for _, task := range pending {
+			if r.Session.AccessToken == "" || task.Session.AccessToken == r.Session.AccessToken {
+				r = task
+				break
+			}
+		}
+		if r.Session.AccessToken == "" {
+			return State{}, ErrNoSession
+		}
+		intent, intentErr := a.hasIntent(r.Session.AccessToken)
+		if intentErr != nil {
+			return State{}, intentErr
+		}
+		if intent {
+			r.Version, r.LogoutPending = 3, true
+		}
 	}
-	a.record = record
-	a.client = a.client.WithToken(record.Session.AccessToken)
-	if record.Session.ExpiresAt.IsZero() || !record.Session.ExpiresAt.After(time.Now()) {
+	a.record = r
+	a.accountCleared = false
+	if r.LogoutPending {
+		if e := a.logoutLocked(ctx); e != nil {
+			return State{}, e
+		}
+		return State{}, ErrNoSession
+	}
+	if e := a.retryOtherAccounts(ctx, r.Session.AccessToken); e != nil {
+		return State{}, e
+	}
+	a.client = a.client.WithToken(r.Session.AccessToken)
+	if !r.Session.ExpiresAt.After(time.Now()) {
 		return State{}, errors.Join(ErrSessionExpired, a.clearLocked())
 	}
-	user, err := a.client.CurrentUser(ctx)
-	if err != nil {
-		if ServiceUnavailable(err) {
-			return a.start(ctx, true)
+	user, e := a.client.CurrentUser(ctx)
+	if e != nil {
+		if authenticationDenied(e) {
+			return State{}, errors.Join(e, a.clearLocked())
 		}
-		if authenticationDenied(err) {
-			return State{}, errors.Join(err, a.clearLocked())
-		}
-		return State{}, err
+		return State{}, e
 	}
-	if user.ID != record.Session.User.ID {
+	if user.ID != r.Session.User.ID {
 		return State{}, errors.Join(ErrSessionMismatch, a.clearLocked())
 	}
-	credential, err := a.client.CredentialWithRetry(ctx, a.config.ProductID, a.config.Environment, a.config.RetryPolicy)
-	if err != nil {
-		if ServiceUnavailable(err) {
-			return a.start(ctx, true)
-		}
-		if authenticationDenied(err) {
-			return State{}, errors.Join(err, a.clearLocked())
-		}
-		return State{}, err
+	identity, e := a.client.Identity(ctx, a.config.ProductID, a.config.Environment)
+	if e != nil {
+		return State{}, e
 	}
 	a.record.Session.User = user
-	a.record.Credential = credential
-	state, err := a.start(ctx, false)
-	if err != nil {
-		return State{}, err
+	a.record.Identity = identity
+	a.record.Identity.IdentityToken = ""
+	state, e := a.start(ctx, identity)
+	if e != nil {
+		return State{}, e
 	}
-	if err = a.save(ctx); err != nil {
-		a.runtime.Close()
-		a.runtime = nil
-		return State{}, err
+	if e = a.save(ctx); e != nil {
+		return State{}, errors.Join(e, a.clearLocked())
 	}
 	return state, nil
 }
-
-func authenticationDenied(err error) bool {
+func authenticationDenied(e error) bool {
 	var api *APIError
-	return errors.As(err, &api) && api.Code != "ENTITLEMENT_PENDING" && (api.Status == 401 || api.Status == 403 || api.Code == "ENTITLEMENT_NOT_PURCHASED")
+	return errors.As(e, &api) && (api.Status == 401 || api.Status == 403)
 }
-
-// RunFeature performs no merchant-metadata checks. Every invocation is decided
-// by the SDK. The action must not reenter this Application's lifecycle methods.
 func (a *Application) RunFeature(feature string, action func() error) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -262,8 +286,7 @@ func (a *Application) RunFeature(feature string, action func() error) error {
 	return a.runtime.RunFeature(feature, action)
 }
 
-// Close stops the SDK and returns floating seats according to SDK policy. It
-// keeps the protected Launch session for the next startup.
+// Close is ordinary shutdown. Only the official SDK owns its persistent files.
 func (a *Application) Close() {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -273,61 +296,100 @@ func (a *Application) Close() {
 	}
 	a.client.token = ""
 }
-
 func (a *Application) clearLocked() error {
 	if a.runtime != nil {
 		a.runtime.Close()
 		a.runtime = nil
 	}
-	var cacheErr error
-	if a.record.Session.User.ID != "" {
-		// The path is always our generated hash directory inside CacheDir;
-		// no saved or user-controlled path is trusted for recursive removal.
-		cacheErr = os.RemoveAll(filepath.Dir(a.cachePath(a.record.Session.User.ID)))
-	}
+	token := a.record.Session.AccessToken
 	a.record = rememberedSession{}
+	a.accountCleared = true
 	a.client.token = ""
-	// Local logout must finish even when the caller's network context expired.
-	return errors.Join(cacheErr, a.store.Delete(context.Background(), a.key))
+	return a.deleteOwned(context.Background(), token)
 }
-
 func (a *Application) logoutLocked(ctx context.Context) error {
 	if a.record.Session.AccessToken == "" {
-		record, err := a.load(context.Background())
-		if err == nil {
-			a.record = record
-		} else if !errors.Is(err, ErrNoSession) {
+		r, e := a.load(context.Background())
+		if e == nil {
+			a.record = r
+		} else if !errors.Is(e, ErrNoSession) {
+			return errors.Join(e, a.clearLocked())
+		}
+	}
+	if a.record.Session.AccessToken == "" {
+		pending, err := a.pendingAccounts(context.Background())
+		if err != nil {
 			return errors.Join(err, a.clearLocked())
 		}
-	}
-	var remoteErr error
-	if a.record.Session.AccessToken != "" {
-		remoteErr = a.client.WithToken(a.record.Session.AccessToken).SignOut(ctx)
-		var api *APIError
-		if errors.As(remoteErr, &api) && api.Status == 401 {
-			remoteErr = nil
+		if len(pending) > 0 {
+			a.record = pending[0]
 		}
 	}
-	return errors.Join(remoteErr, a.clearLocked())
+	otherErr := a.retryOtherAccounts(ctx, a.record.Session.AccessToken)
+	var releaseErr, accountErr error
+	var persistErr error
+	if a.record.Session.AccessToken != "" {
+		// Persist intent before either remote request. Cancellation must not turn
+		// an interrupted logout back into a remembered login after a restart.
+		a.record.LogoutPending = true
+		a.record.Version = 3
+		persist, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
+		persistErr = a.markAccountLogout(persist)
+		cancel()
+	}
+	// Reopen the official SDK after a process restart so it can deny local work
+	// and preserve/retry its unlink-only ticket before the Launch store is cleared.
+	active, activeErr := a.load(context.Background())
+	canReopen := errors.Is(activeErr, ErrNoSession) || activeErr == nil && active.Session.AccessToken == a.record.Session.AccessToken
+	if a.runtime == nil && canReopen && a.record.Session.User.ID != "" && a.record.Identity.LaunchConnectionID != "" {
+		a.runtime, releaseErr = a.makeRuntime(a.record.Identity)
+	}
+	if a.runtime != nil {
+		releaseErr = a.runtime.Deactivate(ctx)
+	}
+	if a.record.Session.AccessToken != "" {
+		accountErr = a.revokeAccount(ctx, a.record)
+	}
+	if accountErr == nil {
+		// A confirmed server revocation makes the retry record unnecessary,
+		// even if its earlier save failed.
+		finished := a.finishAccount(context.Background(), a.record)
+		return errors.Join(otherErr, releaseErr, finished, a.clearLocked())
+	}
+	if a.runtime != nil {
+		a.runtime.Close()
+		a.runtime = nil
+	}
+	a.client.token = ""
+	return errors.Join(otherErr, ErrAccountLogoutPending, accountErr, persistErr, releaseErr)
 }
 
-// Logout revokes the merchant session and clears all local account/runtime
-// state even if remote revocation fails. It does not release node-locked devices.
+// Logout stops local use and retains a pending account task until Launch
+// confirms revocation. Login, Restore and subsequent Logout retry that task.
+// The official SDK's .logout.json is never removed by Launch, even offline.
 func (a *Application) Logout(ctx context.Context) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
+	_ = a.rememberIntent(a.record.Session.AccessToken)
+	lockCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
+	defer cancel()
+	unlock, err := a.lockAccount(lockCtx)
+	if err != nil {
+		var releaseErr error
+		if a.runtime != nil {
+			releaseErr = a.runtime.Deactivate(ctx)
+			a.runtime.Close()
+			a.runtime = nil
+		}
+		a.record.LogoutPending = true
+		a.record.Version = 3
+		a.client.token = ""
+		return errors.Join(ErrAccountLogoutPending, ErrAccountLogoutNotPersisted, err, releaseErr)
+	}
+	defer unlock()
+	if a.accountCleared && a.record.Session.AccessToken == "" {
+		return a.retryOtherAccounts(ctx, "")
+	}
 	return a.logoutLocked(ctx)
 }
-
-// ReleaseDevice explicitly asks the SDK to deactivate this device, then clears
-// local state. A remote failure is returned; callers must not report release as
-// successful when the network request failed.
-func (a *Application) ReleaseDevice(ctx context.Context) error {
-	a.mu.Lock()
-	defer a.mu.Unlock()
-	if a.runtime == nil {
-		return ErrNotStarted
-	}
-	err := a.runtime.Deactivate(ctx)
-	return errors.Join(err, a.logoutLocked(ctx))
-}
+func (a *Application) ReleaseDevice(ctx context.Context) error { return a.Logout(ctx) }

@@ -1,0 +1,197 @@
+{
+  "date": "2026-10-24",
+  "host": "192.168.2.177",
+  "mysql": "8.4.11",
+  "business_code_changes": 0,
+  "external_real_transactions": false,
+  "tests": {
+    "launch-app-linux.log": {
+      "pass": 16,
+      "skip": 0,
+      "fail": 0,
+      "final": "PASS"
+    },
+    "launch-http-linux.log": {
+      "pass": 4,
+      "skip": 0,
+      "fail": 0,
+      "final": "PASS"
+    },
+    "launch-main-linux.log": {
+      "pass": 1,
+      "skip": 0,
+      "fail": 0,
+      "final": "PASS"
+    },
+    "licentivo-http-linux.log": {
+      "pass": 444,
+      "skip": 19,
+      "fail": 0,
+      "final": "PASS"
+    },
+    "licentivo-notice-linux.log": {
+      "pass": 1,
+      "skip": 0,
+      "fail": 0,
+      "final": "PASS"
+    },
+    "licentivo-refund-repro.log": {
+      "pass": 1,
+      "skip": 0,
+      "fail": 0,
+      "final": "PASS"
+    }
+  },
+  "joint": [
+    {
+      "message": "",
+      "status": "start",
+      "step": "initialize_real_launch"
+    },
+    {
+      "message": "Launch uses actual Licentivo management API and identity trust",
+      "status": "pass",
+      "step": "initialize_real_launch"
+    },
+    {
+      "message": "",
+      "status": "start",
+      "step": "publish_product_and_paid_plan"
+    },
+    {
+      "message": "Plan and policy mapping registered through actual API; payment settlement is simulated",
+      "status": "pass",
+      "step": "publish_product_and_paid_plan"
+    },
+    {
+      "message": "",
+      "status": "start",
+      "step": "purchase_and_absolute_dates"
+    },
+    {
+      "message": "Verified payment simulation reached actual Licentivo worker and applied snapshot",
+      "status": "pass",
+      "step": "purchase_and_absolute_dates"
+    },
+    {
+      "message": "",
+      "status": "start",
+      "step": "real_sdk_identity_exchange_and_feature"
+    },
+    {
+      "message": "Actual Go Launch SDK exchanged real identity and verified signed feature grant",
+      "status": "pass",
+      "step": "real_sdk_identity_exchange_and_feature"
+    },
+    {
+      "message": "",
+      "status": "start",
+      "step": "ordinary_close_and_restore"
+    },
+    {
+      "message": "Ordinary close retained binding and remembered account restored",
+      "status": "pass",
+      "step": "ordinary_close_and_restore"
+    },
+    {
+      "message": "",
+      "status": "start",
+      "step": "explicit_logout"
+    },
+    {
+      "message": "Explicit SDK logout denied locally and released actual remote binding",
+      "status": "pass",
+      "step": "explicit_logout"
+    },
+    {
+      "message": "",
+      "status": "start",
+      "step": "remote_release_and_stale_generation"
+    },
+    {
+      "message": "Remote unbind blocked old login; delayed release could not remove newer generation",
+      "status": "pass",
+      "step": "remote_release_and_stale_generation"
+    },
+    {
+      "message": "",
+      "status": "start",
+      "step": "renewal_and_refund"
+    },
+    {
+      "message": "Launch calculated renewal and refunded extension; Licentivo applied absolute dates",
+      "status": "pass",
+      "step": "renewal_and_refund"
+    },
+    {
+      "message": "",
+      "status": "start",
+      "step": "account_revocation_and_fresh_login"
+    },
+    {
+      "message": "Account cutoff released binding without changing purchase; true new login succeeded",
+      "status": "pass",
+      "step": "account_revocation_and_fresh_login"
+    },
+    {
+      "message": "",
+      "status": "start",
+      "step": "full_refund_denies_runtime"
+    },
+    {
+      "message": "Fully refunded purchase cannot obtain real SDK authorization",
+      "status": "pass",
+      "step": "full_refund_denies_runtime"
+    },
+    {
+      "message": "",
+      "status": "start",
+      "step": "complete"
+    },
+    {
+      "message": "Real Launch, Licentivo, MySQL and Go SDK joint audit completed; payment gateway was an isolated simulator",
+      "status": "pass",
+      "step": "complete"
+    }
+  ],
+  "findings": [
+    {
+      "message": "Verified Stripe lost-dispute webhook entered review; paid purchase stayed active and fresh real SDK login remained authorized",
+      "status": "finding",
+      "step": "lost_dispute_event"
+    },
+    {
+      "message": "SaveProduct accepted legal document lengths; DeepL request was 160131 bytes, actual adapter rejected before networking; translation task retrying",
+      "status": "finding",
+      "step": "long_document_translation"
+    },
+    {
+      "attempts": 12,
+      "customer_retry_status": "unknown",
+      "provider_calls_after_retry": 12,
+      "provider_calls_before_fix": 12,
+      "review_required": true,
+      "same_refund_id": true,
+      "scenario": "refund_outage_recovery",
+      "status": "finding",
+      "status_after_retry": "unknown"
+    },
+    {
+      "status": "finding",
+      "scenario": "licentivo_waffo_definite_rejection",
+      "http_status": 409,
+      "ticket_created": false,
+      "posts_after_admin_reconcile": 1,
+      "refund_status": "unknown",
+      "reserved": true,
+      "reserved_cents": 500
+    }
+  ],
+  "cleanup": {
+    "temporary_services_stopped": true,
+    "ssh_tunnel_stopped": true,
+    "local_ssh_password_file_removed": true,
+    "original_mysql_preserved": true,
+    "audit_evidence_retained": true
+  }
+}

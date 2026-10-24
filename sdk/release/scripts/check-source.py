@@ -24,6 +24,9 @@ def main():
         if ROOT not in source.parents or hashlib.sha256(source.read_bytes()).hexdigest() != item['sha256']:
             raise ValueError('Embedded SDK source checksum mismatch: ' + item['destination'])
     windows = os.name == 'nt'
+    java_home = os.environ.get('JAVA_HOME')
+    def java(name):
+        return Path(java_home) / 'bin' / (name + ('.exe' if windows else '')) if java_home else name
     run('go', 'test', './pkg/launchclient', '-count=1')
     for example in ('go', 'web-backend'):
         run('go', 'test', './...', '-count=1', cwd=ROOT / 'examples' / example)
@@ -38,9 +41,9 @@ def main():
     classes = WORK / 'java'
     classes.mkdir(exist_ok=True)
     sources = sorted((ROOT / 'sdk/java/src').rglob('*.java')) + sorted((ROOT / 'sdk/java/tests').glob('*.java'))
-    run('javac', '--release', '17', '-encoding', 'UTF-8', '-d', classes, *sources)
+    run(java('javac'), '--release', '17', '-encoding', 'UTF-8', '-d', classes, *sources)
     for suite in ('LaunchTests', 'OfficialSDKTests'):
-        run('java', '-ea', '-cp', classes, suite)
+        run(java('java'), '-ea', '-cp', classes, suite)
     lock = ROOT / 'sdk/rust/Cargo.lock'
     if not lock.exists():
         shutil.copyfile(ROOT / 'sdk/rust/Cargo.package.lock', lock)

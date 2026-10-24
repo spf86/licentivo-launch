@@ -29,7 +29,7 @@ func TestSoftwareAuthenticationAndErrorRedaction(t *testing.T) {
 				t.Fatal("website session requested")
 			}
 			body = `{"data":{"access_token":"customer-token","user":{"id":"user-id","email":"test@example.invalid","verified":true}}}`
-		case "/api/v1/software/products/11111111-1111-4111-8111-111111111111/credential":
+		case "/api/v1/software/products/11111111-1111-4111-8111-111111111111/identity":
 			if r.Header.Get("Authorization") != "Bearer customer-token" {
 				t.Fatal("missing own bearer")
 			}
@@ -46,7 +46,7 @@ func TestSoftwareAuthenticationAndErrorRedaction(t *testing.T) {
 	if err != nil || user.ID != "user-id" {
 		t.Fatal(err)
 	}
-	_, err = c.Credential(context.Background(), "11111111-1111-4111-8111-111111111111", "sandbox")
+	_, err = c.Identity(context.Background(), "11111111-1111-4111-8111-111111111111", "sandbox")
 	var apiErr *APIError
 	if !errors.As(err, &apiErr) || apiErr.Code != "ENTITLEMENT_UNAVAILABLE" || strings.Contains(err.Error(), "raw details") {
 		t.Fatal("unsafe API error")

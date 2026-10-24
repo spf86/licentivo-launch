@@ -46,8 +46,8 @@ func (s *Service) checkoutView(ctx context.Context, order storage.Order) (Checko
 	}
 	if order.Status == "paid" {
 		v.Fulfillment = "pending_authorization"
-		var task storage.SyncTask
-		if s.db.WithContext(ctx).First(&task, "source_order_id = ?", order.ID).Error == nil && task.Status == "succeeded" {
+		var purchase storage.Entitlement
+		if s.db.WithContext(ctx).First(&purchase, "user_id = ? AND product_id = ? AND environment = ?", order.UserID, order.ProductID, order.Environment).Error == nil && purchase.LaunchPurchaseRef != nil && purchase.AppliedVersion > 0 && purchase.AppliedVersion == purchase.DesiredVersion {
 			v.Fulfillment = "active"
 		}
 		if order.FulfillmentReview {
@@ -56,6 +56,9 @@ func (s *Service) checkoutView(ctx context.Context, order storage.Order) (Checko
 	}
 	if order.Status == "refunded" {
 		v.Fulfillment = "refunded"
+	}
+	if order.Status == "reversed" {
+		v.Fulfillment = "reversed"
 	}
 	return v, nil
 }
@@ -160,15 +163,7 @@ func (s *Service) CreateOrder(ctx context.Context, p Principal, in CheckoutInput
 	if s.db.WithContext(ctx).First(&mapping, "plan_version_id = ?", version.ID).Error != nil || s.db.WithContext(ctx).First(&connection, "id = ?", mapping.ConnectionID).Error != nil {
 		return CheckoutView{}, problem(409, "LICENSE_MAPPING_REQUIRED", "请先在后台为该套餐选择 Licentivo 授权策略")
 	}
-	licenseClient, err := s.licensingProvider(ctx, connection)
-	if err != nil {
-		return CheckoutView{}, ErrStorage
-	}
-	caps, err := licenseClient.Capabilities(ctx)
-	if err != nil || caps.ValidateSales() != nil {
-		return CheckoutView{}, problem(409, "LICENSE_CONTRACT_UNSUPPORTED", "Licentivo 管理接口不可用，因此没有创建付款；请检查读写 API Key")
-	}
-	if err := checkPolicy(ctx, licenseClient, version, mapping, ""); err != nil {
+	if err := s.registerLaunchPlan(ctx, in.Environment, version, mapping, true); err != nil {
 		return CheckoutView{}, err
 	}
 	if s.db.WithContext(ctx).First(&account, "provider = ? AND environment = ? AND enabled = true", in.Provider, in.Environment).Error != nil {
@@ -210,10 +205,16 @@ func (s *Service) CreateOrder(ctx context.Context, p Principal, in CheckoutInput
 		}
 		var entitlement storage.Entitlement
 		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&entitlement, "user_id = ? AND product_id = ? AND environment = ?", user.ID, version.ProductID, in.Environment).Error; err == nil {
-			if entitlement.ManualHold || entitlement.Status == "revoked" {
+			if entitlement.ManualHold || (entitlement.Status == "revoked" && in.Action != "purchase") {
 				return problem(409, "AUTHORIZATION_HELD", "当前权益需由商家处理")
 			}
+			if entitlement.LaunchPurchaseRef == nil && entitlement.DesiredVersion > 0 {
+				return problem(409, "LEGACY_MIGRATION_PENDING", "旧购买记录正在迁移，请稍后重试")
+			}
 			if in.Action == "purchase" && entitlement.DesiredVersion > 0 {
+				if entitlement.AppliedVersion != entitlement.DesiredVersion {
+					return problem(409, "ENTITLEMENT_NOT_READY", "购买记录正在同步，请稍后重试")
+				}
 				var count int64
 				if tx.Model(&storage.EntitlementCoverage{}).Where("entitlement_id = ? AND base_coverage_id IS NULL AND voided_at IS NULL", entitlement.ID).Count(&count).Error != nil {
 					return ErrStorage

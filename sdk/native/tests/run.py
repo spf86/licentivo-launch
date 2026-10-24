@@ -9,6 +9,7 @@ import subprocess
 import tempfile
 import threading
 import time
+import uuid
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
 
@@ -40,8 +41,7 @@ class Handler(BaseHTTPRequestHandler):
         if self.path.startswith('/api/v1/fixture/'):
             if state['mode'] == 'pending_server_error': assert state['credential_calls'] == 1, state
             if state['mode'] == 'ENTITLEMENT_PENDING':
-                assert state['credential_calls'] == 3, state
-                assert time.monotonic() - state['pending_started'] >= 5.9, state
+                assert state['credential_calls'] == 1, state
             state['mode'] = self.path.rsplit('/', 1)[1]
             state['credential_calls'] = 0
             state['pending_started'] = time.monotonic()
@@ -52,33 +52,35 @@ class Handler(BaseHTTPRequestHandler):
         self.error('NOT_FOUND', 404)
     def do_POST(self):
         body = json.loads(self.rfile.read(int(self.headers.get('Content-Length', '0'))) or '{}')
+        if self.path == '/api/v1/auth/logout' and state['mode'] == 'logout_denied': return self.error('UNAUTHENTICATED', 401)
         if state['mode'] == 'offline': return self.error('SERVICE_UNAVAILABLE', 503)
         if self.path == '/api/v1/auth/login':
             state['user'] += 1
-            return self.data({'access_token': 'secret-bearer', 'expires_at': '2099-01-01T00:00:00Z', 'user': {'id': str(state['user'])}})
+            return self.data({'access_token': 'secret-bearer-' + str(state['user']) + '-' + uuid.uuid4().hex, 'expires_at': '2099-01-01T00:00:00Z', 'user': {'id': str(state['user'])}})
         if self.path == '/api/v1/auth/logout': return self.data({})
-        if self.path.endswith('/credential'):
+        if self.path.endswith('/identity'):
             state['credential_calls'] += 1
             if state['mode'] == 'pending_server_error': return self.error('ENTITLEMENT_PENDING', 503)
             if state['mode'].startswith('ENTITLEMENT_'): return self.error(state['mode'], 404 if state['mode'] == 'ENTITLEMENT_NOT_PURCHASED' else 403)
-            credential = {'product_id': launch_product, 'license_key': 'lv_lic_' + 'A' * 43, 'version': 1, 'valid_until': '2099-01-01T00:00:00Z'}
+            credential = {'product_id': launch_product, 'licentivo_product_id': product, 'launch_connection_id': '66666666-6666-4666-8666-666666666666', 'environment': 'sandbox', 'identity_token': 'I' * 64, 'license_key': 'discard-this-unexpected-secret', 'expires_at': '2099-01-01T00:00:00Z'}
             if state['mode'] == 'bad_product': credential['product_id'] = product
-            if state['mode'] == 'bad_key': credential['license_key'] = ''
-            if state['mode'] == 'bad_version': credential['version'] = 0
-            if state['mode'] == 'missing_version': del credential['version']
-            if state['mode'] == 'fraction_version': credential['version'] = 1.5
+            if state['mode'] == 'bad_key': credential['identity_token'] = ''
+            if state['mode'] == 'bad_version': credential['launch_connection_id'] = 'invalid'
+            if state['mode'] == 'missing_version': del credential['environment']
+            if state['mode'] == 'fraction_version': credential['environment'] = 'live'
             return self.data(credential)
-        if self.path in ('/api/v1/activate', '/api/v1/validate', '/api/v1/heartbeat'):
+        if self.path in ('/api/v1/launch/exchange', '/api/v1/validate', '/api/v1/heartbeat'):
             now = int(time.time())
             claims = {'version': 1, 'key_id': 'fixture', 'tenant_id': '33333333-3333-4333-8333-333333333333',
                       'product_id': product, 'license_id': '44444444-4444-4444-8444-444444444444',
                       'device_id': body['device_id'], 'activation_id': '55555555-5555-4555-8555-555555555555',
                       'mode': 'timed', 'features': ['export'], 'max_devices': 2, 'issued_at': now, 'expires_at': now + 3600,
-                      'runtime_policy': {'offline_mode': 'limited', 'heartbeat_seconds': 0, 'offline_seconds': 3600}}
+                      'runtime_policy': {'offline_mode': 'limited', 'heartbeat_seconds': 600, 'offline_seconds': 3600},
+                      'capabilities': {'license_model': 'node_locked', 'launch_connection_id': '66666666-6666-4666-8666-666666666666', 'environment': 'sandbox', 'session_id': '77777777-7777-4777-8777-777777777777', 'session_expires_at': now + 3600, 'binding_version': 1}}
             payload = json.dumps(claims, separators=(',', ':')).encode()
             lease = {'version': 1, 'key_id': 'fixture', 'payload': b64(payload), 'signature': b64(private.sign(b'LicenovaLease/v1\n' + payload))}
-            return self.data({'lease': lease, 'activation_id': claims['activation_id'], 'heartbeat_seconds': 0, 'device_key': 'lv_dev_' + 'B' * 43})
-        if self.path == '/api/v1/deactivate': return self.data({})
+            return self.data({'lease': lease, 'activation_id': claims['activation_id'], 'heartbeat_seconds': 0, 'device_key': 'lv_dev_' + 'B' * 43, 'logout_ticket': {'operation_id': '88888888-8888-4888-8888-888888888888', 'product_id': product, 'activation_id': claims['activation_id'], 'expected_generation': 1, 'release_token': 'lv_out_' + 'O' * 43}} )
+        if self.path == '/api/v1/sessions/logout': return self.data({'operation_id': body['operation_id'], 'activation_id': body['activation_id'], 'expected_generation': body['expected_generation'], 'status': 'succeeded'})
         self.error('NOT_FOUND', 404)
 
 

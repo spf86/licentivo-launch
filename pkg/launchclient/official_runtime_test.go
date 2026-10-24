@@ -5,117 +5,88 @@ import (
 	"crypto/ed25519"
 	"encoding/base64"
 	"encoding/json"
-	"errors"
+	"licentivo-launch/pkg/launchclient"
+	licentivo "licentivo-launch/pkg/launchclient/internal/licentivo"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"strings"
-	"sync/atomic"
 	"testing"
 	"time"
-
-	"licentivo-launch/pkg/launchclient"
-	licentivo "licentivo-launch/pkg/launchclient/internal/licentivo"
 )
 
-// This is a local protocol test: no payment provider or production licensing
-// service is contacted. The real SDK verifies real Ed25519 signatures.
-func TestOfficialSDKRestoresSignedOfflineGrantAndRejectsTampering(t *testing.T) {
-	const launchProduct = "11111111-1111-4111-8111-111111111111"
-	const runtimeProduct = "33333333-3333-4333-8333-333333333333"
+func TestOfficialSDKAccountExchangeAndLogout(t *testing.T) {
+	const product = "11111111-1111-4111-8111-111111111111"
+	const remote = "33333333-3333-4333-8333-333333333333"
+	const connection = "22222222-2222-4222-8222-222222222222"
+	const activation = "55555555-5555-4555-8555-555555555555"
 	const keyID = "66666666-6666-4666-8666-666666666666"
-	device, err := licentivo.MachineDeviceID(runtimeProduct)
-	if err != nil {
-		t.Fatal(err)
+	device, e := licentivo.MachineDeviceID(remote)
+	if e != nil {
+		t.Fatal(e)
 	}
 	key := ed25519.NewKeyFromSeed(make([]byte, 32))
-	now := time.Now().Unix()
-	claims := licentivo.Claims{Version: 1, KeyID: keyID, TenantID: "22222222-2222-4222-8222-222222222222", ProductID: runtimeProduct, LicenseID: "44444444-4444-4444-8444-444444444444", DeviceID: device, ActivationID: "55555555-5555-4555-8555-555555555555", Mode: "timed", Features: []string{"export"}, MaxDevices: 1, IssuedAt: now, ExpiresAt: now + 3600}
-	payload, _ := json.Marshal(claims)
-	signature := ed25519.Sign(key, append([]byte("LicenovaLease/v1\n"), payload...))
-	envelope := map[string]any{"version": 1, "key_id": keyID, "payload": base64.RawURLEncoding.EncodeToString(payload), "signature": base64.RawURLEncoding.EncodeToString(signature)}
-	var offline atomic.Bool
-	runtimeServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if offline.Load() {
-			w.WriteHeader(503)
-			_, _ = w.Write([]byte(`{"error":{"code":"SERVER_UNAVAILABLE"}}`))
-			return
+	at := time.Now().Unix()
+	claims := map[string]any{"version": 1, "key_id": keyID, "tenant_id": connection, "product_id": remote, "license_id": "44444444-4444-4444-8444-444444444444", "device_id": device, "activation_id": activation, "mode": "timed", "features": []string{"export"}, "max_devices": 1, "issued_at": at, "expires_at": at + 600, "runtime_policy": map[string]any{"offline_mode": "none", "offline_seconds": 0, "heartbeat_seconds": 600}, "capabilities": map[string]any{"license_model": "node_locked", "launch_connection_id": connection, "environment": "sandbox", "session_id": "77777777-7777-4777-8777-777777777777", "session_expires_at": at + 3600, "binding_version": 1}}
+	raw, _ := json.Marshal(claims)
+	signature := ed25519.Sign(key, append([]byte("LicenovaLease/v1\n"), raw...))
+	env := map[string]any{"version": 1, "key_id": keyID, "payload": base64.RawURLEncoding.EncodeToString(raw), "signature": base64.RawURLEncoding.EncodeToString(signature)}
+	released := false
+	licensing := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var data any
+		switch r.URL.Path {
+		case "/api/v1/launch/exchange":
+			var body map[string]any
+			_ = json.NewDecoder(r.Body).Decode(&body)
+			if body["license_key"] != "" || body["identity_token"] == "" {
+				t.Error("exchange used a long-term key")
+			}
+			data = map[string]any{"device_key": "lv_dev_" + strings.Repeat("d", 43), "activation_id": activation, "lease": env, "heartbeat_seconds": 600, "logout_ticket": map[string]any{"operation_id": keyID, "product_id": remote, "activation_id": activation, "expected_generation": 1, "release_token": "lv_out_" + strings.Repeat("o", 43)}}
+		case "/api/v1/sessions/logout":
+			released = true
+			data = map[string]any{"operation_id": keyID, "status": "succeeded", "activation_id": activation, "expected_generation": 1}
+		default:
+			t.Errorf("unexpected SDK request %s", r.URL.Path)
+			data = map[string]any{}
 		}
-		_ = json.NewEncoder(w).Encode(map[string]any{"data": map[string]any{"device_key": "lv_dev_" + strings.Repeat("d", 43), "activation_id": claims.ActivationID, "lease": envelope, "heartbeat_seconds": 600}})
+		_ = json.NewEncoder(w).Encode(map[string]any{"data": data})
 	}))
-	defer runtimeServer.Close()
+	defer licensing.Close()
 	merchant := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if offline.Load() {
-			w.WriteHeader(503)
-			_, _ = w.Write([]byte(`{"error":{"code":"UNAVAILABLE"}}`))
-			return
-		}
 		var data any
 		switch r.URL.Path {
 		case "/api/v1/auth/login":
 			data = launchclient.Session{AccessToken: "private-token", User: launchclient.User{ID: "account-a"}, ExpiresAt: time.Now().Add(time.Hour)}
-		case "/api/v1/me":
-			data = map[string]any{"user": launchclient.User{ID: "account-a"}}
 		case "/api/v1/auth/logout":
 			data = map[string]bool{"signed_out": true}
 		default:
-			data = launchclient.Credential{ProductID: launchProduct, LicenseKey: "lv_lic_" + strings.Repeat("a", 43), Version: 1}
+			data = launchclient.Identity{ProductID: product, LicentivoProductID: remote, LaunchConnectionID: connection, Environment: "sandbox", IdentityToken: strings.Repeat("identity-only-", 4), ExpiresAt: time.Now().Add(time.Minute)}
 		}
 		_ = json.NewEncoder(w).Encode(map[string]any{"data": data})
 	}))
 	defer merchant.Close()
-	store := &launchclient.MemoryStore{}
-	cacheRoot := t.TempDir()
-	var cachePath string
-	config := launchclient.Config{Origin: merchant.URL, ProductID: launchProduct, Environment: "sandbox", AllowLocalHTTP: true, Store: store, CacheDir: cacheRoot, RuntimeFactory: func(c launchclient.RuntimeConfig) (launchclient.Runtime, error) {
-		cachePath = c.CachePath
-		return launchclient.NewRuntime(launchclient.ProductConfig{BaseURL: runtimeServer.URL, ProductID: runtimeProduct, TrustedKeys: map[string]string{keyID: base64.RawURLEncoding.EncodeToString(key.Public().(ed25519.PublicKey))}, AllowHTTP: true}, c)
-	}}
-	app, err := launchclient.NewApplication(config)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if _, err = app.Login(context.Background(), "example@example.invalid", "password"); err != nil {
-		t.Fatal(err)
-	}
-	if err = app.RunFeature("export", func() error { return nil }); err != nil {
-		t.Fatal(err)
-	}
-	app.Close()
-	// Simulate a fresh application object while the OS-protected session store
-	// (represented by memory here) and official SDK cache survive the restart.
-	app, err = launchclient.NewApplication(config)
-	if err != nil {
-		t.Fatal(err)
+	var path string
+	app, e := launchclient.NewApplication(launchclient.Config{Origin: merchant.URL, ProductID: product, Environment: "sandbox", AllowLocalHTTP: true, CacheDir: t.TempDir(), RuntimeFactory: func(c launchclient.RuntimeConfig) (launchclient.Runtime, error) {
+		path = c.CachePath
+		return launchclient.NewRuntime(launchclient.ProductConfig{BaseURL: licensing.URL, ProductID: remote, TrustedKeys: map[string]string{keyID: base64.RawURLEncoding.EncodeToString(key.Public().(ed25519.PublicKey))}, AllowHTTP: true}, c)
+	}})
+	if e != nil {
+		t.Fatal(e)
 	}
 	defer app.Close()
-	offline.Store(true)
-	state, err := app.Restore(context.Background())
-	if err != nil || !state.OfflineFallback {
-		t.Fatal("real SDK offline restart failed", err)
+	if _, e = app.Login(context.Background(), "a@example.invalid", "password"); e != nil {
+		t.Fatal(e)
 	}
-	if err = app.RunFeature("export", func() error { return nil }); err != nil {
-		t.Fatal(err)
+	if e = app.RunFeature("export", func() error { return nil }); e != nil {
+		t.Fatal(e)
 	}
-	called := false
-	if err = app.RunFeature("not-purchased", func() error { called = true; return nil }); err == nil || called {
-		t.Fatal("missing feature bypassed SDK")
+	if e = app.Logout(context.Background()); e != nil {
+		t.Fatal(e)
 	}
-	app.Close()
-	raw, err := os.ReadFile(cachePath)
-	if err != nil {
-		t.Fatal(err)
+	if !released {
+		t.Fatal("official logout not sent")
 	}
-	var cached map[string]any
-	if err = json.Unmarshal(raw, &cached); err != nil {
-		t.Fatal(err)
-	}
-	cached["lease"].(map[string]any)["signature"] = base64.RawURLEncoding.EncodeToString(make([]byte, 64))
-	raw, _ = json.Marshal(cached)
-	if err = os.WriteFile(cachePath, raw, 0600); err != nil {
-		t.Fatal(err)
-	}
-	if _, err = app.Restore(context.Background()); !errors.Is(err, launchclient.ErrOfflineUnavailable) {
-		t.Fatal("tampered signature authorized offline", err)
+	if _, e = os.Stat(path + ".logout.json"); e != nil {
+		t.Fatal("SDK logout journal was deleted", e)
 	}
 }
