@@ -51,7 +51,7 @@ foreach($taskLanguage in @($Languages | Select-Object -Unique)){
   $taskManifest=Get-Content -LiteralPath 'node_modules/@licentivo/launch/package.json' -Raw | ConvertFrom-Json
   if($taskManifest.peerDependencies -or $taskManifest.dependencies){throw 'Unexpected separate SDK dependency in npm package.'}
   foreach($taskTest in (Get-ChildItem -LiteralPath (Join-Path $taskRoot 'sdk/javascript/test') -Filter '*.test.mjs')){
-   $taskCode=[IO.File]::ReadAllText($taskTest.FullName).Replace("'../src/index.mjs'","'@licentivo/launch'").Replace("'../src/vendor/licentivo.mjs'","'./node_modules/@licentivo/launch/src/vendor/licentivo.mjs'")
+   $taskCode=[IO.File]::ReadAllText($taskTest.FullName).Replace("'../src/index.mjs'","'@licentivo/launch'").Replace("'../src/","'./node_modules/@licentivo/launch/src/")
    Write-UTF8 (Join-Path $taskConsumer $taskTest.Name) $taskCode
   }
   $taskTests=@(Get-ChildItem -LiteralPath $taskConsumer -Filter '*.test.mjs' | ForEach-Object FullName)

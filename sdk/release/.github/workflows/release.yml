@@ -135,7 +135,7 @@ jobs:
           name: verified-release
           path: dist
       - name: Publish with the configured npm trusted publisher
-        run: npm publish dist/licentivo-launch-*.tgz --access public --ignore-scripts --provenance
+        run: npm publish ./dist/licentivo-launch-*.tgz --access public --ignore-scripts --provenance
 
   crates:
     if: inputs.registry == 'crates'
