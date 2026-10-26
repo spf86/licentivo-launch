@@ -11,7 +11,7 @@ require 'time'
 require 'monitor'
 
 module LicentivoLaunch
-  VERSION = '0.1.2'
+  VERSION = '0.1.4'
   LIMIT = 1 << 20
   UUID = /\A[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\z/
   class Error < StandardError
@@ -163,12 +163,13 @@ module LicentivoLaunch
       @store, @transport = store, transport || LicentivoLaunch.method(:default_transport)
       @factory = runtime_factory || lambda do |config|
         require_relative 'licentivo_launch/vendor/licentivo'
-        raise Error.new('SDK_VERSION_MISMATCH') unless Licentivo::VERSION == '0.11.1'
+        raise Error.new('SDK_VERSION_MISMATCH') unless Licentivo::VERSION == '0.11.2'
         Licentivo::Client.new(config)
       end
       @root = File.expand_path(cache_dir || File.join(Dir.home, '.cache', 'LicentivoLaunch'))
-      @scope = ['launch-session-v1', @launch['merchant_origin'], @launch['launch_product_id'], @launch['licentivo_product_id'], @launch['environment']].join("\n")
+      @scope = ['launch-account-v2', @launch['merchant_origin'], @launch['launch_product_id'], @launch['licentivo_product_id'], @launch['environment']].join("\n")
       @lock, @closed, @in_callback, @attempts = Monitor.new, false, false, pending_attempts
+      @account_cleared = false
       @wait = sleep || lambda { |seconds, cancellation| (seconds * 10).ceil.times { cancellation&.check!; Kernel.sleep(0.1) }; cancellation&.check! }
     end
     def self.connect(merchant_origin, product_id, licentivo_product_id, trusted_keys, environment: 'live', **options)
@@ -177,23 +178,33 @@ module LicentivoLaunch
     end
     def self.from_files(launch_path, product_path, **options) = new(*LicentivoLaunch.load_config(launch_path, product_path), **options)
     def login(email, password, cancellation: nil)
-      serial do
-        cancellation&.check!; logout_internal(cancellation)
+      account_serial do
+        cancellation&.check!; raise Error.new('LOGOUT_PENDING') unless logout_internal(cancellation)
         grant = call('/auth/login', method: 'POST', body: { email: email, password: password, kind: 'desktop' }, cancellation: cancellation)
-        @record = { 'version' => 1, 'scope' => @scope, 'user' => grant['user'], 'token' => grant['access_token'], 'expires_at' => grant['expires_at'] }
+        @record = { 'version' => 2, 'scope' => @scope, 'user' => grant['user'], 'token' => grant['access_token'], 'expires_at' => grant['expires_at'] }
+        @account_cleared = false
         begin
           raise Error.new('INVALID_SESSION') unless valid_identity?(@record) && expiry(@record) > Time.now
           @record['credential'] = credential(cancellation)
-          state = start_runtime(false, cancellation); @store.save(@scope, @record); state
-        rescue StandardError
-          logout_internal(nil); raise
+          state = start_runtime(false, cancellation); @store.save(@scope, @record.merge('credential' => @record['credential'].select { |key, _| %w[product_id licentivo_product_id launch_connection_id environment expires_at].include?(key) })); state
+        rescue StandardError => original
+          begin; logout_internal(nil); rescue StandardError; end
+          raise original
         end
       end
     end
     def restore(cancellation: nil)
-      serial do
-        cancellation&.check!; stop; @record = saved
+      account_serial do
+        cancellation&.check!; stop; @record = @record&.dig('logout_pending') ? @record : saved
+        task = pending_accounts.find { |record| !@record || record['token'] == @record['token'] }
+        @record = task if task
         next nil unless @record
+        @record = @record.merge('version'=>3,'logout_pending'=>true) if has_intent?(@record)
+        if @record['logout_pending']
+          raise Error.new('ACCOUNT_LOGOUT_PENDING') unless logout_internal(cancellation)
+          next nil
+        end
+        retry_other_accounts(@record['token'], cancellation)
         if expiry(@record) <= Time.now
           clear; raise Error.new('SESSION_EXPIRED')
         end
@@ -203,12 +214,12 @@ module LicentivoLaunch
           @record['credential'] = credential(cancellation); @record['user'] = me['user']
         rescue Error => e
           cancellation&.check!
-          next start_runtime(true, cancellation) if e.code == 'NETWORK_UNAVAILABLE' || (500..599).cover?(e.status)
+
           clear if e.code != 'ENTITLEMENT_PENDING' && ([401, 403, 404].include?(e.status) || %w[SESSION_EXPIRED SESSION_MISMATCH ENTITLEMENT_EXPIRED ENTITLEMENT_SUSPENDED ENTITLEMENT_NOT_PURCHASED].include?(e.code))
           raise
         end
         begin
-          state = start_runtime(false, cancellation); @store.save(@scope, @record); state
+          state = start_runtime(false, cancellation); @store.save(@scope, @record.merge('credential' => @record['credential'].select { |key, _| %w[product_id licentivo_product_id launch_connection_id environment expires_at].include?(key) })); state
         rescue StandardError
           clear; raise
         end
@@ -226,28 +237,50 @@ module LicentivoLaunch
         end
       end
     end
-    def logout(cancellation: nil) = serial { logout_internal(cancellation) }
+    def logout(cancellation: nil)
+      account_serial(true) { if @account_cleared && !@record; retry_other_accounts(nil,cancellation);true;else;logout_internal(cancellation);end }
+    end
     def release_device(cancellation: nil)
-      serial do
-        cancellation&.check!
-        raise Error.new('LOGIN_REQUIRED') unless @runtime
-        begin
-          @runtime.deactivate; cancellation&.check!
-        ensure
-          logout_internal(cancellation)
-        end
-      end
+      logout(cancellation: cancellation)
     end
     def close
+      pending = false
       @lock.synchronize do
         raise Error.new('WORKFLOW_BUSY') if @in_callback
         return if @closed
         @closed = true
+        pending = @record&.dig('logout_pending')
         begin; stop; ensure; @record = nil; end
       end
     end
 
     private
+    def account_serial(logout = false)
+      serial do
+        begin
+        begin; remember_intent(@record) if logout && @record; rescue SystemCallError, IOError; end
+        root = File.join(Dir.home, '.cache', 'LicentivoLaunch', 'account-locks', 'ruby')
+        FileUtils.mkdir_p(root, mode: 0o700)
+        File.open(File.join(root, Digest::SHA256.hexdigest(@scope) + '.lock'), File::RDWR | File::CREAT, 0o600) do |file|
+          deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 5
+          until file.flock(File::LOCK_EX | File::LOCK_NB)
+            raise Error.new('ACCOUNT_LOCK_BUSY') if Process.clock_gettime(Process::CLOCK_MONOTONIC) >= deadline
+            Kernel.sleep(0.02)
+          end
+          begin; yield; ensure; file.flock(File::LOCK_UN); end
+        end
+        rescue StandardError
+          if logout
+            if @runtime
+              begin; @runtime.respond_to?(:logout) ? @runtime.logout : @runtime.deactivate; rescue StandardError; end
+            end
+            stop
+            @record = @record.merge('version' => 3, 'logout_pending' => true) if @record
+          end
+          raise
+        end
+      end
+    end
     def serial
       @lock.synchronize do
         raise Error.new('APPLICATION_CLOSED') if @closed
@@ -258,18 +291,19 @@ module LicentivoLaunch
     def cache(record) = File.join(@root, Digest::SHA256.hexdigest(@scope), Digest::SHA256.hexdigest(record.dig('user', 'id')), 'lease.json')
     def expiry(record) = Time.iso8601(record['expires_at'])
     def valid_identity?(record)
-      record.is_a?(Hash) && record['version'] == 1 && record['scope'] == @scope && record['user'].is_a?(Hash) && UUID.match?(record.dig('user', 'id').to_s) && record['token'].is_a?(String) && record['token'].match?(/\A[A-Za-z0-9_-]{43}\z/) && record['expires_at'].is_a?(String) && record['expires_at'].match?(/(?:Z|[+-]\d\d:\d\d)\z/) && expiry(record)
+      record.is_a?(Hash) && record['version'] == 2 && record['scope'] == @scope && record['user'].is_a?(Hash) && UUID.match?(record.dig('user', 'id').to_s) && record['token'].is_a?(String) && record['token'].match?(/\A[A-Za-z0-9_-]{43}\z/) && record['expires_at'].is_a?(String) && record['expires_at'].match?(/(?:Z|[+-]\d\d:\d\d)\z/) && expiry(record)
     rescue ArgumentError, TypeError
       false
     end
     def saved
       record = @store.load(@scope)
-      if record && !(valid_identity?(record) && record['credential'].is_a?(Hash) && record.dig('credential', 'product_id') == @launch['launch_product_id'] && record.dig('credential', 'license_key').is_a?(String) && !record.dig('credential', 'license_key').empty?)
+      if record.is_a?(Hash) && record['logout_pending'] == true && [2, 3].include?(record['version']) && record['scope'] == @scope && record['token'].is_a?(String) && !record['token'].empty?
+        return record
+      end
+      if record && !(valid_identity?(record) && record['credential'].is_a?(Hash) && record.dig('credential', 'product_id') == @launch['launch_product_id'] && UUID.match?(record.dig('credential', 'launch_connection_id').to_s) && !record.dig('credential', 'identity_token'))
         clear(record); raise Error.new('INVALID_SAVED_SESSION')
       end
       record
-    rescue StandardError
-      @store.delete(@scope); raise
     end
     def call(path, method: 'GET', body: nil, cancellation: nil, token: @record&.fetch('token', nil))
       cancellation&.check!
@@ -295,29 +329,18 @@ module LicentivoLaunch
       data['data']
     end
     def credential(cancellation)
-      @attempts.times do |attempt|
-        begin
-          value = call("/software/products/#{@launch['launch_product_id']}/credential", method: 'POST', body: { environment: @launch['environment'] }, cancellation: cancellation)
-          raise Error.new('CREDENTIAL_MISMATCH') unless value['product_id'] == @launch['launch_product_id'] && value['license_key'].is_a?(String) && !value['license_key'].empty? && value['version'].is_a?(Integer) && value['version'] >= 1
-          return value
-        rescue Error => e
-          raise unless e.status == 403 && e.code == 'ENTITLEMENT_PENDING' && attempt + 1 < @attempts && e.retry_after_seconds <= 30
-          @wait.call([3, e.retry_after_seconds].max, cancellation); cancellation&.check!
-        end
-      end
+      value = call("/software/products/#{@launch['launch_product_id']}/identity", method: 'POST', body: { environment: @launch['environment'] }, cancellation: cancellation)
+      raise Error.new('IDENTITY_MISMATCH') unless value['product_id'] == @launch['launch_product_id'] && value['licentivo_product_id'] == @product['product_id'] && value['environment'] == @launch['environment'] && UUID.match?(value['launch_connection_id'].to_s) && value['identity_token'].is_a?(String) && value['identity_token'].length.between?(32, 12288)
+      value
     end
     def start_runtime(offline, cancellation)
       cancellation&.check!
       path = cache(@record); FileUtils.mkdir_p(File.dirname(path), mode: 0o700)
-      runtime = @factory.call(@product.merge('license_key' => @record.dig('credential', 'license_key'), 'cache_path' => path))
+      context = @record.fetch('credential')
+      runtime = @factory.call(@product.merge('license_key' => '', 'identity_token' => context.fetch('identity_token', ''), 'launch_connection_id' => context.fetch('launch_connection_id'), 'environment' => @launch['environment'], 'cache_path' => path))
       begin
-        cancellation&.check!
-        if offline
-          state = runtime.status
-          raise Error.new('OFFLINE_UNAVAILABLE') unless state['allowed'] == true && state['state'] == 'offline_valid'
-        end
-        runtime.start; cancellation&.check!; @runtime = runtime
-        { user: JSON.parse(JSON.generate(@record['user'])), expires_at: @record['expires_at'], offline_fallback: offline }
+        runtime.start; cancellation&.check!; @runtime = runtime; @account_cleared=false
+        { user: JSON.parse(JSON.generate(@record['user'])), expires_at: @record['expires_at'] }
       rescue StandardError
         runtime.close; raise
       end
@@ -327,26 +350,109 @@ module LicentivoLaunch
       runtime&.close
     end
     def clear(record = @record)
-      begin
-        stop
-      ensure
-        @record = nil
+      begin; stop; ensure; @record = nil; @account_cleared=true;delete_owned(record) if record; end
+    end
+    def queue_key = @scope + "\naccount-logout-queue-v1"
+    def intent_path(record)=File.join(Dir.home,'.cache','LicentivoLaunch','account-intents','ruby',Digest::SHA256.hexdigest(@scope)+'.'+Digest::SHA256.hexdigest(record['token'])+'.signedout')
+    def remember_intent(record)
+      path=intent_path(record);FileUtils.mkdir_p(File.dirname(path),mode:0o700)
+      File.open(path,File::WRONLY|File::CREAT,0o600){|file|file.write('1');file.flush;file.fsync}
+    end
+    def has_intent?(record)
+      File.stat(intent_path(record));true
+    rescue Errno::ENOENT
+      false
+    end
+    def pending_accounts
+      queue = @store.load(queue_key)
+      return [] unless queue
+      unless queue.is_a?(Hash) && queue['version'] == 1 && queue['records'].is_a?(Array) && queue['records'].length <= 64 && queue['records'].all? { |record| record.is_a?(Hash) && record['logout_pending'] == true && record['version'] == 3 && record['scope'] == @scope && record['token'].is_a?(String) && !record['token'].empty? && !record.dig('credential', 'identity_token') }
+        raise Error.new('INVALID_SAVED_SESSION')
+      end
+      queue['records']
+    end
+    def update_pending(record, remove: false)
+      records = pending_accounts.reject { |value| value['token'] == record['token'] }
+      unless remove
+        public_record = record.merge('version' => 3, 'logout_pending' => true, 'credential' => (record['credential'] || {}).select { |key, _| %w[product_id licentivo_product_id launch_connection_id environment expires_at].include?(key) })
+        records << public_record
+      end
+      raise Error.new('ACCOUNT_LOGOUT_QUEUE_FULL') if records.length > 64 || JSON.generate({ 'version' => 1, 'records' => records }).bytesize > 60000
+      records.empty? ? @store.delete(queue_key) : @store.save(queue_key, { 'version' => 1, 'records' => records })
+    end
+    def owns?(record)
+      active = @store.load(@scope)
+      record && active && active['token'] == record['token']
+    end
+    def delete_owned(record)
+      @store.delete(@scope) if owns?(record)
+    end
+    def mark_logout(record)
+      begin;remember_intent(record);rescue SystemCallError, IOError;end
+      queue_failure = nil
+      begin; update_pending(record); rescue StandardError => error; queue_failure = error; end
+      if owns?(record)
         begin
-          @store.delete(@scope)
-        ensure
-          FileUtils.rm_rf(File.dirname(cache(record))) if record.is_a?(Hash) && record['user'].is_a?(Hash) && UUID.match?(record.dig('user', 'id').to_s)
+          stored = record.merge('credential' => (record['credential'] || {}).select { |key, _| %w[product_id licentivo_product_id launch_connection_id environment expires_at].include?(key) })
+          @store.save(@scope, stored)
+          return
+        rescue StandardError
+          begin; delete_owned(record); rescue StandardError; end
         end
+      end
+      raise Error.new('ACCOUNT_LOGOUT_STORAGE_FAILED') if queue_failure
+    end
+    def finish_account(record)
+      delete_owned(record)
+      update_pending(record, remove: true)
+      begin;File.unlink(intent_path(record));rescue Errno::ENOENT;end
+    end
+    def retry_other_accounts(skip, cancellation)
+      pending_accounts.each do |record|
+        next if record['token'] == skip
+        begin; call('/auth/logout', method: 'POST', body: {}, cancellation: cancellation, token: record['token'])
+        rescue StandardError => error
+          raise Error.new('ACCOUNT_LOGOUT_PENDING') unless error.is_a?(Error) && error.status == 401
+        end
+        finish_account(record)
       end
     end
     def logout_internal(cancellation)
-      record = @record || saved
-      clear(record)
-      return true unless record
-      begin
-        call('/auth/logout', method: 'POST', body: {}, cancellation: cancellation, token: record['token']); true
-      rescue StandardError
-        false
+      record = @record || saved || pending_accounts.first
+      failure, persist_failure, other_failure, pending, confirmed = nil, nil, nil, false, true
+      begin; retry_other_accounts(record && record['token'], cancellation); rescue StandardError => error; other_failure = error; end
+      if record
+        @record = record.merge('version' => 3, 'logout_pending' => true)
+        record = @record
+        begin; mark_logout(record); rescue StandardError => error; persist_failure = error; end
       end
+      begin
+        active = @store.load(@scope)
+        if !@runtime && record && (!active || active['token'] == record['token']) && record['credential'].is_a?(Hash) && record['credential']['launch_connection_id']
+          context = record.fetch('credential')
+          @runtime = @factory.call(@product.merge('license_key' => '', 'identity_token' => '', 'launch_connection_id' => context.fetch('launch_connection_id'), 'environment' => @launch['environment'], 'cache_path' => cache(record)))
+        end
+        if @runtime
+          result = @runtime.respond_to?(:logout) ? @runtime.logout : @runtime.deactivate
+          pending = (@runtime.respond_to?(:logout_pending?) && @runtime.logout_pending?) || (result.is_a?(Hash) && (result[:revocation_pending] || result['revocation_pending']))
+          raise Error.new('SDK_LOGOUT_STORAGE_FAILED') if result.is_a?(Hash) && (result[:storage_error] || result['storage_error'])
+        end
+      rescue StandardError => error
+        failure = error
+      ensure
+        stop
+      end
+      if record
+        begin; call('/auth/logout', method: 'POST', body: {}, cancellation: cancellation, token: record['token']); rescue StandardError => error; confirmed = error.is_a?(Error) && error.status == 401; end
+      end
+      if confirmed
+        finish_account(record) if record
+        clear(record)
+      end
+      raise persist_failure if !confirmed && persist_failure
+      raise failure if failure
+      raise other_failure if other_failure
+      confirmed && !pending
     end
   end
 end

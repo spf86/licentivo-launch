@@ -1,14 +1,14 @@
 [package]
 name = "licentivo-launch"
-version = "0.1.2"
+version = "0.1.4"
 edition = "2021"
 rust-version = "1.85"
 readme = "README.md"
 license = "MIT"
 description = "Launch account lifecycle with official Licentivo runtime authorization"
 repository = "https://github.com/spf86/licentivo-launch-sdk"
-homepage = "https://github.com/spf86/licentivo-launch-sdk"
-documentation = "https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/manual-integration.md"
+homepage = "https://www.licentivo.com/en/launch.html"
+documentation = "https://www.licentivo.com/en/launch-docs.html"
 keywords = ["licentivo", "launch", "licensing", "authentication", "sdk"]
 categories = ["authentication"]
 include = ["src/**", "tests/**", "build.rs", "Cargo.toml", "Cargo.package.lock", "README.md", "LICENSE", "vendor/**"]

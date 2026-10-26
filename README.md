@@ -32,6 +32,7 @@ The customer website has ten locales. The administration interface currently use
 | Customer accounts | Direct email/password registration without a mail provider, optional required email verification, password recovery, confirmed email changes, and revocable sessions |
 | Payments | Stripe, PayPal, Waffo Payment API, and Paddle Billing; verified callbacks, payment queries, full refunds, and interrupted-operation recovery |
 | Licensing | One encrypted Licentivo management connection, product/policy discovery, versioned plan mappings, license issuance, renewals, policy changes, suspension, and device release |
+| Custom licensing | Choose Licentivo or a merchant-owned HTTP licensing service per product/environment; signed purchase snapshots, durable receipt recovery, and owned license/activation/instructions delivery |
 | Entitlements | Per-account/product/payment-environment isolation, perpetual and fixed-term plans, UTC calendar terms, paid coverage ledger, renewal and upgrade quotes |
 | Reliability | Persistent payment and licensing events, task leases, stable request identifiers, retries, reconciliation, and recovery of interrupted remote operations |
 | Administration | Customer and order management, separate administrator/operator/support roles, audit records, CSV exports, and encrypted backup/restore |
@@ -56,14 +57,14 @@ Licentivo receives the data required for licensing, such as opaque customer refe
 
 ## Install the release package
 
-Download the package for your server from [GitHub Releases](https://github.com/spf86/licentivo-launch/releases/tag/v0.3.0-beta) and extract it. **Running the package requires MySQL 8.0.16+; Go, Git, Node.js and a compiler are not required.**
+Download the package for your server from [GitHub Releases](https://github.com/spf86/licentivo-launch/releases/tag/v0.3.1-beta) and extract it. **Running the package requires MySQL 8.0.16+; Go, Git, Node.js and a compiler are not required.**
 
 | Server | Package |
 | --- | --- |
-| Windows, Intel/AMD x64 | [windows_amd64.zip](https://github.com/spf86/licentivo-launch/releases/download/v0.3.0-beta/licentivo-launch_0.3.0-beta_windows_amd64.zip) |
-| Windows, ARM64 | [windows_arm64.zip](https://github.com/spf86/licentivo-launch/releases/download/v0.3.0-beta/licentivo-launch_0.3.0-beta_windows_arm64.zip) |
-| Linux, Intel/AMD x64 | [linux_amd64.tar.gz](https://github.com/spf86/licentivo-launch/releases/download/v0.3.0-beta/licentivo-launch_0.3.0-beta_linux_amd64.tar.gz) |
-| Linux, ARM64 | [linux_arm64.tar.gz](https://github.com/spf86/licentivo-launch/releases/download/v0.3.0-beta/licentivo-launch_0.3.0-beta_linux_arm64.tar.gz) |
+| Windows, Intel/AMD x64 | [windows_amd64.zip](https://github.com/spf86/licentivo-launch/releases/download/v0.3.1-beta/licentivo-launch_0.3.1-beta_windows_amd64.zip) |
+| Windows, ARM64 | [windows_arm64.zip](https://github.com/spf86/licentivo-launch/releases/download/v0.3.1-beta/licentivo-launch_0.3.1-beta_windows_arm64.zip) |
+| Linux, Intel/AMD x64 | [linux_amd64.tar.gz](https://github.com/spf86/licentivo-launch/releases/download/v0.3.1-beta/licentivo-launch_0.3.1-beta_linux_amd64.tar.gz) |
+| Linux, ARM64 | [linux_arm64.tar.gz](https://github.com/spf86/licentivo-launch/releases/download/v0.3.1-beta/licentivo-launch_0.3.1-beta_linux_arm64.tar.gz) |
 
 `amd64` works on compatible Intel and AMD 64-bit processors. Choose the package for the machine hosting Launch. Customer installer platforms are configured separately in the storefront. Prebuilt server packages are currently provided for Windows and Linux.
 
@@ -90,7 +91,16 @@ Change `database_dsn` in `config.yaml` to match your database, for example:
 launch:YOUR_DATABASE_PASSWORD@tcp(127.0.0.1:3306)/launch?parseTime=true&loc=UTC&charset=utf8mb4
 ```
 
-Save the file. `init` has already generated and saved the instance master key. Keep that key and the configuration for future starts and upgrades. The command refuses to overwrite an existing configuration.
+To choose your own initial administrator, set these values in `config.yaml` **before the first `serve` against an uninitialized database**, replacing the example values:
+
+```yaml
+admin_email: "owner@example.com"
+admin_password: "REPLACE_WITH_A_UNIQUE_12_TO_128_BYTE_PASSWORD"
+```
+
+Leave these fields empty to use the built-in initial credentials below. Nonempty `LAUNCH_ADMIN_EMAIL` / `LAUNCH_ADMIN_PASSWORD` process variables override the corresponding YAML fields.
+
+Save the file. `init` generates the configuration and instance master key; it does not connect to MySQL or create an administrator. Keep that key and the configuration for future starts and upgrades. The command refuses to overwrite an existing configuration.
 
 ### 2. Start Launch
 
@@ -108,14 +118,20 @@ Save the file. `init` has already generated and saved the instance master key. K
 
 ### 3. Sign in and change the initial password
 
-Open **http://localhost:18080/#/login** on the machine running Launch:
+With the configuration generated by `init`, open **http://localhost:18080/#/login** on the machine running Launch. The first `serve` against an uninitialized database creates one administrator. **Only when no initial-account overrides are set**, its credentials are:
 
-| Field | Initial value |
+| Field | Built-in initial value |
 | --- | --- |
 | Email | `admin@example.com` |
-| Password | `LaunchAdmin123!` |
+| Initial password | `LaunchAdmin123!` |
 
-Enter a different password of 12–128 bytes in the required first-login form, save, and sign in again. Complete this local step before exposing the site publicly. Existing installations keep their accounts and passwords.
+If you configured your own initial email or password, use those values instead. Account creation prints the selected credentials in the server terminal. The default password is a fixed bootstrap value, not a randomly generated password or the instance master key.
+
+Enter a different password of 12–128 bytes in the required first-login form, save, and sign in again. This change is required even for a custom initial password; administration and desktop sessions remain blocked until it is complete. Complete this local step before exposing the site publicly.
+
+**Existing installations keep their accounts and passwords.** Changing `admin_email` / `admin_password`, setting their environment overrides, restarting, or upgrading does not reset an installed account. If the initial credentials fail, check your existing account, selected configuration, environment overrides, and database; see [login troubleshooting](docs/installation.md#health-and-troubleshooting).
+
+`init` selects port **18080**. The built-in listener/public URL values when absent from configuration, and the development Compose template, use **8080**. If you changed these settings, use the configured address. For a remote server, `localhost` refers to the machine running the browser; see [remote first login](docs/installation.md#first-login-on-a-remote-server).
 
 To start again later, open the same extracted folder and run `serve`. Keep `config.yaml`, `.local`, the original master key, MySQL data and uploaded files when replacing the executable.
 
@@ -134,6 +150,8 @@ After installation, configure the services through the administration area:
 | HTTPS | Secure public origin and callbacks | [Certificates and HTTPS](docs/ssl-https.md) |
 
 Use a Licentivo management key with product/policy read access and license write access. There is one Licentivo connection shared by Launch's test and live payment modes. The Licentivo service origin is fixed to `https://www.licentivo.com`.
+
+Merchants with an existing licensing system can instead select **System settings → 授权选择与自定义 → 自定义授权服务**. This mode works without configuring Licentivo. The merchant service implements the [external licensing protocol and integration flow](docs/external-licensing.md), with a separate [OpenAPI specification](docs/external-licensing-openapi.json) and [Python adapter example](examples/custom-licensing/README.md). Launch handles verified purchases and delivery; the merchant retains its own license generation, activation and runtime SDK. Existing orders cannot be silently switched to another provider.
 
 See [external service setup](docs/external-services.md) for the account preparation checklist. Store real credentials only in your private server configuration or the authenticated administration area.
 
@@ -203,9 +221,11 @@ Database integration tests are skipped unless explicitly configured. The Windows
 
 ## Application integration examples
 
+The nine-language Launch application packages below use Licentivo. Custom licensing products use the merchant's own SDK and the [external licensing integration flow](docs/external-licensing.md).
+
 See the public [installation and development documentation](https://www.licentivo.com/launch-docs.html), [manual nine-language guide](docs/manual-integration.md), [examples/README.md](examples/README.md) and [application integration guide](docs/software-sdk-integration.md). Launch automatically fills the current merchant address and existing product data into direct connection code and English AI prompts. No manual product-ID entry or configuration-file generation is required. Install only the Launch package for your language. Each package embeds the pinned official SDK and manages its adapter and SDK linking. The server itself does not depend on the client packages.
 
-The administration **程序接入 → 接入检查与代码** page reads the current merchant address, existing product mapping and signing public keys, validates them, and provides a ready-to-use connection function for each language. Start with the [manual nine-language guide](docs/manual-integration.md), [Chinese quick start](docs/application-quickstart.zh-CN.md), [versioned integration packages](docs/integration-packages.md), and [automated/external acceptance workflow](docs/acceptance.md). Launch SDK 0.1.2 embeds official SDK 0.11.1, including the C/C++ CMake curl dependency compatibility fix; its licensing protocol and client API are unchanged. The separate [Launch SDK repository](https://github.com/spf86/licentivo-launch-sdk) has published the GitHub release, with **9/9 public installation checks passed** for Go, Python, C#, Java, Node.js/TypeScript, Rust, Ruby, C and C++. Maven Central and all other language registries are publicly available; consult the [versioned publication record](sdk/release/docs/publication-0.1.2.md) and [public installation evidence](https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/registry-verification.json). External merchant/payment/licensing acceptance remains deferred until its environment is configured.
+The administration **程序接入 → 接入检查与代码** page reads the current merchant address, existing product mapping and signing public keys, validates them, and provides a ready-to-use connection function for each language. Start with the [manual nine-language guide](docs/manual-integration.md), [Chinese quick start](docs/application-quickstart.zh-CN.md), [versioned integration packages](docs/integration-packages.md), and [automated/external acceptance workflow](docs/acceptance.md). Launch SDK 0.1.3 embeds official SDK 0.11.2, including the C/C++ CMake curl dependency compatibility fix; its licensing protocol and client API are unchanged. The separate [Launch SDK repository](https://github.com/spf86/licentivo-launch-sdk) has published the GitHub release, with **9/9 public installation checks passed** for Go, Python, C#, Java, Node.js/TypeScript, Rust, Ruby, C and C++. Maven Central and all other language registries are publicly available; consult the [versioned publication record](sdk/release/docs/publication-0.1.3.md) and [public installation evidence](https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/registry-verification.json). External merchant/payment/licensing acceptance remains deferred until its environment is configured.
 
 **运营工具 → AI 快速接入** generates an English prompt from your language, platform, project type and protected feature. Select the existing software and environment to include the automatically filled direct initialization code, or generate a clearly marked unconfigured draft. The prompt includes the exact versioned package-manager command or GitHub download, links to the language README and integration guides, the `Connect/connect → Login/Restore → RunFeature` lifecycle, and an acceptance checklist. No configuration files or manual internal product-ID entry are required. Copy or download the prompt for your own AI coding tool; Launch never automatically sends it to an AI service, and excludes passwords, license credentials, sessions, management keys, payment keys and server configuration. See [AI integration](docs/ai-integration.md).
 
@@ -234,6 +254,7 @@ docs/                          Installation, configuration, contracts, and recor
 
 - [Installation and operations](docs/installation.md)
 - [Configuration reference](docs/configuration.md)
+- [Custom licensing API and integration flow](docs/external-licensing.md)
 - [External services](docs/external-services.md)
 - [Product requirements](Licentivo%20Launch.md)
 - [Development progress and open work](docs/progress.md)

@@ -67,6 +67,17 @@ type User struct {
 	Email    string `json:"email"`
 	Verified bool   `json:"verified"`
 }
+
+// Identity is an ephemeral account assertion and public routing context.
+// It is not a license, grant, feature list or authorization decision.
+type Identity struct {
+	ProductID          string    `json:"product_id"`
+	LicentivoProductID string    `json:"licentivo_product_id"`
+	LaunchConnectionID string    `json:"launch_connection_id"`
+	Environment        string    `json:"environment"`
+	IdentityToken      string    `json:"identity_token,omitempty"`
+	ExpiresAt          time.Time `json:"expires_at"`
+}
 type Credential struct {
 	ProductID  string     `json:"product_id"`
 	LicenseKey string     `json:"license_key"`
@@ -179,19 +190,21 @@ func (c *Client) CurrentUser(ctx context.Context) (User, error) {
 	err := c.call(ctx, "GET", "/me", nil, &result)
 	return result.User, err
 }
+
+// Credential is retained only to report the removed legacy protocol.
 func (c *Client) Credential(ctx context.Context, product, environment string) (Credential, error) {
-	if !productIDPattern.MatchString(product) {
-		return Credential{}, errors.New("invalid product identifier")
+	return Credential{}, errors.New("long-term license credentials are no longer supplied by Launch; use Identity")
+}
+func (c *Client) Identity(ctx context.Context, product, environment string) (Identity, error) {
+	if !productIDPattern.MatchString(product) || (environment != "live" && environment != "sandbox") {
+		return Identity{}, errors.New("invalid identity context")
 	}
-	if environment != "sandbox" && environment != "live" {
-		return Credential{}, errors.New("environment must be sandbox or live")
+	var out Identity
+	e := c.call(ctx, "POST", "/software/products/"+product+"/identity", map[string]string{"environment": environment}, &out)
+	if e == nil && (out.ProductID != product || out.Environment != environment || !productIDPattern.MatchString(out.LicentivoProductID) || !productIDPattern.MatchString(out.LaunchConnectionID) || len(out.IdentityToken) < 32 || len(out.IdentityToken) > 12288 || !out.ExpiresAt.After(time.Now())) {
+		return Identity{}, ErrInvalidResponse
 	}
-	var result Credential
-	err := c.call(ctx, "POST", "/software/products/"+product+"/credential", map[string]string{"environment": environment}, &result)
-	if err == nil && (result.ProductID != product || result.LicenseKey == "") {
-		return Credential{}, errors.New("credential belongs to a different product")
-	}
-	return result, err
+	return out, e
 }
 
 func retryAfter(value string, now time.Time) time.Duration {

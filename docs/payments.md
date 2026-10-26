@@ -6,6 +6,8 @@ Stripe hosted Checkout, PayPal Orders/Capture, Waffo Payment API, and Paddle Bil
 
 The merchant owns the payment accounts. Each payment account binds `provider`, `environment`, and `merchant_ref`. Transactions and events are deduplicated within the payment account rather than by a global event identifier alone.
 
+Only one payment account can be enabled in each environment. Verifying and saving a provider enables that account and disables every other account in the same environment in one transaction; sandbox and live selections are independent. Failed verification preserves the current provider. Existing orders, webhooks and refunds continue to use their original account and credentials. On upgrade, legacy environments with several enabled accounts retain only the most recently verified account.
+
 `sandbox` and `live` distinguish payment environments. They do not switch the Licentivo service; a plan's license mapping is shared across both modes.
 
 The server creates price and entitlement snapshots from published plan versions. Amounts are integers in currency minor units. Historical baseline tests use USD. Validate supported currencies and decimal places in each adapter; do not assume every currency has two decimal places. PayPal decimal strings must convert exactly to/from integer minor units.

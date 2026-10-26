@@ -92,15 +92,16 @@ type ProductView struct {
 	Downloads []ProductDownloadView `json:"downloads"`
 }
 type PlanSnapshot struct {
-	OfflineMode      string   `json:"offline_mode"`
-	HeartbeatSeconds uint64   `json:"heartbeat_seconds"`
-	OfflineSeconds   uint64   `json:"offline_seconds"`
-	SessionSeconds   uint64   `json:"session_seconds"`
-	SelfReleaseLimit uint64   `json:"self_release_limit"`
-	Features         []string `json:"features"`
-	MaxDevices       uint64   `json:"max_devices"`
-	LicenseModel     string   `json:"license_model"`
-	OfflineSummary   string   `json:"offline_summary"`
+	External         *ExternalSaleRoute `json:"external_licensing,omitempty"`
+	OfflineMode      string             `json:"offline_mode"`
+	HeartbeatSeconds uint64             `json:"heartbeat_seconds"`
+	OfflineSeconds   uint64             `json:"offline_seconds"`
+	SessionSeconds   uint64             `json:"session_seconds"`
+	SelfReleaseLimit uint64             `json:"self_release_limit"`
+	Features         []string           `json:"features"`
+	MaxDevices       uint64             `json:"max_devices"`
+	LicenseModel     string             `json:"license_model"`
+	OfflineSummary   string             `json:"offline_summary"`
 }
 type PlanMarketing struct {
 	Summary    string   `json:"summary"`
@@ -363,6 +364,16 @@ func (s *Service) Site(ctx context.Context, environment, productSlug, requestedL
 		}
 		v.Published = true
 		v.PreviewOnly = publication.PreviewOnly
+		binding, bindingErr := s.productLicensing(s.db.WithContext(ctx), plan.ProductID, environment)
+		if bindingErr != nil {
+			return view, ErrStorage
+		}
+		if binding.Provider == CustomLicensing {
+			v.Snapshot.LicenseModel = "external"
+			v.Snapshot.MaxDevices = 0
+			v.Snapshot.Features = []string{}
+			v.Snapshot.OfflineMode = "external"
+		}
 		if !publication.PreviewOnly && plan.AllowPurchase {
 			view.SalesEnabled = true
 		}
@@ -732,34 +743,73 @@ func (s *Service) PublishPlan(ctx context.Context, p Principal, planID, versionI
 		return databaseError(err)
 	}
 	previewOnly := true
+	binding, bindingErr := s.productLicensing(s.db.WithContext(ctx), candidate.ProductID, environment)
+	if bindingErr != nil {
+		return databaseError(bindingErr)
+	}
+	if binding.Provider == CustomLicensing {
+		return s.publishExternalPlan(ctx, p, candidate, environment)
+	}
 	var mapping storage.PlanLicenseMapping
 	var connection storage.LicentivoConnection
 	if s.db.WithContext(ctx).First(&mapping, "plan_version_id = ?", versionID).Error == nil && s.db.WithContext(ctx).First(&connection, "id = ?", mapping.ConnectionID).Error == nil {
-		client, err := s.licensingProvider(ctx, connection)
-		if err == nil {
-			caps, err := client.Capabilities(ctx)
-			var accounts int64
-			policyErr := checkPolicy(ctx, client, candidate, mapping, "")
-			if err == nil && caps.ValidateSales() == nil && policyErr == nil && s.db.WithContext(ctx).Model(&storage.PaymentAccount{}).Where("environment = ? AND enabled = true", environment).Count(&accounts).Error == nil && accounts > 0 {
-				previewOnly = false
-			}
+		var product storage.Product
+		if err := s.db.WithContext(ctx).First(&product, "id = ?", candidate.ProductID).Error; err != nil {
+			return databaseError(err)
+		}
+		remoteProduct, err := productRemoteID(s.db.WithContext(ctx), product, "")
+		if err != nil {
+			return databaseError(err)
+		}
+		if remoteProduct != "" && remoteProduct != mapping.RemoteProductID {
+			return productMappingConflict()
+		}
+		var accounts int64
+		if s.registerLaunchPlan(ctx, environment, candidate, mapping, true) == nil && s.db.WithContext(ctx).Model(&storage.PaymentAccount{}).Where("environment = ? AND enabled = true", environment).Count(&accounts).Error == nil && accounts > 0 {
+			previewOnly = false
 		}
 	}
+
 	if environment == "live" && previewOnly {
 		return problem(409, "SALES_CONNECTION_REQUIRED", "正式发布前，请配置正式收款，并为套餐选择可自动发放的 Licentivo 授权")
 	}
 	return databaseError(s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var plan storage.Plan
+		if _, err := lockProviderSettings(tx, "SHARE"); err != nil {
+			return err
+		}
 		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&plan, "id = ?", planID).Error; err != nil {
 			return err
 		}
 		var version storage.PlanVersion
-		if err := tx.First(&version, "id = ? AND plan_id = ?", versionID, planID).Error; err != nil {
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&version, "id = ? AND plan_id = ?", versionID, planID).Error; err != nil {
 			return err
 		}
+		if mapping.PlanVersionID != "" {
+			var current storage.PlanLicenseMapping
+			if tx.First(&current, "plan_version_id = ?", versionID).Error != nil || current.ConnectionID != mapping.ConnectionID || current.RemoteProductID != mapping.RemoteProductID || current.RemotePolicyID != mapping.RemotePolicyID || current.RemotePolicyVersion != mapping.RemotePolicyVersion {
+				return problem(409, "MAPPING_CHANGED", "套餐映射刚刚更新，请核对后重新发布")
+			}
+		}
 		var product storage.Product
-		if err := tx.First(&product, "id = ? AND status = 'published'", plan.ProductID).Error; err != nil {
+		if err := tx.Clauses(clause.Locking{Strength: "SHARE"}).First(&product, "id = ? AND status = 'published'", plan.ProductID).Error; err != nil {
 			return problem(409, "PRODUCT_NOT_PUBLISHED", "请先发布产品")
+		}
+		currentBinding, bindingErr := s.productLicensing(tx, product.ID, environment)
+		if bindingErr != nil {
+			return bindingErr
+		}
+		if currentBinding.Provider == CustomLicensing {
+			return problem(409, "MAPPING_CHANGED", "授权提供方刚刚更新，请重新发布")
+		}
+		if mapping.PlanVersionID != "" {
+			remoteProduct, err := productRemoteID(tx, product, "")
+			if err != nil {
+				return err
+			}
+			if remoteProduct != "" && remoteProduct != mapping.RemoteProductID {
+				return productMappingConflict()
+			}
 		}
 		at := now()
 		publication := storage.PlanPublication{PlanID: planID, Environment: environment, VersionID: versionID, PreviewOnly: previewOnly, PublishedAt: at}
@@ -862,10 +912,21 @@ func (s *Service) Dashboard(ctx context.Context, p Principal) (Dashboard, error)
 		counts[check.key] = count
 	}
 	licenseReady := counts["licensing"] > 0 && counts["mappings"] > 0
+	var externalConnections, externalMappings int64
+	if s.db.WithContext(ctx).Model(&storage.ExternalLicensingConnection{}).Where("last_check_error IS NULL").Count(&externalConnections).Error != nil || s.db.WithContext(ctx).Model(&storage.ExternalPlanMapping{}).Count(&externalMappings).Error != nil {
+		return v, ErrStorage
+	}
+	selectedProvider, err := s.activeLicensingProvider(s.db.WithContext(ctx))
+	if err != nil {
+		return v, ErrStorage
+	}
+	if selectedProvider == CustomLicensing {
+		licenseReady = externalConnections > 0 && externalMappings > 0
+	}
 	v.Readiness = []ReadinessItem{
 		{Key: "product", Label: "公开产品", Ready: counts["products"] > 0, Detail: "发布至少一个带介绍和下载信息的软件产品", Target: "#/admin/product"},
 		{Key: "mail", Label: "邮件（可选）", Ready: true, Detail: "未启用邮件时允许直接注册；需要邮件时可配置 Resend 或 SMTP", Target: "#/admin/settings/mail"},
-		{Key: "licensing", Label: "Licentivo 授权", Ready: licenseReady, Detail: "连接管理 API，并让至少一个套餐选择授权策略", Target: "#/admin/settings"},
+		{Key: "licensing", Label: "授权服务", Ready: licenseReady, Detail: "配置 Licentivo 或自定义授权服务，并完成商品套餐映射", Target: "#/admin/settings/licensing"},
 		{Key: "sandbox_payment", Label: "测试收款", Ready: counts["sandbox_payments"] > 0, Detail: "配置支付渠道，并完成一次测试付款和退款", Target: "#/admin/settings/payments"},
 		{Key: "translation", Label: "DeepL 多语言", Ready: counts["translation"] > 0, Detail: "连接 DeepL，自动生成其余九种语言", Target: "#/admin/settings"},
 		{Key: "live_payment", Label: "正式收款", Ready: counts["live_payments"] > 0, Detail: "验证并保存正式收款凭证和 Webhook", Target: "#/admin/settings"},

@@ -46,7 +46,8 @@ func TestEntitlementActionableStatus(t *testing.T) {
 	at := time.Now().UTC()
 	before := at.Add(-time.Hour)
 	later := at.Add(time.Hour)
-	active := storage.Entitlement{Status: "active", ValidFrom: &before, ValidUntil: &later, AppliedVersion: 1, DesiredVersion: 1}
+	ref := "purchase"
+	active := storage.Entitlement{LaunchPurchaseRef: &ref, Status: "active", ValidFrom: &before, ValidUntil: &later, AppliedVersion: 1, DesiredVersion: 1}
 	cases := []struct {
 		name         string
 		change       func(*storage.Entitlement)

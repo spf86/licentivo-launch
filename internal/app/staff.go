@@ -140,7 +140,7 @@ func (s *Service) SetStaffRole(ctx context.Context, p Principal, userID, role, r
 		if err := tx.Model(&staff).Updates(map[string]any{"role": role, "permissions": permissionsForRole(role)}).Error; err != nil {
 			return err
 		}
-		if err := tx.Model(&storage.Session{}).Where("user_id = ? AND revoked_at IS NULL", user.ID).Update("revoked_at", now()).Error; err != nil {
+		if err := s.revokeSessions(tx, user.ID, "", now()); err != nil {
 			return err
 		}
 		return audit(tx, p.User.ID, "staff.role_changed", "staff", user.ID, reason)
@@ -192,8 +192,10 @@ func (s *Service) SetStaffStatus(ctx context.Context, p Principal, userID, statu
 		if err := tx.Model(&user).Updates(changes).Error; err != nil {
 			return err
 		}
-		if err := tx.Model(&storage.Session{}).Where("user_id = ? AND revoked_at IS NULL", user.ID).Update("revoked_at", now()).Error; err != nil {
-			return err
+		if status == "disabled" {
+			if err := s.revokeSessions(tx, user.ID, "", now(), "account_disabled"); err != nil {
+				return err
+			}
 		}
 		return audit(tx, p.User.ID, "staff."+status, "staff", user.ID, reason)
 	}))

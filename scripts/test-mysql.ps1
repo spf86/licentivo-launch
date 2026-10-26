@@ -76,6 +76,11 @@ $taskAppDatabase = $taskDatabase + '_app'
 $taskRestoreDatabase = $taskDatabase + '_restore'
 $taskBootstrapDatabase = $taskDatabase + '_bootstrap'
 $taskProviderDatabase = $taskDatabase + '_providers'
+$taskAccountStoreDatabase = $taskDatabase + '_account_store'
+$taskLogoutDatabase = $taskDatabase + '_logout'
+$taskExternalDatabase = $taskDatabase + '_external'
+$taskBridgeDatabase = $taskDatabase + '_bridge'
+$taskMappingDatabase = $taskDatabase + '_mapping'
 $taskPreviewDatabase = $taskDatabase + '_preview'
 $taskInitFile = Join-Path $taskRun 'initialize-test.sql'
 $taskInitSQL = "ALTER USER 'root'@'localhost' IDENTIFIED BY '$taskPassword';`nCREATE DATABASE $taskDatabase CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;`nCREATE DATABASE $taskAppDatabase CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;`nCREATE USER 'launch_test'@'127.0.0.1' IDENTIFIED BY '$taskPassword';`nGRANT ALL ON $taskDatabase.* TO 'launch_test'@'127.0.0.1';`nGRANT ALL ON $taskAppDatabase.* TO 'launch_test'@'127.0.0.1';`n"
@@ -84,6 +89,9 @@ $taskInitSQL = "ALTER USER 'root'@'localhost' IDENTIFIED BY '$taskPassword';`nCR
 [IO.File]::AppendAllText($taskInitFile, "CREATE DATABASE $taskPreviewDatabase CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;`nGRANT ALL ON $taskPreviewDatabase.* TO 'launch_test'@'127.0.0.1';`n", [Text.UTF8Encoding]::new($false))
 [IO.File]::AppendAllText($taskInitFile, "CREATE DATABASE $taskBootstrapDatabase CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;`nGRANT ALL ON $taskBootstrapDatabase.* TO 'launch_test'@'127.0.0.1';`n", [Text.UTF8Encoding]::new($false))
 [IO.File]::AppendAllText($taskInitFile, "CREATE DATABASE $taskProviderDatabase CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;`nGRANT ALL ON $taskProviderDatabase.* TO 'launch_test'@'127.0.0.1';`n", [Text.UTF8Encoding]::new($false))
+foreach($taskExtraDatabase in @($taskAccountStoreDatabase,$taskLogoutDatabase,$taskExternalDatabase,$taskBridgeDatabase,$taskMappingDatabase)){
+ [IO.File]::AppendAllText($taskInitFile, "CREATE DATABASE $taskExtraDatabase CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;`nGRANT ALL ON $taskExtraDatabase.* TO 'launch_test'@'127.0.0.1';`n", [Text.UTF8Encoding]::new($false))
+}
 $taskServerArgs = @('--no-defaults', ('--basedir="' + $taskBase + '"'), ('--datadir="' + $taskData + '"'), '--bind-address=127.0.0.1', "--port=$taskPort", '--mysqlx=OFF', '--skip-name-resolve', ('--init-file="' + $taskInitFile + '"'), '--console')
 $taskServer = Start-Process -FilePath $taskMySQLD -ArgumentList $taskServerArgs -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $taskRun 'server.out') -RedirectStandardError (Join-Path $taskRun 'server.err')
 $taskPreviousDSN = $env:LAUNCH_TEST_DATABASE_DSN
@@ -91,6 +99,11 @@ $taskPreviousAppDSN = $env:LAUNCH_TEST_APP_DATABASE_DSN
 $taskPreviousRestoreDSN = $env:LAUNCH_TEST_RESTORE_DATABASE_DSN
 $taskPreviousBootstrapDSN = $env:LAUNCH_TEST_BOOTSTRAP_DATABASE_DSN
 $taskPreviousProviderDSN = $env:LAUNCH_TEST_PROVIDER_DATABASE_DSN
+$taskPreviousAccountStoreDSN = $env:LAUNCH_TEST_ACCOUNT_STORE_DATABASE_DSN
+$taskPreviousLogoutDSN = $env:LAUNCH_TEST_LOGOUT_DATABASE_DSN
+$taskPreviousExternalDSN = $env:LAUNCH_TEST_EXTERNAL_DATABASE_DSN
+$taskPreviousBridgeDSN = $env:LAUNCH_TEST_BRIDGE_DATABASE_DSN
+$taskPreviousMappingDSN = $env:LAUNCH_TEST_MAPPING_DATABASE_DSN
 $taskTestExit = 1
 $taskPreviewProcess = $null
 try {
@@ -111,12 +124,17 @@ try {
     $env:LAUNCH_TEST_RESTORE_DATABASE_DSN = "launch_test:$taskPassword@tcp(127.0.0.1:$taskPort)/$taskRestoreDatabase"
     $env:LAUNCH_TEST_BOOTSTRAP_DATABASE_DSN = "launch_test:$taskPassword@tcp(127.0.0.1:$taskPort)/$taskBootstrapDatabase"
     $env:LAUNCH_TEST_PROVIDER_DATABASE_DSN = "launch_test:$taskPassword@tcp(127.0.0.1:$taskPort)/$taskProviderDatabase"
+    $env:LAUNCH_TEST_ACCOUNT_STORE_DATABASE_DSN = "launch_test:$taskPassword@tcp(127.0.0.1:$taskPort)/$taskAccountStoreDatabase"
+    $env:LAUNCH_TEST_LOGOUT_DATABASE_DSN = "launch_test:$taskPassword@tcp(127.0.0.1:$taskPort)/$taskLogoutDatabase"
+    $env:LAUNCH_TEST_EXTERNAL_DATABASE_DSN = "launch_test:$taskPassword@tcp(127.0.0.1:$taskPort)/$taskExternalDatabase"
+    $env:LAUNCH_TEST_BRIDGE_DATABASE_DSN = "launch_test:$taskPassword@tcp(127.0.0.1:$taskPort)/$taskBridgeDatabase"
+    $env:LAUNCH_TEST_MAPPING_DATABASE_DSN = "launch_test:$taskPassword@tcp(127.0.0.1:$taskPort)/$taskMappingDatabase"
 	$taskState=@{mysql_pid=$taskServer.Id; mysql_port=$taskPort; database_dsn=$env:LAUNCH_TEST_DATABASE_DSN; app_database_dsn=$env:LAUNCH_TEST_APP_DATABASE_DSN;restore_database_dsn=$env:LAUNCH_TEST_RESTORE_DATABASE_DSN;bootstrap_database_dsn=$env:LAUNCH_TEST_BOOTSTRAP_DATABASE_DSN;provider_database_dsn=$env:LAUNCH_TEST_PROVIDER_DATABASE_DSN}
 	[IO.File]::WriteAllText((Join-Path $taskRun 'run-state.json'),($taskState|ConvertTo-Json),[Text.UTF8Encoding]::new($false))
 	Write-Output ('Private test state: '+(Join-Path $taskRun 'run-state.json'))
     Push-Location -LiteralPath $taskRoot
     try {
-		if($SkipTests){$taskTestExit=0}else{go test ./... -count=1; $taskTestExit=$LASTEXITCODE}
+		if($SkipTests){$taskTestExit=0}else{go test ./cmd/... ./internal/... ./pkg/... -count=1; $taskTestExit=$LASTEXITCODE}
         if ($Preview -and $taskTestExit -eq 0) {
 			go build -o (Join-Path $taskRoot 'bin\launch.exe') ./cmd/launch
 			if ($LASTEXITCODE -ne 0) { throw 'Preview build failed.' }
@@ -225,6 +243,11 @@ try {
     $env:LAUNCH_TEST_RESTORE_DATABASE_DSN = $taskPreviousRestoreDSN
     $env:LAUNCH_TEST_BOOTSTRAP_DATABASE_DSN = $taskPreviousBootstrapDSN
     $env:LAUNCH_TEST_PROVIDER_DATABASE_DSN = $taskPreviousProviderDSN
+    $env:LAUNCH_TEST_ACCOUNT_STORE_DATABASE_DSN = $taskPreviousAccountStoreDSN
+    $env:LAUNCH_TEST_LOGOUT_DATABASE_DSN = $taskPreviousLogoutDSN
+    $env:LAUNCH_TEST_EXTERNAL_DATABASE_DSN = $taskPreviousExternalDSN
+    $env:LAUNCH_TEST_BRIDGE_DATABASE_DSN = $taskPreviousBridgeDSN
+    $env:LAUNCH_TEST_MAPPING_DATABASE_DSN = $taskPreviousMappingDSN
 	if(-not $DetachPreview){Stop-TaskProcess $taskPreviewProcess}
 	if(-not $KeepMySQL){
 		Stop-TaskProcess $taskServer

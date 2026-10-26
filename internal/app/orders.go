@@ -46,8 +46,8 @@ func (s *Service) checkoutView(ctx context.Context, order storage.Order) (Checko
 	}
 	if order.Status == "paid" {
 		v.Fulfillment = "pending_authorization"
-		var task storage.SyncTask
-		if s.db.WithContext(ctx).First(&task, "source_order_id = ?", order.ID).Error == nil && task.Status == "succeeded" {
+		var purchase storage.Entitlement
+		if s.db.WithContext(ctx).First(&purchase, "user_id = ? AND product_id = ? AND environment = ?", order.UserID, order.ProductID, order.Environment).Error == nil && purchase.LaunchPurchaseRef != nil && purchase.AppliedVersion > 0 && purchase.AppliedVersion == purchase.DesiredVersion {
 			v.Fulfillment = "active"
 		}
 		if order.FulfillmentReview {
@@ -56,6 +56,9 @@ func (s *Service) checkoutView(ctx context.Context, order storage.Order) (Checko
 	}
 	if order.Status == "refunded" {
 		v.Fulfillment = "refunded"
+	}
+	if order.Status == "reversed" {
+		v.Fulfillment = "reversed"
 	}
 	return v, nil
 }
@@ -115,7 +118,6 @@ func (s *Service) CreateOrder(ctx context.Context, p Principal, in CheckoutInput
 	var publication storage.PlanPublication
 	var mapping storage.PlanLicenseMapping
 	var account storage.PaymentAccount
-	var connection storage.LicentivoConnection
 	if s.db.WithContext(ctx).First(&version, "id = ?", in.PlanVersionID).Error != nil || s.db.WithContext(ctx).First(&plan, "id = ?", version.PlanID).Error != nil {
 		return CheckoutView{}, ErrNotFound
 	}
@@ -157,19 +159,11 @@ func (s *Service) CreateOrder(ctx context.Context, p Principal, in CheckoutInput
 	if s.db.WithContext(ctx).First(&publication, "plan_id = ? AND environment = ? AND version_id = ? AND preview_only = false", plan.ID, in.Environment, version.ID).Error != nil {
 		return CheckoutView{}, problem(409, "PLAN_NOT_FOR_SALE", "该套餐尚未开放收款")
 	}
-	if s.db.WithContext(ctx).First(&mapping, "plan_version_id = ?", version.ID).Error != nil || s.db.WithContext(ctx).First(&connection, "id = ?", mapping.ConnectionID).Error != nil {
-		return CheckoutView{}, problem(409, "LICENSE_MAPPING_REQUIRED", "请先在后台为该套餐选择 Licentivo 授权策略")
-	}
-	licenseClient, err := s.licensingProvider(ctx, connection)
-	if err != nil {
-		return CheckoutView{}, ErrStorage
-	}
-	caps, err := licenseClient.Capabilities(ctx)
-	if err != nil || caps.ValidateSales() != nil {
-		return CheckoutView{}, problem(409, "LICENSE_CONTRACT_UNSUPPORTED", "Licentivo 管理接口不可用，因此没有创建付款；请检查读写 API Key")
-	}
-	if err := checkPolicy(ctx, licenseClient, version, mapping, ""); err != nil {
-		return CheckoutView{}, err
+	var route *ExternalSaleRoute
+	var mappingErr error
+	mapping, route, mappingErr = s.saleMapping(ctx, s.db.WithContext(ctx), version, in.Environment, true)
+	if mappingErr != nil {
+		return CheckoutView{}, mappingErr
 	}
 	if s.db.WithContext(ctx).First(&account, "provider = ? AND environment = ? AND enabled = true", in.Provider, in.Environment).Error != nil {
 		return CheckoutView{}, problem(409, "PAYMENT_NOT_CONFIGURED", "该支付渠道尚未配置")
@@ -192,6 +186,13 @@ func (s *Service) CreateOrder(ctx context.Context, p Principal, in CheckoutInput
 	}
 	var order storage.Order
 	err = s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if _, err := lockProviderSettings(tx, "SHARE"); err != nil {
+			return err
+		}
+		var activeAccount storage.PaymentAccount
+		if err := tx.Clauses(clause.Locking{Strength: "SHARE"}).First(&activeAccount, "id = ? AND enabled = true", account.ID).Error; err != nil {
+			return problem(409, "PAYMENT_NOT_CONFIGURED", "该支付渠道已停用，请刷新后使用当前启用的渠道")
+		}
 		var user storage.User
 		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&user, "id = ? AND status = 'active'", p.User.ID).Error; err != nil {
 			return ErrUnauthorized
@@ -210,10 +211,16 @@ func (s *Service) CreateOrder(ctx context.Context, p Principal, in CheckoutInput
 		}
 		var entitlement storage.Entitlement
 		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&entitlement, "user_id = ? AND product_id = ? AND environment = ?", user.ID, version.ProductID, in.Environment).Error; err == nil {
-			if entitlement.ManualHold || entitlement.Status == "revoked" {
+			if entitlement.ManualHold || (entitlement.Status == "revoked" && in.Action != "purchase") {
 				return problem(409, "AUTHORIZATION_HELD", "当前权益需由商家处理")
 			}
+			if entitlement.LaunchPurchaseRef == nil && entitlement.DesiredVersion > 0 {
+				return problem(409, "LEGACY_MIGRATION_PENDING", "旧购买记录正在迁移，请稍后重试")
+			}
 			if in.Action == "purchase" && entitlement.DesiredVersion > 0 {
+				if entitlement.AppliedVersion != entitlement.DesiredVersion {
+					return problem(409, "ENTITLEMENT_NOT_READY", "购买记录正在同步，请稍后重试")
+				}
 				var count int64
 				if tx.Model(&storage.EntitlementCoverage{}).Where("entitlement_id = ? AND base_coverage_id IS NULL AND voided_at IS NULL", entitlement.ID).Count(&count).Error != nil {
 					return ErrStorage
@@ -245,6 +252,17 @@ func (s *Service) CreateOrder(ctx context.Context, p Principal, in CheckoutInput
 			return problem(409, "QUOTE_STALE", "权益已发生变化，请重新报价")
 		}
 		var currentPlan storage.Plan
+		var lockedProduct storage.Product
+		if err := tx.Clauses(clause.Locking{Strength: "SHARE"}).First(&lockedProduct, "id = ?", version.ProductID).Error; err != nil {
+			return err
+		}
+		currentMapping, currentRoute, routeErr := s.saleMapping(ctx, tx, version, in.Environment, false)
+		if routeErr != nil {
+			return routeErr
+		}
+		if currentMapping.ConnectionID != mapping.ConnectionID || currentMapping.RemoteProductID != mapping.RemoteProductID || currentMapping.RemotePolicyID != mapping.RemotePolicyID || (currentRoute == nil) != (route == nil) {
+			return problem(409, "MAPPING_CHANGED", "授权配置刚刚更新，请刷新后重试")
+		}
 		var currentPublication storage.PlanPublication
 		if tx.Clauses(clause.Locking{Strength: "SHARE"}).First(&currentPlan, "id = ?", plan.ID).Error != nil || tx.Clauses(clause.Locking{Strength: "SHARE"}).First(&currentPublication, "plan_id = ? AND environment = ? AND version_id = ? AND preview_only = false", plan.ID, in.Environment, version.ID).Error != nil {
 			return problem(409, "PLAN_NOT_FOR_SALE", "套餐发布状态已变化，请刷新")
@@ -271,7 +289,7 @@ func (s *Service) CreateOrder(ctx context.Context, p Principal, in CheckoutInput
 			quoteJSON = marshal(quote)
 			quoteExpiry = &quote.ExpiresAt
 		}
-		order = storage.Order{ID: orderID, UserID: user.ID, ProductID: version.ProductID, PlanVersionID: version.ID, Environment: in.Environment, Action: in.Action, Status: "pending", IdempotencyKey: in.IdempotencyKey, RequestHash: fingerprint[:], Currency: version.Currency, AmountMinor: amount, PurchasedPeriods: purchasedPeriods, PriceSnapshot: marshal(map[string]any{"plan_name": plan.Name, "currency": version.Currency, "amount_minor": amount, "purchase_periods": purchasedPeriods}), EntitlementSnapshot: version.EntitlementSnapshot, ExpectedEntitlementVersion: entitlement.DesiredVersion, ExpiresAt: at.Add(24 * time.Hour), CreatedAt: at, QuoteSnapshot: quoteJSON, QuoteExpiresAt: quoteExpiry}
+		order = storage.Order{ID: orderID, UserID: user.ID, ProductID: version.ProductID, PlanVersionID: version.ID, Environment: in.Environment, Action: in.Action, Status: "pending", IdempotencyKey: in.IdempotencyKey, RequestHash: fingerprint[:], Currency: version.Currency, AmountMinor: amount, PurchasedPeriods: purchasedPeriods, PriceSnapshot: marshal(map[string]any{"plan_name": plan.Name, "currency": version.Currency, "amount_minor": amount, "purchase_periods": purchasedPeriods}), EntitlementSnapshot: externalPlanSnapshot(version.EntitlementSnapshot, route), ExpectedEntitlementVersion: entitlement.DesiredVersion, ExpiresAt: at.Add(24 * time.Hour), CreatedAt: at, QuoteSnapshot: quoteJSON, QuoteExpiresAt: quoteExpiry}
 		if err := tx.Create(&order).Error; err != nil {
 			return err
 		}

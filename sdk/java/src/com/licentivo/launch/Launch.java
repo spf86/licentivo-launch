@@ -7,6 +7,7 @@ import java.net.*;
 import java.net.http.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.ByteBuffer;
+import java.nio.channels.*;
 import java.nio.file.*;
 import java.nio.file.attribute.*;
 import java.security.*;
@@ -14,6 +15,7 @@ import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.locks.ReentrantLock;
 
 /** Launch account lifecycle. Runtime authorization always belongs to Licentivo 0.11.1. */
 public final class Launch implements AutoCloseable {
@@ -39,7 +41,8 @@ public final class Launch implements AutoCloseable {
     @FunctionalInterface public interface Transport {
         Response request(String method, URI uri, String bearer, byte[] body) throws Exception;
     }
-    /** Must provide OS-user confidentiality/integrity. Never implement as plain JSON on disk. */
+    /** OS-user/host vault: atomic replacement, multiple opaque keys for login and
+     * account logout tasks. Never implement as a single slot or plaintext JSON. */
     public interface Store {
         byte[] load(String scope) throws Exception;
         void save(String scope, byte[] secret) throws Exception;
@@ -83,6 +86,7 @@ public final class Launch implements AutoCloseable {
     private final Sleeper sleeper;
     private final String scope;
     private Map<String, Object> session;
+    private boolean accountCleared;
     private Runtime runtime;
 
     public Launch(Config config, Map<String, Object> product, Path cacheRoot) throws Exception {
@@ -112,7 +116,7 @@ public final class Launch implements AutoCloseable {
         this.cacheRoot = cacheRoot.toAbsolutePath().normalize();
         this.store = Objects.requireNonNull(store); this.transport = Objects.requireNonNull(transport);
         this.factory = Objects.requireNonNull(factory); this.sleeper = Objects.requireNonNull(sleeper);
-        this.scope = hash("launch-v1\n" + config.merchantOrigin + "\n" + config.launchProductID + "\n" + config.licentivoProductID + "\n" + config.environment);
+        this.scope = hash("launch-account-v2\n" + config.merchantOrigin + "\n" + config.launchProductID + "\n" + config.licentivoProductID + "\n" + config.environment);
     }
     public static Launch connect(String merchantOrigin, String productId, String licentivoProductId, Map<String, String> trustedKeys, String environment) throws Exception {
         return new Launch(new Config(merchantOrigin, productId, licentivoProductId, environment),
@@ -130,7 +134,7 @@ public final class Launch implements AutoCloseable {
         public boolean canStartOffline() { var status = sdk.status(); return Boolean.TRUE.equals(status.get("allowed")) && "offline_valid".equals(status.get("state")); }
         public void start() throws Exception { sdk.start(error -> {}); }
         public void runFeature(String feature, Client.FeatureAction action) throws Exception { sdk.runFeature(feature, action); }
-        public void releaseDevice() throws Exception { sdk.close(); sdk.deactivate(); }
+        public void releaseDevice() throws Exception { var result=sdk.logout();if(Boolean.TRUE.equals(result.get("revocation_pending")))throw new Failure("DEVICE_REVOCATION_PENDING");if(result.containsKey("storage_error"))throw new Failure("SDK_LOGOUT_STORAGE_FAILED"); }
         public void close() { sdk.close(); }
     }
     public static final class HTTPTransport implements Transport {
@@ -189,40 +193,41 @@ public final class Launch implements AutoCloseable {
         if (!(envelope.get("data") instanceof Map<?, ?>)) throw new Failure("INVALID_RESPONSE");
         return Json.object(envelope.get("data"));
     }
-    private Map<String, Object> credential() throws Exception {
-        for (int attempt = 0; ; attempt++) {
-            try {
-                var result = call("POST", "/software/products/" + config.launchProductID + "/credential", Map.of("environment", config.environment), token());
-                if (!config.launchProductID.equals(result.get("product_id")) || text(result, "license_key").isEmpty()) throw new Failure("INVALID_RESPONSE");
-                return result;
-            } catch (Failure error) {
-                if (!error.code.equals("ENTITLEMENT_PENDING") || attempt >= 4) throw error;
-                long wait = Math.max(1000L << attempt, error.retryAfterMillis);
-                if (wait > 10000) throw error;
-                try { sleeper.sleep(wait); } catch (InterruptedException stopped) { Thread.currentThread().interrupt(); throw new Failure("CANCELED"); }
-            }
-        }
-    }
+    private Map<String,Object> credential()throws Exception{
+ var result=call("POST","/software/products/"+config.launchProductID+"/identity",Map.of("environment",config.environment),token());
+ if(!config.launchProductID.equals(result.get("product_id"))||!config.licentivoProductID.equals(result.get("licentivo_product_id"))||!config.environment.equals(result.get("environment"))||!uuid(text(result,"launch_connection_id"))||text(result,"identity_token").length()<32)throw new Failure("IDENTITY_MISMATCH");return result;
+ }
     public synchronized State login(String email, char[] password) throws Exception {
-        logout();
+        try(var guard=lockAccount()){return loginAccount(email,password);}finally{Arrays.fill(password,'\0');}
+    }
+    private State loginAccount(String email,char[] password)throws Exception{
+        logoutAccount();
         try {
             var grant = call("POST", "/auth/login", Map.of("email", email, "password", new String(password), "kind", "desktop"), "");
             if (text(grant, "access_token").isEmpty() || text(Json.object(grant.get("user")), "id").isEmpty()) throw new Failure("INVALID_RESPONSE");
-            session = new LinkedHashMap<>(); session.put("scope", scope); session.put("grant", grant);
+            session = new LinkedHashMap<>(); accountCleared=false;session.put("scope", scope); session.put("grant", grant);
             requireFresh(); session.put("credential", credential());
             State result = start(false); save(); return result;
-        } catch (Exception error) { try { logout(); } catch (Exception cleanup) { error.addSuppressed(cleanup); } throw error; }
+        } catch (Exception error) { try { logoutAccount(); } catch (Exception cleanup) { error.addSuppressed(cleanup); } throw error; }
         finally { Arrays.fill(password, '\0'); }
     }
     public synchronized State restore() throws Exception {
-        close(); load(); requireFresh();
+        try(var guard=lockAccount()){return restoreAccount();}
+    }
+    private State restoreAccount()throws Exception{
+        close(); if(session==null||!Boolean.TRUE.equals(session.get("logout_pending"))){try{load();}catch(Failure missing){if(!missing.code.equals("NO_SESSION"))throw missing;var tasks=pendingAccounts();if(tasks.isEmpty())throw missing;session=tasks.get(0);}}
+        for(var task:pendingAccounts())if(recordToken(task).equals(token())){session=task;break;}
+        if(hasIntent(token()))session.put("logout_pending",true);
+        if(Boolean.TRUE.equals(session.get("logout_pending"))){logoutAccount();throw new Failure("NO_SESSION");}
+        retryOtherAccounts(token());
+        requireFresh();
         try {
             var user = Json.object(call("GET", "/me", null, token()).get("user"));
             if (!text(user, "id").equals(userID())) throw new Failure("SESSION_MISMATCH");
             session.put("credential", credential());
             State result = start(false); save(); return result;
         } catch (Failure error) {
-            if (error.unavailable()) { close(); return start(true); }
+
             if (denied(error)) { try { clear(); } catch (Exception cleanup) { error.addSuppressed(cleanup); } }
             throw error;
         } catch (Exception error) { close(); throw error;
@@ -235,11 +240,11 @@ public final class Launch implements AutoCloseable {
         catch (Failure expired) { clear(); throw expired; }
     }
     private State start(boolean offline) throws Exception {
-        var settings = new LinkedHashMap<>(product); settings.put("license_key", Json.text(Json.object(session.get("credential")), "license_key"));
+        var settings = runtimeSettings();
         Path path = cacheDirectory(); privateDirectory(path); settings.put("cache_path", path.resolve("lease.json").toString());
         Runtime candidate = factory.create(settings);
         try {
-            if (offline && !candidate.canStartOffline()) throw new Failure("OFFLINE_UNAVAILABLE");
+
             candidate.start(); runtime = candidate;
         } catch (Exception error) { candidate.close(); throw error; }
         var user = Json.object(grant().get("user"));
@@ -248,55 +253,69 @@ public final class Launch implements AutoCloseable {
     public synchronized void runFeature(String feature, Client.FeatureAction action) throws Exception {
         if (runtime == null) throw new Failure("NOT_STARTED"); runtime.runFeature(feature, action);
     }
-    public synchronized void releaseDevice() throws Exception {
-        if (runtime == null) throw new Failure("NOT_STARTED");
-        Exception failure = null;
-        try { runtime.releaseDevice(); } catch (Exception error) { failure = error; }
-        try { logout(); } catch (Exception error) { if (failure == null) failure = error; else failure.addSuppressed(error); }
-        if (failure != null) throw failure;
+    public synchronized void releaseDevice()throws Exception{logout();}
+    public synchronized void logout()throws Exception{
+        if(session!=null)session.put("logout_pending",true);
+        if(session!=null)try{rememberIntent(token());}catch(Exception ignored){}
+        try(var guard=lockAccount()){if(accountCleared&&session==null)retryOtherAccounts("");else logoutAccount();}finally{if(runtime!=null)try{runtime.releaseDevice();}catch(Exception ignored){}close();}
     }
-    public synchronized void logout() throws Exception {
-        Exception failure = null;
-        try {
-            if (session == null) { try { load(); } catch (Failure missing) { if (!missing.code.equals("NO_SESSION")) throw missing; } }
-            if (session != null) {
-                try { call("POST", "/auth/logout", Map.of(), token()); }
-                catch (Failure error) { if (error.status != 401) throw error; }
-            }
-        } catch (Exception error) { failure = error; }
-        try { clear(); } catch (Exception error) { if (failure == null) failure = error; else failure.addSuppressed(error); }
-        if (failure != null) throw failure;
-    }
+    private void logoutAccount()throws Exception{
+ Exception failure=null;if(session==null)try{load();}catch(Failure missing){if(!missing.code.equals("NO_SESSION")){clear();throw missing;}}
+ if(session==null){var tasks=pendingAccounts();if(!tasks.isEmpty())session=tasks.get(0);}
+ Exception otherFailure=null;try{retryOtherAccounts(session==null?"":token());}catch(Exception e){otherFailure=e;}
+ Exception persistFailure=null;if(session!=null){session.put("logout_pending",true);try{markLogout();}catch(Exception e){persistFailure=e;}}
+ try{var active=activeAccount();if(runtime==null&&session!=null&&(active==null||recordToken(active).equals(token()))&&session.get("credential") instanceof Map)runtime=factory.create(runtimeSettings());if(runtime!=null)runtime.releaseDevice();}catch(Exception e){failure=e;}
+ close();boolean confirmed=true;
+ if(session!=null)try{call("POST","/auth/logout",Map.of(),token());}catch(Exception e){confirmed=e instanceof Failure api&&api.status==401;if(!confirmed&&failure==null)failure=e;}
+ if(confirmed){try{if(session!=null)finishAccount(session);clear();}catch(Exception e){if(failure==null)failure=e;else failure.addSuppressed(e);}}else if(persistFailure!=null){if(failure!=null)persistFailure.addSuppressed(failure);failure=persistFailure;}if(failure==null)failure=otherFailure;if(failure!=null)throw failure;
+ }
     /** Keeps remembered login; the official SDK handles floating-seat shutdown. */
     @Override public synchronized void close() { if (runtime != null) { runtime.close(); runtime = null; } }
-    private void save() throws Exception {
-        byte[] secret = Json.write(session).getBytes(StandardCharsets.UTF_8);
-        try { store.save(scope, secret); } finally { Arrays.fill(secret, (byte) 0); }
-    }
+    private void save()throws Exception{
+ var clean=Json.object(Json.parse(Json.write(session),LIMIT));if(clean.get("credential") instanceof Map)Json.object(clean.get("credential")).keySet().retainAll(Set.of("product_id","licentivo_product_id","launch_connection_id","environment","expires_at"));if(Boolean.TRUE.equals(clean.get("logout_pending"))){clean.put("version",3);if(clean.containsKey("credential"))clean.put("logout_context",clean.remove("credential"));}byte[] secret=Json.write(clean).getBytes(StandardCharsets.UTF_8);try{store.save(scope,secret);}finally{Arrays.fill(secret,(byte)0);}
+ }
+ private Map<String,Object> runtimeSettings()throws Exception{
+ var identity=Json.object(session.get("credential"));var settings=new LinkedHashMap<>(product);settings.put("license_key","");settings.put("identity_token",text(identity,"identity_token"));settings.put("launch_connection_id",text(identity,"launch_connection_id"));settings.put("environment",config.environment);Path path=cacheDirectory();privateDirectory(path);settings.put("cache_path",path.resolve("lease.json").toString());return settings;
+ }
     private void load() throws Exception {
         byte[] raw = store.load(scope); if (raw == null) throw new Failure("NO_SESSION");
         try {
             var loaded = Json.object(Json.parse(new String(raw, StandardCharsets.UTF_8), LIMIT));
             if (!scope.equals(loaded.get("scope"))) throw new Failure("SESSION_MISMATCH");
             var savedGrant = Json.object(loaded.get("grant"));
-            if (text(savedGrant, "access_token").isEmpty() || text(Json.object(savedGrant.get("user")), "id").isEmpty() || !config.launchProductID.equals(Json.object(loaded.get("credential")).get("product_id"))) throw new Failure("SESSION_MISMATCH");
+            if(Boolean.TRUE.equals(loaded.get("logout_pending"))){if(text(savedGrant,"access_token").isEmpty())throw new Failure("SESSION_MISMATCH");if(loaded.get("logout_context") instanceof Map)loaded.put("credential",loaded.remove("logout_context"));session=loaded;return;}
+            if (text(savedGrant, "access_token").isEmpty() || !Boolean.TRUE.equals(loaded.get("logout_pending")) && (text(Json.object(savedGrant.get("user")), "id").isEmpty() || (!config.launchProductID.equals(Json.object(loaded.get("credential")).get("product_id")) || !text(Json.object(loaded.get("credential")),"identity_token").isEmpty() || !uuid(text(Json.object(loaded.get("credential")),"launch_connection_id"))))) throw new Failure("SESSION_MISMATCH");
             session = loaded;
         } catch (RuntimeException error) { throw new Failure("SESSION_MISMATCH"); }
         finally { Arrays.fill(raw, (byte) 0); }
     }
-    private void clear() throws Exception {
-        close(); Exception failure = null;
-        try {
-            if (session != null) {
-                Path path = cacheDirectory();
-                if (!path.startsWith(cacheRoot) || path.equals(cacheRoot)) throw new Failure("CACHE_SCOPE_ERROR");
-                if (Files.exists(path)) try (var paths = Files.walk(path)) { for (Path item : paths.sorted(Comparator.reverseOrder()).toList()) Files.deleteIfExists(item); }
-            }
-        } catch (Exception error) { failure = error; }
-        session = null;
-        try { store.delete(scope); } catch (Exception error) { if (failure == null) failure = error; else failure.addSuppressed(error); }
-        if (failure != null) throw failure;
+    private void clear()throws Exception{close();var saved=session;session=null;accountCleared=true;if(saved!=null)deleteOwned(saved);}
+    private static final ConcurrentHashMap<String,ReentrantLock> ACCOUNT_LOCKS=new ConcurrentHashMap<>();
+    private static final class AccountGuard implements AutoCloseable{
+        final ReentrantLock local;final FileChannel channel;final FileLock lock;
+        AccountGuard(ReentrantLock local,FileChannel channel,FileLock lock){this.local=local;this.channel=channel;this.lock=lock;}
+        public void close()throws IOException{try{lock.release();}finally{try{channel.close();}finally{local.unlock();}}}
     }
+    private AccountGuard lockAccount()throws Exception{
+        var local=ACCOUNT_LOCKS.computeIfAbsent(scope,key->new ReentrantLock());if(!local.tryLock(5,TimeUnit.SECONDS))throw new Failure("ACCOUNT_LOCK_BUSY");FileChannel channel=null;
+        try{Path root=Path.of(System.getProperty("user.home"),".cache","LicentivoLaunch","account-locks","java");privateDirectory(root);channel=FileChannel.open(root.resolve(hash(scope)+".lock"),StandardOpenOption.CREATE,StandardOpenOption.WRITE);long deadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(5);while(true){FileLock lock;try{lock=channel.tryLock();}catch(OverlappingFileLockException busy){lock=null;}if(lock!=null)return new AccountGuard(local,channel,lock);if(System.nanoTime()>=deadline)throw new Failure("ACCOUNT_LOCK_BUSY");Thread.sleep(20);}}
+        catch(Exception e){if(channel!=null)channel.close();local.unlock();throw e;}
+    }
+    private String queueKey(){return scope+"\naccount-logout-queue-v1";}
+    private Path intentPath(String token)throws Exception{return Path.of(System.getProperty("user.home"),".cache","LicentivoLaunch","account-intents","java",hash(scope)+"."+hash(token)+".signedout");}
+    private void rememberIntent(String token)throws Exception{var path=intentPath(token);privateDirectory(path.getParent());try(var file=FileChannel.open(path,StandardOpenOption.CREATE,StandardOpenOption.WRITE)){file.write(ByteBuffer.wrap(new byte[]{1}));file.force(true);}}
+    private boolean hasIntent(String token)throws Exception{try{Files.readAttributes(intentPath(token),BasicFileAttributes.class);return true;}catch(NoSuchFileException missing){return false;}}
+    private void clearIntent(String token)throws Exception{Files.deleteIfExists(intentPath(token));}
+    private static String recordToken(Map<String,Object> record){return text(Json.object(record.get("grant")),"access_token");}
+    private Map<String,Object> publicRecord(Map<String,Object> record){var clean=Json.object(Json.parse(Json.write(record),LIMIT));if(clean.get("credential") instanceof Map)Json.object(clean.get("credential")).keySet().retainAll(Set.of("product_id","licentivo_product_id","launch_connection_id","environment","expires_at"));if(Boolean.TRUE.equals(clean.get("logout_pending"))){clean.put("version",3);if(clean.containsKey("credential"))clean.put("logout_context",clean.remove("credential"));}return clean;}
+    private Map<String,Object> activeAccount()throws Exception{byte[] raw=store.load(scope);if(raw==null)return null;try{var value=Json.object(Json.parse(new String(raw,StandardCharsets.UTF_8),LIMIT));if(!scope.equals(value.get("scope")))throw new Failure("SESSION_MISMATCH");return value;}finally{Arrays.fill(raw,(byte)0);}}
+    private boolean owns(Map<String,Object> record)throws Exception{var active=activeAccount();return active!=null&&recordToken(active).equals(recordToken(record));}
+    private void deleteOwned(Map<String,Object> record)throws Exception{if(owns(record))store.delete(scope);}
+    private List<Map<String,Object>> pendingAccounts()throws Exception{byte[] raw=store.load(queueKey());if(raw==null)return new ArrayList<>();try{var queue=Json.object(Json.parse(new String(raw,StandardCharsets.UTF_8),LIMIT));if(!(queue.get("version") instanceof Number version)||version.intValue()!=1||!(queue.get("records") instanceof List<?> records)||records.size()>64)throw new Failure("SESSION_MISMATCH");var result=new ArrayList<Map<String,Object>>();for(Object item:records){var record=Json.object(item);if(!scope.equals(record.get("scope"))||!Boolean.TRUE.equals(record.get("logout_pending"))||recordToken(record).isEmpty())throw new Failure("SESSION_MISMATCH");if(record.get("logout_context") instanceof Map)record.put("credential",record.remove("logout_context"));result.add(record);}return result;}finally{Arrays.fill(raw,(byte)0);}}
+    private void updatePending(Map<String,Object> record,boolean remove)throws Exception{var records=pendingAccounts();records.removeIf(value->recordToken(value).equals(recordToken(record)));if(!remove){var value=publicRecord(record);value.put("version",3);value.put("logout_pending",true);records.add(value);}if(records.size()>64)throw new Failure("ACCOUNT_LOGOUT_QUEUE_FULL");if(records.isEmpty()){store.delete(queueKey());return;}var persisted=new ArrayList<Map<String,Object>>();for(var value:records)persisted.add(publicRecord(value));byte[] raw=Json.write(Map.of("version",1,"records",persisted)).getBytes(StandardCharsets.UTF_8);try{if(raw.length>60000)throw new Failure("ACCOUNT_LOGOUT_QUEUE_FULL");store.save(queueKey(),raw);}finally{Arrays.fill(raw,(byte)0);}}
+    private void markLogout()throws Exception{try{rememberIntent(token());}catch(Exception ignored){}Exception queueFailure=null;try{updatePending(session,false);}catch(Exception e){queueFailure=e;}if(owns(session)){try{save();return;}catch(Exception e){try{deleteOwned(session);}catch(Exception ignored){}}}if(queueFailure!=null)throw new Failure("ACCOUNT_LOGOUT_STORAGE_FAILED");}
+    private void finishAccount(Map<String,Object> record)throws Exception{deleteOwned(record);updatePending(record,true);clearIntent(recordToken(record));}
+    private void retryOtherAccounts(String skip)throws Exception{for(var record:pendingAccounts()){if(recordToken(record).equals(skip))continue;try{call("POST","/auth/logout",Map.of(),recordToken(record));}catch(Failure error){if(error.status!=401)throw error;}finishAccount(record);}}
     private Path cacheDirectory() throws Exception { return cacheRoot.resolve(hash(scope + "\n" + userID())); }
     private Map<String, Object> grant() { return Json.object(session.get("grant")); }
     private String token() { return Json.text(grant(), "access_token"); }

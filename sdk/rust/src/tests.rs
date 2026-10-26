@@ -16,6 +16,11 @@ struct Shared {
     paths: Vec<String>,
     waits: Vec<Duration>,
     values: HashMap<String, Vec<u8>>,
+    fail_saves: bool,
+    fail_deletes: bool,
+    logins: usize,
+    blocked_token: String,
+    token_prefix: String,
 }
 struct TestStore(Rc<RefCell<Shared>>);
 impl Store for TestStore {
@@ -23,23 +28,27 @@ impl Store for TestStore {
         Ok(self.0.borrow().values.get(key).cloned())
     }
     fn save(&mut self, key: &str, value: &[u8]) -> Result<(), Failure> {
+        if self.0.borrow().fail_saves { return Err(Failure::new("TEST_STORAGE_FAILED")); }
         self.0.borrow_mut().values.insert(key.into(), value.into());
         Ok(())
     }
     fn delete(&mut self, key: &str) -> Result<(), Failure> {
+        if self.0.borrow().fail_deletes { return Err(Failure::new("TEST_STORAGE_FAILED")); }
         self.0.borrow_mut().values.remove(key);
         Ok(())
     }
 }
 struct TestTransport(Rc<RefCell<Shared>>);
 impl Transport for TestTransport {
-    fn request(&mut self, _: &str, url: &str, _: &str, _: &[u8]) -> Result<Response, Failure> {
+    fn request(&mut self, _: &str, url: &str, bearer: &str, _: &[u8]) -> Result<Response, Failure> {
         let mut s = self.0.borrow_mut();
         if s.mode == "offline" {
             return Err(Failure::service());
         }
+        if url.ends_with("/logout") && !s.blocked_token.is_empty() && bearer==s.blocked_token { return Err(Failure::service()); }
         let data = if url.ends_with("/login") {
-            json!({"access_token":"private-bearer","expires_at":"2099-01-01T00:00:00Z","user":{"id":s.user,"email":"a@example.invalid"}})
+            s.logins+=1;
+            json!({"access_token":format!("{}{}",s.token_prefix,s.logins),"expires_at":"2099-01-01T00:00:00Z","user":{"id":s.user,"email":"a@example.invalid"}})
         } else if url.ends_with("/logout") {
             s.logouts += 1;
             json!({"signed_out":true})
@@ -63,7 +72,7 @@ impl Transport for TestTransport {
                     retry_after: "3".into(),
                 });
             }
-            json!({"product_id":PRODUCT,"license_key":"private-license","version":1})
+            json!({"product_id":PRODUCT,"licentivo_product_id":REMOTE,"environment":"sandbox","launch_connection_id":KEY,"identity_token":"I".repeat(64),"expires_at":"2099-01-01T00:00:00Z"})
         };
         Ok(Response {
             status: 200,
@@ -139,6 +148,7 @@ fn fixture(name: &str) -> (Application, Rc<RefCell<Shared>>, PathBuf) {
     let shared = Rc::new(RefCell::new(Shared {
         user: "account-a".into(),
         offline: true,
+        token_prefix: format!("private-bearer-{}-",OffsetDateTime::now_utc().unix_timestamp_nanos()),
         ..Shared::default()
     }));
     let root = temp(name);
@@ -149,35 +159,38 @@ fn fixture(name: &str) -> (Application, Rc<RefCell<Shared>>, PathBuf) {
     )
 }
 #[test]
-fn restart_offline_and_feature_authority() {
-    let (mut app, shared, root) = fixture("offline");
-    app.login("a@example.invalid", "private-password").unwrap();
-    app.close();
-    assert_eq!(shared.borrow().logouts, 0);
-    shared.borrow_mut().mode = "offline".into();
-    drop(app);
-    let mut app = create(shared.clone(), root.clone(), "sandbox");
-    assert!(app.restore().unwrap().offline_fallback);
-    let mut ran = false;
-    assert_eq!(
-        app.run_feature("other", || {
-            ran = true;
-            Ok(())
-        })
-        .unwrap_err()
-        .code,
-        "FEATURE_DENIED"
-    );
-    assert!(!ran);
-    assert_eq!(shared.borrow().paths[0], shared.borrow().paths[1]);
-    app.close();
-    shared.borrow_mut().offline = false;
-    assert_eq!(app.restore().unwrap_err().code, "OFFLINE_UNAVAILABLE");
-    drop(app);
-    fs::remove_dir_all(root).unwrap();
+fn failed_saves_and_offline_logout_never_restore_the_old_account() {
+    for delete_fails in [false,true] {
+        let(mut app,shared,root)=fixture("failed-store");app.login("a","b").unwrap();
+        {let mut s=shared.borrow_mut();s.fail_saves=true;s.fail_deletes=delete_fails;s.mode="offline".into();}
+        assert_eq!(app.logout().unwrap_err().code,"ACCOUNT_LOGOUT_STORAGE_FAILED");
+        assert_eq!(app.run_feature("export",||{panic!("signed-out callback");#[allow(unreachable_code)]Ok(())}).unwrap_err().code,"NOT_STARTED");
+        if !delete_fails {assert!(shared.borrow().values.is_empty());shared.borrow_mut().fail_saves=false;let mut restarted=create(shared.clone(),root.clone(),"sandbox");assert_eq!(restarted.restore().unwrap_err().code,"NO_SESSION");}
+        else{let mut restarted=create(shared.clone(),root.clone(),"sandbox");assert_eq!(restarted.restore().unwrap_err().code,"ACCOUNT_LOGOUT_STORAGE_FAILED");}
+        drop(app);fs::remove_dir_all(root).unwrap();
+    }
 }
 #[test]
-fn denials_clear_session_and_sdk_cache() {
+fn stale_instance_preserves_new_login_and_retries_its_own_account() {
+    let(mut old,shared,root)=fixture("stale-instance");old.login("a","b").unwrap();let mut newer=create(shared.clone(),root.clone(),"sandbox");newer.login("a","b").unwrap();
+    let active=newer.scope.clone();let before=shared.borrow().values[&active].clone();let old_token=old.token().unwrap().to_string();shared.borrow_mut().blocked_token=old_token;assert!(old.logout().is_err());assert_eq!(shared.borrow().values[&active],before);
+    old.close();shared.borrow_mut().blocked_token.clear();let count=shared.borrow().opens;let mut restarted=create(shared.clone(),root.clone(),"sandbox");restarted.restore().unwrap();assert_eq!(shared.borrow().opens,count+1);assert_eq!(shared.borrow().values[&active],before);assert_eq!(shared.borrow().values.len(),1);
+    drop((old,newer,restarted));fs::remove_dir_all(root).unwrap();
+}
+#[test]
+fn completed_old_logout_never_adopts_a_newer_login(){let(mut old,shared,root)=fixture("completed-logout");old.login("a","b").unwrap();old.logout().unwrap();let mut newer=create(shared.clone(),root.clone(),"sandbox");newer.login("a","b").unwrap();let token=newer.token().unwrap().to_string();old.logout().unwrap();assert!(!shared.borrow().values.is_empty());newer.restore().unwrap();assert_eq!(newer.token().unwrap(),token);drop((old,newer));fs::remove_dir_all(root).unwrap();}
+#[test]
+fn restart_requires_identity_and_feature_authority_is_sdk_owned() {
+ let (mut app,shared,root)=fixture("identity");app.login("a@example.invalid","password").unwrap();
+ let saved=shared.borrow().values.values().next().unwrap().clone();let saved=String::from_utf8(saved).unwrap();assert!(!saved.contains(&"I".repeat(64)));assert!(!saved.contains("license_key"));
+ app.close();assert_eq!(shared.borrow().logouts,0);shared.borrow_mut().mode="offline".into();
+ assert_eq!(app.restore().unwrap_err().code,"SERVICE_UNAVAILABLE");assert_eq!(shared.borrow().opens,1);
+ shared.borrow_mut().mode.clear();assert!(!app.restore().unwrap().offline_fallback);
+ let mut ran=false;assert_eq!(app.run_feature("other",||{ran=true;Ok(())}).unwrap_err().code,"FEATURE_DENIED");assert!(!ran);
+ assert_eq!(shared.borrow().paths[0],shared.borrow().paths[1]);drop(app);fs::remove_dir_all(root).unwrap();
+}
+#[test]
+fn denials_clear_account_but_preserve_sdk_files() {
     for code in [
         "unauthorized",
         "ENTITLEMENT_EXPIRED",
@@ -191,7 +204,7 @@ fn denials_clear_session_and_sdk_cache() {
         assert!(app.restore().is_err());
         assert_eq!(shared.borrow().opens, 1);
         assert!(shared.borrow().values.is_empty());
-        assert!(!Path::new(&shared.borrow().paths[0]).exists());
+        assert!(Path::new(&shared.borrow().paths[0]).exists());
         drop(app);
         fs::remove_dir_all(root).unwrap();
     }
@@ -203,16 +216,8 @@ fn pending_is_bounded_and_keeps_login() {
     app.close();
     shared.borrow_mut().mode = "ENTITLEMENT_PENDING".into();
     assert_eq!(app.restore().unwrap_err().code, "ENTITLEMENT_PENDING");
-    assert_eq!(shared.borrow().credentials, 6);
-    assert_eq!(
-        shared.borrow().waits,
-        vec![
-            Duration::from_secs(3),
-            Duration::from_secs(3),
-            Duration::from_secs(4),
-            Duration::from_secs(8)
-        ]
-    );
+    assert_eq!(shared.borrow().credentials, 2);
+    assert!(shared.borrow().waits.is_empty());
     assert!(!shared.borrow().values.is_empty());
     assert_eq!(shared.borrow().opens, 1);
     drop(app);
@@ -260,9 +265,17 @@ fn explicit_release_scope_and_offline_logout() {
     assert_eq!(live.restore().unwrap_err().code, "NO_SESSION");
     shared.borrow_mut().mode = "offline".into();
     assert_eq!(app.logout().unwrap_err().code, "SERVICE_UNAVAILABLE");
-    assert!(shared.borrow().values.is_empty());
-    assert!(!Path::new(&shared.borrow().paths[1]).exists());
+    assert!(!shared.borrow().values.is_empty());
+    assert!(Path::new(&shared.borrow().paths[1]).exists());
     drop(app);
+    let mut restarted=create(shared.clone(),root.clone(),"sandbox");
+    let before=shared.borrow().credentials;
+    assert_eq!(restarted.restore().unwrap_err().code,"SERVICE_UNAVAILABLE");
+    assert_eq!(shared.borrow().credentials,before);
+    shared.borrow_mut().mode.clear();
+    assert_eq!(restarted.restore().unwrap_err().code,"NO_SESSION");
+    assert!(shared.borrow().values.is_empty());
+    drop(restarted);
     fs::remove_dir_all(root).unwrap();
 }
 #[test]
@@ -456,11 +469,11 @@ fn official_runtime_online_restart_offline_and_tamper() {
                     json!({"signed_out":true})
                 } else if path.ends_with("/me") {
                     json!({"user":{"id":"account-a"}})
-                } else if path.ends_with("/credential") {
-                    json!({"product_id":PRODUCT,"license_key":format!("lv_lic_{}","a".repeat(43)),"version":1})
+                } else if path.ends_with("/identity") {
+                    json!({"product_id":PRODUCT,"licentivo_product_id":REMOTE,"launch_connection_id":"66666666-6666-4666-8666-666666666666","environment":"sandbox","identity_token":"I".repeat(64),"expires_at":"2099-01-01T00:00:00Z"})
                 } else {
                     let now = OffsetDateTime::now_utc().unix_timestamp();
-                    let claims = json!({"version":1,"key_id":"signing-test","tenant_id":"33333333-3333-4333-8333-333333333333","product_id":REMOTE,"license_id":"44444444-4444-4444-8444-444444444444","device_id":request["device_id"],"activation_id":"55555555-5555-4555-8555-555555555555","mode":"timed","features":["export"],"max_devices":1,"issued_at":now,"expires_at":now+3600});
+                    let claims = json!({"version":1,"key_id":"signing-test","tenant_id":"33333333-3333-4333-8333-333333333333","product_id":REMOTE,"license_id":"44444444-4444-4444-8444-444444444444","device_id":request["device_id"],"activation_id":"55555555-5555-4555-8555-555555555555","mode":"timed","features":["export"],"max_devices":1,"issued_at":now,"expires_at":now+3600,"runtime_policy":{"offline_mode":"limited","offline_seconds":3600,"heartbeat_seconds":600},"capabilities":{"license_model":"node_locked","launch_connection_id":"66666666-6666-4666-8666-666666666666","environment":"sandbox","session_id":"77777777-7777-4777-8777-777777777777","session_expires_at":now+3600,"binding_version":1}});
                     let payload = claims.to_string();
                     let message = [b"LicenovaLease/v1\n".as_slice(), payload.as_bytes()].concat();
                     let mut signature = [0u8; 64];
@@ -472,7 +485,7 @@ fn official_runtime_online_restart_offline_and_tamper() {
                             message.len(),
                         );
                     }
-                    json!({"activation_id":"55555555-5555-4555-8555-555555555555","device_key":format!("lv_dev_{}","d".repeat(43)),"lease":{"version":1,"key_id":"signing-test","payload":URL_SAFE_NO_PAD.encode(payload.as_bytes()),"signature":URL_SAFE_NO_PAD.encode(signature)},"heartbeat_seconds":600})
+                    json!({"activation_id":"55555555-5555-4555-8555-555555555555","device_key":format!("lv_dev_{}","d".repeat(43)),"lease":{"version":1,"key_id":"signing-test","payload":URL_SAFE_NO_PAD.encode(payload.as_bytes()),"signature":URL_SAFE_NO_PAD.encode(signature)},"heartbeat_seconds":600,"logout_ticket":{"operation_id":"88888888-8888-4888-8888-888888888888","product_id":REMOTE,"activation_id":"55555555-5555-4555-8555-555555555555","expected_generation":1,"release_token":format!("lv_out_{}","o".repeat(43))}})
                 };
                 (200, json!({"data":data}))
             };
@@ -513,17 +526,7 @@ fn official_runtime_online_restart_offline_and_tamper() {
     drop(app);
     offline.store(true, Ordering::SeqCst);
     let mut app = create();
-    assert!(app.restore().unwrap().offline_fallback);
-    app.run_feature("export", || Ok(())).unwrap();
-    let mut ran = false;
-    assert!(app
-        .run_feature("absent", || {
-            ran = true;
-            Ok(())
-        })
-        .is_err());
-    assert!(!ran);
-    drop(app);
+    assert!(app.restore().is_err());drop(app);
     let cache = fs::read_dir(&root)
         .unwrap()
         .next()
@@ -531,11 +534,12 @@ fn official_runtime_online_restart_offline_and_tamper() {
         .unwrap()
         .path()
         .join("lease.json");
+    let mut settings=product.clone();settings["license_key"]=json!("");settings["identity_token"]=json!("");settings["launch_connection_id"]=json!("66666666-6666-4666-8666-666666666666");settings["environment"]=json!("sandbox");settings["cache_path"]=json!(cache.to_str().unwrap());
+    let mut runtime=OfficialRuntimeFactory.open(&settings,false).unwrap();runtime.run_feature("export",&mut ||Ok(())).unwrap();
+    let mut ran=false;assert!(runtime.run_feature("absent",&mut ||{ran=true;Ok(())}).is_err());assert!(!ran);runtime.close();
     let mut value: Value = serde_json::from_slice(&fs::read(&cache).unwrap()).unwrap();
     value["lease"]["signature"] = json!(URL_SAFE_NO_PAD.encode([0u8; 64]));
     fs::write(cache, value.to_string()).unwrap();
-    let mut app = create();
-    assert!(app.restore().is_err());
-    drop(app);
+    assert!(OfficialRuntimeFactory.open(&settings,false).is_err());
     fs::remove_dir_all(root).unwrap();
 }

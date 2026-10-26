@@ -55,15 +55,17 @@ func MakeSnapshot(ctx context.Context, db *gorm.DB, key []byte, configuration ma
 // RestoreSnapshot refuses every nonempty target and restores in one transaction.
 // Worker leases and login tokens from an old backup cannot be reused as current.
 func RestoreSnapshot(ctx context.Context, db *gorm.DB, snap Snapshot) error {
-	if snap.Format != "licentivo-launch-backup-v1" || len(snap.MasterKey) != 32 || len(snap.Tables) != len(models()) {
-		return errors.New("unsupported or incomplete backup")
-	}
-	entries := map[string]json.RawMessage{}
-	for _, table := range snap.Tables {
-		if _, ok := entries[table.Name]; ok {
-			return errors.New("duplicate backup table")
+	tableNames := make([]string, 0, len(models()))
+	for _, model := range models() {
+		stmt := &gorm.Statement{DB: db}
+		if err := stmt.Parse(model); err != nil {
+			return err
 		}
-		entries[table.Name] = table.Rows
+		tableNames = append(tableNames, stmt.Schema.Table)
+	}
+	entries, err := snapshotEntries(snap, tableNames)
+	if err != nil {
+		return err
 	}
 	return db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		for _, model := range models() {
@@ -126,4 +128,78 @@ func RestoreSnapshot(ctx context.Context, db *gorm.DB, snap Snapshot) error {
 		// reconcile transactions after the backup timestamp before resuming workers.
 		return tx.Model(&InstanceSettings{}).Where("id = 1").Update("recovery_required", true).Error
 	})
+}
+
+// Additive tables may be absent in older v1 archives. External tables are only
+// optional when the archive contains no custom licensing state.
+func snapshotEntries(snap Snapshot, tableNames []string) (map[string]json.RawMessage, error) {
+	if snap.Format != "licentivo-launch-backup-v1" || len(snap.MasterKey) != 32 {
+		return nil, errors.New("unsupported or incomplete backup")
+	}
+	known := make(map[string]bool, len(tableNames))
+	missingExternal := false
+	for _, name := range tableNames {
+		known[name] = true
+	}
+	entries := make(map[string]json.RawMessage, len(tableNames))
+	for _, table := range snap.Tables {
+		if !known[table.Name] {
+			return nil, errors.New("unknown backup table")
+		}
+		if _, exists := entries[table.Name]; exists {
+			return nil, errors.New("duplicate backup table")
+		}
+		entries[table.Name] = table.Rows
+	}
+	for _, name := range tableNames {
+		if _, exists := entries[name]; !exists {
+			if name != "payment_reversals" && name != "external_licensing_connections" && name != "product_licensing_bindings" && name != "external_plan_mappings" {
+				return nil, errors.New("backup table is missing")
+			}
+			entries[name] = json.RawMessage("[]")
+			if name != "payment_reversals" {
+				missingExternal = true
+			}
+		}
+	}
+	if missingExternal {
+		for _, name := range []string{"external_licensing_connections", "product_licensing_bindings", "external_plan_mappings"} {
+			var rows []json.RawMessage
+			if raw := entries[name]; len(raw) > 0 {
+				if json.Unmarshal(raw, &rows) != nil || len(rows) > 0 {
+					return nil, errors.New("external licensing backup table is missing")
+				}
+			}
+		}
+		for _, name := range []string{"sync_tasks", "orders", "entitlements"} {
+			var rows []struct {
+				Provider            string
+				Snapshot            json.RawMessage
+				EntitlementSnapshot json.RawMessage
+			}
+			if raw := entries[name]; len(raw) > 0 {
+				if json.Unmarshal(raw, &rows) != nil {
+					return nil, errors.New("backup table content is invalid")
+				}
+			}
+			for _, row := range rows {
+				if row.Provider == "custom_http" {
+					return nil, errors.New("external licensing backup table is missing")
+				}
+				for _, raw := range []json.RawMessage{row.Snapshot, row.EntitlementSnapshot} {
+					if len(raw) == 0 {
+						continue
+					}
+					var fields map[string]json.RawMessage
+					if json.Unmarshal(raw, &fields) != nil {
+						return nil, errors.New("backup snapshot is invalid")
+					}
+					if value := fields["external_licensing"]; len(value) > 0 && string(value) != "null" {
+						return nil, errors.New("external licensing backup table is missing")
+					}
+				}
+			}
+		}
+	}
+	return entries, nil
 }

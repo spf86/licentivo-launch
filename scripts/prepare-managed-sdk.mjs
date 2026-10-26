@@ -34,11 +34,16 @@ for (const name of fs.readdirSync(path.join(source,'go'))) {
 tree('go/internal',`${go}/internal`,name=>name.endsWith('.go') && !name.endsWith('_test.go'));
 notices(go);
 const py = 'sdk/python/src/licentivo_launch/_vendor';
-copy('python/licentivo.py',`${py}/licentivo.py`,text=>text.replace('import licentivo_tasks','from . import licentivo_tasks'));
-copy('python/licentivo_tasks.py',`${py}/licentivo_tasks.py`); notices(py);
+copy('python/licentivo.py',`${py}/licentivo.py`,text=>text.replace('import licentivo_tasks','from . import licentivo_tasks').replace('import licentivo_logout','from . import licentivo_logout'));
+for (const name of fs.readdirSync(path.join(source,'python'))) {
+  if (/^licentivo_.+\.py$/.test(name)) copy(`python/${name}`,`${py}/${name}`);
+}
+notices(py);
 fs.writeFileSync(path.join(root,py,'__init__.py'),'"""Private, pinned Licentivo SDK implementation."""\n');
 const js = 'sdk/javascript/src/vendor';
-for (const name of ['licentivo.mjs','feature-tasks.mjs','quickstart.mjs','app.mjs']) copy(`javascript/${name}`,`${js}/${name}`);
+for (const name of fs.readdirSync(path.join(source,'javascript'))) {
+  if (name.endsWith('.mjs') && !name.includes('test') && name !== 'demo.mjs') copy(`javascript/${name}`,`${js}/${name}`);
+}
 notices(js);
 for (const name of fs.readdirSync(path.join(source,'csharp'))) if (name.endsWith('.cs')) copy(`csharp/${name}`,`sdk/csharp/vendor/${name}`);
 notices('sdk/csharp/vendor');
@@ -58,5 +63,5 @@ fs.mkdirSync(path.join(root,rb,'licentivo/native'),{recursive:true});
 for (const name of ['CMakeLists.txt','LicentivoConfig.cmake.in','LICENSE','NOTICE','VERSION']) copy(name,`sdk/native/vendor/sdk/${name}`);
 tree('c','sdk/native/vendor/sdk/c',name=>/\.(c|h)$/.test(name)||/LICEN[CS]E|NOTICE/i.test(name));
 tree('cpp','sdk/native/vendor/sdk/cpp',name=>name.endsWith('.hpp'));
-fs.writeFileSync(path.join(root,'sdk/managed-sdk-manifest.json'),JSON.stringify({schema_version:1,sdk_version:upstreamVersion,changes:'Only private import and native-library relocation, with embedded text line endings normalized to LF; authorization and cryptographic logic are unchanged.',files:records},null,2)+'\n');
+fs.writeFileSync(path.join(root,'sdk/managed-sdk-manifest.json'),JSON.stringify({schema_version:1,sdk_version:upstreamVersion,source_revision:process.argv[3]||'release',changes:'Only private import and native-library relocation, with embedded text line endings normalized to LF; authorization and cryptographic logic are unchanged. Account-lifecycle revisions are released together with the matching Licentivo server.',files:records},null,2)+'\n');
 console.log(`Embedded SDK ${upstreamVersion}: ${records.length} files, with source and destination SHA-256 records.`);

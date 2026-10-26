@@ -4,7 +4,8 @@ using System.Text;
 
 namespace Licentivo.Launch;
 
-/// <summary>Implement with an OS vault. Never persist these bytes as plaintext.</summary>
+/// <summary>OS-user/host vault with atomic replacement and multiple opaque keys.
+/// Active login and account logout tasks use distinct keys. Never persist plaintext.</summary>
 public interface ISessionStore
 {
     byte[]? Load(string key);

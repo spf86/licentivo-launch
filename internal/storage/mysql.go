@@ -100,6 +100,9 @@ func Initialize(ctx context.Context, db *gorm.DB) error {
 	if err := db.WithContext(ctx).Set("gorm:table_options", "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin").AutoMigrate(models()...); err != nil {
 		return ErrSchema
 	}
+	if err := ensurePaymentReversalStatus(db.WithContext(ctx)); err != nil {
+		return ErrSchema
+	}
 	return nil
 }
 

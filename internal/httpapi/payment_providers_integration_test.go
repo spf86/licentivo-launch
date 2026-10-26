@@ -19,6 +19,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -41,6 +42,7 @@ type providerFixturePayment struct {
 	refundID, refundOperation, refundStatus string
 }
 type providerFixtureAPI struct {
+	mu       sync.Mutex
 	t        *testing.T
 	private  *rsa.PrivateKey
 	payments map[string]*providerFixturePayment
@@ -89,6 +91,8 @@ func (f *providerFixtureAPI) waffoOrder(p *providerFixturePayment) map[string]an
 	return map[string]any{"acquiringOrderId": p.id, "merchantOrderId": p.order, "paymentRequestId": strings.ReplaceAll(p.operation, "-", ""), "orderCurrency": "USD", "orderAmount": fmt.Sprintf("%d.%02d", p.minor/100, p.minor%100), "merchantInfo": map[string]string{"merchantId": "fixture_merchant"}, "orderStatus": status, "orderCompletedAt": time.Now().Add(-time.Minute).UTC().Format(time.RFC3339Nano), "orderAction": string(action)}
 }
 func (f *providerFixtureAPI) roundTrip(r *http.Request) (*http.Response, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
 	f.calls = append(f.calls, r.Method+" "+r.URL.Path)
 	var body map[string]json.RawMessage
 	if r.Body != nil {
@@ -98,7 +102,7 @@ func (f *providerFixtureAPI) roundTrip(r *http.Request) (*http.Response, error) 
 		}
 	}
 	str := func(key string) string { var v string; _ = json.Unmarshal(body[key], &v); return v }
-	waffo := r.URL.Host == "api-sandbox.waffo.com"
+	waffo := r.URL.Host == "api-sandbox.waffo.com" || r.URL.Host == "api.waffo.com"
 	if !waffo && r.URL.Host != "sandbox-api.paddle.com" {
 		f.t.Fatalf("unexpected external host: %s", r.URL.Host)
 	}
@@ -258,7 +262,8 @@ func TestNewPaymentProvidersAndRegistrationWithoutMail(t *testing.T) {
 	defer func() { http.DefaultTransport = previous }()
 	licensing := &uniqueProviderLicenses{&licenseDouble{results: map[string]ports.EntitlementResult{}, requests: map[string]string{}}}
 	mailRecorder := &recordingMailSender{}
-	config := app.Config{PublicURL: "https://merchant.example", MasterKey: bytes.Repeat([]byte{39}, 32), UploadDir: t.TempDir(), MailFactory: mailRecorder.factory, LicensingFactory: func(context.Context, storage.LicentivoConnection) (ports.LicensingProvider, error) {
+	bridge := &accountBridgeDouble{}
+	config := app.Config{BridgeFactory: func(string) (ports.LaunchBridge, error) { return bridge, nil }, PublicURL: "https://merchant.example", MasterKey: bytes.Repeat([]byte{39}, 32), UploadDir: t.TempDir(), MailFactory: mailRecorder.factory, LicensingFactory: func(context.Context, storage.LicentivoConnection) (ports.LicensingProvider, error) {
 		return licensing, nil
 	}, LicensingSetupFactory: func(string) (app.LicentivoSetupProvider, error) { return licensing, nil }}
 	var service *app.Service
@@ -284,16 +289,72 @@ func TestNewPaymentProvidersAndRegistrationWithoutMail(t *testing.T) {
 	product := data[app.ProductView](t, a.request("PUT", "/api/v1/admin/product", app.ProductView{Name: "Provider integration product", Slug: "provider-integration", Status: "published", Content: app.ProductContent{Summary: "Test checkout and refunds"}}, admin))
 	unit, period := "month", uint64(1)
 	plan := data[app.PlanView](t, a.request("POST", "/api/v1/admin/plans", app.PlanView{ProductID: product.ID, Name: "Pro", Currency: "USD", AmountMinor: 1299, PurchaseType: "fixed_term", TermUnit: &unit, TermCount: &period, AllowPurchase: true, AllowRenewal: true}, admin))
+	a.expect(a.request("PUT", "/api/v1/admin/licensing/provider", app.LicensingProviderInput{Provider: "unknown"}, admin), 400)
+	a.expect(a.request("PUT", "/api/v1/admin/licensing/provider", app.LicensingProviderInput{Provider: app.CustomLicensing}, admin), 200)
+	a.expect(a.request("PUT", "/api/v1/admin/products/"+product.ID+"/licensing", app.ProductLicensingInput{Provider: "licentivo", Environment: "sandbox"}, admin), 409)
+	a.expect(a.request("PUT", "/api/v1/admin/licensing/provider", app.LicensingProviderInput{Provider: "licentivo"}, admin), 200)
 	a.expect(a.request("POST", "/api/v1/admin/connections/licentivo", app.LicenseSettings{APIKey: "lv_api_test"}, admin), 200)
 	a.expect(a.request("POST", "/api/v1/admin/connections/mappings", app.MappingInput{VersionID: plan.VersionID, PolicyID: "22222222-2222-4222-8222-222222222222"}, admin), 200)
 	settings := []app.PaymentSettings{{Provider: "waffo", Environment: "sandbox", MerchantRef: "fixture_merchant", APIKey: "waffo_fixture_key", PrivateKey: base64.StdEncoding.EncodeToString(private), PublicKey: base64.StdEncoding.EncodeToString(public)}, {Provider: "paddle", Environment: "sandbox", MerchantRef: fixtureSeller, APIKey: "pdl_sdbx_apikey_fixture", WebhookSecret: "pdl_ntfset_fixture", ClientToken: "test_fixture", ProductID: fixtureProduct}}
 	for _, setting := range settings {
 		a.expect(a.request("POST", "/api/v1/admin/connections/payments", setting, admin), 200)
 	}
+	liveSetting := settings[0]
+	liveSetting.Environment = "live"
+	a.expect(a.request("POST", "/api/v1/admin/connections/payments", liveSetting, admin), 200)
+	var owner storage.User
+	if err := db.First(&owner, "email = ?", login["email"]).Error; err != nil {
+		t.Fatal(err)
+	}
+	saveErrors := make(chan error, 8)
+	var saves sync.WaitGroup
+	for index := range 8 {
+		saves.Add(1)
+		go func(index int) {
+			defer saves.Done()
+			saveErrors <- service.SavePaymentSettings(ctx, app.Principal{User: owner, Role: "admin"}, settings[index%len(settings)])
+		}(index)
+	}
+	saves.Wait()
+	close(saveErrors)
+	for err := range saveErrors {
+		if err != nil {
+			t.Fatal("concurrent payment configuration failed", err)
+		}
+	}
+	var enabledSandbox, enabledLive int64
+	if err := db.Model(&storage.PaymentAccount{}).Where("environment = 'sandbox' AND enabled = true").Count(&enabledSandbox).Error; err != nil || enabledSandbox != 1 {
+		t.Fatal("concurrent saves enabled multiple sandbox providers", enabledSandbox, err)
+	}
+	if err := db.Model(&storage.PaymentAccount{}).Where("environment = 'live' AND enabled = true").Count(&enabledLive).Error; err != nil || enabledLive != 1 {
+		t.Fatal("sandbox configuration disabled the live provider", enabledLive, err)
+	}
+	a.expect(a.request("POST", "/api/v1/admin/connections/payments", settings[1], admin), 200)
+	// Normalize a legacy configuration that had multiple enabled providers.
+	if err := db.Model(&storage.PaymentAccount{}).Where("environment = 'sandbox' AND provider = 'waffo'").Update("enabled", true).Error; err != nil {
+		t.Fatal(err)
+	}
+	restart()
 	a.expect(a.request("POST", "/api/v1/admin/plans/"+plan.ID+"/publish", map[string]string{"version_id": plan.VersionID, "environment": "sandbox"}, admin), 200)
 	site := data[app.SiteView](t, a.request("GET", "/api/v1/site?environment=sandbox", nil, nil))
-	if site.EmailVerificationRequired || len(site.PaymentProviders) != 2 {
+	if site.EmailVerificationRequired || len(site.PaymentProviders) != 1 || site.PaymentProviders[0] != "paddle" {
 		t.Fatal("optional registration or new provider catalog was not available")
+	}
+	var accounts []storage.PaymentAccount
+	if err := db.Where("environment = 'sandbox'").Find(&accounts).Error; err != nil || len(accounts) != 2 {
+		t.Fatal("saved payment accounts were lost", accounts, err)
+	}
+	for _, account := range accounts {
+		if account.Enabled != (account.Provider == "paddle") {
+			t.Fatal("payment providers were enabled together", accounts)
+		}
+	}
+	badSettings := settings[0]
+	badSettings.MerchantRef = "wrong_merchant"
+	a.expect(a.request("POST", "/api/v1/admin/connections/payments", badSettings, admin), 400)
+	site = data[app.SiteView](t, a.request("GET", "/api/v1/site?environment=sandbox", nil, nil))
+	if len(site.PaymentProviders) != 1 || site.PaymentProviders[0] != "paddle" {
+		t.Fatal("failed verification deactivated the working provider")
 	}
 	a.expect(a.request("POST", "/api/v1/auth/email", map[string]string{"email": "buyer@example.invalid", "kind": "reset"}, nil), 409)
 	for caseIndex, provider := range []string{"waffo", "paddle", "paddle"} {
@@ -301,6 +362,11 @@ func TestNewPaymentProvidersAndRegistrationWithoutMail(t *testing.T) {
 			parent := a.t
 			a.t = t
 			defer func() { a.t = parent }()
+			selectedIndex := 0
+			if provider == "paddle" {
+				selectedIndex = 1
+			}
+			a.expect(a.request("POST", "/api/v1/admin/connections/payments", settings[selectedIndex], admin), 200)
 			drainAuthorization := func() {
 				for range 12 {
 					handled, err := service.ProcessAuthorization(ctx)
@@ -324,7 +390,13 @@ func TestNewPaymentProvidersAndRegistrationWithoutMail(t *testing.T) {
 				t.Fatal("unverified email was falsely marked verified")
 			}
 			input := app.CheckoutInput{ProductID: product.ID, PlanVersionID: plan.VersionID, Provider: provider, Environment: "sandbox", IdempotencyKey: fmt.Sprintf("provider-checkout-key-%d", caseIndex)}
+			inactive := input
+			inactive.Provider = settings[1-selectedIndex].Provider
+			a.expect(a.request("POST", "/api/v1/orders", inactive, customer), 409)
 			order := data[app.CheckoutView](t, a.request("POST", "/api/v1/orders", input, customer))
+			// Existing checkout recovery, webhooks and refunds must keep using
+			// the original account after another provider becomes active.
+			a.expect(a.request("POST", "/api/v1/admin/connections/payments", settings[1-selectedIndex], admin), 200)
 			restart()
 			order = data[app.CheckoutView](t, a.request("POST", "/api/v1/orders", input, customer))
 			if order.CheckoutURL == nil {
@@ -402,7 +474,7 @@ func TestNewPaymentProvidersAndRegistrationWithoutMail(t *testing.T) {
 			drainAuthorization()
 			desktop := map[string]string{"email": credentials["email"], "password": credentials["password"], "kind": "desktop"}
 			grant := data[app.SessionGrant](t, a.request("POST", "/api/v1/auth/login", desktop, nil, func(r *http.Request) { r.Header.Del("Origin") }))
-			a.expect(a.request("POST", "/api/v1/software/products/"+product.ID+"/credential", map[string]string{"environment": "sandbox"}, nil, func(r *http.Request) {
+			a.expect(a.request("POST", "/api/v1/software/products/"+product.ID+"/identity", map[string]string{"environment": "sandbox"}, nil, func(r *http.Request) {
 				r.Header.Del("Origin")
 				r.Header.Set("Authorization", "Bearer "+grant.AccessToken)
 			}), 200)
@@ -514,6 +586,7 @@ func TestNewPaymentProvidersAndRegistrationWithoutMail(t *testing.T) {
 		t.Fatal("turning off verification disabled password recovery")
 	}
 	// Payment and authorization notifications can be enabled independently.
+	a.expect(a.request("POST", "/api/v1/admin/connections/payments", settings[1], admin), 200)
 	yes := true
 	smtp.OrderNotifications = &yes
 	a.expect(a.request("POST", "/api/v1/admin/mail/settings", smtp, admin), 200)

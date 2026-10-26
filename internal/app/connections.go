@@ -2,11 +2,11 @@ package app
 
 import (
 	"context"
-	"crypto/sha256"
 	"encoding/json"
 	"errors"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	"licentivo-launch/internal/adapters/licentivo"
 	"licentivo-launch/internal/payments"
@@ -122,6 +122,9 @@ func (s *Service) SavePaymentSettings(ctx context.Context, p Principal, in Payme
 		return problem(400, "PAYMENT_CONNECTION_FAILED", "支付凭证或收款商户检查未通过")
 	}
 	return databaseError(s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if _, err := lockProviderSettings(tx, "UPDATE"); err != nil {
+			return err
+		}
 		secret, err := s.createSecret(tx, "payment_credentials", marshal(in))
 		if err != nil {
 			return err
@@ -146,7 +149,7 @@ func (s *Service) SavePaymentSettings(ctx context.Context, p Principal, in Payme
 				return err
 			}
 		}
-		if err := tx.Model(&storage.PaymentAccount{}).Where("provider = ? AND environment = ? AND id <> ?", in.Provider, in.Environment, account.ID).Update("enabled", false).Error; err != nil {
+		if err := tx.Model(&storage.PaymentAccount{}).Where("environment = ? AND id <> ?", in.Environment, account.ID).Update("enabled", false).Error; err != nil {
 			return err
 		}
 		return audit(tx, p.User.ID, "payment.configure", "payment_account", account.ID, "")
@@ -277,11 +280,27 @@ func (s *Service) SaveLicenseSettings(ctx context.Context, p Principal, in Licen
 	if err != nil {
 		return nil, databaseError(err)
 	}
-	return map[string]any{"id": id, "connected": true, "sales_contract_ready": capsErr == nil && caps.ValidateSales() == nil, "capabilities": caps}, nil
+	if err := s.syncLaunchTrust(ctx, apiKey); err != nil {
+		return nil, err
+	}
+	contract := ports.LaunchBridgeVersion
+	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&storage.LicentivoConnection{}).Where("id = ?", id).Update("contract_version", contract).Error; err != nil {
+			return err
+		}
+		return tx.Model(&storage.SyncTask{}).Where("launch_connection_id IS NULL AND status <> 'succeeded'").Updates(map[string]any{"status": "manual_review", "last_error_code": "LEGACY_PURCHASE_REVIEW_REQUIRED", "lease_token": nil, "lease_until": nil}).Error
+	}); err != nil {
+		return nil, ErrStorage
+	}
+	return map[string]any{"id": id, "connected": true, "account_protocol_ready": true, "sales_contract_ready": true, "contract_version": contract}, nil
 }
 func (s *Service) Connections(ctx context.Context, p Principal) (map[string]any, error) {
 	if !p.IsAdmin() {
 		return nil, ErrForbidden
+	}
+	selected, err := s.activeLicensingProvider(s.db.WithContext(ctx))
+	if err != nil {
+		return nil, ErrStorage
 	}
 	var accounts []storage.PaymentAccount
 	var connection storage.LicentivoConnection
@@ -312,12 +331,14 @@ func (s *Service) Connections(ctx context.Context, p Principal) (map[string]any,
 		// unsupported because they probed a proposed endpoint rather than the
 		// management API Licentivo actually exposes. Present the current adapter
 		// capability immediately; saving again persists the upgraded marker.
-		if provider, err := s.licensingProvider(ctx, connection); err == nil {
-			if current, err := provider.Capabilities(ctx); err == nil && current.ValidateSales() == nil {
-				capabilities = marshal(current)
-				if contract == nil {
-					version := "licentivo-management-v1"
-					contract = &version
+		if selected == "licentivo" {
+			if provider, err := s.licensingProvider(ctx, connection); err == nil {
+				if current, err := provider.Capabilities(ctx); err == nil && current.ValidateSales() == nil {
+					capabilities = marshal(current)
+					if contract == nil {
+						version := "licentivo-management-v1"
+						contract = &version
+					}
 				}
 			}
 		}
@@ -331,7 +352,7 @@ func (s *Service) Connections(ctx context.Context, p Principal) (map[string]any,
 	for _, v := range rows {
 		mappings = append(mappings, map[string]any{"version_id": v.PlanVersionID, "product_id": v.RemoteProductID, "policy_id": v.RemotePolicyID, "policy_version": v.RemotePolicyVersion})
 	}
-	return map[string]any{"payments": pay, "licensing": licenses, "mappings": mappings, "licentivo_url": LicentivoServiceURL}, nil
+	return map[string]any{"payments": pay, "licensing": licenses, "mappings": mappings, "licentivo_url": LicentivoServiceURL, "licensing_provider": selected}, nil
 }
 
 type MappingInput struct {
@@ -365,37 +386,24 @@ type licentivoCatalogSnapshot struct {
 	} `json:"policies"`
 }
 
-func policyPlanSnapshot(policy ports.PolicyDefinition) PlanSnapshot {
-	features := append([]string(nil), policy.Features...)
-	if features == nil {
-		features = []string{}
-	}
-	return PlanSnapshot{
-		OfflineMode: policy.OfflineMode, HeartbeatSeconds: policy.HeartbeatSeconds,
-		OfflineSeconds: policy.OfflineSeconds, SessionSeconds: policy.SessionSeconds,
-		SelfReleaseLimit: policy.SelfReleaseLimit, Features: features,
-		MaxDevices: policy.MaxDevices, LicenseModel: policy.LicenseModel,
-	}
-}
-
 func (s *Service) SaveMapping(ctx context.Context, p Principal, in MappingInput) error {
 	if !p.CanManage() {
 		return ErrForbidden
 	}
-	if in.VersionID == "" || in.PolicyID == "" {
+	if !integrationUUIDPattern.MatchString(in.VersionID) || !integrationUUIDPattern.MatchString(in.PolicyID) {
 		return ErrInvalid
 	}
 	var connection storage.LicentivoConnection
-	if s.db.WithContext(ctx).Order("created_at,id").First(&connection).Error != nil {
-		return problem(409, "LICENSE_CONNECTION_REQUIRED", "请先连接 Licentivo")
+	if s.db.WithContext(ctx).First(&connection, "contract_version = ?", ports.LaunchBridgeVersion).Error != nil {
+		return bridgePending()
 	}
 	var catalog licentivoCatalogSnapshot
 	if json.Unmarshal(connection.Catalog, &catalog) != nil {
-		return problem(409, "LICENSE_CATALOG_REFRESH_REQUIRED", "Licentivo 策略目录需要刷新，请重新验证 API Key")
+		return problem(409, "LICENSE_CATALOG_REFRESH_REQUIRED", "请刷新 Licentivo 产品和策略目录")
 	}
-	productIDs := make(map[string]string, len(catalog.Products.Items))
+	names := map[string]string{}
 	for _, product := range catalog.Products.Items {
-		productIDs[product.ID] = product.Name
+		names[product.ID] = product.Name
 	}
 	var selected licentivoCatalogPolicy
 	for _, policy := range catalog.Policies.Items {
@@ -404,55 +412,66 @@ func (s *Service) SaveMapping(ctx context.Context, p Principal, in MappingInput)
 			break
 		}
 	}
-	if selected.ProductID == "" || selected.Version < 1 || productIDs[selected.ProductID] == "" {
-		return problem(409, "LICENSE_POLICY_NOT_AVAILABLE", "该授权策略已不可用，请刷新 Licentivo 策略列表")
+	if selected.ProductID == "" || selected.Version == 0 || names[selected.ProductID] == "" {
+		return problem(409, "LICENSE_POLICY_NOT_AVAILABLE", "请刷新 Licentivo 策略目录后重新选择")
 	}
-	client, err := s.licensingProvider(ctx, connection)
-	if err != nil {
-		return ErrStorage
-	}
-	caps, err := client.Capabilities(ctx)
-	if err != nil || caps.ValidateSales() != nil {
-		return problem(409, "LICENSE_CONTRACT_UNSUPPORTED", "Licentivo 管理接口不可用，请确认 API Key 具有读写权限")
-	}
-	policyProvider, ok := client.(ports.PolicyCatalogProvider)
-	if !ok {
-		return problem(409, "LICENSE_POLICY_DETAILS_UNAVAILABLE", "无法读取 Licentivo 策略详情，请刷新连接后重试")
-	}
-	definition, err := policyProvider.PolicyDefinition(ctx, in.PolicyID)
-	if err != nil || definition.ID != selected.ID || definition.ProductID != selected.ProductID || definition.Version != selected.Version {
-		return problem(409, "LICENSE_POLICY_CHANGED", "Licentivo 策略已经更新，请刷新策略列表后重新选择")
-	}
-	snapshot := policyPlanSnapshot(definition)
-	if snapshot.MaxDevices < 1 || snapshot.MaxDevices > 10000 || (snapshot.LicenseModel != "node_locked" && snapshot.LicenseModel != "floating") {
-		return problem(409, "LICENSE_POLICY_INVALID", "Licentivo 策略配置不完整，请先在 Licentivo 中修正")
-	}
-	snapshotBytes := marshal(snapshot)
-	snapshotHash := sha256.Sum256(snapshotBytes)
-	var version storage.PlanVersion
-	if s.db.WithContext(ctx).First(&version, "id = ?", in.VersionID).Error != nil {
-		return ErrNotFound
-	}
-	version.EntitlementSnapshot = snapshotBytes
-	version.SnapshotHash = snapshotHash[:]
-	mapping := storage.PlanLicenseMapping{RemoteProductID: selected.ProductID, RemoteProductName: productIDs[selected.ProductID], RemotePolicyID: in.PolicyID, RemotePolicyName: selected.Name, RemotePolicyVersion: selected.Version}
-	if err := checkPolicy(ctx, client, version, mapping, ""); err != nil {
-		return err
+	var target storage.PlanVersion
+	if err := s.db.WithContext(ctx).Select("id", "product_id").First(&target, "id = ?", in.VersionID).Error; err != nil {
+		return databaseError(err)
 	}
 	return databaseError(s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		var existing int64
-		if tx.Model(&storage.PlanPublication{}).Where("version_id = ? AND preview_only = false", in.VersionID).Count(&existing).Error != nil {
-			return ErrStorage
-		}
-		if existing > 0 {
-			return problem(409, "PUBLISHED_MAPPING_IMMUTABLE", "已经开始销售的套餐不能直接更换授权，请创建套餐新版本")
-		}
-		if err := tx.Model(&storage.PlanVersion{}).Where("id = ?", in.VersionID).Updates(map[string]any{"entitlement_snapshot": snapshotBytes, "snapshot_hash": snapshotHash[:]}).Error; err != nil {
+		if _, err := lockProviderSettings(tx, "SHARE"); err != nil {
 			return err
 		}
-		if err := tx.Where("plan_version_id = ?", in.VersionID).Delete(&storage.PlanLicenseMapping{}).Error; err != nil {
+		if err := s.requireLicensingProvider(tx, "licentivo"); err != nil {
 			return err
 		}
-		return tx.Create(&storage.PlanLicenseMapping{PlanVersionID: in.VersionID, ConnectionID: connection.ID, RemoteProductID: selected.ProductID, RemoteProductName: productIDs[selected.ProductID], RemotePolicyID: in.PolicyID, RemotePolicyName: selected.Name, RemotePolicyVersion: selected.Version}).Error
+		// Lock the common parent before any consistent reads. Locking only the
+		// two different version rows allowed both transactions to see no conflict.
+		var product storage.Product
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&product, "id = ?", target.ProductID).Error; err != nil {
+			return err
+		}
+		var version storage.PlanVersion
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&version, "id = ? AND product_id = ?", in.VersionID, product.ID).Error; err != nil {
+			return err
+		}
+		mapping := storage.PlanLicenseMapping{PlanVersionID: version.ID, ConnectionID: connection.ID, RemoteProductID: selected.ProductID, RemoteProductName: names[selected.ProductID], RemotePolicyID: selected.ID, RemotePolicyName: selected.Name, RemotePolicyVersion: selected.Version}
+		var published int64
+		if err := tx.Model(&storage.PlanPublication{}).Where("version_id = ? AND preview_only = false", version.ID).Count(&published).Error; err != nil {
+			return err
+		}
+		if published > 0 {
+			var saved storage.PlanLicenseMapping
+			if tx.First(&saved, "plan_version_id = ?", version.ID).Error != nil || saved.ConnectionID != mapping.ConnectionID || saved.RemoteProductID != mapping.RemoteProductID || saved.RemotePolicyID != mapping.RemotePolicyID || saved.RemotePolicyVersion != mapping.RemotePolicyVersion {
+				return problem(409, "PUBLISHED_MAPPING_IMMUTABLE", "已经开始销售的套餐不能直接更换授权，请创建套餐新版本")
+			}
+		}
+		remoteProduct, err := productRemoteID(tx, product, version.ID)
+		if err != nil {
+			return err
+		}
+		if remoteProduct != "" && remoteProduct != mapping.RemoteProductID {
+			return productMappingConflict()
+		}
+		for _, environment := range []string{"sandbox", "live"} {
+			if err := s.registerLaunchPlan(ctx, environment, version, mapping, false); err != nil {
+				return err
+			}
+		}
+		policy, err := s.mappingPolicy(ctx, mapping)
+		if err != nil {
+			return err
+		}
+		display := marshal(policyDisplaySnapshot(policy))
+		if err := tx.Model(&version).Updates(map[string]any{"entitlement_snapshot": display, "snapshot_hash": securityDigest(display)}).Error; err != nil {
+			return err
+		}
+		if product.LicentivoProductID == nil {
+			if err := tx.Model(&product).Update("licentivo_product_id", mapping.RemoteProductID).Error; err != nil {
+				return err
+			}
+		}
+		return tx.Clauses(clause.OnConflict{UpdateAll: true}).Create(&mapping).Error
 	}))
 }

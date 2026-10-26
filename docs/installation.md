@@ -4,7 +4,7 @@ This guide starts with a ready-to-run Licentivo Launch release package. The proj
 
 ## Download the server package
 
-Choose a Windows or Linux package for amd64 or arm64 from [GitHub Releases](https://github.com/spf86/licentivo-launch/releases/tag/v0.3.0-beta), then extract it. The package includes the executable, installation guide, public configuration example and license notices.
+Choose a Windows or Linux package for amd64 or arm64 from [GitHub Releases](https://github.com/spf86/licentivo-launch/releases/tag/v0.3.1-beta), then extract it. The package includes the executable, installation guide, public configuration example and license notices.
 
 You need MySQL 8.0.16+, an empty database and an account permitted to create/alter application tables. Go, Git, Node.js and a compiler are not required to run the package. The [binary guide](binary-installation.md) lists direct downloads, architecture selection and checksum verification.
 
@@ -32,6 +32,9 @@ Edit `config.yaml` in the extracted directory:
 1. Replace `database_dsn` with your own connection string.
 2. Keep the automatically generated `master_key`.
 3. Check the listener, public URL, and upload directory.
+4. Optionally set `admin_email` and `admin_password` before the first server start. Use your own email and a unique password of 12-128 bytes; empty fields use the built-in initial values below. Nonempty `LAUNCH_ADMIN_EMAIL` / `LAUNCH_ADMIN_PASSWORD` process variables override the corresponding YAML fields.
+
+`init` writes the private configuration and master key only. It does not connect to MySQL or create an administrator; the first `serve` against an uninitialized database creates the account.
 
 Start the application:
 
@@ -39,7 +42,11 @@ Start the application:
 ./launch.exe serve
 ```
 
-Open `http://localhost:18080/#/login`. A new database automatically receives the initial account `admin@example.com` with password `LaunchAdmin123!`. The first login requires a different password of 12-128 bytes. Sign in again with the replacement password to access administration. Complete this step on localhost before exposing a public origin. No restart after password change is required. Existing administrators are not reset.
+Open `http://localhost:18080/#/login` in a browser on the server. On an uninitialized database, **when no initial-account overrides are set**, the administrator email is `admin@example.com` and the initial password is `LaunchAdmin123!`. If you supplied your own credentials, use those instead. Account creation prints the selected credentials in the server terminal; the fixed default password is separate from the randomly generated master key.
+
+The first login requires a different password of 12-128 bytes, even if you configured your own initial password. Save and sign in again with the replacement password. Administration and desktop sessions remain blocked until the change is complete. Complete this step before exposing a public origin. No restart after password change is required.
+
+Existing installations keep their current accounts and passwords. Changing `admin_email`, `admin_password`, or their environment overrides, restarting, or upgrading does not reset an installed account. See [login troubleshooting](#health-and-troubleshooting) if the default credentials fail.
 
 For subsequent starts, return to the same extracted directory and run `./launch.exe serve`. The existing configuration, database and administrator password are retained. Source development is covered in the optional build section below.
 
@@ -55,7 +62,19 @@ Edit `config.yaml` as described above, then:
 ./launch serve
 ```
 
-Open `http://localhost:18080/#/login`, sign in with `admin@example.com` / `LaunchAdmin123!`, and complete the required password change. The default listener is loopback. The Linux binaries are cross-built with CGO disabled; Linux and ARM64 runtime acceptance remains dependent on the target machine.
+Open `http://localhost:18080/#/login` in a browser on the server and follow the same first-login flow above. Use your configured initial credentials, or `admin@example.com` / `LaunchAdmin123!` only for an uninitialized database without overrides. The generated listener is loopback-only. The Linux binaries are cross-built with CGO disabled; Linux and ARM64 runtime acceptance remains dependent on the target machine.
+
+## First login on a remote server
+
+`launch init` writes `127.0.0.1:18080` and `http://localhost:18080` into the configuration. If your browser is on another computer, `localhost` refers to that computer, not the server. With SSH access, open a tunnel from the computer running your browser:
+
+```sh
+ssh -N -L 18080:127.0.0.1:18080 YOUR_SSH_USER@SERVER_HOST
+```
+
+Keep the tunnel open, visit `http://localhost:18080/#/login`, and complete the password change before configuring the [public deployment](#public-deployment). If local port 18080 is occupied, choose another local port and use that port in the browser URL. If you changed the server listener, adjust the tunnel destination too.
+
+Port **18080** comes from the configuration generated by `init`. The built-in listener/public URL values when absent from configuration, and the development Compose template, use **8080**. Process variables can override YAML, so use the effective listener/public URL for your deployment.
 
 ## Environment-only configuration
 
@@ -154,7 +173,7 @@ Copy-Item .env.example .env
 docker compose up --build -d
 ```
 
-The template builds the Go server, waits for the MySQL health check, and publishes the application at `http://localhost:8080`. MySQL data is stored in the `mysql-data` volume. The initial administrator is created automatically; use the first-login password-change flow. Optional `LAUNCH_ADMIN_EMAIL` and `LAUNCH_ADMIN_PASSWORD` override the initial account only on a new database.
+The template builds the Go server, waits for the MySQL health check, and publishes the application at `http://localhost:8080`. MySQL data is stored in the `mysql-data` volume. On an uninitialized database, the initial administrator defaults to `admin@example.com` / `LaunchAdmin123!`. To choose your own credentials, set `LAUNCH_ADMIN_EMAIL` and `LAUNCH_ADMIN_PASSWORD` in `.env` before the first start. The password-change flow is required for either choice. Existing accounts and passwords are preserved; these variables cannot reset them.
 
 The application filesystem is read-only and the default upload directory is not a persistent writable mount. Before using installer or document-image uploads, add a dedicated upload bind mount or volume, set `LAUNCH_UPLOAD_DIR` to its container path, and grant write access to the image's UID/GID `65532`. For a bind mount, prepare permissions on the Docker host. Retain that directory with your database backups.
 
@@ -170,6 +189,9 @@ Compose/MySQL 8.4 container operation has not yet been validated in the recorded
 | Startup cannot connect to MySQL | Check the configured host/port, network route, server listener, account permissions, and DSN |
 | Address already in use | Stop the intended old instance or choose another listener and matching public URL |
 | Missing configuration | Run `launch init` and edit `config.yaml` |
+| Default administrator login fails | The defaults apply only when no initial-account overrides were supplied and the database was uninitialized. Check the YAML selected by the working directory, `--config` or `LAUNCH_CONFIG_FILE`, nonempty `LAUNCH_ADMIN_EMAIL` / `LAUNCH_ADMIN_PASSWORD` process values, and whether the DSN points to an existing installation. Use that account's current password; restarting or editing bootstrap settings does not reset it. |
+| First login succeeds but administration is blocked | Complete the required password change, then sign in again with the replacement password; this applies to custom initial passwords too. |
+| Server starts but `localhost:18080` cannot be reached | Check the effective listener and port: `init` uses 18080; omitted configuration values and Compose use 8080. A loopback listener is reachable only on the server or through a tunnel. |
 | Credentials cannot be decrypted | Restore the original instance master key; do not generate a replacement for an existing database |
 | Payment confirmed but license pending | Inspect licensing jobs and the read/write Licentivo key; query/retry the original operation |
 | Upload failure | Check `LAUNCH_UPLOAD_DIR`, storage capacity, filesystem permissions, and container mounts |

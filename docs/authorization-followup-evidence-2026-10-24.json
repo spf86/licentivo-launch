@@ -1,0 +1,118 @@
+{
+  "date": "2026-10-24",
+  "status": "findings_only_no_business_fixes_no_deployment",
+  "issues": [
+    {
+      "id": "AUTH-04",
+      "priority": "high",
+      "owner": "Licentivo server",
+      "title": "Policy edits prevent terminal purchase snapshots from revoking existing access",
+      "remote_error": "LAUNCH_POLICY_CHANGED",
+      "proof": "Refund, suspension and expiry snapshots all reach manual review after 12 accelerated fixture retries; prior entitlement remains active and fresh online Go SDK activation executes export. The expiry snapshot has a deadline in the past."
+    },
+    {
+      "id": "AUTH-05",
+      "priority": "high",
+      "owner": "Licentivo server",
+      "title": "Lower-plan synchronization blocked by occupied device count retains higher-plan authorization",
+      "remote_error": "LAUNCH_DEVICE_LIMIT_CONFLICT",
+      "proof": "With two active devices, one-device basic snapshot stays unapplied through 12 retries; fresh online Go SDK on an existing host still executes pro."
+    },
+    {
+      "id": "AUTH-06",
+      "priority": "medium",
+      "owner": "Licentivo server",
+      "title": "Ordinary renewal clears a manual per-license device limit",
+      "proof": "Manual limit one blocks a second device; ordinary renewal resets limit to policy value two, and another host activates using the actual SDK."
+    },
+    {
+      "id": "AUTH-07",
+      "priority": "medium",
+      "owner": "Launch Go SDK; optional Launch server logout-only capability",
+      "title": "Failed account logout loses retry state and a subsequent logout reports success without revoking the old session",
+      "proof": "Actual Launch HTTP service and Go account SDK with a licensing runtime double: first account logout fails in transport; local runtime and account record are cleared; after transport recovers, second Logout returns nil without any accepted logout request. The original token authenticates and fetches a new signed assertion through the real identity HTTP endpoint."
+    }
+  ],
+  "tests": {
+    "launch-authorization-controls.jsonl": {
+      "passed_test_records": 34,
+      "failed_records": 0,
+      "skipped_tests": [],
+      "findings": []
+    },
+    "lic-authorization-controls.jsonl": {
+      "passed_test_records": 28,
+      "failed_records": 0,
+      "skipped_tests": [],
+      "findings": []
+    },
+    "lic-sdk-controls.jsonl": {
+      "passed_test_records": 123,
+      "failed_records": 0,
+      "skipped_tests": [],
+      "findings": []
+    },
+    "lic-new-probes-verified.jsonl": {
+      "passed_test_records": 6,
+      "failed_records": 0,
+      "skipped_tests": [],
+      "findings": [
+        "authorization_followup_probe_test.go:82: FOLLOWUP_FINDING policy edit -> entitlement.refunded rejected as LAUNCH_POLICY_CHANGED after 12 attempts; entitlement stays active v1; fresh online SDK activates and executes export",
+        "authorization_followup_probe_test.go:82: FOLLOWUP_FINDING policy edit -> entitlement.suspended rejected as LAUNCH_POLICY_CHANGED after 12 attempts; entitlement stays active v1; fresh online SDK activates and executes export",
+        "authorization_followup_probe_test.go:82: FOLLOWUP_FINDING policy edit -> entitlement.expired rejected as LAUNCH_POLICY_CHANGED after 12 attempts; entitlement stays active v1; fresh online SDK activates and executes export",
+        "authorization_followup_probe_test.go:112: FOLLOWUP_FINDING lower plan remains unapplied after 12 retries: LAUNCH_DEVICE_LIMIT_CONFLICT; old pro policy and two-device limit retained; fresh SDK executes pro",
+        "authorization_followup_probe_test.go:127: FOLLOWUP_FINDING manual max_devices=1 blocked second device; ordinary renewal reset it to policy max_devices=2; second device online SDK activated and executed export"
+      ]
+    },
+    "launch-logout-probe-verified.jsonl": {
+      "passed_test_records": 1,
+      "failed_records": 0,
+      "skipped_tests": [],
+      "findings": [
+        "launch_logout_followup_probe_test.go:116: FOLLOWUP_FINDING failed Launch logout discarded the account record; after network recovery, a second Logout returned nil without a request; the original server session still authenticated and issued a fresh identity. Local runtime was stopped; this probe does not claim local feature execution after logout."
+      ]
+    }
+  },
+  "control_test_records": 185,
+  "integrity": {
+    "file_counts": {
+      "launch": 281,
+      "licentivo": 359
+    },
+    "changed_code_files": {
+      "launch": [],
+      "licentivo": []
+    },
+    "unchanged": true
+  },
+  "cleanup": {
+    "original_services_preserved": true,
+    "remote_device_accessed": false,
+    "audit_mysql_stopped": true,
+    "evidence_preserved": true
+  },
+  "limitations": [
+    "No payments were charged or refunded with a real provider. The first three probes submit exact purchase snapshots through the real Licentivo API and worker, using its real MySQL and official Go SDK; they are not a complete PSP-to-Launch-to-Licentivo deployment test.",
+    "Backoff is accelerated by changing only the selected event availability time in the dedicated fixture, without altering business implementation or its outcomes.",
+    "Launch logout test uses a licensing runtime double and proves a live server session and new identity, not local protected execution after logout or a single end-to-end stolen-token activation.",
+    "Only Go SDK behavior is dynamically established for these findings; no claim that all nine language SDKs were tested.",
+    "An initial downgrade probe accidentally treated a configured device ID as overrideable; official Go SDK correctly derives host identity. The final probe first binds that actual host and then tests it again. Initial log retained privately."
+  ],
+  "deployment": {
+    "launch": false,
+    "licentivo": false,
+    "sdk_publication": false
+  },
+  "remote_host_accessed": false,
+  "code_snapshot_sha256": "fe9f26af93ccb4e47e9de375886ebc440cfc95665cd372407faa8dd8a472d470",
+  "evidence_sha256": {
+    "launch-authorization-controls.jsonl": "30a1759b41efcff9633c643ef6bf43cffd73e3b3217cec5768540a19acf9f02a",
+    "lic-authorization-controls.jsonl": "57c162b5416377037578730c7a54265546dfdb187eb4c16b1d942a7f6e569453",
+    "lic-sdk-controls.jsonl": "8cf2f6c235c1596364ef0cc9e96be8e5477dafb22544ddae54aa202767f37409",
+    "lic-new-probes-verified.jsonl": "81741d6083d23934cc215fc0791d73c8a73346fa595a13b241e85e223290408b",
+    "launch-logout-probe-verified.jsonl": "1f7f05d05f267f5c4ddb025a1c4f295883cfa82b3d8c170f86a22198520d6f9d",
+    "authorization_followup_probe_test.go": "7c6751c5ae95781782497e29f5b68d32fb7257ce037056ed445a0bf4a761fca3",
+    "launch_logout_followup_probe_test.go": "f7db7059a4ff49c558ff1d6ff7b2e4a86128ed6245a072323b5c06731ceea34d"
+  },
+  "private_evidence_directory": ".local/auth-followup-20261024/"
+}

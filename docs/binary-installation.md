@@ -7,10 +7,10 @@ Download a package from [Licentivo Launch releases](https://github.com/spf86/lic
 
 | Operating system / processor | Package suffix |
 | --- | --- |
-| Windows, Intel/AMD x64 | [windows_amd64.zip](https://github.com/spf86/licentivo-launch/releases/download/v0.3.0-beta/licentivo-launch_0.3.0-beta_windows_amd64.zip) |
-| Windows, ARM64 | [windows_arm64.zip](https://github.com/spf86/licentivo-launch/releases/download/v0.3.0-beta/licentivo-launch_0.3.0-beta_windows_arm64.zip) |
-| Linux, x86-64 | [linux_amd64.tar.gz](https://github.com/spf86/licentivo-launch/releases/download/v0.3.0-beta/licentivo-launch_0.3.0-beta_linux_amd64.tar.gz) |
-| Linux, AArch64 | [linux_arm64.tar.gz](https://github.com/spf86/licentivo-launch/releases/download/v0.3.0-beta/licentivo-launch_0.3.0-beta_linux_arm64.tar.gz) |
+| Windows, Intel/AMD x64 | [windows_amd64.zip](https://github.com/spf86/licentivo-launch/releases/download/v0.3.1-beta/licentivo-launch_0.3.1-beta_windows_amd64.zip) |
+| Windows, ARM64 | [windows_arm64.zip](https://github.com/spf86/licentivo-launch/releases/download/v0.3.1-beta/licentivo-launch_0.3.1-beta_windows_arm64.zip) |
+| Linux, x86-64 | [linux_amd64.tar.gz](https://github.com/spf86/licentivo-launch/releases/download/v0.3.1-beta/licentivo-launch_0.3.1-beta_linux_amd64.tar.gz) |
+| Linux, AArch64 | [linux_arm64.tar.gz](https://github.com/spf86/licentivo-launch/releases/download/v0.3.1-beta/licentivo-launch_0.3.1-beta_linux_arm64.tar.gz) |
 
 `amd64` means x86-64 and works on compatible Intel and AMD processors. `arm64` means 64-bit ARM. Use the operating-system and architecture combination that matches your machine. MySQL may run locally or on a reachable separate server.
 
@@ -40,8 +40,8 @@ Keep the automatically generated `master_key`. Save the file and start:
 Extract the archive for your architecture and enter its directory:
 
 ```sh
-tar -xzf licentivo-launch_0.3.0-beta_linux_amd64.tar.gz
-cd licentivo-launch_0.3.0-beta_linux_amd64
+tar -xzf licentivo-launch_0.3.1-beta_linux_amd64.tar.gz
+cd licentivo-launch_0.3.1-beta_linux_amd64
 chmod +x launch
 ./launch init
 ```
@@ -56,16 +56,20 @@ The Linux archives preserve the executable permission. The explicit `chmod` comm
 
 ## Initial administrator and required password change
 
-Open **http://localhost:18080/#/login** on the server. The first start against a new database automatically creates:
+`launch init` creates the private configuration and master key only. The first `serve` against an uninitialized database creates one administrator. With the generated configuration, open **http://localhost:18080/#/login** in a browser on the server. **If no initial-account overrides were supplied**, use:
 
-| Field | Value |
+| Field | Built-in initial value |
 | --- | --- |
 | Email | `admin@example.com` |
 | Initial password | `LaunchAdmin123!` |
 
-The first login opens **Change the initial password**. Enter the current password and a different new password of 12-128 bytes, confirm it, and save. Sign in again with your new password. Administration and desktop sessions remain blocked until the change is complete. The old password and old sessions stop working after the change.
+To select your own initial credentials, set `admin_email` and `admin_password` in `config.yaml` **before the first `serve` against an uninitialized database**. Nonempty `LAUNCH_ADMIN_EMAIL` and `LAUNCH_ADMIN_PASSWORD` process values override the corresponding YAML fields. Each empty field falls back to its built-in value above. Account creation prints the selected email and password in the server terminal. The built-in password is fixed; it is not the generated master key.
 
-Complete this first-login step on localhost before exposing the public site. Existing installations keep their current administrator accounts and passwords. Optional `LAUNCH_ADMIN_EMAIL` and `LAUNCH_ADMIN_PASSWORD` values can select the initial account on a fresh database only; they do not reset an installed account.
+The first login opens **Change the initial password**, including when you supplied your own initial password. Enter the current password and a different new password of 12-128 bytes, confirm it, and save. Sign in again with your new password. Administration and desktop sessions remain blocked until the change is complete. The old password and old sessions stop working after the change.
+
+Complete this first-login step before exposing the public site. Existing installations keep their current accounts and passwords: changing initial-account settings, restarting, or upgrading does not reset an installed account. If the default login fails, check whether the database was already initialized and whether configuration or process variables supplied other credentials. See [login troubleshooting](https://github.com/spf86/licentivo-launch/blob/main/docs/installation.md#health-and-troubleshooting).
+
+The generated configuration uses port **18080**; omitted listener/public URL values and the development Compose template use **8080**. Use your configured address if you changed it. The generated listener is loopback-only. When your browser is on another computer, its `localhost` does not refer to the server; use an [SSH tunnel for first login](https://github.com/spf86/licentivo-launch/blob/main/docs/installation.md#first-login-on-a-remote-server).
 
 ## What the commands do
 
@@ -83,7 +87,7 @@ Replace `launch` with `./launch` on Linux or `./launch.exe` on Windows. Keep `co
 The release includes `SHA256SUMS.txt`. On Windows:
 
 ```powershell
-Get-FileHash .\licentivo-launch_0.3.0-beta_windows_amd64.zip -Algorithm SHA256
+Get-FileHash .\licentivo-launch_0.3.1-beta_windows_amd64.zip -Algorithm SHA256
 ```
 
 Compare its hash with the corresponding line in `SHA256SUMS.txt`. On Linux, in a directory containing all four archives and the checksum file:
@@ -108,4 +112,4 @@ See the [full installation guide](https://github.com/spf86/licentivo-launch/blob
 
 ## Release scope
 
-Version 0.3.0-beta is a development beta. Native Windows amd64 startup and isolated MySQL account/commerce tests are checked. Windows arm64 and Linux amd64/arm64 packages are cross-built; they are not represented as natively tested on every target. Linux binaries use `CGO_ENABLED=0`. Real payment/email/translation/licensing acceptance and production deployment remain deployment-specific work; live-sales gates are retained.
+Version 0.3.1-beta is a development beta. Native Windows amd64 startup and isolated MySQL account/commerce tests are checked. Windows arm64 and Linux amd64/arm64 packages are cross-built; they are not represented as natively tested on every target. Linux binaries use `CGO_ENABLED=0`. Real payment/email/translation/licensing acceptance and production deployment remain deployment-specific work; live-sales gates are retained.

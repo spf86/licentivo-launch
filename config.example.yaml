@@ -7,7 +7,11 @@ public_url: "http://localhost:18080"
 database_dsn: "launch:REPLACE_WITH_DATABASE_PASSWORD@tcp(127.0.0.1:3306)/launch"
 master_key: "REPLACE_WITH_OUTPUT_OF_LAUNCH_KEYGEN"
 upload_dir: ".local/uploads"
-# Optional initial administrator overrides; used only for a new database.
+# Optional initial administrator overrides; set before the first `serve`.
+# Empty values fall back to admin@example.com / LaunchAdmin123!.
+# Nonempty LAUNCH_ADMIN_EMAIL / LAUNCH_ADMIN_PASSWORD process values win.
+# Custom passwords must be 12-128 bytes; first-login password change is required.
+# These settings never reset an existing account or password.
 admin_email: ""
 admin_password: ""
 # Optional separate passphrase for backup/restore, or use LAUNCH_BACKUP_PASSPHRASE.

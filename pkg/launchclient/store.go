@@ -16,6 +16,9 @@ var ErrSecureStoreUnavailable = errors.New("OS-protected session storage unavail
 // SessionStore stores sensitive serialized session data. Implementations MUST
 // protect confidentiality and integrity for the current OS user. Keys are opaque.
 // Load returns ErrNoSession for missing entries. Never log values.
+// Stores must isolate the current OS user/host, support multiple opaque keys,
+// and replace each value atomically. Active login and account logout tasks use
+// distinct keys; do not implement this as a single unkeyed record slot.
 type SessionStore interface {
 	Load(context.Context, string) ([]byte, error)
 	Save(context.Context, string, []byte) error

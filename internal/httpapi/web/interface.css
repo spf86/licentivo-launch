@@ -207,6 +207,13 @@ td code { font-size:12px; }
 .provider-configure { grid-column:2; grid-row:2; color:var(--accent); font-size:12px; font-weight:600; justify-self:end; }
 .provider-description { padding-right:42px; }
 .provider-editor { border:1px solid var(--line); border-radius:8px; padding:26px; min-width:0; }
+.licensing-settings .provider-editor > section > h3 { margin-top:0; }
+.licensing-settings .provider-editor form > label { display:flex; flex-direction:column; align-items:stretch; gap:7px; }
+.licensing-settings .provider-editor form > .check-option { flex-direction:row; align-items:flex-start; }
+.licensing-settings .card { padding:18px; }
+.licensing-settings fieldset { min-width:0; border:1px solid var(--line); border-radius:7px; padding:16px; margin:0; }
+.licensing-settings .provider-editor form textarea { font-family:inherit; font-size:14px; }
+.licensing-settings .provider-description { padding-right:50px; }
 .provider-editor .section-head { gap:12px; margin-bottom:12px; flex-wrap:wrap; }
 .provider-editor h3 { font-size:23px; }
 .provider-editor > .hint { font-size:13px; margin-bottom:22px; }

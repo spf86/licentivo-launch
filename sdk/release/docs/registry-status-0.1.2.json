@@ -1,0 +1,126 @@
+{
+  "version": "0.1.2",
+  "upstream_sdk_version": "0.11.1",
+  "source_commit": "ac983627784de4ca38c2e71e85b60526bb046251",
+  "repository": "https://github.com/spf86/licentivo-launch-sdk",
+  "release": "https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.2",
+  "verified_at": "2026-10-23T13:59:29.268644+00:00",
+  "public_installations_verified": 9,
+  "total_languages": 9,
+  "all_nine_published_and_installed": true,
+  "github_release_published": true,
+  "registries": {
+    "go": {
+      "package": "github.com/spf86/licentivo-launch-sdk/pkg/launchclient",
+      "version": "0.1.2",
+      "url": "https://github.com/spf86/licentivo-launch-sdk/tree/v0.1.2/pkg/launchclient",
+      "installation": "go get github.com/spf86/licentivo-launch-sdk/pkg/launchclient@v0.1.2",
+      "status": "published",
+      "install_verified": true,
+      "github_download_available": true,
+      "verified_at": "2026-10-23T13:37:23.194607+00:00",
+      "verification_receipt": "registry-verification.json"
+    },
+    "python": {
+      "package": "licentivo-launch",
+      "version": "0.1.2",
+      "url": "https://pypi.org/project/licentivo-launch/0.1.2/",
+      "installation": "python -m pip install licentivo-launch==0.1.2",
+      "status": "published",
+      "install_verified": true,
+      "github_download_available": true,
+      "verified_at": "2026-10-23T13:37:43.716955+00:00",
+      "verification_receipt": "registry-verification.json"
+    },
+    "javascript": {
+      "package": "@licentivo/launch",
+      "version": "0.1.2",
+      "url": "https://www.npmjs.com/package/@licentivo/launch/v/0.1.2",
+      "installation": "npm install @licentivo/launch@0.1.2",
+      "status": "published",
+      "install_verified": true,
+      "github_download_available": true,
+      "verified_at": "2026-10-23T13:34:00.729490+00:00",
+      "verification_receipt": "registry-verification.json"
+    },
+    "csharp": {
+      "package": "Licentivo.Launch",
+      "version": "0.1.2",
+      "url": "https://www.nuget.org/packages/Licentivo.Launch/0.1.2",
+      "installation": "dotnet add package Licentivo.Launch --version 0.1.2",
+      "status": "published",
+      "install_verified": true,
+      "github_download_available": true,
+      "verified_at": "2026-10-23T13:42:09.243266+00:00",
+      "verification_receipt": "registry-verification.json"
+    },
+    "java": {
+      "package": "com.licentivo.launch:launch-client",
+      "version": "0.1.2",
+      "url": "https://repo.maven.apache.org/maven2/com/licentivo/launch/launch-client/0.1.2/launch-client-0.1.2.jar",
+      "installation": "com.licentivo.launch:launch-client:0.1.2",
+      "status": "published",
+      "install_verified": true,
+      "github_download_available": true,
+      "deployment_id": "cac96184-c336-4799-a759-9d59a73d3d95",
+      "verified_at": "2026-10-23T13:59:29.268644+00:00",
+      "verification_receipt": "registry-verification.json"
+    },
+    "rust": {
+      "package": "licentivo-launch",
+      "version": "0.1.2",
+      "url": "https://crates.io/crates/licentivo-launch/0.1.2",
+      "installation": "cargo add licentivo-launch@=0.1.2",
+      "status": "published",
+      "install_verified": true,
+      "github_download_available": true,
+      "verified_at": "2026-10-23T13:54:58.544830+00:00",
+      "verification_receipt": "registry-verification.json"
+    },
+    "ruby": {
+      "package": "licentivo-launch",
+      "version": "0.1.2",
+      "url": "https://rubygems.org/gems/licentivo-launch/versions/0.1.2",
+      "installation": "gem install licentivo-launch --version 0.1.2",
+      "status": "published",
+      "install_verified": true,
+      "github_download_available": true,
+      "verified_at": "2026-10-23T13:38:56.613224+00:00",
+      "verification_receipt": "registry-verification.json"
+    },
+    "c": {
+      "package": "LicentivoLaunch::Account",
+      "version": "0.1.2",
+      "url": "https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.2",
+      "installation": "Download the compiler-compatible native CMake archive and verify SHA256SUMS.",
+      "status": "published",
+      "install_verified": true,
+      "github_download_available": true,
+      "verified_at": "2026-10-23T13:34:36.599341+00:00",
+      "verification_receipt": "registry-verification.json",
+      "verified_platform": "windows-amd64-gnu",
+      "curl_discovery_modes": [
+        "default",
+        "module"
+      ]
+    },
+    "cpp": {
+      "package": "LicentivoLaunch::CPP",
+      "version": "0.1.2",
+      "url": "https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.2",
+      "installation": "Download the compiler-compatible native CMake archive and verify SHA256SUMS.",
+      "status": "published",
+      "install_verified": true,
+      "github_download_available": true,
+      "verified_at": "2026-10-23T13:35:16.862325+00:00",
+      "verification_receipt": "registry-verification.json",
+      "verified_platform": "windows-amd64-gnu",
+      "curl_discovery_modes": [
+        "default",
+        "module"
+      ]
+    }
+  },
+  "external_acceptance_complete": false,
+  "previous_version_status": "registry-status-0.1.1.json"
+}

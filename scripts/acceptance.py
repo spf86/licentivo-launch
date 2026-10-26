@@ -184,38 +184,45 @@ def verify(merchant, config, args, report, user):
                 or expectation == "active" and state.get("synchronized") is not True):
             raise ProbeError("ENTITLEMENT_STATUS_MISMATCH")
         record(report, "entitlement_status", observed=state["status"], code=state["code"])
+        return state
 
-    observe(allow_pending=True)
-    expected_code = EXPECTED_CODES.get(args.expect)
-    credential = None
-    deadline = time.monotonic() + args.wait_seconds
-    attempts = 0
-    while True:
-        attempts += 1
+    state = observe(allow_pending=True)
+    identity = None
+    report.setdefault("licensing_scope", "not_called")
+    if args.expect == "active":
+        deadline = time.monotonic() + args.wait_seconds
+        attempts = 1
+        while state and state.get("status") == "pending":
+            delay = state.get("retry_after_seconds", 3)
+            if type(delay) is not int or delay < 0:
+                raise ProbeError("INVALID_RETRY_AFTER")
+            delay = max(3, delay)
+            if attempts >= 5 or time.monotonic() + delay >= deadline:
+                raise ProbeError("ENTITLEMENT_PENDING", 403)
+            time.sleep(delay)
+            attempts += 1
+            state = observe(allow_pending=True)
+        identity = merchant.call("POST", prefix + "/identity", {"environment": "sandbox"})
+        if (not isinstance(identity, dict) or identity.get("product_id") != product
+                or identity.get("licentivo_product_id") != config["licentivo_product_id"]
+                or identity.get("environment") != "sandbox"
+                or not isinstance(identity.get("identity_token"), str)
+                or not 32 <= len(identity["identity_token"]) <= 12288):
+            raise ProbeError("IDENTITY_CONTEXT_MISMATCH")
         try:
-            credential = merchant.call("POST", prefix + "/credential", {"environment": "sandbox"})
-            if expected_code:
-                raise ProbeError("UNEXPECTED_ACCESS_GRANTED")
-            break
-        except ProbeError as error:
-            expected_http = 404 if args.expect == "not_purchased" else 403
-            if expected_code and error.code == expected_code and error.status == expected_http:
-                record(report, "credential_denied", code=error.code)
-                break
-            if (attempts < 5 and args.expect == "active" and error.status == 403 and error.code == "ENTITLEMENT_PENDING"
-                    and time.monotonic() + max(3, error.retry_after) < deadline):
-                time.sleep(max(3, error.retry_after))
-                continue
-            raise
-    if credential is not None:
-        if (not isinstance(credential, dict) or credential.get("product_id") != product
-                or not isinstance(credential.get("license_key"), str) or not credential["license_key"]
-                or type(credential.get("version")) is not int or credential["version"] < 1):
-            raise ProbeError("CREDENTIAL_CONTEXT_MISMATCH")
-        record(report, "credential_retrieved", version=credential.get("version"))
-        # Synchronization may have completed while polling. Re-read the state;
-        # credential success must not hide an inconsistent or unknown status.
+            identifier(identity.get("launch_connection_id", ""))
+            expires = datetime.fromisoformat(identity.get("expires_at", "").replace("Z", "+00:00"))
+            remaining = (expires - datetime.now(timezone.utc)).total_seconds()
+            if not 0 < remaining <= 150:
+                raise ValueError()
+        except (ValueError, TypeError, ProbeError, AttributeError):
+            raise ProbeError("IDENTITY_CONTEXT_MISMATCH") from None
+        record(report, "identity_assertion_received")
         observe()
+    else:
+        # A negative Launch purchase state is not evidence of runtime denial.
+        # Identity assertions only prove login and may legitimately still exist.
+        record(report, "purchase_state_only", observed=args.expect)
     if args.order_id:
         order = merchant.call("GET", "/api/v1/orders/" + identifier(args.order_id))
         if not isinstance(order, dict) or order.get("product_id") != product or order.get("environment") != "sandbox":
@@ -227,7 +234,7 @@ def verify(merchant, config, args, report, user):
             raise ProbeError("INVALID_ORDER_STATE")
         record(report, "order", order_id=identifier(args.order_id), status=order.get("status"), fulfillment=order.get("fulfillment"))
     if args.activate:
-        if args.expect != "active" or credential is None or not args.product_config:
+        if args.expect != "active" or identity is None or not args.product_config:
             raise ProbeError("ACTIVATION_REQUIRES_ACTIVE_PRODUCT_CONFIG")
         sdk_config = public_product(args.product_config, config["licentivo_product_id"])
         try:
@@ -237,22 +244,33 @@ def verify(merchant, config, args, report, user):
         scope = hashlib.sha256("\n".join((config["merchant_origin"], user["id"], product, "sandbox")).encode()).hexdigest()
         cache = Path(args.cache_dir).resolve() / scope
         cache.mkdir(parents=True, exist_ok=True, mode=0o700)
-        sdk_config.update(license_key=credential["license_key"], cache_path=str(cache / "lease.json"))
+        sdk_config.update(license_key="", identity_token=identity["identity_token"],
+                          launch_connection_id=identity["launch_connection_id"], environment="sandbox",
+                          cache_path=str(cache / "lease.json"))
         performed = []
         report["licensing_scope"] = "official_external_service"
         if urllib.parse.urlsplit(config["merchant_origin"]).hostname in ("localhost", "127.0.0.1", "::1"):
             report["scope"] = "local_merchant_external_licensing_probe"
         try:
             with sdk.Client(sdk_config) as client:
-                client.start()
-                # start() may legally use an old offline grant. This probe must
-                # prove an online round trip before claiming activation evidence.
-                client.refresh_online()
-                online = client.status()
-                if not isinstance(online, dict) or online.get("allowed") is not True or online.get("state") != "active":
-                    raise ProbeError("SDK_ONLINE_CONFIRMATION_REQUIRED")
-                record(report, "official_sdk_online_confirmation")
-                client.run_feature(args.feature, lambda: performed.append(True))
+                try:
+                    client.start()
+                    # start() may legally use an old offline grant. This probe must
+                    # prove an online round trip before claiming activation evidence.
+                    client.refresh_online()
+                    online = client.status()
+                    if not isinstance(online, dict) or online.get("allowed") is not True or online.get("state") != "active":
+                        raise ProbeError("SDK_ONLINE_CONFIRMATION_REQUIRED")
+                    record(report, "official_sdk_online_confirmation")
+                    client.run_feature(args.feature, lambda: performed.append(True))
+                finally:
+                    result = client.logout()
+                    if not isinstance(result, dict) or result.get("local_complete") is not True or result.get("storage_error"):
+                        raise ProbeError("SDK_LOGOUT_STORAGE_FAILED")
+                    if result.get("revocation_pending"):
+                        raise ProbeError("SDK_LOGOUT_PENDING")
+                    report["sdk_logout_confirmed"] = True
+
         except Exception as error:
             raise ProbeError(getattr(error, "code", "SDK_AUTHORIZATION_FAILED")) from None
         if performed != [True]:

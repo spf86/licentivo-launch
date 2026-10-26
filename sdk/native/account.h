@@ -9,7 +9,9 @@ int launch_login(launch_account *account,const char *origin,const char *product_
 int launch_sign_in(launch_account *account,int argc,char **argv);
 void launch_sign_out(launch_account *account,int clear_cache);
 /* A store must protect secrets with an OS vault. load returns malloc-owned text,
-   1=found, 0=missing, -1=error. No default plaintext persistence is provided. */
+   1=found, 0=missing, -1=error. Support multiple opaque scope keys with atomic
+   replacement, isolated to the current OS user/host; login and account logout
+   tasks use distinct keys. No default plaintext persistence is provided. */
 typedef struct launch_secret_store {
  void *context;
  int (*load)(void *context,const char *scope,char **record);

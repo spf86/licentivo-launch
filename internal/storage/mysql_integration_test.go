@@ -50,6 +50,35 @@ func TestMySQLBaseline(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	t.Run("upgrade pre-reversal schema", func(t *testing.T) {
+		if err := db.Exec("ALTER TABLE orders MODIFY COLUMN status ENUM('pending','paid','closed','refunding','refunded') NOT NULL DEFAULT 'pending'").Error; err != nil {
+			t.Fatal(err)
+		}
+		if err := db.Migrator().DropTable(&PaymentReversal{}); err != nil {
+			t.Fatal(err)
+		}
+		if err := Initialize(ctx, db); err != nil {
+			t.Fatal(err)
+		}
+		var column string
+		if err := db.Raw("SELECT COLUMN_TYPE FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='orders' AND column_name='status'").Scan(&column).Error; err != nil {
+			t.Fatal(err)
+		}
+		if !strings.Contains(column, "'reversed'") || !db.Migrator().HasTable(&PaymentReversal{}) {
+			t.Fatal("existing schema did not gain financial reversal support")
+		}
+	})
+	t.Run("upgrade product routing schema", func(t *testing.T) {
+		if err := db.Migrator().DropColumn(&Product{}, "LicentivoProductID"); err != nil {
+			t.Fatal(err)
+		}
+		if err := Initialize(ctx, db); err != nil {
+			t.Fatal(err)
+		}
+		if !db.Migrator().HasColumn(&Product{}, "LicentivoProductID") {
+			t.Fatal("existing products did not gain the nullable routing field")
+		}
+	})
 	t.Run("constraints", func(t *testing.T) { testConstraints(t, ctx, pool) })
 }
 

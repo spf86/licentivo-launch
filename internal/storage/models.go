@@ -7,6 +7,7 @@ import (
 )
 
 type InstanceSettings struct {
+	LicensingProvider       string          `gorm:"type:varchar(32) CHARACTER SET ascii COLLATE ascii_bin;not null;default:''"`
 	RecoveryRequired        bool            `gorm:"type:boolean;not null;default:false"`
 	ID                      uint64          `gorm:"column:id;type:tinyint unsigned;primaryKey;autoIncrement:false;check:ck_single_instance,id = 1"`
 	InstanceRef             string          `gorm:"column:instance_ref;type:char(32) CHARACTER SET ascii COLLATE ascii_bin;not null;uniqueIndex:uq_instance_settings_instance_ref"`
@@ -74,13 +75,16 @@ type Session struct {
 func (Session) TableName() string { return "sessions" }
 
 type Product struct {
-	ID        string          `gorm:"column:id;type:char(36) CHARACTER SET ascii COLLATE ascii_bin;primaryKey;autoIncrement:false"`
-	Slug      string          `gorm:"column:slug;type:varchar(80) CHARACTER SET ascii COLLATE ascii_bin;not null;uniqueIndex:uq_products_slug"`
-	Name      string          `gorm:"column:name;type:varchar(160);not null"`
-	Content   json.RawMessage `gorm:"column:content;type:json;not null"`
-	Status    string          `gorm:"column:status;type:enum('draft','published','archived');not null;default:'draft'"`
-	CreatedAt time.Time       `gorm:"column:created_at;type:datetime(6);not null;default:CURRENT_TIMESTAMP(6)"`
-	UpdatedAt time.Time       `gorm:"column:updated_at;type:datetime(6);not null;default:CURRENT_TIMESTAMP(6)"`
+	// Public routing context, fixed when this product is first mapped. This is
+	// not a local authorization decision or a customer entitlement.
+	LicentivoProductID *string         `gorm:"type:char(36) CHARACTER SET ascii COLLATE ascii_bin"`
+	ID                 string          `gorm:"column:id;type:char(36) CHARACTER SET ascii COLLATE ascii_bin;primaryKey;autoIncrement:false"`
+	Slug               string          `gorm:"column:slug;type:varchar(80) CHARACTER SET ascii COLLATE ascii_bin;not null;uniqueIndex:uq_products_slug"`
+	Name               string          `gorm:"column:name;type:varchar(160);not null"`
+	Content            json.RawMessage `gorm:"column:content;type:json;not null"`
+	Status             string          `gorm:"column:status;type:enum('draft','published','archived');not null;default:'draft'"`
+	CreatedAt          time.Time       `gorm:"column:created_at;type:datetime(6);not null;default:CURRENT_TIMESTAMP(6)"`
+	UpdatedAt          time.Time       `gorm:"column:updated_at;type:datetime(6);not null;default:CURRENT_TIMESTAMP(6)"`
 }
 
 func (Product) TableName() string { return "products" }
@@ -273,7 +277,7 @@ type Order struct {
 	PlanVersionID              string          `gorm:"column:plan_version_id;type:char(36) CHARACTER SET ascii COLLATE ascii_bin;not null"`
 	Environment                string          `gorm:"column:environment;type:enum('sandbox','live');not null;uniqueIndex:uq_order_request,priority:2;uniqueIndex:uq_order_environment,priority:2"`
 	Action                     string          `gorm:"column:action;type:enum('purchase','renew','upgrade');not null"`
-	Status                     string          `gorm:"column:status;type:enum('pending','closed','paid','refunding','refunded');not null;default:'pending'"`
+	Status                     string          `gorm:"column:status;type:enum('pending','closed','paid','refunding','refunded','reversed');not null;default:'pending'"`
 	IdempotencyKey             string          `gorm:"column:idempotency_key;type:varchar(80) CHARACTER SET ascii COLLATE ascii_bin;not null;uniqueIndex:uq_order_request,priority:3"`
 	RequestHash                []byte          `gorm:"column:request_hash;type:binary(32);not null"`
 	Currency                   string          `gorm:"column:currency;type:char(3) CHARACTER SET ascii COLLATE ascii_bin;not null"`
@@ -360,6 +364,9 @@ type PaymentEvent struct {
 func (PaymentEvent) TableName() string { return "payment_events" }
 
 type Entitlement struct {
+	// The remote purchase reference is rotated after a fully refunded purchase.
+	// An old, revoked Licentivo purchase is never revived by a later payment.
+	LaunchPurchaseRef     *string         `gorm:"type:varchar(128) CHARACTER SET ascii COLLATE ascii_bin"`
 	LastReconciledAt      *time.Time      `gorm:"type:datetime(6);index"`
 	RemoteObservedVersion uint64          `gorm:"type:bigint unsigned;not null;default:0"`
 	CurrentCoverageID     *string         `gorm:"type:char(36) CHARACTER SET ascii COLLATE ascii_bin"`
@@ -424,25 +431,29 @@ type LicenseBinding struct {
 func (LicenseBinding) TableName() string { return "license_bindings" }
 
 type SyncTask struct {
-	ConnectionID      *string         `gorm:"type:char(36) CHARACTER SET ascii COLLATE ascii_bin"`
-	OperationID       string          `gorm:"column:operation_id;type:char(36) CHARACTER SET ascii COLLATE ascii_bin;primaryKey;autoIncrement:false;check:ck_task_version,target_version > 0 AND expected_version = target_version-1"`
-	EntitlementID     string          `gorm:"column:entitlement_id;type:char(36) CHARACTER SET ascii COLLATE ascii_bin;not null;uniqueIndex:uq_task_version,priority:1"`
-	SourceOrderID     *string         `gorm:"column:source_order_id;type:char(36) CHARACTER SET ascii COLLATE ascii_bin"`
-	ExpectedVersion   uint64          `gorm:"column:expected_version;type:bigint unsigned;not null"`
-	TargetVersion     uint64          `gorm:"column:target_version;type:bigint unsigned;not null;uniqueIndex:uq_task_version,priority:2"`
-	RequestJSON       json.RawMessage `gorm:"column:request_json;type:json;not null"`
-	RequestHash       []byte          `gorm:"column:request_hash;type:binary(32);not null"`
-	ResultCiphertext  []byte          `gorm:"column:result_ciphertext;type:mediumblob"`
-	Status            string          `gorm:"column:status;type:enum('pending','running','retrying','succeeded','manual_review');not null;default:'pending';index:ix_task_claim,priority:1"`
-	Attempts          uint64          `gorm:"column:attempts;type:int unsigned;not null;default:0"`
-	AvailableAt       time.Time       `gorm:"column:available_at;type:datetime(6);not null;default:CURRENT_TIMESTAMP(6);index:ix_task_claim,priority:2"`
-	LeaseToken        *string         `gorm:"column:lease_token;type:char(36) CHARACTER SET ascii COLLATE ascii_bin"`
-	LeaseUntil        *time.Time      `gorm:"column:lease_until;type:datetime(6);index:ix_task_claim,priority:3"`
-	LastErrorCode     *string         `gorm:"column:last_error_code;type:varchar(80) CHARACTER SET ascii COLLATE ascii_bin"`
-	CreatedAt         time.Time       `gorm:"column:created_at;type:datetime(6);not null;default:CURRENT_TIMESTAMP(6)"`
-	UpdatedAt         time.Time       `gorm:"column:updated_at;type:datetime(6);not null;default:CURRENT_TIMESTAMP(6)"`
-	FkTaskEntitlement *Entitlement    `gorm:"foreignKey:EntitlementID;references:ID;constraint:fk_task_entitlement,OnUpdate:RESTRICT,OnDelete:RESTRICT"`
-	FkTaskOrder       *Order          `gorm:"foreignKey:SourceOrderID;references:ID;constraint:fk_task_order,OnUpdate:RESTRICT,OnDelete:RESTRICT"`
+	Provider           string          `gorm:"type:varchar(32) CHARACTER SET ascii COLLATE ascii_bin;not null;default:licentivo;index"`
+	LaunchConnectionID *string         `gorm:"type:char(36) CHARACTER SET ascii COLLATE ascii_bin"`
+	RemoteAcceptedAt   *time.Time      `gorm:"type:datetime(6)"`
+	RetryRequested     bool            `gorm:"not null;default:false"`
+	ConnectionID       *string         `gorm:"type:char(36) CHARACTER SET ascii COLLATE ascii_bin"`
+	OperationID        string          `gorm:"column:operation_id;type:char(36) CHARACTER SET ascii COLLATE ascii_bin;primaryKey;autoIncrement:false;check:ck_task_version,target_version > 0 AND expected_version = target_version-1"`
+	EntitlementID      string          `gorm:"column:entitlement_id;type:char(36) CHARACTER SET ascii COLLATE ascii_bin;not null;uniqueIndex:uq_task_version,priority:1"`
+	SourceOrderID      *string         `gorm:"column:source_order_id;type:char(36) CHARACTER SET ascii COLLATE ascii_bin"`
+	ExpectedVersion    uint64          `gorm:"column:expected_version;type:bigint unsigned;not null"`
+	TargetVersion      uint64          `gorm:"column:target_version;type:bigint unsigned;not null;uniqueIndex:uq_task_version,priority:2"`
+	RequestJSON        json.RawMessage `gorm:"column:request_json;type:json;not null"`
+	RequestHash        []byte          `gorm:"column:request_hash;type:binary(32);not null"`
+	ResultCiphertext   []byte          `gorm:"column:result_ciphertext;type:mediumblob"`
+	Status             string          `gorm:"column:status;type:enum('pending','running','retrying','succeeded','manual_review');not null;default:'pending';index:ix_task_claim,priority:1"`
+	Attempts           uint64          `gorm:"column:attempts;type:int unsigned;not null;default:0"`
+	AvailableAt        time.Time       `gorm:"column:available_at;type:datetime(6);not null;default:CURRENT_TIMESTAMP(6);index:ix_task_claim,priority:2"`
+	LeaseToken         *string         `gorm:"column:lease_token;type:char(36) CHARACTER SET ascii COLLATE ascii_bin"`
+	LeaseUntil         *time.Time      `gorm:"column:lease_until;type:datetime(6);index:ix_task_claim,priority:3"`
+	LastErrorCode      *string         `gorm:"column:last_error_code;type:varchar(80) CHARACTER SET ascii COLLATE ascii_bin"`
+	CreatedAt          time.Time       `gorm:"column:created_at;type:datetime(6);not null;default:CURRENT_TIMESTAMP(6)"`
+	UpdatedAt          time.Time       `gorm:"column:updated_at;type:datetime(6);not null;default:CURRENT_TIMESTAMP(6)"`
+	FkTaskEntitlement  *Entitlement    `gorm:"foreignKey:EntitlementID;references:ID;constraint:fk_task_entitlement,OnUpdate:RESTRICT,OnDelete:RESTRICT"`
+	FkTaskOrder        *Order          `gorm:"foreignKey:SourceOrderID;references:ID;constraint:fk_task_order,OnUpdate:RESTRICT,OnDelete:RESTRICT"`
 }
 
 func (SyncTask) TableName() string { return "sync_tasks" }
@@ -480,5 +491,5 @@ type AuditEntry struct {
 func (AuditEntry) TableName() string { return "audit_entries" }
 
 func models() []any {
-	return []any{&InstanceSettings{}, &SecretRecord{}, &User{}, &StaffAccount{}, &Session{}, &Product{}, &ProductDownload{}, &ProductDocumentImage{}, &TranslationSettings{}, &ContentTranslation{}, &TranslationTask{}, &LicentivoConnection{}, &Plan{}, &PlanVersion{}, &PlanLicenseMapping{}, &PaymentAccount{}, &Order{}, &Payment{}, &Refund{}, &PaymentEvent{}, &Entitlement{}, &EntitlementCoverage{}, &LicenseBinding{}, &SyncTask{}, &LicentivoEvent{}, &AuditEntry{}, &EmailCredential{}, &MailSettings{}, &EmailOutbox{}, &PlanPublication{}, &InvoiceRequest{}, &RuntimeStatus{}, &DeviceOperation{}}
+	return []any{&LaunchTrustConnection{}, &LaunchEventStream{}, &LaunchOutbox{}, &InstanceSettings{}, &SecretRecord{}, &User{}, &StaffAccount{}, &Session{}, &Product{}, &ProductDownload{}, &ProductDocumentImage{}, &TranslationSettings{}, &ContentTranslation{}, &TranslationTask{}, &LicentivoConnection{}, &Plan{}, &PlanVersion{}, &PlanLicenseMapping{}, &PaymentAccount{}, &Order{}, &Payment{}, &Refund{}, &PaymentReversal{}, &PaymentEvent{}, &Entitlement{}, &EntitlementCoverage{}, &LicenseBinding{}, &SyncTask{}, &LicentivoEvent{}, &AuditEntry{}, &EmailCredential{}, &MailSettings{}, &EmailOutbox{}, &PlanPublication{}, &InvoiceRequest{}, &RuntimeStatus{}, &DeviceOperation{}, &ExternalLicensingConnection{}, &ProductLicensingBinding{}, &ExternalPlanMapping{}}
 }

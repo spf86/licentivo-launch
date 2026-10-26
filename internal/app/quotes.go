@@ -1,7 +1,6 @@
 package app
 
 import (
-	"bytes"
 	"context"
 	"encoding/base64"
 	"encoding/json"
@@ -24,19 +23,20 @@ type QuoteInput struct {
 // The authenticated token binds the quote to its owner and entitlement version.
 // No client-supplied amount or date is trusted during checkout.
 type saleQuote struct {
-	UserID          string     `json:"user_id"`
-	EntitlementID   string     `json:"entitlement_id"`
-	Input           QuoteInput `json:"input"`
-	ExpectedVersion uint64     `json:"expected_version"`
-	BaseCoverageID  string     `json:"base_coverage_id"`
-	Currency        string     `json:"currency"`
-	AmountMinor     int64      `json:"amount_minor"`
-	From            time.Time  `json:"valid_from"`
-	Until           *time.Time `json:"valid_until"`
-	Anchor          time.Time  `json:"anchor"`
-	AddedPeriods    uint64     `json:"added_periods"`
-	Periods         uint64     `json:"periods"`
-	ExpiresAt       time.Time  `json:"expires_at"`
+	UserID            string     `json:"user_id"`
+	EntitlementID     string     `json:"entitlement_id"`
+	Input             QuoteInput `json:"input"`
+	ExpectedVersion   uint64     `json:"expected_version"`
+	BaseCoverageID    string     `json:"base_coverage_id"`
+	Currency          string     `json:"currency"`
+	AmountMinor       int64      `json:"amount_minor"`
+	From              time.Time  `json:"valid_from"`
+	Until             *time.Time `json:"valid_until"`
+	Anchor            time.Time  `json:"anchor"`
+	AddedPeriods      uint64     `json:"added_periods"`
+	Periods           uint64     `json:"periods"`
+	UpgradePriceMinor *int64     `json:"upgrade_price_minor,omitempty"`
+	ExpiresAt         time.Time  `json:"expires_at"`
 }
 type QuoteView struct {
 	CurrentPlan     PlanView   `json:"current_plan"`
@@ -60,22 +60,6 @@ func sameTerm(a, b storage.PlanVersion) bool {
 	}
 	return a.TermUnit != nil && b.TermUnit != nil && a.TermCount != nil && b.TermCount != nil && *a.TermUnit == *b.TermUnit && *a.TermCount == *b.TermCount
 }
-func permitsUpgrade(old, new PlanSnapshot) bool {
-	if old.LicenseModel != new.LicenseModel || new.MaxDevices < old.MaxDevices || old.OfflineSummary != new.OfflineSummary || old.OfflineMode != new.OfflineMode || old.OfflineSeconds != new.OfflineSeconds || old.SessionSeconds != new.SessionSeconds || old.HeartbeatSeconds != new.HeartbeatSeconds {
-		return false
-	}
-	have := map[string]bool{}
-	for _, f := range new.Features {
-		have[f] = true
-	}
-	for _, f := range old.Features {
-		if !have[f] {
-			return false
-		}
-	}
-	return true
-}
-
 func (s *Service) Quote(ctx context.Context, p Principal, in QuoteInput, requestedLocale string) (QuoteView, error) {
 	if in.Action != "renew" && in.Action != "upgrade" || in.Environment != "sandbox" && in.Environment != "live" {
 		return QuoteView{}, ErrInvalid
@@ -130,13 +114,13 @@ func (s *Service) Quote(ctx context.Context, p Principal, in QuoteInput, request
 	if !sameTerm(old, target) {
 		return QuoteView{}, problem(409, "INCOMPATIBLE_PLAN", "仅支持相同币种、购买类型及期限的续费或升级")
 	}
-	var oldRights, newRights PlanSnapshot
-	if json.Unmarshal(old.EntitlementSnapshot, &oldRights) != nil || json.Unmarshal(target.EntitlementSnapshot, &newRights) != nil {
-		return QuoteView{}, ErrStorage
+	mapping, _, mappingErr := s.saleMapping(ctx, s.db.WithContext(ctx), target, in.Environment, true)
+	if mappingErr != nil {
+		return QuoteView{}, mappingErr
 	}
 	q := saleQuote{UserID: p.User.ID, EntitlementID: e.ID, Input: in, ExpectedVersion: e.DesiredVersion, Currency: target.Currency, AmountMinor: target.AmountMinor, From: at, Anchor: at, AddedPeriods: 1, Periods: 1, ExpiresAt: at.Add(15 * time.Minute)}
 	if in.Action == "renew" {
-		if !plan.AllowRenewal || old.PlanID != target.PlanID || target.PurchaseType != "fixed_term" || !bytes.Equal(old.SnapshotHash, target.SnapshotHash) {
+		if !plan.AllowRenewal || old.PlanID != target.PlanID || target.PurchaseType != "fixed_term" || current.mapping.ConnectionID != mapping.ConnectionID || current.mapping.RemoteProductID != mapping.RemoteProductID || current.mapping.RemotePolicyID != mapping.RemotePolicyID || current.mapping.RemotePolicyVersion != mapping.RemotePolicyVersion {
 			return QuoteView{}, problem(409, "RENEWAL_UNAVAILABLE", "该套餐暂不能按原权益续费，请联系商家或选择升级")
 		}
 		tail := latestBase(rows)
@@ -165,8 +149,8 @@ func (s *Service) Quote(ctx context.Context, p Principal, in QuoteInput, request
 		}
 		q.Until = &end
 	} else {
-		if plan.Status != "published" || !plan.AllowPurchase || target.AmountMinor <= old.AmountMinor || !permitsUpgrade(oldRights, newRights) {
-			return QuoteView{}, problem(409, "UPGRADE_UNAVAILABLE", "目标套餐必须增加权益，且不能减少名额或改变授权及离线规则")
+		if plan.Status != "published" || !plan.AllowPurchase || target.AmountMinor <= old.AmountMinor {
+			return QuoteView{}, problem(409, "UPGRADE_UNAVAILABLE", "目标套餐价格必须高于原套餐且允许购买")
 		}
 		if current.coverage.ValidUntil != nil && !current.coverage.ValidUntil.After(at) {
 			return QuoteView{}, problem(409, "UPGRADE_EXPIRED", "请先续费，再申请升级")
@@ -190,35 +174,16 @@ func (s *Service) Quote(ctx context.Context, p Principal, in QuoteInput, request
 			}
 			q.AmountMinor = *target.PermanentUpgradeMinor
 		} else {
-			money, err := domain.UpgradeDifference(domain.Money{Currency: old.Currency, Minor: old.AmountMinor}, domain.Money{Currency: target.Currency, Minor: target.AmountMinor}, base.coverage.ValidFrom, *q.Until, at)
+			money, fullPrice, err := upgradeAmount(current, base, target, at)
 			if err != nil {
-				return QuoteView{}, ErrInvalid
+				return QuoteView{}, err
 			}
 			q.AmountMinor = money.Minor
+			q.UpgradePriceMinor = &fullPrice
 		}
 	}
 	if !payments.SupportsAmount(domain.Money{Currency: q.Currency, Minor: q.AmountMinor}) {
 		return QuoteView{}, ErrInvalid
-	}
-	var mapping storage.PlanLicenseMapping
-	var connection storage.LicentivoConnection
-	if s.db.WithContext(ctx).First(&mapping, "plan_version_id = ?", target.ID).Error != nil || s.db.WithContext(ctx).First(&connection, "id = ?", mapping.ConnectionID).Error != nil {
-		return QuoteView{}, problem(409, "LICENSE_MAPPING_REQUIRED", "请先在后台为目标套餐选择 Licentivo 授权策略")
-	}
-	var binding storage.LicenseBinding
-	if s.db.WithContext(ctx).First(&binding, "entitlement_id = ? AND replaced_at IS NULL", e.ID).Error != nil || binding.ConnectionID != connection.ID {
-		return QuoteView{}, problem(409, "LICENSE_CONNECTION_CONFLICT", "权益变更必须沿用当前授权连接")
-	}
-	provider, err := s.licensingProvider(ctx, connection)
-	if err != nil {
-		return QuoteView{}, ErrStorage
-	}
-	caps, err := provider.Capabilities(ctx)
-	if err != nil || caps.ValidateSales() != nil {
-		return QuoteView{}, problem(409, "LICENSE_CONTRACT_UNSUPPORTED", "Licentivo 当前不能自动更新这项授权")
-	}
-	if err := checkPolicy(ctx, provider, target, mapping, binding.RemoteLicenseID); err != nil {
-		return QuoteView{}, err
 	}
 	sealed, err := s.vault.Seal(marshal(q), "sale-quote:v1")
 	if err != nil {
@@ -229,6 +194,46 @@ func (s *Service) Quote(ctx context.Context, p Principal, in QuoteInput, request
 	view.CurrentPlan, _ = s.localizedPlanView(ctx, view.CurrentPlan, locale, source)
 	view.Plan, _ = s.localizedPlanView(ctx, view.Plan, locale, source)
 	return view, nil
+}
+
+// Price the exact interval bought by its source order. PaidPeriods is cumulative
+// for calendar anchoring after renewals, and is not the number sold by that order.
+// An upgrade charge is already prorated; subsequent upgrades use the full target
+// price saved in that quote rather than prorating the collected charge again.
+func upgradeAmount(current, base *coverageRow, target storage.PlanVersion, at time.Time) (domain.Money, int64, error) {
+	if base == nil || current == nil || base.coverage.ValidUntil == nil {
+		return domain.Money{}, 0, ErrStorage
+	}
+	periods := base.order.PurchasedPeriods
+	if periods == 0 {
+		periods = 1
+	}
+	fullPrice, err := purchaseAmount(target, periods)
+	if err != nil {
+		return domain.Money{}, 0, err
+	}
+	currentPrice := base.order.AmountMinor
+	if current.coverage.BaseCoverageID != nil {
+		var previous saleQuote
+		if json.Unmarshal(current.order.QuoteSnapshot, &previous) != nil {
+			return domain.Money{}, 0, ErrStorage
+		}
+		if previous.UpgradePriceMinor != nil {
+			currentPrice = *previous.UpgradePriceMinor
+		} else {
+			// Quotes issued before the full price was saved still refer to an
+			// immutable plan version containing the original period discounts.
+			currentPrice, err = purchaseAmount(current.version, periods)
+			if err != nil {
+				return domain.Money{}, 0, err
+			}
+		}
+	}
+	money, err := domain.UpgradeDifference(domain.Money{Currency: base.order.Currency, Minor: currentPrice}, domain.Money{Currency: target.Currency, Minor: fullPrice}, base.coverage.ValidFrom, *base.coverage.ValidUntil, at)
+	if err != nil {
+		return domain.Money{}, 0, ErrInvalid
+	}
+	return money, fullPrice, nil
 }
 
 func (s *Service) OwnedPlans(ctx context.Context, p Principal, productID, environment, requestedLocale string) ([]PlanView, error) {
@@ -300,7 +305,9 @@ func (s *Service) coverageRows(tx *gorm.DB, id string) ([]coverageRow, error) {
 		if err := tx.First(&r.version, "id = ?", r.order.PlanVersionID).Error; err != nil {
 			return nil, err
 		}
-		if err := tx.First(&r.mapping, "plan_version_id = ?", r.version.ID).Error; err != nil {
+		if route := externalRoute(c.Snapshot); route != nil {
+			r.mapping = storage.PlanLicenseMapping{PlanVersionID: r.version.ID, ConnectionID: route.ConnectionID, RemoteProductID: route.ProductRef, RemotePolicyID: route.PlanRef, RemotePolicyVersion: 1}
+		} else if err := tx.First(&r.mapping, "plan_version_id = ?", r.version.ID).Error; err != nil {
 			return nil, err
 		}
 		out = append(out, r)

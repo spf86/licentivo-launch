@@ -133,6 +133,10 @@ func (s *Service) OperationalReadiness(ctx context.Context, p Principal, run str
 	if run != "" && !p.IsAdmin() {
 		return OperationalReadiness{}, ErrForbidden
 	}
+	selected, err := s.activeLicensingProvider(s.db.WithContext(ctx))
+	if err != nil {
+		return OperationalReadiness{}, ErrStorage
+	}
 	switch run {
 	case "":
 	case "mysql":
@@ -140,7 +144,16 @@ func (s *Service) OperationalReadiness(ctx context.Context, p Principal, run str
 	case "mail":
 		_, _ = s.CheckMail(ctx, p, MailCheckInput{To: p.User.Email})
 	case "licentivo":
-		s.checkLicentivoConnection(ctx)
+		if selected == "licentivo" {
+			s.checkLicentivoConnection(ctx)
+			break
+		}
+		var external []storage.ExternalLicensingConnection
+		if s.db.WithContext(ctx).Find(&external).Error == nil {
+			for _, row := range external {
+				_, _ = s.CheckExternalConnection(ctx, p, row.ID)
+			}
+		}
 	case "deepl":
 		s.checkDeepLConnection(ctx)
 	case "payments":
@@ -226,7 +239,7 @@ func (s *Service) OperationalReadiness(ctx context.Context, p Principal, run str
 
 	var connection storage.LicentivoConnection
 	licenseStatus, licenseDetail := "warning", "尚未连接 Licentivo"
-	if err := s.db.WithContext(ctx).Order("created_at,id").First(&connection).Error; err == nil {
+	if err := s.db.WithContext(ctx).Order("created_at,id").First(&connection).Error; err == nil && selected == "licentivo" {
 		licenseStatus, licenseDetail = "ready", "产品、策略和读写授权能力检查通过"
 		if connection.ContractVersion == nil {
 			licenseStatus, licenseDetail = "failed", "API Key 缺少销售授权所需的读写权限"
@@ -236,7 +249,25 @@ func (s *Service) OperationalReadiness(ctx context.Context, p Principal, run str
 			licenseStatus, licenseDetail = "warning", "连接已保存，请执行一次读写权限检查"
 		}
 	}
-	checks = append(checks, readinessCheck("licentivo", "Licentivo 读写权限", licenseStatus, licenseDetail, "#/admin/settings", connection.LastCheckedAt))
+	var external []storage.ExternalLicensingConnection
+	if s.db.WithContext(ctx).Find(&external).Error != nil {
+		return OperationalReadiness{}, ErrStorage
+	}
+	if selected == CustomLicensing {
+		connection.LastCheckedAt = nil
+		licenseStatus, licenseDetail = "warning", "已启用自定义授权，请先配置并检查连接"
+		if len(external) > 0 {
+			licenseStatus, licenseDetail = "ready", "使用自定义授权服务；每个商品的环境和映射仍需分别验收"
+		}
+		for _, row := range external {
+			connection.LastCheckedAt = row.LastCheckedAt
+			if row.LastCheckError != nil || row.LastCheckedAt == nil {
+				licenseStatus, licenseDetail = "failed", "自定义授权连接需要重新检查"
+				break
+			}
+		}
+	}
+	checks = append(checks, readinessCheck("licentivo", "授权服务连接", licenseStatus, licenseDetail, "#/admin/settings/licensing", connection.LastCheckedAt))
 
 	var translation storage.TranslationSettings
 	deepLStatus, deepLDetail := "warning", "尚未连接 DeepL"

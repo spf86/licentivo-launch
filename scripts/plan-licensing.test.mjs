@@ -52,6 +52,19 @@ test("licensing context excludes policies whose products are unavailable", () =>
   assert.equal(context.productName(product.id), product.name);
 });
 
+test("custom licensing suppresses saved Licentivo policies and mappings", () => {
+  const context = licensingContext({
+    licensing_provider: "custom_http",
+    licensing: [{catalog: {products: {items: [product]}, policies: {items: [timedPolicy]}}}],
+    mappings: [{version_id: "saved", policy_id: timedPolicy.id}],
+    external: {default_provider: "custom_http", connections: []},
+  });
+  assert.equal(context.licensing, null);
+  assert.deepEqual(context.selectablePolicies, []);
+  assert.deepEqual(context.mappings, []);
+  assert.equal(planLicenseStatus(context).kind, "custom");
+});
+
 test("licensing status distinguishes disconnected, failed, empty and ready states", async t => {
   const cases = [
     { name: "not connected", context: licensingContext(null), kind: "disconnected" },

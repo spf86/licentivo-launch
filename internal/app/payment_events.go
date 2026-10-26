@@ -49,6 +49,18 @@ func (s *Service) ReceivePaymentWebhook(ctx context.Context, accountID string, h
 			if !bytes.Equal(previous.BodyHash, sum[:]) {
 				return problem(409, "EVENT_CONFLICT", "通知内容与原事件不一致")
 			}
+			// A channel resend can recover a previously unsupported reversal or
+			// an exhausted read-only verification. Reuse the stored event identity;
+			// successful canonical reversals remain protected by their receipt.
+			if previous.Status == "review" && paymentReversalKind(event.Kind) {
+				result := tx.Model(&storage.PaymentEvent{}).Where("id = ? AND status = 'review'", previous.ID).Updates(map[string]any{"status": "pending", "attempts": 0, "available_at": now(), "lease_token": nil, "lease_until": nil, "verified_payload": marshal(event)})
+				if result.Error != nil {
+					return result.Error
+				}
+				if result.RowsAffected > 0 {
+					return audit(tx, "", "payment_event.redelivered", "payment_event", previous.ID, "原渠道重新验证并重发撤款通知")
+				}
+			}
 			return nil
 		}
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
@@ -123,7 +135,9 @@ func (s *Service) ProcessPaymentEvent(ctx context.Context) (handled bool, proces
 	}
 	switch event.Kind {
 	case "checkout.session.completed", "checkout.session.async_payment_succeeded", "CHECKOUT.ORDER.APPROVED", "PAYMENT.CAPTURE.COMPLETED", "PAYMENT_NOTIFICATION", "transaction.completed", "transaction.paid", "transaction.updated", "transaction.canceled":
-	case "refund.created", "refund.updated", "PAYMENT.CAPTURE.REFUNDED", "REFUND_NOTIFICATION", "adjustment.created", "adjustment.updated":
+	case "charge.dispute.created", "charge.dispute.updated", "charge.dispute.closed", "charge.dispute.funds_withdrawn", "charge.dispute.funds_reinstated", "PAYMENT.CAPTURE.REVERSED", "adjustment.created", "adjustment.updated":
+		return true, s.processPaymentReversal(ctx, row, event)
+	case "refund.created", "refund.updated", "PAYMENT.CAPTURE.REFUNDED", "REFUND_NOTIFICATION":
 		return true, s.processRefundEvent(ctx, row, event)
 	default:
 		return true, databaseError(s.db.WithContext(ctx).Model(&row).Update("status", "review").Error)
@@ -168,18 +182,19 @@ func (s *Service) ProcessPaymentEvent(ctx context.Context) (handled bool, proces
 }
 
 type ProductEntitlement struct {
-	ProductID    string                `json:"product_id"`
-	ProductName  string                `json:"product_name"`
-	ProductSlug  string                `json:"product_slug"`
-	DownloadURL  string                `json:"download_url,omitempty"`
-	Version      string                `json:"version,omitempty"`
-	Downloads    []ProductDownloadView `json:"downloads"`
-	Status       string                `json:"status"`
-	ValidFrom    *time.Time            `json:"valid_from"`
-	ValidUntil   *time.Time            `json:"valid_until"`
-	Snapshot     json.RawMessage       `json:"snapshot"`
-	Environment  string                `json:"environment"`
-	Synchronized bool                  `json:"synchronized"`
+	LicensingProvider string                `json:"licensing_provider"`
+	ProductID         string                `json:"product_id"`
+	ProductName       string                `json:"product_name"`
+	ProductSlug       string                `json:"product_slug"`
+	DownloadURL       string                `json:"download_url,omitempty"`
+	Version           string                `json:"version,omitempty"`
+	Downloads         []ProductDownloadView `json:"downloads"`
+	Status            string                `json:"status"`
+	ValidFrom         *time.Time            `json:"valid_from"`
+	ValidUntil        *time.Time            `json:"valid_until"`
+	Snapshot          json.RawMessage       `json:"snapshot"`
+	Environment       string                `json:"environment"`
+	Synchronized      bool                  `json:"synchronized"`
 }
 
 func (s *Service) MyProducts(ctx context.Context, p Principal, requestedLocale string) ([]ProductEntitlement, error) {
@@ -210,6 +225,12 @@ func (s *Service) MyProducts(ctx context.Context, p Principal, requestedLocale s
 			status = "expired"
 		}
 		views = append(views, ProductEntitlement{
+			LicensingProvider: func() string {
+				if externalRoute(row.Snapshot) != nil {
+					return CustomLicensing
+				}
+				return "licentivo"
+			}(),
 			ProductID:    row.ProductID,
 			ProductName:  productView.Name,
 			ProductSlug:  productView.Slug,
@@ -221,35 +242,13 @@ func (s *Service) MyProducts(ctx context.Context, p Principal, requestedLocale s
 			ValidUntil:   row.ValidUntil,
 			Snapshot:     row.Snapshot,
 			Environment:  row.Environment,
-			Synchronized: row.AppliedVersion == row.DesiredVersion && row.AppliedVersion > 0,
+			Synchronized: row.LaunchPurchaseRef != nil && row.AppliedVersion > 0 && row.AppliedVersion == row.DesiredVersion,
 		})
 	}
 	return views, nil
 }
 func (s *Service) SoftwareCredential(ctx context.Context, p Principal, productID, environment string) (map[string]any, error) {
-	status, entitlement, err := s.softwareStatus(ctx, p, productID, environment)
-	if err != nil {
-		return nil, err
-	}
-	if status.Status != "ready" {
-		code := http.StatusForbidden
-		if status.Status == "not_purchased" {
-			code = http.StatusNotFound
-		}
-		return nil, problem(code, status.Code, status.Message)
-	}
-	var binding storage.LicenseBinding
-	if err := s.db.WithContext(ctx).First(&binding, "entitlement_id = ? AND replaced_at IS NULL", entitlement.ID).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, problem(403, "ENTITLEMENT_PENDING", "软件凭证正在恢复，请稍后重试；持续未完成时请联系商家")
-		}
-		return nil, ErrStorage
-	}
-	key, err := s.readSecret(ctx, binding.CredentialSecretID)
-	if err != nil {
-		return nil, err
-	}
-	return map[string]any{"product_id": productID, "license_key": string(key), "valid_until": entitlement.ValidUntil, "version": entitlement.AppliedVersion}, nil
+	return nil, problem(410, "LICENSE_CREDENTIAL_REMOVED", "请升级接入程序，使用短期账号身份凭据连接 Licentivo")
 }
 func (s *Service) RetryAuthorization(ctx context.Context, p Principal, id, reason string) error {
 	if !p.IsAdmin() {
@@ -266,11 +265,16 @@ func (s *Service) RetryAuthorization(ctx context.Context, p Principal, id, reaso
 		if task.Status == "succeeded" || task.Status == "running" {
 			return problem(409, "TASK_STATE_CONFLICT", "当前任务无需重试或正在执行")
 		}
-		var command ports.EntitlementCommand
-		if json.Unmarshal(task.RequestJSON, &command) != nil || command.Validate() != nil {
+		var command ports.CommerceSnapshot
+		if task.Provider == CustomLicensing {
+			var snapshot ports.ExternalSnapshot
+			if task.ConnectionID == nil || json.Unmarshal(task.RequestJSON, &snapshot) != nil || snapshot.Validate() != nil {
+				return problem(409, "TASK_NEEDS_COMPENSATION", "原任务参数不完整，需要对账后补偿")
+			}
+		} else if task.LaunchConnectionID == nil || json.Unmarshal(task.RequestJSON, &command) != nil || command.Validate() != nil {
 			return problem(409, "TASK_NEEDS_COMPENSATION", "原任务参数不完整，需要对账后补偿")
 		}
-		if err := tx.Model(&task).Updates(map[string]any{"status": "pending", "attempts": 0, "available_at": now(), "last_error_code": nil}).Error; err != nil {
+		if err := tx.Model(&task).Updates(map[string]any{"status": "pending", "attempts": 0, "available_at": now(), "last_error_code": nil, "retry_requested": task.RemoteAcceptedAt != nil}).Error; err != nil {
 			return err
 		}
 		return audit(tx, p.User.ID, "authorization.retry", "sync_task", id, reason)

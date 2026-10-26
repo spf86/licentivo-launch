@@ -1,14 +1,15 @@
 # frozen_string_literal: true
 Gem::Specification.new do |spec|
   spec.name = 'licentivo-launch'
-  spec.version = '0.1.2'
+  spec.version = '0.1.4'
   spec.summary = 'Merchant account lifecycle with the official Licentivo runtime'
   spec.description = 'Login, scoped secure sessions, verified offline recovery and feature guards for Licentivo Launch.'
   spec.authors = ['Licentivo Launch contributors']
   spec.license = 'MIT'
-  spec.homepage = 'https://github.com/spf86/licentivo-launch-sdk'
+  spec.homepage = 'https://www.licentivo.com/en/launch.html'
+  spec.metadata['homepage_uri'] = 'https://www.licentivo.com/en/launch.html'
   spec.metadata['source_code_uri'] = 'https://github.com/spf86/licentivo-launch-sdk'
-  spec.metadata['documentation_uri'] = 'https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/manual-integration.md'
+  spec.metadata['documentation_uri'] = 'https://www.licentivo.com/en/launch-docs.html'
   spec.metadata['bug_tracker_uri'] = 'https://github.com/spf86/licentivo-launch-sdk/issues'
   spec.metadata['allowed_push_host'] = 'https://rubygems.org'
   spec.required_ruby_version = '>= 3.1'

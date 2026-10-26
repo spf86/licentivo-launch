@@ -120,10 +120,10 @@ func run() error {
 		if err := app.Logout(cleanup); err != nil {
 			return fmt.Errorf("sign-out or cleanup was not fully confirmed: %w", err)
 		}
-		fmt.Println("Signed out; remembered session and this account's SDK cache removed.")
+		fmt.Println("Signed out; the official SDK handled device revocation and the Launch account was cleared.")
 		return nil
 	}
-	state, err := app.Restore(ctx)
+	_, err = app.Restore(ctx)
 	if errors.Is(err, launchclient.ErrNoSession) || errors.Is(err, launchclient.ErrSessionExpired) {
 		reader := bufio.NewReader(os.Stdin)
 		fmt.Print("Email: ")
@@ -137,7 +137,7 @@ func run() error {
 		if readErr != nil {
 			return errors.New("use an interactive terminal to enter the password")
 		}
-		state, err = app.Login(ctx, strings.TrimSpace(email), string(password))
+		_, err = app.Login(ctx, strings.TrimSpace(email), string(password))
 		clear(password)
 	}
 	if err != nil {
@@ -152,13 +152,10 @@ func run() error {
 		fmt.Println("Device released and signed out.")
 		return nil
 	}
-	if state.OfflineFallback {
-		fmt.Println("Merchant unavailable; startup is permitted by the SDK's valid signed offline grant.")
-	}
 	if err := app.RunFeature("export", func() error { return os.WriteFile("licensed-report.txt", []byte("Protected report\n"), 0600) }); err != nil {
 		return err
 	}
-	fmt.Println("Protected export completed. Close keeps remembered login; use --logout to clear it or --release-device to free this device.")
+	fmt.Println("Protected export completed. Close keeps remembered login; use --logout or --release-device for explicit SDK logout.")
 	return nil
 }
 

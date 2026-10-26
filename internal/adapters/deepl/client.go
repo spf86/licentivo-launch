@@ -89,23 +89,50 @@ func (c *Client) Translate(ctx context.Context, source, target string, texts []s
 	if source == "" || target == "" || len(texts) == 0 || len(texts) > 50 {
 		return nil, ErrRequest
 	}
-	request := struct {
-		Text               []string `json:"text"`
-		SourceLanguage     string   `json:"source_lang"`
-		TargetLanguage     string   `json:"target_lang"`
-		PreserveFormatting bool     `json:"preserve_formatting"`
-	}{texts, source, target, true}
-	var response struct {
-		Translations []struct {
-			Text string `json:"text"`
-		} `json:"translations"`
+	// DeepL bounds total encoded bytes as well as item count. Reserve 8 KiB
+	// for headers, and preflight every batch before sending a billable request.
+	const bodyBudget = 120 << 10
+	var batches [][]string
+	start := 0
+	for end := 1; end <= len(texts); end++ {
+		raw, err := json.Marshal(translationRequest{texts[start:end], source, target, true})
+		if err != nil {
+			return nil, ErrRequest
+		}
+		if len(raw) <= bodyBudget {
+			continue
+		}
+		if end-start == 1 {
+			return nil, ErrRequest
+		}
+		batches = append(batches, texts[start:end-1])
+		start = end - 1
+		raw, err = json.Marshal(translationRequest{texts[start:end], source, target, true})
+		if err != nil || len(raw) > bodyBudget {
+			return nil, ErrRequest
+		}
 	}
-	if err := c.call(ctx, http.MethodPost, "/v2/translate", request, &response); err != nil || len(response.Translations) != len(texts) {
-		return nil, ErrRequest
-	}
-	translated := make([]string, len(response.Translations))
-	for i, item := range response.Translations {
-		translated[i] = item.Text
+	batches = append(batches, texts[start:])
+	translated := make([]string, 0, len(texts))
+	for _, batch := range batches {
+		var response struct {
+			Translations []struct {
+				Text string `json:"text"`
+			} `json:"translations"`
+		}
+		if err := c.call(ctx, http.MethodPost, "/v2/translate", translationRequest{batch, source, target, true}, &response); err != nil || len(response.Translations) != len(batch) {
+			return nil, ErrRequest
+		}
+		for _, item := range response.Translations {
+			translated = append(translated, item.Text)
+		}
 	}
 	return translated, nil
+}
+
+type translationRequest struct {
+	Text               []string `json:"text"`
+	SourceLanguage     string   `json:"source_lang"`
+	TargetLanguage     string   `json:"target_lang"`
+	PreserveFormatting bool     `json:"preserve_formatting"`
 }

@@ -1,0 +1,96 @@
+{
+  "version": "0.1.4",
+  "checked_at": "2026-10-26T09:27:25.000875+00:00",
+  "website_links_verified": 5,
+  "registry_count": 6,
+  "all_six_completed": false,
+  "source_commit": "b29de451e4e24d4598db70b400a4ca01b5d648c3",
+  "release": "https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.4",
+  "registries": {
+    "crates": {
+      "status": "published_and_link_verified",
+      "observed_metadata": {
+        "project": "launch",
+        "registry": "crates",
+        "version": "0.1.4",
+        "homepage": "https://www.licentivo.com/en/launch.html",
+        "documentation": "https://www.licentivo.com/en/launch-docs.html",
+        "repository": "https://github.com/spf86/licentivo-launch-sdk"
+      }
+    },
+    "maven": {
+      "status": "awaiting_publication",
+      "observed_metadata": {
+        "project": "launch",
+        "registry": "maven",
+        "version": "0.1.3",
+        "homepage": "https://github.com/spf86/licentivo-launch-sdk"
+      }
+    },
+    "npm": {
+      "status": "published_and_link_verified",
+      "observed_metadata": {
+        "project": "launch",
+        "registry": "npm",
+        "version": "0.1.4",
+        "homepage": "https://www.licentivo.com/en/launch.html",
+        "repository": {
+          "url": "git+https://github.com/spf86/licentivo-launch-sdk.git",
+          "type": "git",
+          "directory": "sdk/javascript"
+        }
+      }
+    },
+    "nuget": {
+      "status": "published_and_link_verified",
+      "observed_metadata": {
+        "project": "launch",
+        "registry": "nuget",
+        "version": "0.1.4",
+        "urls": {
+          "readme": "README.md",
+          "projectUrl": "https://www.licentivo.com/en/launch.html"
+        }
+      }
+    },
+    "pypi": {
+      "status": "published_and_link_verified",
+      "observed_metadata": {
+        "project": "launch",
+        "registry": "pypi",
+        "latest_metadata_version": "0.1.3",
+        "verified_project_url": "https://pypi.org/project/licentivo-launch/0.1.4/",
+        "version": "0.1.4",
+        "urls": {
+          "Documentation": "https://www.licentivo.com/en/launch-docs.html",
+          "Homepage": "https://www.licentivo.com/en/launch.html",
+          "Issues": "https://github.com/spf86/licentivo-launch-sdk/issues",
+          "Source": "https://github.com/spf86/licentivo-launch-sdk"
+        }
+      }
+    },
+    "rubygems": {
+      "status": "published_and_link_verified",
+      "observed_metadata": {
+        "project": "launch",
+        "registry": "rubygems",
+        "version": "0.1.4",
+        "homepage": "https://www.licentivo.com/en/launch.html",
+        "documentation": "https://www.licentivo.com/en/launch-docs.html",
+        "metadata": {
+          "homepage_uri": "https://www.licentivo.com/en/launch.html",
+          "bug_tracker_uri": "https://github.com/spf86/licentivo-launch-sdk/issues",
+          "source_code_uri": "https://github.com/spf86/licentivo-launch-sdk",
+          "allowed_push_host": "https://rubygems.org",
+          "documentation_uri": "https://www.licentivo.com/en/launch-docs.html"
+        }
+      }
+    }
+  },
+  "maven_upload": {
+    "status": "signed_bundle_ready",
+    "signatures_verified": 4,
+    "expected_project_url": "https://www.licentivo.com/en/launch.html",
+    "expected_version": "0.1.4"
+  }
+}

@@ -291,6 +291,17 @@ func (w *Waffo) QueryRefund(ctx context.Context, id string) (ports.Refund, error
 	}
 	return ports.Refund{ExternalID: id, PaymentID: data.PaymentID, Amount: money, Status: status}, nil
 }
+
+func (w *Waffo) RecoverRefund(ctx context.Context, in ports.RefundRequest) (ports.Refund, error) {
+	if !validID(in.OperationID) || !validID(in.PaymentID) || !validAmount(in.Amount) {
+		return ports.Refund{}, ErrRejected
+	}
+	out, err := w.QueryRefund(ctx, strings.ReplaceAll(in.OperationID, "-", ""))
+	if err == nil && (out.PaymentID != in.PaymentID || out.Amount != in.Amount) {
+		return ports.Refund{}, ErrVerification
+	}
+	return out, err
+}
 func (w *Waffo) VerifyWebhook(_ context.Context, headers http.Header, raw []byte) (ports.VerifiedEvent, error) {
 	if !w.verify(raw, headers.Get("X-SIGNATURE")) {
 		return ports.VerifiedEvent{}, ErrVerification

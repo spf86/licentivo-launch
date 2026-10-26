@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "licentivo-launch"
-version = "0.1.2"
+version = "0.1.4"
 description = "Merchant account and official Licentivo runtime lifecycle integration"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -12,8 +12,9 @@ license = {file = "LICENSE"}
 dependencies = ["cryptography>=44.0.1,<49"]
 
 [project.urls]
-Homepage = "https://github.com/spf86/licentivo-launch-sdk"
-Documentation = "https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/manual-integration.md"
+Homepage = "https://www.licentivo.com/en/launch.html"
+Documentation = "https://www.licentivo.com/en/launch-docs.html"
+Source = "https://github.com/spf86/licentivo-launch-sdk"
 Issues = "https://github.com/spf86/licentivo-launch-sdk/issues"
 
 [tool.setuptools.packages.find]

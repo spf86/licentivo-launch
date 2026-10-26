@@ -1,0 +1,501 @@
+{
+  "date": "2026-10-24",
+  "status": "Launch fixes and current Licentivo integration verified locally; not deployed",
+  "scope": [
+    "AUTH-08 Launch SDK account persistence",
+    "AUTH-10 Launch SDK session ownership",
+    "Current Licentivo fixes and official SDK import verification"
+  ],
+  "upstream": {
+    "version": "0.11.1",
+    "revision": "local-20261024-5d74ba5ea131",
+    "manifest_files": 115,
+    "changed_files": [
+      "pkg/launchclient/internal/licentivo/client.go",
+      "pkg/launchclient/internal/licentivo/credential.go",
+      "pkg/launchclient/internal/licentivo/logout.go",
+      "sdk/python/src/licentivo_launch/_vendor/licentivo.py",
+      "sdk/python/src/licentivo_launch/_vendor/licentivo_logout.py",
+      "sdk/javascript/src/vendor/licentivo.mjs",
+      "sdk/javascript/src/vendor/logout.mjs",
+      "sdk/csharp/vendor/DeviceCredential.cs",
+      "sdk/csharp/vendor/LicentivoClient.cs",
+      "sdk/csharp/vendor/Logout.cs",
+      "sdk/java/src/licentivo/Client.java",
+      "sdk/java/src/licentivo/Demo.java",
+      "sdk/java/src/licentivo/DeviceCredential.java",
+      "sdk/java/src/licentivo/LogoutJournal.java",
+      "sdk/rust/vendor/c/demo.c",
+      "sdk/rust/vendor/c/device_logout.h",
+      "sdk/rust/vendor/c/licentivo.c",
+      "sdk/ruby/vendor/c/demo.c",
+      "sdk/ruby/vendor/c/device_logout.h",
+      "sdk/ruby/vendor/c/licentivo.c",
+      "sdk/native/vendor/sdk/c/demo.c",
+      "sdk/native/vendor/sdk/c/device_logout.h",
+      "sdk/native/vendor/sdk/c/licentivo.c"
+    ],
+    "unchanged_files": 92,
+    "added_files": 0,
+    "unique_changed_upstream_sources": 17,
+    "all_destination_and_snapshot_hashes_match": true,
+    "verification_context": "Frozen 0.11.1 import used by the recorded runtime tests, before the concurrent workspace version update."
+  },
+  "go_account_http": {
+    "passed_records_including_subtests": 26,
+    "passed_top_level": 20,
+    "pass_names": [
+      "TestAccountLockCoordinatesProcessesAndRecoversAfterExit",
+      "TestAccountStoreOwnershipHTTP/atomic_store_save_failure_does_not_restore_account",
+      "TestAccountStoreOwnershipHTTP/old_instance_401_preserves_new_login",
+      "TestAccountStoreOwnershipHTTP/old_instance_network_failure_retries_own_queue",
+      "TestAccountStoreOwnershipHTTP",
+      "TestAccountLogoutStoreFailureDoesNotRestoreOldLogin/all_saves_fail",
+      "TestAccountLogoutStoreFailureDoesNotRestoreOldLogin/active_save_and_delete_fail",
+      "TestAccountLogoutStoreFailureDoesNotRestoreOldLogin/queue_save_fails",
+      "TestAccountLogoutStoreFailureDoesNotRestoreOldLogin",
+      "TestAccountLogoutReportsTotalStorageFailure",
+      "TestAccountLogoutLockTimeoutKeepsAccountExitIntent",
+      "TestOldAccountLogoutPreservesNewLoginAndRetriesOwnQueue",
+      "TestSoftwareAuthenticationAndErrorRedaction",
+      "TestOriginPolicy",
+      "TestIdentityIsEphemeralAndSDKDecidesFeatures",
+      "TestLogoutReleasesAndRetainsSDKJournal",
+      "TestCloseKeepsAccountAndDoesNotRelease",
+      "TestLaunchOutageNeverDecidesOfflineAuthorization",
+      "TestLogoutAfterRestartReopensSDKForRevocation",
+      "TestCanceledLogoutQueuesAccountAndStopsRuntime",
+      "TestAccountLogoutRetriesAfterRestartWithoutRestoringLogin",
+      "TestAccountSwitchReleasesOldDevice",
+      "TestSessionExpiryDoesNotOpenSDK",
+      "TestLaunchAccountLogoutRecovery",
+      "TestDPAPIStoreEncryptsAndBindsScope",
+      "TestOfficialSDKAccountExchangeAndLogout"
+    ],
+    "failed": [],
+    "skipped_test_cases": []
+  },
+  "go_after_upstream_sync": {
+    "passed_records_including_subtests": 21,
+    "passed_top_level": 18,
+    "pass_names": [
+      "TestAccountLockCoordinatesProcessesAndRecoversAfterExit",
+      "TestAccountLogoutStoreFailureDoesNotRestoreOldLogin/all_saves_fail",
+      "TestAccountLogoutStoreFailureDoesNotRestoreOldLogin/active_save_and_delete_fail",
+      "TestAccountLogoutStoreFailureDoesNotRestoreOldLogin/queue_save_fails",
+      "TestAccountLogoutStoreFailureDoesNotRestoreOldLogin",
+      "TestAccountLogoutReportsTotalStorageFailure",
+      "TestAccountLogoutLockTimeoutKeepsAccountExitIntent",
+      "TestOldAccountLogoutPreservesNewLoginAndRetriesOwnQueue",
+      "TestSoftwareAuthenticationAndErrorRedaction",
+      "TestOriginPolicy",
+      "TestIdentityIsEphemeralAndSDKDecidesFeatures",
+      "TestLogoutReleasesAndRetainsSDKJournal",
+      "TestCloseKeepsAccountAndDoesNotRelease",
+      "TestLaunchOutageNeverDecidesOfflineAuthorization",
+      "TestLogoutAfterRestartReopensSDKForRevocation",
+      "TestCanceledLogoutQueuesAccountAndStopsRuntime",
+      "TestAccountLogoutRetriesAfterRestartWithoutRestoringLogin",
+      "TestAccountSwitchReleasesOldDevice",
+      "TestSessionExpiryDoesNotOpenSDK",
+      "TestDPAPIStoreEncryptsAndBindsScope",
+      "TestOfficialSDKAccountExchangeAndLogout"
+    ],
+    "failed": [],
+    "skipped_test_cases": [
+      "TestAccountStoreOwnershipHTTP",
+      "TestLaunchAccountLogoutRecovery"
+    ]
+  },
+  "official_go_sdk": {
+    "passed_records_including_subtests": 67,
+    "passed_top_level": 15,
+    "pass_names": [
+      "TestSharedVectors/valid",
+      "TestSharedVectors/expired",
+      "TestSharedVectors/wrong_product",
+      "TestSharedVectors/wrong_device",
+      "TestSharedVectors/bad_signature",
+      "TestSharedVectors/unknown_key",
+      "TestSharedVectors/future_clock",
+      "TestSharedVectors/long_ttl",
+      "TestSharedVectors/missing_context",
+      "TestSharedVectors/bad_features",
+      "TestSharedVectors/duplicate_features",
+      "TestSharedVectors/wrong_inner_key",
+      "TestSharedVectors/unknown_field",
+      "TestSharedVectors/duplicate_field",
+      "TestSharedVectors/wrong_type",
+      "TestSharedVectors/limited_48h",
+      "TestSharedVectors/offline_shorter_than_heartbeat",
+      "TestSharedVectors/limited_no_timer",
+      "TestSharedVectors/permanent_with_heartbeat",
+      "TestSharedVectors/permanent_no_timer",
+      "TestSharedVectors/online_required_no_timer",
+      "TestSharedVectors/limited_ttl_overrun",
+      "TestSharedVectors/online_required_jitter_grace",
+      "TestSharedVectors/online_required_grace_boundary",
+      "TestSharedVectors/online_required_ttl_overrun",
+      "TestSharedVectors/invalid_heartbeat",
+      "TestSharedVectors/negative_heartbeat",
+      "TestSharedVectors/limited_zero_allowance",
+      "TestSharedVectors/unknown_offline_mode",
+      "TestSharedVectors/unknown_policy_field",
+      "TestSharedVectors/duplicate_policy_field",
+      "TestSharedVectors/wrong_policy_type",
+      "TestSharedVectors/node_capabilities",
+      "TestSharedVectors/floating_capabilities",
+      "TestSharedVectors/offline_file_context",
+      "TestSharedVectors/maintenance_included",
+      "TestSharedVectors/invalid_model",
+      "TestSharedVectors/invalid_session_id",
+      "TestSharedVectors/session_expired_early",
+      "TestSharedVectors/floating_no_timer",
+      "TestSharedVectors/floating_permanent_offline",
+      "TestSharedVectors/invalid_app_version",
+      "TestSharedVectors/maintenance_uncovered",
+      "TestSharedVectors/future_release",
+      "TestSharedVectors/invalid_offline_context",
+      "TestSharedVectors/unknown_capability_field",
+      "TestSharedVectors/duplicate_capability_field",
+      "TestSharedVectors/wrong_capability_type",
+      "TestSharedVectors",
+      "TestHeartbeatPermanentOfflineAndPolicyRestart",
+      "TestCacheFallbackDenialAndLicenseContext",
+      "TestMeteredCallbackCrashRecovery",
+      "TestHeartbeatDelayMinimum",
+      "TestRetryAfterAndHTMLProxyFailure/Too_Many_Requests",
+      "TestRetryAfterAndHTMLProxyFailure/Service_Unavailable",
+      "TestRetryAfterAndHTMLProxyFailure",
+      "TestStartupRefreshCanBeCanceledWithoutNetworkMutex",
+      "TestLogoutDuringIdentityExchangeNeverRestoresAuthority",
+      "TestLogoutFallbackSurvivesPrimaryFailureAndOfflineRestart",
+      "TestLogoutReportsTotalPersistenceFailureAndStillRevokes",
+      "TestOldInstanceLogoutPreservesNewBindingCache",
+      "TestNewBindingRecoveryAcknowledgesOldLogoutRecord",
+      "TestLogoutNewestRecordWinsAcrossStorageLocations/true",
+      "TestLogoutNewestRecordWinsAcrossStorageLocations/false",
+      "TestLogoutNewestRecordWinsAcrossStorageLocations",
+      "TestRotatedAssertionCannotRestoreLoggedOutBinding",
+      "TestProductInitializationDefaults"
+    ],
+    "failed": [],
+    "skipped_test_cases": []
+  },
+  "licentivo_http_merged_results": {
+    "passed_records_including_subtests": 62,
+    "results": {
+      "TestJointRepeatedReleaseUsesOneAllowance": "pass",
+      "TestJointLateLogoutPreservesNewBindingCache": "pass",
+      "TestEdgeControlQueuedReleaseCannotTouchFreshGeneration": "pass",
+      "TestEdgeControlOfflineUnbindKeepsKnownDeadline": "pass",
+      "TestJointFreshJWTForSignedOutSIDCannotReopenBinding": "pass",
+      "TestLaunchReleaseAllowanceCountsBindingOnce": "pass",
+      "TestLaunchRenewalPreservesManualSuspension": "pass",
+      "TestLaunchRenewalPreservesManualFeatures/features_0": "pass",
+      "TestLaunchRenewalPreservesManualFeatures/features_1": "pass",
+      "TestLaunchRenewalPreservesManualFeatures": "pass",
+      "TestLaunchManualFeatureCapSurvivesPolicyChanges": "pass",
+      "TestLaunchMigrationPreservesManualAuthorization": "pass",
+      "TestLaunchCommercialSuspensionAndExpiryCanRenew/entitlement.suspended": "pass",
+      "TestLaunchCommercialSuspensionAndExpiryCanRenew/entitlement.expired": "pass",
+      "TestLaunchCommercialSuspensionAndExpiryCanRenew": "pass",
+      "TestLaunchManagedLicenseRejectsIndependentRenewal": "pass",
+      "TestLaunchLeaseHonorsPurchaseDeadlineInSDK": "pass",
+      "TestLaunchLeaseKeepsEarlierLicenseAndSessionDeadlines": "pass",
+      "TestLaunchRestrictionsIgnorePolicyDrift/entitlement.refunded/policy_version": "pass",
+      "TestLaunchRestrictionsIgnorePolicyDrift/entitlement.refunded/missing_mapping": "pass",
+      "TestLaunchRestrictionsIgnorePolicyDrift/entitlement.refunded/policy_mode": "pass",
+      "TestLaunchRestrictionsIgnorePolicyDrift/entitlement.suspended/policy_version": "pass",
+      "TestLaunchRestrictionsIgnorePolicyDrift/entitlement.suspended/missing_mapping": "pass",
+      "TestLaunchRestrictionsIgnorePolicyDrift/entitlement.suspended/policy_mode": "pass",
+      "TestLaunchRestrictionsIgnorePolicyDrift/entitlement.expired/policy_version": "pass",
+      "TestLaunchRestrictionsIgnorePolicyDrift/entitlement.expired/missing_mapping": "pass",
+      "TestLaunchRestrictionsIgnorePolicyDrift/entitlement.expired/policy_mode": "pass",
+      "TestLaunchRestrictionsIgnorePolicyDrift": "pass",
+      "TestLaunchDowngradeReconcilesExcessDevices": "pass",
+      "TestLaunchRenewalPreservesManualDeviceLimit": "pass",
+      "TestLaunchRestrictionsKeepOwnershipAndVersionChecks": "pass",
+      "TestLaunchRestrictionRetryAfterReview": "pass",
+      "TestLaunchMigrationPreservesManualDeviceLimit": "pass",
+      "TestLaunchManualDeviceLimitTracksCommercialCeiling": "pass",
+      "TestLaunchDowngradeRestoresMissingCapabilitiesSnapshot": "pass",
+      "TestLaunchSDKRetryRefreshesChangedGrant": "pass",
+      "TestLaunchFailedDowngradeBlocksUntilPolicyRetry": "pass",
+      "TestLaunchExplicitDowngradeProtectsMissingMappingAndVersions": "pass",
+      "TestLaunchRestrictionInferenceAndOwnership/shorter_validity": "pass",
+      "TestLaunchRestrictionInferenceAndOwnership/fewer_features": "pass",
+      "TestLaunchRestrictionInferenceAndOwnership/lower_meter": "pass",
+      "TestLaunchRestrictionInferenceAndOwnership/failed_upgrade": "pass",
+      "TestLaunchRestrictionInferenceAndOwnership/wrong_account": "pass",
+      "TestLaunchRestrictionInferenceAndOwnership/wrong_product": "pass",
+      "TestLaunchRestrictionInferenceAndOwnership": "pass",
+      "TestLaunchSessionRevocationScopesAndReplay": "pass",
+      "TestLaunchAccountSessionRevocation/password_changed": "pass",
+      "TestLaunchAccountSessionRevocation/account_disabled": "pass",
+      "TestLaunchAccountSessionRevocation": "pass",
+      "TestLaunchRevocationBeforeFirstExchange": "pass",
+      "TestLaunchSessionRevocationAtomicRollback": "pass",
+      "TestLaunchAccountRevocationCutoffNeverMovesBackwards": "pass",
+      "TestLaunchSessionRevocationAccessAndValidation": "pass",
+      "TestLaunchSessionRevocationConcurrentRetries": "pass",
+      "TestLaunchAccountLogoutRemoteUnbindAndReplay": "pass",
+      "TestLaunchPendingLogoutCannotReleaseFreshLogin": "pass",
+      "TestLaunchDeviceReleaseReviewCannotBypassBindingVersion": "pass",
+      "TestLaunchExpiredSessionRequiresFreshLogin": "pass",
+      "TestLaunchCommerceVersionsIsolationAndRetry": "pass",
+      "TestLaunchMigrationPreservesRightsAndRejectsOldKeys": "pass",
+      "TestLaunchMigrationDoesNotReplaceFloatingPurchase": "pass",
+      "TestLaunchLegacyReplayHonorsReducedPurchaseDeadline": "pass"
+    },
+    "runs": [
+      "lic-current-controls.jsonl",
+      "lic-dedup-final.jsonl"
+    ]
+  },
+  "real_joint": {
+    "passed_stage_records": 18,
+    "verification_stages_excluding_completion": 17,
+    "results": [
+      {
+        "message": "",
+        "status": "start",
+        "step": "initialize_real_launch"
+      },
+      {
+        "message": "Launch uses actual Licentivo management API and identity trust",
+        "status": "pass",
+        "step": "initialize_real_launch"
+      },
+      {
+        "message": "",
+        "status": "start",
+        "step": "publish_product_and_paid_plan"
+      },
+      {
+        "message": "Plan and policy mapping registered through actual API; payment settlement is simulated",
+        "status": "pass",
+        "step": "publish_product_and_paid_plan"
+      },
+      {
+        "message": "",
+        "status": "start",
+        "step": "purchase_and_absolute_dates"
+      },
+      {
+        "message": "Verified payment simulation reached actual Licentivo worker and applied snapshot",
+        "status": "pass",
+        "step": "purchase_and_absolute_dates"
+      },
+      {
+        "message": "",
+        "status": "start",
+        "step": "real_sdk_identity_exchange_and_feature"
+      },
+      {
+        "message": "Actual Go Launch SDK exchanged real identity and verified signed feature grant",
+        "status": "pass",
+        "step": "real_sdk_identity_exchange_and_feature"
+      },
+      {
+        "message": "",
+        "status": "start",
+        "step": "ordinary_close_and_restore"
+      },
+      {
+        "message": "Ordinary close retained binding and remembered account restored",
+        "status": "pass",
+        "step": "ordinary_close_and_restore"
+      },
+      {
+        "message": "",
+        "status": "start",
+        "step": "vault_save_failure_plus_network_outage"
+      },
+      {
+        "message": "Real Launch, current Licentivo and official SDK denied restart after interrupted vault logout; account/device revocation recovered, fresh login and signed feature worked",
+        "status": "pass",
+        "step": "vault_save_failure_plus_network_outage"
+      },
+      {
+        "message": "",
+        "status": "start",
+        "step": "vault_all_writes_and_deletes_fail_plus_network_outage"
+      },
+      {
+        "message": "Real Launch, current Licentivo and official SDK denied restart after interrupted vault logout; account/device revocation recovered, fresh login and signed feature worked",
+        "status": "pass",
+        "step": "vault_all_writes_and_deletes_fail_plus_network_outage"
+      },
+      {
+        "message": "",
+        "status": "start",
+        "step": "explicit_logout"
+      },
+      {
+        "message": "Explicit SDK logout denied locally and released actual remote binding",
+        "status": "pass",
+        "step": "explicit_logout"
+      },
+      {
+        "message": "",
+        "status": "start",
+        "step": "account_logout_outage_and_restart"
+      },
+      {
+        "message": "Durable DPAPI account logout survived SDK recreation; local feature and restore denied, real Licentivo device remained released, original Launch session revoked, notification confirmed; lost reply recovered through HTTP 401",
+        "status": "pass",
+        "step": "account_logout_outage_and_restart"
+      },
+      {
+        "message": "",
+        "status": "start",
+        "step": "account_logout_lost_commit_reply"
+      },
+      {
+        "message": "Durable DPAPI account logout survived SDK recreation; local feature and restore denied, real Licentivo device remained released, original Launch session revoked, notification confirmed; lost reply recovered through HTTP 401",
+        "status": "pass",
+        "step": "account_logout_lost_commit_reply"
+      },
+      {
+        "message": "",
+        "status": "start",
+        "step": "remote_release_and_stale_generation"
+      },
+      {
+        "message": "Remote unbind blocked old login; delayed release could not remove newer generation",
+        "status": "pass",
+        "step": "remote_release_and_stale_generation"
+      },
+      {
+        "message": "",
+        "status": "start",
+        "step": "renewal_and_refund"
+      },
+      {
+        "message": "Launch calculated renewal and refunded extension; Licentivo applied absolute dates",
+        "status": "pass",
+        "step": "renewal_and_refund"
+      },
+      {
+        "message": "",
+        "status": "start",
+        "step": "account_revocation_and_fresh_login"
+      },
+      {
+        "message": "Account cutoff released binding without changing purchase; true new login succeeded",
+        "status": "pass",
+        "step": "account_revocation_and_fresh_login"
+      },
+      {
+        "message": "",
+        "status": "start",
+        "step": "full_refund_denies_runtime"
+      },
+      {
+        "message": "Fully refunded purchase cannot obtain real SDK authorization",
+        "status": "pass",
+        "step": "full_refund_denies_runtime"
+      },
+      {
+        "message": "",
+        "status": "start",
+        "step": "exhausted_refund_recovery_real_services"
+      },
+      {
+        "message": "After 12 uncertain attempts, admin resumed original refund with unchanged idempotency payload; real Licentivo and SDK denied the refunded purchase",
+        "status": "pass",
+        "step": "exhausted_refund_recovery_real_services"
+      },
+      {
+        "message": "",
+        "status": "start",
+        "step": "verified_pending_then_lost_dispute"
+      },
+      {
+        "message": "Authenticated Stripe event re-queried actual adapter for original capture and lost dispute; Launch voided purchase, Licentivo applied it, fresh official Go SDK authorization denied; duplicate event was idempotent",
+        "status": "pass",
+        "step": "verified_pending_then_lost_dispute"
+      },
+      {
+        "message": "",
+        "status": "start",
+        "step": "long_documents_real_deepl_adapter"
+      },
+      {
+        "message": "Real DeepL adapter split legal 160000-byte product documentation, saved nine complete target locales with matching fields; largest request 112122 bytes",
+        "status": "pass",
+        "step": "long_documents_real_deepl_adapter"
+      },
+      {
+        "message": "",
+        "status": "start",
+        "step": "complete"
+      },
+      {
+        "message": "Real Launch, Licentivo, MySQL and Go SDK joint audit completed; payment gateway was an isolated simulator",
+        "status": "pass",
+        "step": "complete"
+      }
+    ]
+  },
+  "cleanup": {
+    "mysql": {
+      "remote_device_accessed": false,
+      "audit_mysql_stopped": true,
+      "original_services_preserved": true,
+      "evidence_preserved": true
+    },
+    "licentivo": {
+      "local_licentivo_stopped": true
+    }
+  },
+  "deployed": false,
+  "published_sdk": false,
+  "git_committed_or_pushed": false,
+  "licentivo_source_edited_by_this_task": false,
+  "official_sdk_changes": "Imported owner-provided source snapshot with existing preparation script; no separate edits to licensing/crypto implementation.",
+  "new_confirmed_blocking_product_bugs": [],
+  "test_contract_adjustments": [
+    "SDK now retains shared credential/lease files on logout; native, Ruby and C# tests assert preservation and denied execution.",
+    "A duplicate binding release may return stale rather than a second succeeded receipt; allowance probe accepts this and verifies one physical release and one quota debit.",
+    "Offline probe uses the real Activate API through a local 503 proxy; unsupported ActivateCached call was removed."
+  ],
+  "limits": [
+    "Runtime tests ran on Windows. Real dual-service business integration used Go; other languages used local signed SDK fixtures.",
+    "Payment and translation providers were isolated simulators; no live payment, refund or deployment.",
+    "OS-user/host-scoped vaults must support multiple opaque keys with atomic replacement. If both vault persistence and local intent storage fail, logout reports failure and stops current local use; no durable-completion claim."
+  ],
+  "proof_sha256": {
+    "go-http-final.jsonl": "95bdf98eddbbc456e70517e85472a0c11e0d21fa3677f55fa3bdce92e64df197",
+    "go-upstream.jsonl": "3a9a0d9be6ce2665e444e663d885205e9d61005c02a39ed01587988ddfb62714",
+    "lic-sdk-controls.jsonl": "b51b735774befde10610f9524a1d72851dbb4917dd54b7265624502847ddb02a",
+    "lic-current-controls.jsonl": "173170cb0e33d72ad6770b62e82fc2cd7341535a81ba22de8c9e0a8a0160bc1e",
+    "lic-dedup-final.jsonl": "39cadd563f19947188f3bef01424a103f191842f85381bde68d10d8cf7c83354",
+    "javascript-upstream.log": "49ddcdca807c1e2c8caaf77571f7d556d2b6d68ad27c7f4940a3b3f151dfbf2e",
+    "python-upstream.log": "6350c1ba31069b695463aa16be5b1e7adf271e2720b1eaacc03adebc68b57d37",
+    "csharp-upstream.log": "f6be507f8d245c19901a624aa81f4b09de94708a91316e6a1101dc3487050c7f",
+    "csharp-runtime-upstream.log": "8fe480fada77928b1b910c47563dad867a8e643cee16ed1e311ddb4c08c659e4",
+    "java-upstream.log": "364f8ef3ef15d7b6c427e139d2d006b62c81a4494219d14ec939dea0d770dcb6",
+    "java-runtime-upstream.log": "194275a8cbcfa1e9b39b029169b678bccd445468458837b8d7dddb64bdb38756",
+    "ruby-upstream.log": "d2c6ec2fa0cdb7e76bc18758b8ed0fb722b08ea5badd9463faff17299058057a",
+    "ruby-runtime-upstream.log": "16f2fdbc7fb740a3e35e2dd639525aba70c60954cbb3f9d4ea0395ef13bc6e2d",
+    "rust-upstream.log": "8c3598b524c1a5777af9a10c08418d54877d7f4b34da2e90f680d3718d967a9c",
+    "native-upstream.log": "900a7ad0136dbeb829237b27fc9935e5d3febae375e9b7f86b9e8f8b36d78f02",
+    "joint-run/joint-results.jsonl": "e06d056499970f7607050fc78ce3fde61a6924b830739a45ec9e0eab8aeae8c1",
+    "licentivo-source-snapshot.json": "c12d0e1d6bafbe540797eaa7c1b4c843eab67b9b7b1b1540444adf252efec9ee"
+  },
+  "workspace_upstream_at_finalization": {
+    "version": "0.11.2",
+    "source_revision": "licentivo-sdk-v0.11.2-release-20261024",
+    "manifest_files": 115,
+    "all_current_source_and_destination_hashes_match": true,
+    "source_changes_from_tested_snapshot": [
+      "VERSION",
+      "ruby/lib/licentivo.rb",
+      "CMakeLists.txt"
+    ],
+    "source_changes_are_version_strings_only": true,
+    "packaging_note": "Current embedding script additionally searches the Ruby gem extension directory. It does not change authorization logic. Full integration logs refer to the frozen 0.11.1 snapshot; this report is not a package-publication acceptance report for 0.11.2."
+  }
+}

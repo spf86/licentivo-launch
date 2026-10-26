@@ -39,24 +39,27 @@ var (
 )
 
 type Config struct {
-	PublicURL, SetupToken string
-	MasterKey             []byte
-	UploadDir             string
-	MailFactory           func(mailer.Config) (mailer.Sender, error)
-	PaymentFactory        func(context.Context, storage.PaymentAccount) (ports.PaymentProvider, error)
-	LicensingFactory      func(context.Context, storage.LicentivoConnection) (ports.LicensingProvider, error)
-	LicensingSetupFactory func(apiKey string) (LicentivoSetupProvider, error)
-	TranslationFactory    func(edition, apiKey string) (ports.Translator, error)
-	TLSListenerEnabled    bool
-	ApplyTLSCertificate   func(*tls.Certificate)
+	PublicURL, SetupToken    string
+	MasterKey                []byte
+	UploadDir                string
+	MailFactory              func(mailer.Config) (mailer.Sender, error)
+	PaymentFactory           func(context.Context, storage.PaymentAccount) (ports.PaymentProvider, error)
+	BridgeFactory            func(integrationKey string) (ports.LaunchBridge, error)
+	ExternalLicensingFactory func(context.Context, storage.ExternalLicensingConnection) (ports.ExternalLicensing, error)
+	LicensingFactory         func(context.Context, storage.LicentivoConnection) (ports.LicensingProvider, error)
+	LicensingSetupFactory    func(apiKey string) (LicentivoSetupProvider, error)
+	TranslationFactory       func(edition, apiKey string) (ports.Translator, error)
+	TLSListenerEnabled       bool
+	ApplyTLSCertificate      func(*tls.Certificate)
 }
 type Service struct {
-	db        *gorm.DB
-	vault     *security.Vault
-	config    Config
-	dummyHash string
-	uploadDir string
-	publicURL atomic.Value
+	db            *gorm.DB
+	vault         *security.Vault
+	config        Config
+	dummyHash     string
+	uploadDir     string
+	publicURL     atomic.Value
+	licensingTurn atomic.Uint64
 }
 
 func New(ctx context.Context, db *gorm.DB, config Config) (*Service, error) {
@@ -88,6 +91,9 @@ func New(ctx context.Context, db *gorm.DB, config Config) (*Service, error) {
 		return nil, ErrStorage
 	}
 	if err := db.WithContext(ctx).First(&settings, "id = ?", 1).Error; err != nil {
+		return nil, ErrStorage
+	}
+	if err := s.normalizeProviderSettings(ctx); err != nil {
 		return nil, ErrStorage
 	}
 	publicURL := strings.TrimRight(config.PublicURL, "/")

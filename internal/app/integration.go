@@ -115,6 +115,9 @@ func (s *Service) CheckIntegration(ctx context.Context, p Principal, in Integrat
 		return report, ErrStorage
 	}
 	report = IntegrationReport{Ready: true, Language: in.Language, CheckedAt: now(), Checks: []IntegrationCheck{}, Config: IntegrationConfig{SchemaVersion: 1, MerchantOrigin: s.PublicURL(), LaunchProductID: product.ID, Environment: in.Environment}}
+	if err := s.rejectExternalRuntime(ctx, in.ProductID, in.Environment); err != nil {
+		return report, err
+	}
 	check := func(code, status, message string) {
 		report.Checks = append(report.Checks, IntegrationCheck{code, status, message})
 		if status == "failed" {
@@ -134,6 +137,16 @@ func (s *Service) CheckIntegration(ctx context.Context, p Principal, in Integrat
 	if len(publications) == 0 {
 		check("PUBLISHED_PLAN_REQUIRED", "failed", "该环境还没有已发布套餐，请先在销售套餐中选择 Licentivo 策略并发布")
 	}
+	remoteProduct, err := productRemoteID(s.db.WithContext(ctx), product, "")
+	if err != nil {
+		if failure, ok := err.(*Error); ok && failure.Code == "PRODUCT_MAPPING_CONFLICT" {
+			check("PRODUCT_MAPPING_CONFLICT", "failed", "该产品的历史套餐映射存在冲突，请先核对已购套餐对应的 Licentivo 产品")
+			report.ExamplePath = integrationExamplePath(in.Language)
+			return report, nil
+		}
+		return report, ErrStorage
+	}
+	report.Config.LicentivoProductID = remoteProduct
 	ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
 	defer cancel()
 	providers := map[string]ports.LicensingProvider{}
@@ -179,7 +192,7 @@ func (s *Service) CheckIntegration(ctx context.Context, p Principal, in Integrat
 			}
 			providers[mapping.ConnectionID] = provider
 		}
-		if err := checkPolicy(ctx, provider, version, mapping, ""); err != nil {
+		if err := s.registerLaunchPlan(ctx, in.Environment, version, mapping, true); err != nil {
 			check("POLICY_MAPPING_MISMATCH", "failed", "套餐 "+version.PlanID+" 的远程策略检查未通过，请检查连接与策略版本；策略有变更时请创建匹配的新版本")
 			continue
 		}

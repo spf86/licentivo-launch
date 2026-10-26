@@ -158,6 +158,15 @@ func (s *Service) Login(ctx context.Context, address, password, kind string) (Se
 		if current.PasswordHash != user.PasswordHash || current.Status != "active" {
 			return ErrUnauthorized
 		}
+		if kind == "desktop" {
+			if err := s.identityFence(tx, current.ID, now()); err != nil {
+				var failure *Error
+				if errors.As(err, &failure) && failure.Code == "LAUNCH_LOGIN_REQUIRED" {
+					return problem(503, "ACCOUNT_SECURITY_SYNC_PENDING", "请稍后重新登录，账号安全变更正在同步")
+				}
+				return err
+			}
+		}
 		var err error
 		role, err = s.role(tx, current)
 		if err != nil {
@@ -168,7 +177,7 @@ func (s *Service) Login(ctx context.Context, address, password, kind string) (Se
 		if kind == "website" {
 			csrfHash = security.Digest(csrf)
 		}
-		return tx.Create(&storage.Session{ID: id, UserID: user.ID, TokenHash: security.Digest(token), CSRFHash: csrfHash, Kind: kind, ExpiresAt: expires}).Error
+		return tx.Create(&storage.Session{ID: id, UserID: user.ID, TokenHash: security.Digest(token), CSRFHash: csrfHash, Kind: kind, ExpiresAt: expires, CreatedAt: now()}).Error
 	})
 	if err != nil {
 		return SessionGrant{}, databaseError(err)
@@ -354,7 +363,11 @@ func (s *Service) CompleteEmail(ctx context.Context, token, newPassword string) 
 			return err
 		}
 		if credential.Kind != "verify" {
-			if err := tx.Model(&storage.Session{}).Where("user_id = ? AND revoked_at IS NULL", user.ID).Update("revoked_at", at).Error; err != nil {
+			reason := ""
+			if credential.Kind == "reset" {
+				reason = "password_changed"
+			}
+			if err := s.revokeSessions(tx, user.ID, "", at, reason); err != nil {
 				return err
 			}
 			if err := tx.Model(&storage.EmailCredential{}).Where("user_id = ? AND used_at IS NULL", user.ID).Update("used_at", at).Error; err != nil {
@@ -418,7 +431,7 @@ func (s *Service) ChangePassword(ctx context.Context, p Principal, current, repl
 			return err
 		}
 		at := now()
-		if err := tx.Model(&storage.Session{}).Where("user_id = ? AND revoked_at IS NULL", user.ID).Update("revoked_at", at).Error; err != nil {
+		if err := s.revokeSessions(tx, user.ID, "", at, "password_changed"); err != nil {
 			return err
 		}
 		if err := tx.Model(&storage.EmailCredential{}).Where("user_id = ? AND used_at IS NULL", user.ID).Update("used_at", at).Error; err != nil {
@@ -429,7 +442,13 @@ func (s *Service) ChangePassword(ctx context.Context, p Principal, current, repl
 }
 
 func (s *Service) Logout(ctx context.Context, p Principal) error {
-	return databaseError(s.db.WithContext(ctx).Model(&storage.Session{}).Where("id = ? AND user_id = ?", p.Session.ID, p.User.ID).Update("revoked_at", now()).Error)
+	return databaseError(s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var user storage.User
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&user, "id = ?", p.User.ID).Error; err != nil {
+			return err
+		}
+		return s.revokeSessions(tx, user.ID, p.Session.ID, now())
+	}))
 }
 
 type SessionView struct {
@@ -452,12 +471,15 @@ func (s *Service) Sessions(ctx context.Context, p Principal) ([]SessionView, err
 	return views, nil
 }
 func (s *Service) RevokeSession(ctx context.Context, p Principal, id string) error {
-	result := s.db.WithContext(ctx).Model(&storage.Session{}).Where("id = ? AND user_id = ?", id, p.User.ID).Update("revoked_at", now())
-	if result.Error != nil {
-		return ErrStorage
-	}
-	if result.RowsAffected == 0 {
-		return ErrNotFound
-	}
-	return nil
+	return databaseError(s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var user storage.User
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&user, "id = ?", p.User.ID).Error; err != nil {
+			return err
+		}
+		var session storage.Session
+		if err := tx.First(&session, "id = ? AND user_id = ?", id, user.ID).Error; err != nil {
+			return err
+		}
+		return s.revokeSessions(tx, user.ID, id, now(), "forced_logout")
+	}))
 }

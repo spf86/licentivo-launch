@@ -21,12 +21,11 @@ import (
 )
 
 type runtimeEntry struct {
-	mu             sync.Mutex
-	sdk            launchclient.Runtime
-	credentialHash [32]byte
-	version        uint64
-	refs           int
-	used           time.Time
+	mu            sync.Mutex
+	sdk           launchclient.Runtime
+	assertionHash [32]byte
+	refs          int
+	used          time.Time
 }
 type runtimePool struct {
 	mu       sync.Mutex
@@ -42,7 +41,7 @@ var errFeatureDenied = errors.New("SDK denied the protected feature")
 // Bounded, private per-account cache; each SDK owns a single heartbeat loop.
 // Production deployments should size capacity and persist device ownership for
 // their deployment model. Sharing a cache directory across processes is unsupported.
-func (p *runtimePool) use(scope string, credential launchclient.Credential, action func(launchclient.Runtime) error) error {
+func (p *runtimePool) use(scope string, identity launchclient.Identity, action func(launchclient.Runtime) error) error {
 	p.mu.Lock()
 	entry := p.entries[scope]
 	if entry == nil {
@@ -71,20 +70,20 @@ func (p *runtimePool) use(scope string, credential launchclient.Credential, acti
 	p.mu.Unlock()
 	entry.mu.Lock()
 	defer func() { entry.mu.Unlock(); p.mu.Lock(); entry.refs--; entry.used = time.Now(); p.mu.Unlock() }()
-	hash := sha256.Sum256([]byte(credential.LicenseKey))
-	if entry.sdk != nil && (entry.credentialHash != hash || entry.version != credential.Version) {
+	hash := sha256.Sum256([]byte(identity.IdentityToken))
+	if entry.sdk != nil && (entry.assertionHash != hash) {
 		entry.sdk.Close()
 		entry.sdk = nil
 	}
 	if entry.sdk == nil {
 		cfg := p.template
-		cfg.LicenseKey = credential.LicenseKey
+		cfg.LicenseKey = ""
 		dir := filepath.Join(p.root, scope)
 		if err := launchclient.ProtectDirectory(dir); err != nil {
 			return err
 		}
 		cfg.CachePath = filepath.Join(dir, "lease.json")
-		sdk, err := launchclient.NewRuntime(cfg, launchclient.RuntimeConfig{Credential: credential, CachePath: cfg.CachePath})
+		sdk, err := launchclient.NewRuntime(cfg, launchclient.RuntimeConfig{Identity: identity, Environment: identity.Environment, CachePath: cfg.CachePath})
 		if err != nil {
 			return err
 		}
@@ -94,7 +93,7 @@ func (p *runtimePool) use(scope string, credential launchclient.Credential, acti
 			sdk.Close()
 			return err
 		}
-		entry.sdk, entry.credentialHash, entry.version = sdk, hash, credential.Version
+		entry.sdk, entry.assertionHash = sdk, hash
 	}
 	return action(entry.sdk)
 }
@@ -210,15 +209,15 @@ func main() {
 			writeFailure(w, launchclient.ErrInvalidResponse)
 			return
 		}
-		credential, err := customer.CredentialWithRetry(ctx, product, environment, launchclient.RetryPolicy{MaxAttempts: 3})
+		identity, err := customer.Identity(ctx, product, environment)
 		if err != nil {
 			writeFailure(w, err)
 			return
 		}
 		// Identity comes from merchant authentication, never a user_id in the body.
-		scope := sha256.Sum256([]byte(strings.TrimRight(origin, "/") + "\n" + user.ID + "\n" + product + "\n" + environment))
+		scope := sha256.Sum256([]byte(strings.TrimRight(origin, "/") + "\n" + user.ID + "\n" + product + "\n" + environment + "\n" + template.ProductID + "\n" + authorization))
 		var report string
-		err = pool.use(hex.EncodeToString(scope[:]), credential, func(sdk launchclient.Runtime) error {
+		err = pool.use(hex.EncodeToString(scope[:]), identity, func(sdk launchclient.Runtime) error {
 			if err := ctx.Err(); err != nil {
 				return err
 			}

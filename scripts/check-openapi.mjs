@@ -28,7 +28,13 @@ for(const [route,methods] of Object.entries(spec.paths))for(const [method,op] of
  for(const name of [...route.matchAll(/\{([^}]+)\}/g)].map(m=>m[1])){
   if(!op.parameters?.some(p=>p.in==='path'&&p.name===name&&p.required))throw new Error('Missing path parameter: '+route);
  }
- if(!op.responses?.['200'])throw new Error('Missing success response: '+route);
+ const removedCredential=method==='post'&&route==='/api/v1/software/products/{id}/credential';
+ if(removedCredential){
+  if(!op.deprecated||!op.responses?.['410']||op.responses?.['200'])throw new Error('Removed credential endpoint must document only HTTP 410: '+route);
+ }else if(!op.responses?.['200'])throw new Error('Missing success response: '+route);
+ for(const requirement of op.security||[])for(const name of Object.keys(requirement)){
+  if(!spec.components?.securitySchemes?.[name])throw new Error('Unknown security scheme: '+name+' at '+route);
+ }
  operations++;
 }
 console.log(`OpenAPI: ${operations} documented operations, all references and routes resolved.`);

@@ -46,7 +46,7 @@ begin
     if options[:mode] == :release
       app.release_device(cancellation: token); puts 'Device released and local session removed.'
     else
-      puts(state[:offline_fallback] ? 'Signed in with a verified offline lease.' : 'Signed in; runtime started.')
+      puts 'Signed in; official SDK runtime started.'
       app.run_feature(options[:feature]) { puts 'Protected business callback executed.' } if options[:feature]
     end
   end

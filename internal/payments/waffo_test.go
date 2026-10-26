@@ -53,6 +53,7 @@ func TestWaffoSignedCheckoutPaymentAndAsynchronousRefund(t *testing.T) {
 	orderStatus := "PAY_SUCCESS"
 	merchantRef := "merchant_fixture"
 	signed := true
+	refundPosts := 0
 	requestID := "123456781234423482341234567890ab"
 	orderID := "12345678-1234-4234-8234-1234567890ab"
 	w.http.Transport = roundTrip(func(r *http.Request) (*http.Response, error) {
@@ -81,6 +82,7 @@ func TestWaffoSignedCheckoutPaymentAndAsynchronousRefund(t *testing.T) {
 		case "/api/v1/order/inquiry":
 			data = map[string]any{"acquiringOrderId": "A123", "merchantOrderId": orderID, "paymentRequestId": requestID, "orderCurrency": "USD", "orderAmount": "16.99", "orderStatus": orderStatus, "orderCompletedAt": "2026-10-22T10:00:00Z", "merchantInfo": map[string]string{"merchantId": merchantRef}}
 		case "/api/v1/order/refund":
+			refundPosts++
 			if in["refundRequestId"] != requestID || in["refundAmount"] != "16.99" || in["acquiringOrderId"] != "A123" {
 				t.Fatal("incorrect Waffo refund identity")
 			}
@@ -133,6 +135,18 @@ func TestWaffoSignedCheckoutPaymentAndAsynchronousRefund(t *testing.T) {
 	refund, err = w.QueryRefund(ctx, requestID)
 	if err != nil || refund.Status != ports.PaymentSucceeded || refund.PaymentID != "A123" || refund.Amount != in.Amount {
 		t.Fatal("confirmed refund was not correlated")
+	}
+	beforePosts := refundPosts
+	recovery := ports.RefundRequest{OperationID: orderID, PaymentID: "A123", Amount: in.Amount, RequestedAt: time.Now().Add(-72 * time.Hour)}
+	if found, err := w.RecoverRefund(ctx, recovery); err != nil || found.ExternalID != requestID || found.Status != ports.PaymentSucceeded {
+		t.Fatal("read-only recovery beyond POST window failed", err)
+	}
+	recovery.Amount.Minor++
+	if _, err := w.RecoverRefund(ctx, recovery); err == nil {
+		t.Fatal("mismatched recovery receipt accepted")
+	}
+	if refundPosts != beforePosts {
+		t.Fatal("read-only recovery submitted another refund")
 	}
 	refundStatus = "ORDER_REFUND_FAILED"
 	if refund, err := w.QueryRefund(ctx, requestID); err != nil || refund.Status != ports.PaymentFailed {

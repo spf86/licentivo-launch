@@ -1,11 +1,11 @@
 {
   "name": "@licentivo/launch",
-  "version": "0.1.2",
+  "version": "0.1.4",
   "description": "Merchant account and official Licentivo runtime lifecycle for trusted Node.js applications",
   "type": "module",
   "license": "MIT",
   "repository": {"type": "git", "url": "https://github.com/spf86/licentivo-launch-sdk.git", "directory": "sdk/javascript"},
-  "homepage": "https://github.com/spf86/licentivo-launch-sdk#readme",
+  "homepage": "https://www.licentivo.com/en/launch.html",
   "bugs": {"url": "https://github.com/spf86/licentivo-launch-sdk/issues"},
   "keywords": ["licentivo", "launch", "licensing", "authentication", "sdk"],
   "publishConfig": {"access": "public", "registry": "https://registry.npmjs.org/"},

@@ -1,11 +1,8 @@
 package app
 
 import (
-	"bytes"
 	"context"
 	"crypto/sha256"
-	"encoding/json"
-	"errors"
 	"time"
 
 	"gorm.io/gorm"
@@ -74,7 +71,7 @@ func (s *Service) reconcilePayment(ctx context.Context, orderID string) error {
 		if err := tx.Model(&order).Updates(map[string]any{"status": "paid", "paid_at": paidAt}).Error; err != nil {
 			return err
 		}
-		if err := s.applyPaidCoverage(tx, user, order, paidAt); err != nil {
+		if err := s.applyPaidCoverage(tx, order, paidAt); err != nil {
 			return err
 		}
 		if err := s.queueCustomerNotification(tx, user.ID, "Payment confirmed", "Payment for order "+order.ID+" has been confirmed. Software access is being prepared. View the order in your account."); err != nil {
@@ -86,129 +83,6 @@ func (s *Service) reconcilePayment(ctx context.Context, orderID string) error {
 
 func securityDigest(raw []byte) []byte { sum := sha256.Sum256(raw); return sum[:] }
 
-func (s *Service) ProcessAuthorization(ctx context.Context) (bool, error) {
-	var task storage.SyncTask
-	lease, err := newID()
-	if err != nil {
-		return false, err
-	}
-	err = s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		at := now()
-		err := tx.Clauses(clause.Locking{Strength: "UPDATE", Options: "SKIP LOCKED"}).Where("((status IN ('pending','retrying') AND available_at <= ?) OR (status = 'running' AND lease_until < ?)) AND NOT EXISTS (SELECT 1 FROM sync_tasks prior WHERE prior.entitlement_id = sync_tasks.entitlement_id AND prior.target_version < sync_tasks.target_version AND prior.status <> 'succeeded')", at, at).Order("available_at,operation_id").First(&task).Error
-		if err != nil {
-			return err
-		}
-		task.Attempts++
-		return tx.Model(&task).Updates(map[string]any{"status": "running", "lease_token": lease, "lease_until": at.Add(time.Minute), "attempts": task.Attempts}).Error
-	})
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return false, nil
-	}
-	if err != nil {
-		return false, ErrStorage
-	}
-	var command ports.EntitlementCommand
-	var connection storage.LicentivoConnection
-	var currentEntitlement storage.Entitlement
-	if s.db.WithContext(ctx).First(&currentEntitlement, "id = ?", task.EntitlementID).Error != nil || currentEntitlement.Status == "revoked" {
-		return true, s.failAuthorization(ctx, task, lease, "TERMINAL_AUTHORIZATION_HOLD", true)
-	}
-	if json.Unmarshal(task.RequestJSON, &command) != nil || task.ConnectionID == nil || !bytes.Equal(securityDigest(marshal(command)), task.RequestHash) {
-		return true, s.failAuthorization(ctx, task, lease, "COMMAND_INVALID", true)
-	}
-	if command.LicenseID == "" && command.ExpectedVersion > 0 {
-		var binding storage.LicenseBinding
-		if s.db.WithContext(ctx).First(&binding, "entitlement_id = ? AND replaced_at IS NULL", task.EntitlementID).Error != nil {
-			return true, s.failAuthorization(ctx, task, lease, "BINDING_PENDING", false)
-		}
-		command.LicenseID = binding.RemoteLicenseID
-		// A preceding create may have still been pending when this task was queued.
-		// Persist its recovered identity before the first outbound call.
-		if err := s.db.WithContext(ctx).Model(&task).Where("lease_token = ?", lease).Updates(map[string]any{"request_json": marshal(command), "request_hash": securityDigest(marshal(command))}).Error; err != nil {
-			return true, ErrStorage
-		}
-	}
-	if command.Validate() != nil {
-		return true, s.failAuthorization(ctx, task, lease, "COMMAND_INVALID", true)
-	}
-	if s.db.WithContext(ctx).First(&connection, "id = ?", *task.ConnectionID).Error != nil {
-		return true, s.failAuthorization(ctx, task, lease, "CONNECTION_MISSING", true)
-	}
-	client, err := s.licensingProvider(ctx, connection)
-	if err != nil {
-		return true, s.failAuthorization(ctx, task, lease, "CONNECTION_UNAVAILABLE", false)
-	}
-	result, err := client.Apply(ctx, command)
-	if err != nil {
-		return true, s.failAuthorization(ctx, task, lease, "REMOTE_OPERATION_PENDING", errors.Is(err, ports.ErrContractUnsupported))
-	}
-	if result.OperationID != command.OperationID || result.Version != command.TargetVersion || result.Status != command.DesiredStatus || result.LicenseID == "" || !result.ValidFrom.Equal(command.ValidFrom) || !sameTime(result.ValidUntil, command.ValidUntil) || (command.LicenseID != "" && result.LicenseID != command.LicenseID) {
-		return true, s.failAuthorization(ctx, task, lease, "REMOTE_RESULT_MISMATCH", true)
-	}
-	finishCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 10*time.Second)
-	defer cancel()
-	err = s.db.WithContext(finishCtx).Transaction(func(tx *gorm.DB) error {
-		var entitlement storage.Entitlement
-		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&entitlement, "id = ?", task.EntitlementID).Error; err != nil {
-			return err
-		}
-		var current storage.SyncTask
-		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&current, "operation_id = ? AND lease_token = ?", task.OperationID, lease).Error; err != nil {
-			return err
-		}
-		if entitlement.AppliedVersion < result.Version {
-			if entitlement.AppliedVersion != command.ExpectedVersion {
-				return problem(409, "LOCAL_VERSION_CONFLICT", "授权状态需要对账")
-			}
-			var binding storage.LicenseBinding
-			err := tx.First(&binding, "entitlement_id = ? AND replaced_at IS NULL", entitlement.ID).Error
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				if len(result.Secret) == 0 {
-					return problem(409, "REMOTE_KEY_MISSING", "授权结果缺少可恢复凭证")
-				}
-				secretID, err := s.createSecret(tx, "license_key", result.Secret)
-				if err != nil {
-					return err
-				}
-				id, err := newID()
-				if err != nil {
-					return err
-				}
-				if err := tx.Create(&storage.LicenseBinding{ID: id, EntitlementID: entitlement.ID, ConnectionID: connection.ID, CustomerRef: command.CustomerRef, RemoteLicenseID: result.LicenseID, CredentialSecretID: secretID}).Error; err != nil {
-					return err
-				}
-			} else if err != nil {
-				return err
-			} else if binding.RemoteLicenseID != result.LicenseID {
-				return problem(409, "LICENSE_BINDING_CONFLICT", "授权关联需要核实")
-			}
-			state := result.Status
-			if entitlement.Status == "revoked" {
-				state = "revoked"
-			}
-			if entitlement.DesiredVersion > result.Version && state != "revoked" {
-				state = "pending"
-			}
-			if err := tx.Model(&entitlement).Updates(map[string]any{"applied_version": result.Version, "status": state}).Error; err != nil {
-				return err
-			}
-			if state == "active" {
-				if err := s.queueCustomerNotification(tx, entitlement.UserID, "Your software access is ready", "Your software access has been activated or updated. Sign in to your account to view your products, downloads, and access period."); err != nil {
-					return err
-				}
-			}
-		}
-		sealed, err := s.vault.Seal(marshal(map[string]any{"operation_id": result.OperationID, "license_id": result.LicenseID, "version": result.Version}), "sync-result:"+task.OperationID)
-		if err != nil {
-			return err
-		}
-		return tx.Model(&current).Updates(map[string]any{"status": "succeeded", "result_ciphertext": sealed, "lease_token": nil, "lease_until": nil, "last_error_code": nil}).Error
-	})
-	if err != nil {
-		_ = s.failAuthorization(finishCtx, task, lease, "LOCAL_RESULT_PENDING", false)
-	}
-	return true, databaseError(err)
-}
 func sameTime(a, b *time.Time) bool {
 	if a == nil || b == nil {
 		return a == nil && b == nil
@@ -240,23 +114,24 @@ func (s *Service) RunCommerce(ctx context.Context) {
 			_ = s.db.WithContext(ctx).Model(&storage.RuntimeStatus{}).Where("id = ?", 1).Updates(map[string]any{"commerce_heartbeat": at, "updated_at": at}).Error
 			lastHeartbeat = at
 		}
+		// Identity invalidation remains safe while financial recovery is under review.
+		for i := 0; i < 10; i++ {
+			handled, err := s.ProcessIdentityRevocation(ctx)
+			if err != nil || !handled {
+				break
+			}
+		}
 		if s.RecoveryRequired(ctx) {
 			continue
 		}
-		_ = s.ProcessCoverageTransitions(ctx)
-		_ = s.ReconcileLicenses(ctx)
 		for i := 0; i < 3; i++ {
 			handled, err := s.ProcessTranslation(ctx)
 			if err != nil || !handled {
 				break
 			}
 		}
-		for i := 0; i < 10; i++ {
-			handled, err := s.ProcessLicenseEvent(ctx)
-			if err != nil || !handled {
-				break
-			}
-		}
+		_ = s.queueLaunchMigrations(ctx)
+		_ = s.ProcessCoverageTransitions(ctx)
 		_ = s.ProcessRefunds(ctx)
 		for i := 0; i < 10; i++ {
 			handled, err := s.ProcessDeviceOperation(ctx)

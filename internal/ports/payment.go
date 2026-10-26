@@ -82,11 +82,12 @@ type Refund struct {
 // VerifiedEvent is trusted only after signature and configured merchant/env
 // checks. Money and ownership still must be matched with the local order.
 type VerifiedEvent struct {
-	ID          string
-	Kind        string
-	ResourceID  string
-	Environment Environment
-	OccurredAt  time.Time
+	ID             string
+	Kind           string
+	ResourceID     string
+	Environment    Environment
+	OccurredAt     time.Time
+	ReversalAmount *domain.Money `json:",omitempty"`
 }
 
 type PaymentProvider interface {
@@ -96,4 +97,23 @@ type PaymentProvider interface {
 	Refund(context.Context, RefundRequest) (Refund, error)
 	QueryRefund(context.Context, string) (Refund, error)
 	VerifyWebhook(context.Context, http.Header, []byte) (VerifiedEvent, error)
+}
+
+// Reversals are commercial payment facts, never runtime permission decisions.
+// Providers re-query the original resource using the merchant's credentials.
+type PaymentReversal struct {
+	ExternalID, PaymentID, CheckoutID, OrderID, MerchantRef string
+	Environment                                             Environment
+	Amount, OriginalAmount                                  domain.Money
+	PaidAt                                                  *time.Time
+	Confirmed                                               bool
+}
+type PaymentReversalProvider interface {
+	QueryPaymentReversal(context.Context, VerifiedEvent) (PaymentReversal, error)
+}
+
+// RefundRecoveryProvider reads a previously submitted operation without money
+// movement. It is deliberately independent of checkout recovery support.
+type RefundRecoveryProvider interface {
+	RecoverRefund(context.Context, RefundRequest) (Refund, error)
 }

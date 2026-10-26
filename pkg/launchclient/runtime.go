@@ -33,21 +33,31 @@ func (r *officialRuntime) Start(ctx context.Context, changed func(error)) error 
 	_, err := r.client.Start(ctx, changed)
 	return err
 }
-func (r *officialRuntime) CanStartOffline() bool { return r.client.Status().Allowed }
 func (r *officialRuntime) RunFeature(feature string, action func() error) error {
 	return r.client.RunFeature(feature, action)
 }
 func (r *officialRuntime) Deactivate(ctx context.Context) error {
-	if err := r.client.Stop(ctx); err != nil {
+	result, err := r.client.Logout(ctx)
+	if err != nil {
 		return err
 	}
-	return r.client.Deactivate(ctx)
+	if result.RevocationPending {
+		return ErrRevocationPending
+	}
+	return nil
 }
+
 func (r *officialRuntime) Close() { r.client.Close() }
 
 // NewRuntime owns the official SDK adapter used by desktop and trusted backend applications.
 func NewRuntime(product ProductConfig, runtime RuntimeConfig) (Runtime, error) {
-	product.LicenseKey = runtime.Credential.LicenseKey
+	if runtime.Identity.LicentivoProductID != product.ProductID || runtime.Identity.Environment != runtime.Environment {
+		return nil, errors.New("identity routing context does not match public product configuration")
+	}
+	product.LicenseKey = ""
+	product.IdentityToken = runtime.Identity.IdentityToken
+	product.LaunchConnectionID = runtime.Identity.LaunchConnectionID
+	product.Environment = runtime.Environment
 	product.CachePath = runtime.CachePath
 	if runtime.Environment == "live" {
 		product.AllowHTTP = false
@@ -79,7 +89,7 @@ func NewApplicationFromFiles(launchPath, productPath string, options Config) (*A
 	decoder.DisallowUnknownFields()
 	var product ProductConfig
 	var extra any
-	if decoder.Decode(&product) != nil || decoder.Decode(&extra) != io.EOF || product.ProductID != launch.LicentivoProductID || product.LicenseKey != "" || product.CachePath != "" {
+	if decoder.Decode(&product) != nil || decoder.Decode(&extra) != io.EOF || product.ProductID != launch.LicentivoProductID || product.LicenseKey != "" || product.CachePath != "" || product.IdentityToken != "" || product.LaunchConnectionID != "" || product.Environment != "" || product.DeviceID != "" || product.DeviceName != "" {
 		return nil, errors.New("invalid or mismatched public product configuration")
 	}
 	options.Origin, options.ProductID, options.Environment = launch.MerchantOrigin, launch.ProductID, launch.Environment
