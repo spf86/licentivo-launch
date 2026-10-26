@@ -23,6 +23,10 @@ This is a **beta development release**. The source includes the workflows below 
 
 The customer website has ten locales. The administration interface currently uses Simplified Chinese; repository documentation is primarily in English, with a Chinese application integration quick start.
 
+## Custom licensing services
+
+Launch 0.3.2-beta can synchronize purchases with an existing licensing service using signed HTTP requests. Select one store-wide provider, map products and plans per environment, and keep runtime authorization in your own service and SDK. See the [receiver protocol and API guide](docs/external-licensing.md), [OpenAPI contract](docs/external-licensing-openapi.json), and [Python adapter example](examples/custom-licensing/README.md).
+
 ## Features
 
 | Area | Implemented capabilities |
@@ -57,14 +61,14 @@ Licentivo receives the data required for licensing, such as opaque customer refe
 
 ## Install the release package
 
-Download the package for your server from [GitHub Releases](https://github.com/spf86/licentivo-launch/releases/tag/v0.3.1-beta) and extract it. **Running the package requires MySQL 8.0.16+; Go, Git, Node.js and a compiler are not required.**
+Download the package for your server from [GitHub Releases](https://github.com/spf86/licentivo-launch/releases/tag/v0.3.2-beta) and extract it. **Running the package requires MySQL 8.0.16+; Go, Git, Node.js and a compiler are not required.**
 
 | Server | Package |
 | --- | --- |
-| Windows, Intel/AMD x64 | [windows_amd64.zip](https://github.com/spf86/licentivo-launch/releases/download/v0.3.1-beta/licentivo-launch_0.3.1-beta_windows_amd64.zip) |
-| Windows, ARM64 | [windows_arm64.zip](https://github.com/spf86/licentivo-launch/releases/download/v0.3.1-beta/licentivo-launch_0.3.1-beta_windows_arm64.zip) |
-| Linux, Intel/AMD x64 | [linux_amd64.tar.gz](https://github.com/spf86/licentivo-launch/releases/download/v0.3.1-beta/licentivo-launch_0.3.1-beta_linux_amd64.tar.gz) |
-| Linux, ARM64 | [linux_arm64.tar.gz](https://github.com/spf86/licentivo-launch/releases/download/v0.3.1-beta/licentivo-launch_0.3.1-beta_linux_arm64.tar.gz) |
+| Windows, Intel/AMD x64 | [windows_amd64.zip](https://github.com/spf86/licentivo-launch/releases/download/v0.3.2-beta/licentivo-launch_0.3.2-beta_windows_amd64.zip) |
+| Windows, ARM64 | [windows_arm64.zip](https://github.com/spf86/licentivo-launch/releases/download/v0.3.2-beta/licentivo-launch_0.3.2-beta_windows_arm64.zip) |
+| Linux, Intel/AMD x64 | [linux_amd64.tar.gz](https://github.com/spf86/licentivo-launch/releases/download/v0.3.2-beta/licentivo-launch_0.3.2-beta_linux_amd64.tar.gz) |
+| Linux, ARM64 | [linux_arm64.tar.gz](https://github.com/spf86/licentivo-launch/releases/download/v0.3.2-beta/licentivo-launch_0.3.2-beta_linux_arm64.tar.gz) |
 
 `amd64` works on compatible Intel and AMD 64-bit processors. Choose the package for the machine hosting Launch. Customer installer platforms are configured separately in the storefront. Prebuilt server packages are currently provided for Windows and Linux.
 

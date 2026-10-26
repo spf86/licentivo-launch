@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Licentivo Launch Integration API",
-    "version": "0.3.1-beta",
+    "version": "0.3.2-beta",
     "description": "System, account, desktop licensing, integration wizard and basic purchase APIs. This is not the full staff administration/payment-webhook API. Runtime access must still pass the official Licentivo SDK. Email verification is required only when enabled by the merchant. Custom licensing connections and customer delivery are also documented. External receiver endpoints are specified separately in external-licensing-openapi.json.",
     "license": {
       "name": "MIT",
@@ -3045,6 +3045,135 @@
           }
         }
       }
+    },
+    "/api/v1/admin/connections/licentivo": {
+      "post": {
+        "operationId": "configureLicentivoConnection",
+        "summary": "Validate and save the server-side Licentivo management connection",
+        "tags": [
+          "Licentivo connection"
+        ],
+        "security": [
+          {
+            "websiteCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "additionalProperties": true,
+                      "description": "Connection identity, verified capabilities and catalog. Saved secrets are never returned."
+                    },
+                    "request_id": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid configuration/input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Administrator required, invalid CSRF, or forbidden scope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No owned resource",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Immutable mapping, migration required or purchase not ready",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Storage/external service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LicentivoConnectionInput"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -4527,6 +4656,22 @@
         "required": [
           "provider"
         ]
+      },
+      "LicentivoConnectionInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "api_key": {
+            "type": "string",
+            "writeOnly": true,
+            "description": "Required for the first connection. Omit or leave empty to retain the saved server-side key."
+          },
+          "webhook_secret": {
+            "type": "string",
+            "writeOnly": true,
+            "description": "Optional secret of 32–256 bytes. Omit or leave empty to retain the saved secret."
+          }
+        }
       }
     },
     "securitySchemes": {
