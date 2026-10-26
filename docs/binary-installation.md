@@ -56,16 +56,20 @@ The Linux archives preserve the executable permission. The explicit `chmod` comm
 
 ## Initial administrator and required password change
 
-Open **http://localhost:18080/#/login** on the server. The first start against a new database automatically creates:
+`launch init` creates the private configuration and master key only. The first `serve` against an uninitialized database creates one administrator. With the generated configuration, open **http://localhost:18080/#/login** in a browser on the server. **If no initial-account overrides were supplied**, use:
 
-| Field | Value |
+| Field | Built-in initial value |
 | --- | --- |
 | Email | `admin@example.com` |
 | Initial password | `LaunchAdmin123!` |
 
-The first login opens **Change the initial password**. Enter the current password and a different new password of 12-128 bytes, confirm it, and save. Sign in again with your new password. Administration and desktop sessions remain blocked until the change is complete. The old password and old sessions stop working after the change.
+To select your own initial credentials, set `admin_email` and `admin_password` in `config.yaml` **before the first `serve` against an uninitialized database**. Nonempty `LAUNCH_ADMIN_EMAIL` and `LAUNCH_ADMIN_PASSWORD` process values override the corresponding YAML fields. Each empty field falls back to its built-in value above. Account creation prints the selected email and password in the server terminal. The built-in password is fixed; it is not the generated master key.
 
-Complete this first-login step on localhost before exposing the public site. Existing installations keep their current administrator accounts and passwords. Optional `LAUNCH_ADMIN_EMAIL` and `LAUNCH_ADMIN_PASSWORD` values can select the initial account on a fresh database only; they do not reset an installed account.
+The first login opens **Change the initial password**, including when you supplied your own initial password. Enter the current password and a different new password of 12-128 bytes, confirm it, and save. Sign in again with your new password. Administration and desktop sessions remain blocked until the change is complete. The old password and old sessions stop working after the change.
+
+Complete this first-login step before exposing the public site. Existing installations keep their current accounts and passwords: changing initial-account settings, restarting, or upgrading does not reset an installed account. If the default login fails, check whether the database was already initialized and whether configuration or process variables supplied other credentials. See [login troubleshooting](https://github.com/spf86/licentivo-launch/blob/main/docs/installation.md#health-and-troubleshooting).
+
+The generated configuration uses port **18080**; omitted listener/public URL values and the development Compose template use **8080**. Use your configured address if you changed it. The generated listener is loopback-only. When your browser is on another computer, its `localhost` does not refer to the server; use an [SSH tunnel for first login](https://github.com/spf86/licentivo-launch/blob/main/docs/installation.md#first-login-on-a-remote-server).
 
 ## What the commands do
 

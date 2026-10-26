@@ -73,7 +73,31 @@ All server commands select the same file automatically. To select an explicit co
 ./bin/launch.exe check --config ./config.yaml
 ```
 
-No setup token is needed. On a fresh database, sign in as `admin@example.com` / `LaunchAdmin123!` and complete the required password change. Optional initial-account overrides do not reset an existing installation. Preserve the master key across restarts; replacing it makes stored credentials unreadable.
+Preserve the master key across restarts; replacing it makes stored credentials unreadable.
+
+## Initial administrator credentials
+
+`launch init` creates the private configuration and master key only; it does not connect to MySQL or create an account. The first `launch serve` against an uninitialized database creates one administrator. No setup token is needed.
+
+For each credential, the first nonempty value wins:
+
+| Credential | Process environment | YAML field | Built-in fallback |
+| --- | --- | --- | --- |
+| Email | `LAUNCH_ADMIN_EMAIL` | `admin_email` | `admin@example.com` |
+| Initial password | `LAUNCH_ADMIN_PASSWORD` | `admin_password` | `LaunchAdmin123!` |
+
+To choose your own credentials, edit `config.yaml` **before the first `serve` against an uninitialized database**, replacing both example values:
+
+```yaml
+admin_email: "owner@example.com"
+admin_password: "REPLACE_WITH_A_UNIQUE_12_TO_128_BYTE_PASSWORD"
+```
+
+Empty YAML fields use the corresponding built-in fallback unless a nonempty process override exists. The built-in password is fixed; it is not randomly generated and is separate from `master_key`. Account creation prints the selected credentials in the server terminal. The executable does not read `.env`; Compose reads it for interpolation.
+
+The first login requires a different password of 12-128 bytes, including when the initial password was customized. Save, then sign in again. Administration and desktop sessions are blocked until the change; the old password and old sessions stop working afterward.
+
+**These settings are not a password-reset mechanism.** Once the database is initialized, changing them, restarting, or upgrading preserves the existing accounts and passwords. For login failures, verify the selected configuration, process overrides, and target database, and use the existing account's current password. See [installation troubleshooting](installation.md#health-and-troubleshooting).
 
 ## External services
 
