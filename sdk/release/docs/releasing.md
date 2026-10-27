@@ -37,7 +37,7 @@ The package builder also runs `scripts/check-native-consumers.py` against the
 installed native package. It compiles and executes independent C and C++
 consumers in the default curl discovery mode and with `CURL_NO_CURL_CMAKE=ON`
 to force FindCURL module discovery. Both consumers require the exact Launch
-package version. These checks cover the SDK 0.11.5 curl target compatibility
+package version. These checks cover the SDK 0.11.6 curl target compatibility
 fix; keep compiler, architecture and runtime dependencies matched to the package.
 
 The source CI verifies all nine languages against local signed license fixtures,

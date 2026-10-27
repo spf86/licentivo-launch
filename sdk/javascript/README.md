@@ -1,4 +1,4 @@
-# Launch Node.js 0.1.5
+# Launch Node.js 0.1.6
 
 [Website](https://www.licentivo.com/en/launch.html) · [Documentation](https://www.licentivo.com/en/launch-docs.html) · [Source code](https://github.com/spf86/licentivo-launch-sdk)
 
@@ -7,10 +7,10 @@
 Node.js 20.3+. Install only Launch from npm:
 
 ```sh
-npm install @licentivo/launch@0.1.5
+npm install @licentivo/launch@0.1.6
 ```
 
-Import from @licentivo/launch. Official SDK 0.11.5 modules, default adapter and TypeScript declarations are inside the package. There is no official SDK peer dependency.
+Import from @licentivo/launch. Official SDK 0.11.6 modules, default adapter and TypeScript declarations are inside the package. There is no official SDK peer dependency.
 
 ## Direct initialization and manual lifecycle
 

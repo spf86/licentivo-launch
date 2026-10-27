@@ -11,7 +11,7 @@ $taskSDK=if($Source){[IO.Path]::GetFullPath($Source)}else{Join-Path $taskRoot 'e
 & (Join-Path $PSScriptRoot 'prepare-examples.ps1') -Source $taskSDK -VerifyOnly
 & node (Join-Path $PSScriptRoot 'prepare-managed-sdk.mjs') $taskSDK
 if($LASTEXITCODE -ne 0){throw 'Managed SDK preparation failed.'}
-$taskOutput=if($Output){[IO.Path]::GetFullPath($Output)}else{Join-Path $taskRoot 'artifacts/integration-packages-managed-0.1.5'}
+$taskOutput=if($Output){[IO.Path]::GetFullPath($Output)}else{Join-Path $taskRoot 'artifacts/integration-packages-managed-0.1.6'}
 if(-not $taskOutput.StartsWith($taskRoot+[IO.Path]::DirectorySeparatorChar,[StringComparison]::OrdinalIgnoreCase)){throw 'Output must remain within the workspace.'}
 if(Test-Path -LiteralPath $taskOutput){throw 'Choose a new package output directory; old artifacts are retained.'}
 New-Item -ItemType Directory -Path $taskOutput -Force | Out-Null
@@ -48,7 +48,7 @@ function Curl([string]$To){
 }
 function Zip([string]$From,[string]$Name){Compress-Archive -Path (Join-Path $From '*') -DestinationPath (Join-Path $taskOutput $Name);$taskArtifacts.Add($Name)}
 function Language([string]$Name,[string]$Artifact,[string]$Archive,[string]$Kind){
- $taskLanguages.Add([ordered]@{language=$Name;version='0.1.5';upstream_version='0.11.5';artifact=$Artifact;source_archive=$Archive;artifact_type=$Kind;sdk_managed=$true;requires_separate_official_sdk=$false;initialization='direct_parameters';configuration_files_required=$false})
+ $taskLanguages.Add([ordered]@{language=$Name;version='0.1.6';upstream_version='0.11.6';artifact=$Artifact;source_archive=$Archive;artifact_type=$Kind;sdk_managed=$true;requires_separate_official_sdk=$false;initialization='direct_parameters';configuration_files_required=$false})
  if(-not $taskArtifacts.Contains($Artifact)){$taskArtifacts.Add($Artifact)}
 }
 foreach($taskName in @('python','csharp','javascript','ruby','java','rust','native')){Copy-Tree (Join-Path $taskRoot ('sdk/'+$taskName)) (Join-Path $taskStage $taskName)}
@@ -68,21 +68,21 @@ foreach($taskFile in (Get-ChildItem -LiteralPath (Join-Path $taskGo 'pkg') -Recu
  [IO.File]::WriteAllText($taskFile.FullName,$taskCode,[Text.UTF8Encoding]::new($false))
 }
 Copy-Item -LiteralPath (Join-Path $taskRoot 'pkg/launchclient/README.md') -Destination (Join-Path $taskGo 'README.md')
-Zip $taskGo 'licentivo-launch-go-0.1.5.zip'
-Language 'Go' 'licentivo-launch-go-0.1.5.zip' 'licentivo-launch-go-0.1.5.zip' 'self_contained_go_module'
-foreach($taskName in @('python','csharp','javascript','ruby','java','rust','native')){Zip (Join-Path $taskStage $taskName) ('licentivo-launch-'+$taskName+'-0.1.5-source.zip')}
+Zip $taskGo 'licentivo-launch-go-0.1.6.zip'
+Language 'Go' 'licentivo-launch-go-0.1.6.zip' 'licentivo-launch-go-0.1.6.zip' 'self_contained_go_module'
+foreach($taskName in @('python','csharp','javascript','ruby','java','rust','native')){Zip (Join-Path $taskStage $taskName) ('licentivo-launch-'+$taskName+'-0.1.6-source.zip')}
 if(-not $SourceOnly -and -not $SkipPython){
  Checked $Python @('-m','pip','wheel','--no-deps','--no-build-isolation','--wheel-dir',$taskOutput,(Join-Path $taskStage 'python'))
- Language 'Python' 'licentivo_launch-0.1.5-py3-none-any.whl' 'licentivo-launch-python-0.1.5-source.zip' 'self_contained_wheel'
-}else{Language 'Python' 'licentivo-launch-python-0.1.5-source.zip' 'licentivo-launch-python-0.1.5-source.zip' 'self_contained_source'}
+ Language 'Python' 'licentivo_launch-0.1.6-py3-none-any.whl' 'licentivo-launch-python-0.1.6-source.zip' 'self_contained_wheel'
+}else{Language 'Python' 'licentivo-launch-python-0.1.6-source.zip' 'licentivo-launch-python-0.1.6-source.zip' 'self_contained_source'}
 if(-not $SourceOnly -and -not $SkipDotNet){
  Checked $DotNet @('pack',(Join-Path $taskStage 'csharp/Licentivo.Launch.csproj'),'-c','Release','-o',$taskOutput,'-m:1','-p:UseSharedCompilation=false')
- Language 'C#' 'Licentivo.Launch.0.1.5.nupkg' 'licentivo-launch-csharp-0.1.5-source.zip' 'self_contained_nuget'
-}else{Language 'C#' 'licentivo-launch-csharp-0.1.5-source.zip' 'licentivo-launch-csharp-0.1.5-source.zip' 'self_contained_source'}
+ Language 'C#' 'Licentivo.Launch.0.1.6.nupkg' 'licentivo-launch-csharp-0.1.6-source.zip' 'self_contained_nuget'
+}else{Language 'C#' 'licentivo-launch-csharp-0.1.6-source.zip' 'licentivo-launch-csharp-0.1.6-source.zip' 'self_contained_source'}
 if(-not $SourceOnly -and -not $SkipJavaScript){
  Checked $Npm @('pack',(Join-Path $taskStage 'javascript'),'--ignore-scripts','--pack-destination',$taskOutput)
- Language 'JavaScript/Node.js' 'licentivo-launch-0.1.5.tgz' 'licentivo-launch-javascript-0.1.5-source.zip' 'self_contained_npm'
-}else{Language 'JavaScript/Node.js' 'licentivo-launch-javascript-0.1.5-source.zip' 'licentivo-launch-javascript-0.1.5-source.zip' 'self_contained_source'}
+ Language 'JavaScript/Node.js' 'licentivo-launch-0.1.6.tgz' 'licentivo-launch-javascript-0.1.6-source.zip' 'self_contained_npm'
+}else{Language 'JavaScript/Node.js' 'licentivo-launch-javascript-0.1.6-source.zip' 'licentivo-launch-javascript-0.1.6-source.zip' 'self_contained_source'}
 if(-not $SourceOnly -and -not $SkipJava){
  $taskJavac=if($JavaHome){Join-Path $JavaHome 'bin/javac.exe'}else{'javac'}
  $taskJar=if($JavaHome){Join-Path $JavaHome 'bin/jar.exe'}else{'jar'}
@@ -92,15 +92,15 @@ if(-not $SourceOnly -and -not $SkipJava){
  Checked $taskJavac (@('--release','17','-encoding','UTF-8','-d',$taskClasses)+$taskSources)
  Copy-Tree (Join-Path $taskStage 'java/vendor') (Join-Path $taskClasses 'META-INF/licenses/licentivo')
  Copy-Item -LiteralPath (Join-Path $taskRoot 'LICENSE') -Destination (Join-Path $taskClasses 'META-INF/LICENSE')
- Checked $taskJar @('--create','--file',(Join-Path $taskOutput 'launch-client-0.1.5.jar'),'-C',$taskClasses,'.')
- Copy-Item -LiteralPath (Join-Path $taskStage 'java/pom.xml') -Destination (Join-Path $taskOutput 'launch-client-0.1.5.pom')
- $taskArtifacts.Add('launch-client-0.1.5.pom')
- Language 'Java' 'launch-client-0.1.5.jar' 'licentivo-launch-java-0.1.5-source.zip' 'self_contained_jar'
-}else{Language 'Java' 'licentivo-launch-java-0.1.5-source.zip' 'licentivo-launch-java-0.1.5-source.zip' 'self_contained_source'}
+ Checked $taskJar @('--create','--file',(Join-Path $taskOutput 'launch-client-0.1.6.jar'),'-C',$taskClasses,'.')
+ Copy-Item -LiteralPath (Join-Path $taskStage 'java/pom.xml') -Destination (Join-Path $taskOutput 'launch-client-0.1.6.pom')
+ $taskArtifacts.Add('launch-client-0.1.6.pom')
+ Language 'Java' 'launch-client-0.1.6.jar' 'licentivo-launch-java-0.1.6-source.zip' 'self_contained_jar'
+}else{Language 'Java' 'licentivo-launch-java-0.1.6-source.zip' 'licentivo-launch-java-0.1.6-source.zip' 'self_contained_source'}
 if(-not $SourceOnly -and -not $SkipRuby){
  Push-Location (Join-Path $taskStage 'ruby')
- try{Checked $Ruby @('-e',"require 'rubygems/gem_runner'; Gem::GemRunner.new.run(ARGV)",'--','build','licentivo-launch.gemspec','--output',(Join-Path $taskOutput 'licentivo-launch-0.1.5.gem'))}finally{Pop-Location}
- $taskRubyArtifact='licentivo-launch-0.1.5.gem'
+ try{Checked $Ruby @('-e',"require 'rubygems/gem_runner'; Gem::GemRunner.new.run(ARGV)",'--','build','licentivo-launch.gemspec','--output',(Join-Path $taskOutput 'licentivo-launch-0.1.6.gem'))}finally{Pop-Location}
+ $taskRubyArtifact='licentivo-launch-0.1.6.gem'
  if($CurlRoot -and $CCompiler){
   $taskNative=Join-Path $taskStage 'ruby/lib/licentivo_launch/vendor/licentivo/native'
   New-Item -ItemType Directory -Path $taskNative -Force | Out-Null
@@ -109,22 +109,22 @@ if(-not $SourceOnly -and -not $SkipRuby){
   Checked $CCompiler (@('-std=c11','-O2','-shared','-Wl,--export-all-symbols',('-I'+$taskCore),('-I'+(Join-Path $CurlRoot 'include')))+$taskCFiles+@(('-L'+(Join-Path $CurlRoot 'lib')),'-lcurl','-lbcrypt','-ladvapi32','-o',(Join-Path $taskNative 'licentivo_native.dll')))
   Get-ChildItem -LiteralPath (Join-Path $CurlRoot 'bin') -Filter '*.dll' | ForEach-Object {Copy-Item -LiteralPath $_.FullName -Destination $taskNative}
   $taskPlatform=(& $Ruby -e 'print Gem::Platform.local').Trim()
-  $taskRubyArtifact='licentivo-launch-0.1.5-'+$taskPlatform+'.gem'
+  $taskRubyArtifact='licentivo-launch-0.1.6-'+$taskPlatform+'.gem'
   $taskPrior=$env:LAUNCH_GEM_PRECOMPILED
   Push-Location (Join-Path $taskStage 'ruby')
   try{$env:LAUNCH_GEM_PRECOMPILED='1';Checked $Ruby @('-e',"require 'rubygems/gem_runner'; Gem::GemRunner.new.run(ARGV)",'--','build','licentivo-launch.gemspec','--output',(Join-Path $taskOutput $taskRubyArtifact))}finally{Pop-Location;$env:LAUNCH_GEM_PRECOMPILED=$taskPrior}
-  $taskArtifacts.Add('licentivo-launch-0.1.5.gem')
+  $taskArtifacts.Add('licentivo-launch-0.1.6.gem')
  }
- Language 'Ruby' $taskRubyArtifact 'licentivo-launch-ruby-0.1.5-source.zip' 'self_contained_gem'
-}else{Language 'Ruby' 'licentivo-launch-ruby-0.1.5-source.zip' 'licentivo-launch-ruby-0.1.5-source.zip' 'self_contained_source'}
+ Language 'Ruby' $taskRubyArtifact 'licentivo-launch-ruby-0.1.6-source.zip' 'self_contained_gem'
+}else{Language 'Ruby' 'licentivo-launch-ruby-0.1.6-source.zip' 'licentivo-launch-ruby-0.1.6-source.zip' 'self_contained_source'}
 if(-not $SourceOnly -and $BuildRustCrate){
  $taskRust=Join-Path $taskStage 'rust/Cargo.toml'
  Checked $Cargo @('generate-lockfile','--manifest-path',$taskRust,'--offline')
  Checked $Cargo @('package','--manifest-path',$taskRust,'--allow-dirty','--no-verify','--offline','--target-dir',(Join-Path $taskStage 'rust-target'))
- Copy-Item -LiteralPath (Join-Path $taskStage 'rust-target/package/licentivo-launch-0.1.5.crate') -Destination $taskOutput
- Language 'Rust' 'licentivo-launch-0.1.5.crate' 'licentivo-launch-rust-0.1.5-source.zip' 'self_contained_crate'
-}else{Language 'Rust' 'licentivo-launch-rust-0.1.5-source.zip' 'licentivo-launch-rust-0.1.5-source.zip' 'self_contained_source'}
-$taskNativeArtifact='licentivo-launch-native-0.1.5-source.zip'
+ Copy-Item -LiteralPath (Join-Path $taskStage 'rust-target/package/licentivo-launch-0.1.6.crate') -Destination $taskOutput
+ Language 'Rust' 'licentivo-launch-0.1.6.crate' 'licentivo-launch-rust-0.1.6-source.zip' 'self_contained_crate'
+}else{Language 'Rust' 'licentivo-launch-rust-0.1.6-source.zip' 'licentivo-launch-rust-0.1.6-source.zip' 'self_contained_source'}
+$taskNativeArtifact='licentivo-launch-native-0.1.6-source.zip'
 if(-not $SourceOnly -and $BuildNative){
  $taskBuild=if($NativeBuildDir){$NativeBuildDir}else{Join-Path $taskStage 'native-build'}
  $taskPrefix=Join-Path $taskStage 'native-install'
@@ -133,11 +133,11 @@ if(-not $SourceOnly -and $BuildNative){
  Checked $CMake $taskCMakeArgs
  Checked $CMake @('--build',$taskBuild,'--config','Release')
  Checked $CMake @('--install',$taskBuild,'--config','Release')
- $taskNativeArtifact='licentivo-launch-native-0.1.5-windows-amd64-gnu.zip'
+ $taskNativeArtifact='licentivo-launch-native-0.1.6-windows-amd64-gnu.zip'
  Zip $taskPrefix $taskNativeArtifact
 }
-Language 'C' $taskNativeArtifact 'licentivo-launch-native-0.1.5-source.zip' 'self_contained_cmake'
-Language 'C++' $taskNativeArtifact 'licentivo-launch-native-0.1.5-source.zip' 'self_contained_cmake'
+Language 'C' $taskNativeArtifact 'licentivo-launch-native-0.1.6-source.zip' 'self_contained_cmake'
+Language 'C++' $taskNativeArtifact 'licentivo-launch-native-0.1.6-source.zip' 'self_contained_cmake'
 Copy-Item -LiteralPath (Join-Path $taskRoot 'sdk/managed-sdk-manifest.json') -Destination $taskOutput
 $taskArtifacts.Add('managed-sdk-manifest.json')
 $taskBundle=Join-Path $taskStage 'source-bundle'
@@ -153,22 +153,22 @@ New-Item -ItemType Directory -Path (Join-Path $taskBundle 'scripts/fixtures'),(J
 foreach($taskName in @('test-integration-packages.ps1','test-managed-installations.ps1','generate-integration-smoke.mjs','acceptance.py','test_acceptance.py','integration-prompts.test.mjs','integration-state.test.mjs')){Copy-Item -LiteralPath (Join-Path $PSScriptRoot $taskName) -Destination (Join-Path $taskBundle 'scripts')}
 Copy-Item -LiteralPath (Join-Path $taskRoot 'internal/app/integration.go') -Destination (Join-Path $taskBundle 'scripts/fixtures/integration-contract.go.txt')
 foreach($taskName in @('integration-prompts.js','integration-state.js')){Copy-Item -LiteralPath (Join-Path $taskRoot ('internal/httpapi/web/'+$taskName)) -Destination (Join-Path $taskBundle 'internal/httpapi/web')}
-Zip $taskBundle 'licentivo-launch-0.1.5-source.zip'
-$taskInventory=[ordered]@{schema_version=2;wrapper_version='0.1.5';upstream_sdk_version='0.11.5';sdk_dependency_management='embedded';requires_separate_official_sdk=$false;initialization='direct_parameters';configuration_files_required=$false;published=$false;languages=$taskLanguages.ToArray()}
-$taskInventory.source_bundle='licentivo-launch-0.1.5-source.zip'
+Zip $taskBundle 'licentivo-launch-0.1.6-source.zip'
+$taskInventory=[ordered]@{schema_version=2;wrapper_version='0.1.6';upstream_sdk_version='0.11.6';sdk_dependency_management='embedded';requires_separate_official_sdk=$false;initialization='direct_parameters';configuration_files_required=$false;published=$false;languages=$taskLanguages.ToArray()}
+$taskInventory.source_bundle='licentivo-launch-0.1.6-source.zip'
 $taskInventory | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $taskOutput 'integration-packages.json') -Encoding utf8
 $taskArtifacts.Add('integration-packages.json')
 @'
-# Launch integration packages 0.1.5
+# Launch integration packages 0.1.6
 
 Install only the Launch artifact for your language. The pinned Licentivo SDK
-0.11.5 implementation, adapters and license notices are embedded. Do not install
+0.11.6 implementation, adapters and license notices are embedded. Do not install
 a separate official SDK, copy an adapter, or configure official SDK paths.
 
-- Python: pip install ./licentivo_launch-0.1.5-py3-none-any.whl
-- Node.js: npm install ./licentivo-launch-0.1.5.tgz
-- C#: add this directory as a local NuGet source, then install Licentivo.Launch 0.1.5.
-- Java: use launch-client-0.1.5.jar as your single Launch classpath entry.
+- Python: pip install ./licentivo_launch-0.1.6-py3-none-any.whl
+- Node.js: npm install ./licentivo-launch-0.1.6.tgz
+- C#: add this directory as a local NuGet source, then install Licentivo.Launch 0.1.6.
+- Java: use launch-client-0.1.6.jar as your single Launch classpath entry.
 - Go: extract its ZIP, require/replace only the Launch module, and call
   launchclient.Connect with the public parameters filled by Launch.
 - Ruby: gem install --local the Launch gem matching your Ruby platform; a source

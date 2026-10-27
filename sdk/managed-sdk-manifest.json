@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "sdk_version": "0.11.5",
-  "source_revision": "licentivo-sdk-v0.11.5-release-20261027",
+  "sdk_version": "0.11.6",
+  "source_revision": "licentivo-sdk-v0.11.6-interrupted-identity-20261027",
   "changes": "Only private import and native-library relocation, with embedded text line endings normalized to LF; authorization and cryptographic logic are unchanged. Account-lifecycle revisions are released together with the matching Licentivo server.",
   "files": [
     {
@@ -79,8 +79,8 @@
     {
       "source": "VERSION",
       "destination": "pkg/launchclient/internal/licentivo/VERSION",
-      "source_sha256": "939f07bb10023db653bb019c8c57f7d01569bff679ec6841ff793f8cf37cde0d",
-      "sha256": "939f07bb10023db653bb019c8c57f7d01569bff679ec6841ff793f8cf37cde0d"
+      "source_sha256": "5f6ca10b1d6b6eb9112c2ba20ee0decd761b864bfbf9dd595c6c9192d2936f03",
+      "sha256": "5f6ca10b1d6b6eb9112c2ba20ee0decd761b864bfbf9dd595c6c9192d2936f03"
     },
     {
       "source": "python/licentivo.py",
@@ -115,8 +115,8 @@
     {
       "source": "VERSION",
       "destination": "sdk/python/src/licentivo_launch/_vendor/VERSION",
-      "source_sha256": "939f07bb10023db653bb019c8c57f7d01569bff679ec6841ff793f8cf37cde0d",
-      "sha256": "939f07bb10023db653bb019c8c57f7d01569bff679ec6841ff793f8cf37cde0d"
+      "source_sha256": "5f6ca10b1d6b6eb9112c2ba20ee0decd761b864bfbf9dd595c6c9192d2936f03",
+      "sha256": "5f6ca10b1d6b6eb9112c2ba20ee0decd761b864bfbf9dd595c6c9192d2936f03"
     },
     {
       "source": "javascript/app.mjs",
@@ -163,8 +163,8 @@
     {
       "source": "VERSION",
       "destination": "sdk/javascript/src/vendor/VERSION",
-      "source_sha256": "939f07bb10023db653bb019c8c57f7d01569bff679ec6841ff793f8cf37cde0d",
-      "sha256": "939f07bb10023db653bb019c8c57f7d01569bff679ec6841ff793f8cf37cde0d"
+      "source_sha256": "5f6ca10b1d6b6eb9112c2ba20ee0decd761b864bfbf9dd595c6c9192d2936f03",
+      "sha256": "5f6ca10b1d6b6eb9112c2ba20ee0decd761b864bfbf9dd595c6c9192d2936f03"
     },
     {
       "source": "csharp/Advanced.cs",
@@ -229,8 +229,8 @@
     {
       "source": "VERSION",
       "destination": "sdk/csharp/vendor/VERSION",
-      "source_sha256": "939f07bb10023db653bb019c8c57f7d01569bff679ec6841ff793f8cf37cde0d",
-      "sha256": "939f07bb10023db653bb019c8c57f7d01569bff679ec6841ff793f8cf37cde0d"
+      "source_sha256": "5f6ca10b1d6b6eb9112c2ba20ee0decd761b864bfbf9dd595c6c9192d2936f03",
+      "sha256": "5f6ca10b1d6b6eb9112c2ba20ee0decd761b864bfbf9dd595c6c9192d2936f03"
     },
     {
       "source": "java/src/licentivo/Capabilities.java",
@@ -319,8 +319,8 @@
     {
       "source": "VERSION",
       "destination": "sdk/java/vendor/VERSION",
-      "source_sha256": "939f07bb10023db653bb019c8c57f7d01569bff679ec6841ff793f8cf37cde0d",
-      "sha256": "939f07bb10023db653bb019c8c57f7d01569bff679ec6841ff793f8cf37cde0d"
+      "source_sha256": "5f6ca10b1d6b6eb9112c2ba20ee0decd761b864bfbf9dd595c6c9192d2936f03",
+      "sha256": "5f6ca10b1d6b6eb9112c2ba20ee0decd761b864bfbf9dd595c6c9192d2936f03"
     },
     {
       "source": "rust/src/lib.rs",
@@ -337,8 +337,8 @@
     {
       "source": "c/demo.c",
       "destination": "sdk/rust/vendor/c/demo.c",
-      "source_sha256": "1ebda2213acadd8e2ba5361bd9a204f132b4e4373de829066d6dde9ac7dfe9f0",
-      "sha256": "18f1c0508c0adb0a6082ba93224fd405068aeef7e63259a73e2b947a978a5612"
+      "source_sha256": "856d25e05341ec31a4a8348cefadc6b4c575639cbfce4ff1b2af4bda299c4786",
+      "sha256": "6577505701fcf4594546034b673c6662c0c75662dba4a47d11128109dfdd014e"
     },
     {
       "source": "c/device_logout.h",
@@ -355,8 +355,8 @@
     {
       "source": "c/licentivo.c",
       "destination": "sdk/rust/vendor/c/licentivo.c",
-      "source_sha256": "8ea98d018857eb392def533e2443e86dca25952e526f4f108975bf8531a94fb3",
-      "sha256": "8ea98d018857eb392def533e2443e86dca25952e526f4f108975bf8531a94fb3"
+      "source_sha256": "f43e631ae8a9865b190c908879d7645debbd8e721a1e784284a179386b5d8f83",
+      "sha256": "f43e631ae8a9865b190c908879d7645debbd8e721a1e784284a179386b5d8f83"
     },
     {
       "source": "c/licentivo.h",
@@ -375,6 +375,12 @@
       "destination": "sdk/rust/vendor/c/test_feature_deadlines.c",
       "source_sha256": "b944a5c1770695c1a5fb12b3e326d02e2860ed5a8d72c9cdf28a38d0201fe2b5",
       "sha256": "b944a5c1770695c1a5fb12b3e326d02e2860ed5a8d72c9cdf28a38d0201fe2b5"
+    },
+    {
+      "source": "c/test_platform_lines.c",
+      "destination": "sdk/rust/vendor/c/test_platform_lines.c",
+      "source_sha256": "f0b5ed49b4033cf888a196bfa34b778e884cadb97843224f21e33e773940d15e",
+      "sha256": "f0b5ed49b4033cf888a196bfa34b778e884cadb97843224f21e33e773940d15e"
     },
     {
       "source": "c/test_state_files.c",
@@ -451,14 +457,14 @@
     {
       "source": "VERSION",
       "destination": "sdk/rust/vendor/VERSION",
-      "source_sha256": "939f07bb10023db653bb019c8c57f7d01569bff679ec6841ff793f8cf37cde0d",
-      "sha256": "939f07bb10023db653bb019c8c57f7d01569bff679ec6841ff793f8cf37cde0d"
+      "source_sha256": "5f6ca10b1d6b6eb9112c2ba20ee0decd761b864bfbf9dd595c6c9192d2936f03",
+      "sha256": "5f6ca10b1d6b6eb9112c2ba20ee0decd761b864bfbf9dd595c6c9192d2936f03"
     },
     {
       "source": "ruby/lib/licentivo.rb",
       "destination": "sdk/ruby/lib/licentivo_launch/vendor/licentivo.rb",
-      "source_sha256": "e30917ff131ac5b2c2c5966ba3001195bdd27cb2b0f1db2c460855a1634ae2c8",
-      "sha256": "aa6f117ed6973c7a665938edd39ab495b728b9896128f594bc67c2afe4a0e6a8"
+      "source_sha256": "ad3d9bf83e762d2d076a0741d8cb466e973322fa0701ab2b4b37bdce4f10e203",
+      "sha256": "72a5386e620e92e340a2e41c5bbb1b1a916c690b302824abc61db1ff2b1c9194"
     },
     {
       "source": "c/app.c",
@@ -469,8 +475,8 @@
     {
       "source": "c/demo.c",
       "destination": "sdk/ruby/vendor/c/demo.c",
-      "source_sha256": "1ebda2213acadd8e2ba5361bd9a204f132b4e4373de829066d6dde9ac7dfe9f0",
-      "sha256": "18f1c0508c0adb0a6082ba93224fd405068aeef7e63259a73e2b947a978a5612"
+      "source_sha256": "856d25e05341ec31a4a8348cefadc6b4c575639cbfce4ff1b2af4bda299c4786",
+      "sha256": "6577505701fcf4594546034b673c6662c0c75662dba4a47d11128109dfdd014e"
     },
     {
       "source": "c/device_logout.h",
@@ -487,8 +493,8 @@
     {
       "source": "c/licentivo.c",
       "destination": "sdk/ruby/vendor/c/licentivo.c",
-      "source_sha256": "8ea98d018857eb392def533e2443e86dca25952e526f4f108975bf8531a94fb3",
-      "sha256": "8ea98d018857eb392def533e2443e86dca25952e526f4f108975bf8531a94fb3"
+      "source_sha256": "f43e631ae8a9865b190c908879d7645debbd8e721a1e784284a179386b5d8f83",
+      "sha256": "f43e631ae8a9865b190c908879d7645debbd8e721a1e784284a179386b5d8f83"
     },
     {
       "source": "c/licentivo.h",
@@ -507,6 +513,12 @@
       "destination": "sdk/ruby/vendor/c/test_feature_deadlines.c",
       "source_sha256": "b944a5c1770695c1a5fb12b3e326d02e2860ed5a8d72c9cdf28a38d0201fe2b5",
       "sha256": "b944a5c1770695c1a5fb12b3e326d02e2860ed5a8d72c9cdf28a38d0201fe2b5"
+    },
+    {
+      "source": "c/test_platform_lines.c",
+      "destination": "sdk/ruby/vendor/c/test_platform_lines.c",
+      "source_sha256": "f0b5ed49b4033cf888a196bfa34b778e884cadb97843224f21e33e773940d15e",
+      "sha256": "f0b5ed49b4033cf888a196bfa34b778e884cadb97843224f21e33e773940d15e"
     },
     {
       "source": "c/test_state_files.c",
@@ -583,14 +595,14 @@
     {
       "source": "VERSION",
       "destination": "sdk/ruby/vendor/VERSION",
-      "source_sha256": "939f07bb10023db653bb019c8c57f7d01569bff679ec6841ff793f8cf37cde0d",
-      "sha256": "939f07bb10023db653bb019c8c57f7d01569bff679ec6841ff793f8cf37cde0d"
+      "source_sha256": "5f6ca10b1d6b6eb9112c2ba20ee0decd761b864bfbf9dd595c6c9192d2936f03",
+      "sha256": "5f6ca10b1d6b6eb9112c2ba20ee0decd761b864bfbf9dd595c6c9192d2936f03"
     },
     {
       "source": "CMakeLists.txt",
       "destination": "sdk/native/vendor/sdk/CMakeLists.txt",
-      "source_sha256": "f9eb291f2387ff1e93c4cdd290b641405eef0410b914980cdc75941b9f702673",
-      "sha256": "f9eb291f2387ff1e93c4cdd290b641405eef0410b914980cdc75941b9f702673"
+      "source_sha256": "601d4f8cd2d350357527f80ce0392ed5f66ee0161b78b82a79987d58108d1867",
+      "sha256": "601d4f8cd2d350357527f80ce0392ed5f66ee0161b78b82a79987d58108d1867"
     },
     {
       "source": "LicentivoConfig.cmake.in",
@@ -613,8 +625,8 @@
     {
       "source": "VERSION",
       "destination": "sdk/native/vendor/sdk/VERSION",
-      "source_sha256": "939f07bb10023db653bb019c8c57f7d01569bff679ec6841ff793f8cf37cde0d",
-      "sha256": "939f07bb10023db653bb019c8c57f7d01569bff679ec6841ff793f8cf37cde0d"
+      "source_sha256": "5f6ca10b1d6b6eb9112c2ba20ee0decd761b864bfbf9dd595c6c9192d2936f03",
+      "sha256": "5f6ca10b1d6b6eb9112c2ba20ee0decd761b864bfbf9dd595c6c9192d2936f03"
     },
     {
       "source": "c/app.c",
@@ -625,8 +637,8 @@
     {
       "source": "c/demo.c",
       "destination": "sdk/native/vendor/sdk/c/demo.c",
-      "source_sha256": "1ebda2213acadd8e2ba5361bd9a204f132b4e4373de829066d6dde9ac7dfe9f0",
-      "sha256": "18f1c0508c0adb0a6082ba93224fd405068aeef7e63259a73e2b947a978a5612"
+      "source_sha256": "856d25e05341ec31a4a8348cefadc6b4c575639cbfce4ff1b2af4bda299c4786",
+      "sha256": "6577505701fcf4594546034b673c6662c0c75662dba4a47d11128109dfdd014e"
     },
     {
       "source": "c/device_logout.h",
@@ -643,8 +655,8 @@
     {
       "source": "c/licentivo.c",
       "destination": "sdk/native/vendor/sdk/c/licentivo.c",
-      "source_sha256": "8ea98d018857eb392def533e2443e86dca25952e526f4f108975bf8531a94fb3",
-      "sha256": "8ea98d018857eb392def533e2443e86dca25952e526f4f108975bf8531a94fb3"
+      "source_sha256": "f43e631ae8a9865b190c908879d7645debbd8e721a1e784284a179386b5d8f83",
+      "sha256": "f43e631ae8a9865b190c908879d7645debbd8e721a1e784284a179386b5d8f83"
     },
     {
       "source": "c/licentivo.h",
@@ -663,6 +675,12 @@
       "destination": "sdk/native/vendor/sdk/c/test_feature_deadlines.c",
       "source_sha256": "b944a5c1770695c1a5fb12b3e326d02e2860ed5a8d72c9cdf28a38d0201fe2b5",
       "sha256": "b944a5c1770695c1a5fb12b3e326d02e2860ed5a8d72c9cdf28a38d0201fe2b5"
+    },
+    {
+      "source": "c/test_platform_lines.c",
+      "destination": "sdk/native/vendor/sdk/c/test_platform_lines.c",
+      "source_sha256": "f0b5ed49b4033cf888a196bfa34b778e884cadb97843224f21e33e773940d15e",
+      "sha256": "f0b5ed49b4033cf888a196bfa34b778e884cadb97843224f21e33e773940d15e"
     },
     {
       "source": "c/test_state_files.c",

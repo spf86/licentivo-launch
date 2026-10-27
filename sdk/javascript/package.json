@@ -1,6 +1,6 @@
 {
   "name": "@licentivo/launch",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Merchant account and official Licentivo runtime lifecycle for trusted Node.js applications",
   "type": "module",
   "license": "MIT",

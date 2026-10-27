@@ -1,10 +1,10 @@
-# Launch C# / .NET 0.1.5
+# Launch C# / .NET 0.1.6
 
 [Website](https://www.licentivo.com/en/launch.html) · [Documentation](https://www.licentivo.com/en/launch-docs.html) · [Source code](https://github.com/spf86/licentivo-launch-sdk)
 
 > Local account-exchange changes are unpublished. Login uses a short-lived identity assertion; Launch calculates purchased dates and Licentivo owns runtime permission. See the repository guide docs/account-purchase-boundary.md.
 
-.NET 8+. Install from NuGet.org with `dotnet add package Licentivo.Launch --version 0.1.5`. Downloaded packages can also use a local NuGet feed. Official SDK 0.11.5 source compiles inside the Launch assembly. NuGet resolves the ordinary BouncyCastle.Cryptography dependency; there is no Licentivo.SDK package/project dependency.
+.NET 8+. Install from NuGet.org with `dotnet add package Licentivo.Launch --version 0.1.6`. Downloaded packages can also use a local NuGet feed. Official SDK 0.11.6 source compiles inside the Launch assembly. NuGet resolves the ordinary BouncyCastle.Cryptography dependency; there is no Licentivo.SDK package/project dependency.
 
 ## Direct initialization and manual lifecycle
 
