@@ -19,6 +19,9 @@ func (a *application) registerIntegration(mux *http.ServeMux) {
 		if err := input(w, r, &in); err != nil {
 			return nil, err
 		}
+		if err := a.service.RequireSDKTransport(r.Context(), in.Environment); err != nil {
+			return nil, err
+		}
 		return a.service.Identity(r.Context(), p, r.PathValue("id"), in.Environment)
 	})
 	a.route(mux, "GET /api/v1/admin/integration/context", true, 60, func(w http.ResponseWriter, r *http.Request, p app.Principal) (any, error) {
@@ -26,13 +29,20 @@ func (a *application) registerIntegration(mux *http.ServeMux) {
 		if !p.IsAdmin() {
 			return nil, app.ErrForbidden
 		}
-		return map[string]string{"merchant_origin": a.service.PublicURL(), "licensing_origin": app.LicentivoServiceURL}, nil
+		allowed, err := a.service.SDKHTTPEnabled(r.Context())
+		if err != nil {
+			return nil, err
+		}
+		return map[string]any{"merchant_origin": a.service.PublicURL(), "licensing_origin": app.LicentivoServiceURL, "allow_http": allowed}, nil
 	})
 	a.route(mux, "GET /api/v1/software/products/{id}/status", true, 60, func(w http.ResponseWriter, r *http.Request, p app.Principal) (any, error) {
 		w.Header().Set("Cache-Control", "no-store")
 		environment := r.URL.Query().Get("environment")
 		if environment == "" {
 			environment = "live"
+		}
+		if err := a.service.RequireSDKTransport(r.Context(), environment); err != nil {
+			return nil, err
 		}
 		return a.service.SoftwareEntitlementStatus(r.Context(), p, r.PathValue("id"), environment)
 	})

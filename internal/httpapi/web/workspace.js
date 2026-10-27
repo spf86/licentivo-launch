@@ -1,6 +1,15 @@
 const escape=value=>String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 export const paymentNames={stripe:"Stripe",paypal:"PayPal",waffo:"Waffo",paddle:"Paddle"};
 export const icon=name=>`<img class="ui-icon" src="/assets/icons/${name}.svg" alt="" width="20" height="20">`;
+export function workspaceAccountMenu(user){
+ const role={admin:"店铺管理员",operations:"运营人员",support:"客服人员"}[user.role]||"网站人员";
+ return `<div class="workspace-account"><details class="workspace-account-menu"><summary aria-label="账号菜单"><span class="account-avatar">${icon("user")}</span><span class="account-role">${role}</span>${icon("chevron-down")}</summary><div class="account-popover"><div class="account-identity"><span class="account-avatar">${icon("user")}</span><span><strong>${role}</strong><small>${escape(user.email)}</small></span></div><nav aria-label="账号操作"><a href="#/account">${icon("user")}账号中心</a><a href="#/home">${icon("external-link")}查看商店</a><button type="button" data-action="logout">${icon("log-out")}退出登录</button></nav></div></details></div>`;
+}
+
+export function installAccountMenuInteractions(root=document){
+ root.addEventListener("click",event=>{for(const menu of root.querySelectorAll(".workspace-account-menu[open]"))if(!menu.contains(event.target))menu.open=false});
+ root.addEventListener("keydown",event=>{if(event.key!=="Escape")return;const menu=root.querySelector(".workspace-account-menu[open]");if(menu){menu.open=false;menu.querySelector("summary").focus();event.preventDefault()}});
+}
 const input=(label,name,value="",extra="",type="text")=>`<label>${escape(label)}<input type="${type}" name="${name}" value="${escape(value)}" ${extra}></label>`;
 const error='<p class="form-error" role="alert" tabindex="-1"></p>';
 const descriptions={stripe:"信用卡与本地支付方式",paypal:"PayPal 账户与银行卡",waffo:"Waffo Payment API 托管收银台",paddle:"Paddle Billing · 软件与数字产品"};
@@ -36,7 +45,7 @@ export function initializeMailForm(root){
 }
 
 export function settingsWorkspace(panels,selected="payments"){
- const labels={payments:"收款",mail:"邮件与注册",licensing:"授权系统",website:"网站与安全",translation:"语言与翻译",staff:"人员",data:"数据"};
+ const labels={payments:"收款",mail:"邮件与注册",licensing:"授权系统",website:"网站与安全",policies:"条款与政策",translation:"语言与翻译",staff:"人员",data:"数据"};
  if(selected==="customlicensing")selected="licensing";
  if(!labels[selected])selected="payments";
  return `<nav class="settings-tabs" aria-label="设置分类">${Object.entries(labels).map(([key,label])=>`<a href="#/admin/settings/${key}" ${selected===key?'aria-current="page"':""}>${label}</a>`).join("")}</nav><div class="settings-content" data-settings-current="${selected}">${panels[selected]}</div>`;

@@ -20,6 +20,7 @@ examples/vendor/
 sdk/ruby/lib/licentivo_launch/vendor/licentivo/native/
 **/obj/
 **/bin/
+**/target/
 **/__pycache__/
 *.pyc
 .DS_Store

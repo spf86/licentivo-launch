@@ -116,14 +116,16 @@ class Application:
     cache format. Launch remembered sessions use the selected secure store.
     """
     def __init__(self, origin, product_id, product_config, environment="live", *,
-                 store=None, cache_dir=None, runtime_factory=None, opener=None, sleep=time.sleep):
+                 store=None, cache_dir=None, runtime_factory=None, opener=None, sleep=time.sleep, allow_http=False):
         self._lifecycle_lock = RLock()
         parsed = urllib.parse.urlsplit(origin)
         if (environment not in ("sandbox", "live") or not parsed.hostname or parsed.username is not None
                 or parsed.password is not None or parsed.path not in ("", "/") or parsed.query or parsed.fragment
                 or parsed.scheme not in ("http", "https")):
             raise ValueError("Use a valid merchant origin and sandbox/live environment")
-        if parsed.scheme != "https" and not (environment == "sandbox" and parsed.hostname in ("localhost", "127.0.0.1", "::1")):
+        if not isinstance(allow_http, bool) or allow_http and environment != "sandbox":
+            raise ValueError("HTTP opt-in is restricted to sandbox")
+        if parsed.scheme != "https" and not (environment == "sandbox" and (allow_http or parsed.hostname in ("localhost", "127.0.0.1", "::1"))):
             raise ValueError("HTTPS required")
         if str(uuid.UUID(product_id)) != product_id.lower():
             raise ValueError("Invalid Launch product ID")
@@ -159,6 +161,7 @@ class Application:
         product = json.loads(Path(product_config).read_text(encoding="utf-8-sig"))
         if launch.get("schema_version") != 1 or launch.get("licentivo_product_id") != product.get("product_id"):
             raise ValueError("Launch and SDK configuration mismatch")
+        kwargs["allow_http"] = launch.get("allow_http", False)
         return cls(launch["merchant_origin"], launch["launch_product_id"], product, launch["environment"], **kwargs)
 
     def _call(self, path, body, token="", method="POST"):
@@ -168,6 +171,8 @@ class Application:
         request = urllib.request.Request(self.origin + "/api/v1" + path, None if method == "GET" else json.dumps(body).encode(), headers, method=method)
         try:
             with self.opener.open(request, timeout=15) as response:
+                if response.status != 200:
+                    raise APIError("REQUEST_FAILED", response.status)
                 raw = response.read(1048577)
                 if len(raw) > 1048576:
                     raise APIError("INVALID_RESPONSE")
@@ -292,14 +297,22 @@ class Application:
             raise APIError('SESSION_EXPIRED')
         try:
             me = self._call('/me', None, saved['access_token'], method='GET')
-            if me.get('user', {}).get('id') != saved['user_id']: raise APIError('SESSION_REJECTED', 401)
+            user = me.get('user')
+            if not isinstance(user, dict) or not isinstance(user.get('id'), str) or not user['id']:
+                raise APIError('INVALID_RESPONSE')
+            if user['id'] != saved['user_id']: raise APIError('SESSION_REJECTED', 401)
             identity = self._credential(saved['access_token'])
         except APIError as error:
-            if error.status in (401, 403): self._forget(saved)
+            if error.status == 401 or error.status == 403 and error.code not in ('SDK_HTTP_DISABLED', 'SDK_HTTPS_REQUIRED'):
+                self._forget(saved)
             raise
         saved['identity_context'] = {k: identity[k] for k in ('product_id', 'licentivo_product_id', 'launch_connection_id', 'environment', 'expires_at')}
         self._start(saved, identity)
-        self.store.save(self.scope, json.dumps(saved).encode())
+        try:
+            self.store.save(self.scope, json.dumps(saved).encode())
+        except Exception:
+            self._forget(saved)
+            raise
         return True
 
     def run_feature(self, name, action):
@@ -411,6 +424,8 @@ class Application:
         finally:
             try:
                 if self.runtime: self.runtime.close()
+            except Exception as error:
+                if failure is None: failure = error
             finally: self.runtime = None
         confirmed = True
         if saved:
@@ -425,11 +440,13 @@ class Application:
         return confirmed and not pending
 
     def close(self):
-        if self.closed:
-            return
-        if self.runtime:
-            self.runtime.close()
-        self.runtime, self.session, self.closed = None, None, True
+        with self._lifecycle_lock:
+            if self.closed:
+                return
+            runtime = self.runtime
+            self.runtime, self.session, self.closed = None, None, True
+            if runtime:
+                runtime.close()
 
     def __enter__(self):
         return self

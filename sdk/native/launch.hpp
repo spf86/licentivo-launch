@@ -16,6 +16,7 @@ public:
         : Application(launch_application_open(origin,product,config,environment,remember,store)) {}
     static Application FromFiles(const char *launch,const char *product,bool remember=false,const launch_secret_store *store=nullptr) { return Application(launch_application_from_files(launch,product,remember,store)); }
     static Application Connect(const char *origin,const char *product,const char *licentivo_product,const char *trusted_keys_json,const char *environment="live",bool remember=false,const launch_secret_store *store=nullptr) { return Application(launch_application_connect(origin,product,licentivo_product,trusted_keys_json,environment,remember,store)); }
+    static Application ConnectHTTP(const char *origin,const char *product,const char *licentivo_product,const char *trusted_keys_json,const char *environment="sandbox",bool remember=false,const launch_secret_store *store=nullptr) { return Application(launch_application_connect_http(origin,product,licentivo_product,trusted_keys_json,environment,1,remember,store)); }
     ~Application() { launch_application_close(app_); }
     Application(const Application&) = delete;
     Application& operator=(const Application&) = delete;

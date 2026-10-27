@@ -60,11 +60,17 @@ func (s *Service) Identity(ctx context.Context, p Principal, product, environmen
 	// Recheck stored session state; a caller cannot reuse a stale Principal.
 	var session storage.Session
 	if err := s.db.WithContext(ctx).Where("id = ? AND user_id = ? AND revoked_at IS NULL AND expires_at > ?", p.Session.ID, p.User.ID, now()).First(&session).Error; err != nil {
-		return IdentityView{}, ErrUnauthorized
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return IdentityView{}, ErrUnauthorized
+		}
+		return IdentityView{}, ErrStorage
 	}
 	var user storage.User
 	if err := s.db.WithContext(ctx).First(&user, "id = ? AND status = 'active'", p.User.ID).Error; err != nil {
-		return IdentityView{}, ErrUnauthorized
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return IdentityView{}, ErrUnauthorized
+		}
+		return IdentityView{}, ErrStorage
 	}
 	if user.PasswordChangeRequired {
 		return IdentityView{}, ErrForbidden

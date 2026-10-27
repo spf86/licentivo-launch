@@ -1,0 +1,832 @@
+{
+  "schema_version": 1,
+  "locales": {
+    "en": {
+      "title": "HTTP testing on customer servers and private networks",
+      "languages": "Choose your language",
+      "intro": "All server addresses, IPs and hostnames in this guide belong to the customer's own Launch deployment. Customers do not join Licentivo's or the developer's private network. Both public test servers and the customer's private-network servers are supported.",
+      "protocol": "The SDK uses the protocol in `merchant_origin`: `https://` uses HTTPS; `http://` is allowed only by the test permissions below. A failed HTTPS request never falls back to HTTP. A switch does not rewrite addresses or install a TLS certificate.",
+      "switches": "Two independent switches, both off by default",
+      "switchHeaders": [
+        "Switch",
+        "Where the customer changes it",
+        "Effect"
+      ],
+      "apiSwitch": [
+        "**Allow HTTP (testing)** for one API key",
+        "Licentivo → Development and integration → API Key → Create API Key or Access settings",
+        "Allows this specific key to create or update Launch account connections for HTTP merchant origins. Read-only keys do not gain write permission. Rotating a key preserves this setting."
+      ],
+      "sdkSwitch": [
+        "**Allow SDK HTTP (test environment only)**",
+        "The customer's Launch → System settings → Website and security → SSL certificates and access protocol",
+        "Allows this Launch installation to accept HTTP SDK account requests and generate HTTP test code. HTTP runtime identity exchange is restricted to `sandbox`; `live` requires HTTPS."
+      ],
+      "scope": "Customers control both switches themselves. No Licentivo platform administrator or platform-wide development mode is required. These settings affect only the customer's Launch address. Launch and the official licensing SDK still call Licentivo over HTTPS.",
+      "setup": "Set up a customer test server",
+      "steps": [
+        "Update the Licentivo server, Launch server and SDK package. Older SDKs that only permit localhost HTTP must be upgraded; server settings cannot change an installed SDK's URL validation.",
+        "In the customer's Licentivo workspace, create a dedicated **read/write** test key or open an active key's **Access settings**, and select **Allow HTTP (testing)**.",
+        "In the customer's Launch **Website and security** settings, enter an address reachable by the test clients, such as `http://192.168.1.20:18080`, `http://test-server:18080` or the customer's test domain. Enable **Allow SDK HTTP (test environment only)** and save. Use an origin without a path, query, fragment or trailing slash.",
+        "Reconnect Launch to Licentivo with that key. Reading products and policies alone does not establish the account connection; also confirm that the account authorization connection is ready.",
+        "In **Application integration → Integration checks and code**, select **sandbox**, run the checks, and copy the newly generated code. After successful checks it automatically includes the HTTP test option. Use test accounts and test purchases."
+      ],
+      "network": "A public IP or public DNS record is not required. Test clients must resolve and reach the configured Launch address. `localhost` means the machine running the SDK; a different machine must use the server's IP or internal hostname. Licentivo records the origin and pinned signing keys, without calling back or fetching keys from that origin. Launch and the online licensing client still need outbound access to Licentivo's HTTPS endpoints. An entirely disconnected private network cannot run online account licensing.",
+      "selection": "How the SDK chooses HTTP or HTTPS",
+      "configIntro": "The generated public Launch configuration for an enabled customer-server test is equivalent to:",
+      "configMeaning": "The address selects the protocol. `allow_http: true` permits the HTTP merchant origin only in `sandbox`; it never downgrades an HTTPS URL. The official licensing product configuration remains HTTPS. Equivalent direct-call options for all nine languages are:",
+      "sdkHeaders": [
+        "SDK",
+        "Explicit HTTP test option"
+      ],
+      "sdkScope": "These options require an updated SDK build. The SDK never receives or queries the merchant's management API key. Launch exports public configuration and also checks its own HTTP switch on the server, so editing a client flag alone cannot enable HTTP access when that switch is off. Legacy constructors retain their existing sandbox localhost exception for compatibility; this does not bypass the server's default-off switch.",
+      "production": "Close testing or move to HTTPS",
+      "risk": "HTTP does not encrypt passwords, account tokens or other data. The customer's private network can still be monitored or compromised. Entering an API key into Launch administration over HTTP also exposes the browser-to-Launch request, even when Launch-to-Licentivo calls use HTTPS. Use dedicated test credentials; use HTTPS for production and sensitive administration.",
+      "migration": "After configuring a working HTTPS listener or TLS proxy, update Launch's effective merchant origin, reconnect Licentivo as needed, then regenerate and update the clients' integration configuration. A copied or compiled HTTP URL does not change automatically. Disable both HTTP switches when testing ends. `live` SDK identity exchange requires HTTPS regardless of either switch.",
+      "closing": "Closing Launch's switch rejects subsequent HTTP SDK requests with `SDK_HTTP_DISABLED`; HTTP identity requests in `live` return `SDK_HTTPS_REQUIRED`. Existing signed offline permissions still follow Licentivo's normal expiry and revocation rules. Closing the API key's HTTP permission blocks future HTTP connection creation or updates by that key; it does not delete existing connections, revoke purchases or invalidate issued permissions. Disable a connection separately if it must stop authorizing.",
+      "failures": "Diagnose a failed connection",
+      "diagnostics": "Launch shows the failing phase (reading products or policies, querying connections, or creating a sandbox/live connection), the specific reason, and Licentivo's error code and request ID when provided. Saved failures remain visible after a page refresh. Error messages never display the management API key.",
+      "errorHeaders": [
+        "Error",
+        "Action"
+      ],
+      "actions": [
+        "Enable HTTP for the exact API key used by Launch, or configure a working HTTPS merchant URL.",
+        "Check the complete key, expiry, revocation, and the status of its owner and workspace.",
+        "Use a valid Owner's read/write key. HTTP permission does not add write permission.",
+        "Enable the SDK HTTP test switch in the customer's own Launch, or use HTTPS.",
+        "Use HTTPS for `live`; HTTP tests must use `sandbox`.",
+        "Check outbound networking, DNS, firewall and proxy settings on the customer's test machine.",
+        "Check the system clock, trusted certificates and HTTPS proxy. Keep TLS verification enabled."
+      ]
+    },
+    "zh": {
+      "title": "客户测试服务器的 HTTP 接入说明",
+      "languages": "选择语言",
+      "intro": "本文中的服务器地址、IP 和主机名，均属于客户自己部署的 Launch。客户不需要进入 Licentivo 或开发者的内网。客户自己的公网测试服务器和内网测试服务器均可使用本说明。",
+      "protocol": "SDK 按 `merchant_origin` 中的地址选择协议：`https://` 使用 HTTPS；`http://` 仅在下述测试权限允许时使用。HTTPS 请求失败不会自动降级为 HTTP。开关不会改写地址，也不会安装 TLS 证书。",
+      "switches": "两个独立开关，默认均关闭",
+      "switchHeaders": [
+        "开关",
+        "客户在哪里设置",
+        "控制范围"
+      ],
+      "apiSwitch": [
+        "单个 API Key 的 **允许 HTTP（测试用）**",
+        "Licentivo → 开发与接入 → API Key → 创建 API Key，或已有 Key 的接入设置",
+        "允许使用这一个 Key 为 HTTP 地址的 Launch 站点创建或更新账号授权连接。只读 Key 不会因此获得写权限。轮换 Key 会保留此设置。"
+      ],
+      "sdkSwitch": [
+        "**允许 SDK 使用 HTTP（仅测试环境）**",
+        "客户自己的 Launch → 系统设置 → 网站与安全 → SSL 证书与访问协议",
+        "允许该 Launch 接受 HTTP SDK 账号请求并生成 HTTP 测试接入代码。HTTP 运行身份兑换仅限 `sandbox`；`live` 仍要求 HTTPS。"
+      ],
+      "scope": "两个开关均由客户自行管理，无须 Licentivo 平台管理员操作，也不需要将整个 Licentivo 平台切换为开发模式。它们只影响客户的 Launch 地址。Launch 和官方授权 SDK 调用 Licentivo 时仍使用 HTTPS。",
+      "setup": "客户如何配置测试服务器",
+      "steps": [
+        "更新 Licentivo 服务端、Launch 服务端和对应语言的 SDK。旧版 SDK 若只允许 localhost HTTP，必须升级；服务端设置不能改变已安装 SDK 的地址校验。",
+        "在客户自己的 Licentivo 工作空间创建专用的 **读写** 测试 Key，或打开有效 Key 的 **接入设置**，选择 **允许 HTTP（测试用）**。",
+        "在客户自己的 Launch **网站与安全** 设置中填写测试客户端能访问的地址，例如 `http://192.168.1.20:18080`、`http://test-server:18080` 或客户自己的测试域名。开启 **允许 SDK 使用 HTTP（仅测试环境）** 并保存。地址只包含协议、主机和可选端口，不带路径、查询参数、片段或末尾斜杠。",
+        "使用该 Key 将 Launch 重新连接到 Licentivo。读取到产品和策略仅说明目录可读，还须确认账号授权连接已建立。",
+        "在 **程序接入 → 接入检查与代码** 选择 **sandbox 测试环境**，运行检查，再复制新生成的代码。检查通过后，HTTP 测试参数会自动填入。使用测试账号和测试购买。"
+      ],
+      "network": "客户自己的内网不需要公网 IP 或公网 DNS，但测试客户端必须能解析并访问所填的 Launch 地址。`localhost` 指运行 SDK 的那台机器，其他机器须使用服务器的 IP 或内部主机名。Licentivo 只登记站点来源与固定签名公钥，不会回连该地址，也不会从中抓取公钥。Launch 和在线授权客户端仍须能够出站访问 Licentivo 的 HTTPS 接口。完全断网的内网不能进行在线账号授权联调。",
+      "selection": "SDK 如何选择 HTTP 或 HTTPS",
+      "configIntro": "开启客户服务器的 HTTP 测试后，生成的 Launch 公开配置相当于：",
+      "configMeaning": "地址决定协议。`allow_http: true` 仅允许 `sandbox` 使用 HTTP 商户地址，不会将 HTTPS 地址降级为 HTTP。官方授权产品的配置仍为 HTTPS。九种语言的直接调用参数如下：",
+      "sdkHeaders": [
+        "SDK",
+        "明确的 HTTP 测试参数"
+      ],
+      "sdkScope": "这些参数需要新版 SDK 支持。SDK 不会收到或查询商户的管理 API Key。Launch 只导出公开配置，并在服务端检查自身的 HTTP 开关；仅修改客户端参数不能绕过关闭的服务端开关。旧构造方式为兼容保留原有的 sandbox 本机 HTTP 例外，但不能绕过服务端默认关闭的开关。",
+      "production": "关闭测试或切换 HTTPS",
+      "risk": "HTTP 不加密密码、账号令牌等数据，客户自己的内网也可能被监听或入侵。管理员通过 HTTP 打开 Launch 后台并输入 API Key 时，浏览器到 Launch 的请求也可能泄露 Key，即使 Launch 到 Licentivo 使用 HTTPS。测试请使用专用凭据；正式部署和敏感管理操作使用 HTTPS。",
+      "migration": "为 Launch 配置可用的 HTTPS 监听或 TLS 代理后，应更新实际商户地址、按需重新连接 Licentivo，再重新生成接入配置并更新客户端。已复制或编译进程序的 HTTP 地址不会自动变化。测试结束后关闭两个 HTTP 开关。无论开关如何设置，`live` SDK 身份兑换仍须使用 HTTPS。",
+      "closing": "关闭 Launch 开关后，后续 HTTP SDK 请求返回 `SDK_HTTP_DISABLED`；`live` 的 HTTP 身份请求返回 `SDK_HTTPS_REQUIRED`。已签发的离线许可仍遵循 Licentivo 正常的到期和撤销规则。关闭 API Key 的 HTTP 权限后，该 Key 不能再创建或更新 HTTP 站点连接，但不会删除已有连接、撤销购买或使已签发许可失效。需要停止已有连接授权时，须另行停用该连接。",
+      "failures": "连接失败时如何排查",
+      "diagnostics": "Launch 会显示失败阶段（读取产品或策略、查询连接、创建 sandbox/live 连接）、具体原因，以及 Licentivo 返回的错误码和请求编号。保存的失败信息在刷新后仍可查看。错误内容不会显示管理 API Key。",
+      "errorHeaders": [
+        "错误",
+        "处理方法"
+      ],
+      "actions": [
+        "为 Launch 实际使用的那个 API Key 开启 HTTP，或配置可用的 HTTPS 商户地址。",
+        "检查 Key 是否完整、到期、吊销，以及创建者和工作空间是否有效。",
+        "使用有效 Owner 创建的读写 Key。HTTP 权限不会增加写权限。",
+        "在客户自己的 Launch 开启 SDK HTTP 测试开关，或改用 HTTPS。",
+        "`live` 必须使用 HTTPS；HTTP 测试选择 `sandbox`。",
+        "检查客户测试机器的出站网络、DNS、防火墙和代理设置。",
+        "检查系统时间、受信证书和 HTTPS 代理，并保持 TLS 证书校验开启。"
+      ]
+    },
+    "de": {
+      "title": "HTTP-Tests auf Kundenservern und in privaten Netzwerken",
+      "languages": "Sprache wählen",
+      "intro": "Alle Serveradressen, IP-Adressen und Hostnamen in dieser Anleitung gehören zur eigenen Launch-Installation des Kunden. Kunden müssen keinem privaten Netzwerk von Licentivo oder des Entwicklers beitreten. Öffentliche Testserver und Server im privaten Kundennetzwerk werden unterstützt.",
+      "protocol": "Das SDK verwendet das Protokoll in `merchant_origin`: `https://` verwendet HTTPS; `http://` ist nur mit den unten beschriebenen Testberechtigungen zulässig. Fehlgeschlagene HTTPS-Anfragen werden niemals auf HTTP zurückgestuft. Ein Schalter schreibt keine Adressen um und installiert kein TLS-Zertifikat.",
+      "switches": "Zwei unabhängige, standardmäßig deaktivierte Schalter",
+      "switchHeaders": [
+        "Schalter",
+        "Einstellung durch den Kunden",
+        "Wirkung"
+      ],
+      "apiSwitch": [
+        "**HTTP erlauben (Tests)** für einen API-Schlüssel",
+        "Licentivo → Entwicklung und Integration → API Key → API Key erstellen oder Zugriffseinstellungen",
+        "Erlaubt genau diesem Schlüssel, Launch-Kontoverbindungen für HTTP-Händleradressen zu erstellen oder zu aktualisieren. Schreibgeschützte Schlüssel erhalten keine Schreibrechte. Die Einstellung bleibt beim Rotieren des Schlüssels erhalten."
+      ],
+      "sdkSwitch": [
+        "**SDK-Zugriff über HTTP erlauben (nur Testumgebung)**",
+        "Launch des Kunden → Systemeinstellungen → Website und Sicherheit → SSL-Zertifikate und Zugriffsprotokoll",
+        "Erlaubt dieser Launch-Installation HTTP-Kontoanfragen vom SDK und die Erzeugung von HTTP-Testcode. Der Austausch einer Identitätsbestätigung für die Laufzeit ist über HTTP nur in `sandbox` zulässig; `live` erfordert HTTPS."
+      ],
+      "scope": "Kunden verwalten beide Schalter selbst. Weder ein Licentivo-Plattformadministrator noch ein plattformweiter Entwicklungsmodus ist erforderlich. Die Einstellungen betreffen nur die Launch-Adresse des Kunden. Launch und das offizielle Lizenzierungs-SDK rufen Licentivo weiterhin über HTTPS auf.",
+      "setup": "Einen Testserver beim Kunden einrichten",
+      "steps": [
+        "Aktualisieren Sie den Licentivo-Server, den Launch-Server und das SDK-Paket. Ältere SDKs, die HTTP nur für localhost zulassen, müssen aktualisiert werden; Servereinstellungen ändern die URL-Prüfung eines installierten SDKs nicht.",
+        "Erstellen Sie im Licentivo-Arbeitsbereich des Kunden einen eigenen Testschlüssel mit **Lese- und Schreibrechten**, oder öffnen Sie die **Zugriffseinstellungen** eines aktiven Schlüssels und wählen Sie **HTTP erlauben (Tests)**.",
+        "Tragen Sie in den Launch-Einstellungen **Website und Sicherheit** des Kunden eine für Testclients erreichbare Adresse ein, etwa `http://192.168.1.20:18080`, `http://test-server:18080` oder die Testdomain des Kunden. Aktivieren Sie **SDK-Zugriff über HTTP erlauben (nur Testumgebung)** und speichern Sie. Verwenden Sie einen Origin ohne Pfad, Abfrage, Fragment oder abschließenden Schrägstrich.",
+        "Verbinden Sie Launch mit diesem Schlüssel erneut mit Licentivo. Das Lesen von Produkten und Richtlinien allein stellt keine Kontoverbindung her; prüfen Sie auch, dass die Kontoautorisierungsverbindung bereit ist.",
+        "Wählen Sie unter **Anwendungsintegration → Integrationsprüfung und Code** die Umgebung **sandbox**, führen Sie die Prüfungen aus und kopieren Sie den neu erzeugten Code. Nach erfolgreicher Prüfung enthält er die HTTP-Testoption automatisch. Verwenden Sie Testkonten und Testkäufe."
+      ],
+      "network": "Eine öffentliche IP-Adresse oder ein öffentlicher DNS-Eintrag ist nicht erforderlich. Testclients müssen die konfigurierte Launch-Adresse auflösen und erreichen können. `localhost` bezeichnet den Rechner, auf dem das SDK läuft; andere Rechner müssen die Server-IP oder den internen Hostnamen verwenden. Licentivo speichert den Origin und die fest hinterlegten Signaturprüfschlüssel, ohne die Adresse zurückzurufen oder Schlüssel von ihr abzurufen. Launch und der Online-Lizenzierungsclient benötigen weiterhin ausgehenden Zugriff auf die HTTPS-Endpunkte von Licentivo. In einem vollständig abgeschotteten privaten Netzwerk ist keine Online-Kontolizenzierung möglich.",
+      "selection": "Wie das SDK HTTP oder HTTPS auswählt",
+      "configIntro": "Die erzeugte öffentliche Launch-Konfiguration für einen aktivierten Test auf einem Kundenserver entspricht:",
+      "configMeaning": "Die Adresse bestimmt das Protokoll. `allow_http: true` erlaubt die HTTP-Händleradresse nur in `sandbox`; eine HTTPS-URL wird niemals herabgestuft. Die offizielle Lizenzproduktkonfiguration bleibt bei HTTPS. Gleichwertige Optionen für direkte Aufrufe in allen neun Sprachen:",
+      "sdkHeaders": [
+        "SDK",
+        "Explizite HTTP-Testoption"
+      ],
+      "sdkScope": "Diese Optionen erfordern eine aktualisierte SDK-Version. Das SDK erhält oder erfragt niemals den Verwaltungs-API-Schlüssel des Händlers. Launch exportiert öffentliche Konfiguration und prüft seinen HTTP-Schalter auch auf dem Server. Ein Clientflag allein kann HTTP daher nicht aktivieren, wenn der Serverschalter deaktiviert ist. Bestehende Konstruktoren behalten aus Kompatibilitätsgründen die bisherige localhost-Ausnahme in sandbox; diese umgeht den standardmäßig deaktivierten Serverschalter nicht.",
+      "production": "Tests beenden oder auf HTTPS umstellen",
+      "risk": "HTTP verschlüsselt weder Passwörter noch Kontotoken oder andere Daten. Auch das private Kundennetzwerk kann überwacht oder kompromittiert werden. Die Eingabe eines API-Schlüssels in der Launch-Verwaltung über HTTP legt auch die Browser-zu-Launch-Anfrage offen, selbst wenn Launch Licentivo über HTTPS aufruft. Verwenden Sie eigene Testzugangsdaten; nutzen Sie HTTPS für den Produktivbetrieb und sensible Verwaltungsaufgaben.",
+      "migration": "Konfigurieren Sie einen funktionierenden HTTPS-Listener oder TLS-Proxy, aktualisieren Sie den wirksamen Händler-Origin in Launch und verbinden Sie Licentivo bei Bedarf erneut. Erzeugen und aktualisieren Sie anschließend die Integrationskonfiguration der Clients. Eine kopierte oder einkompilierte HTTP-URL ändert sich nicht automatisch. Deaktivieren Sie nach den Tests beide HTTP-Schalter. Der SDK-Identitätsaustausch in `live` erfordert unabhängig von beiden Schaltern HTTPS.",
+      "closing": "Nach dem Deaktivieren des Launch-Schalters werden weitere HTTP-SDK-Anfragen mit `SDK_HTTP_DISABLED` abgelehnt; HTTP-Identitätsanfragen in `live` liefern `SDK_HTTPS_REQUIRED`. Bereits signierte Offlineberechtigungen unterliegen weiterhin den normalen Ablauf- und Widerrufsregeln von Licentivo. Das Deaktivieren der HTTP-Berechtigung eines API-Schlüssels verhindert nur neue oder aktualisierte HTTP-Verbindungen mit diesem Schlüssel; bestehende Verbindungen, Käufe und erteilte Berechtigungen werden nicht gelöscht oder widerrufen. Deaktivieren Sie eine Verbindung gesondert, wenn sie keine Autorisierungen mehr erteilen soll.",
+      "failures": "Fehlgeschlagene Verbindungen untersuchen",
+      "diagnostics": "Launch zeigt die fehlgeschlagene Phase (Lesen von Produkten oder Richtlinien, Abfragen von Verbindungen oder Erstellen einer sandbox/live-Verbindung), den konkreten Grund sowie gegebenenfalls Fehlercode und Anfrage-ID von Licentivo. Gespeicherte Fehler bleiben nach dem Neuladen sichtbar. Fehlermeldungen zeigen niemals den Verwaltungs-API-Schlüssel.",
+      "errorHeaders": [
+        "Fehler",
+        "Maßnahme"
+      ],
+      "actions": [
+        "Aktivieren Sie HTTP für genau den von Launch verwendeten API-Schlüssel oder konfigurieren Sie eine funktionierende HTTPS-Händleradresse.",
+        "Prüfen Sie den vollständigen Schlüssel, Ablauf, Widerruf sowie den Status des Eigentümers und Arbeitsbereichs.",
+        "Verwenden Sie einen Lese-/Schreibschlüssel eines gültigen Owners. Die HTTP-Berechtigung gewährt keine Schreibrechte.",
+        "Aktivieren Sie den SDK-HTTP-Testschalter in der eigenen Launch-Installation des Kunden oder verwenden Sie HTTPS.",
+        "Verwenden Sie HTTPS für `live`; HTTP-Tests müssen `sandbox` verwenden.",
+        "Prüfen Sie ausgehende Netzwerkverbindungen, DNS, Firewall und Proxy auf dem Testrechner des Kunden.",
+        "Prüfen Sie Systemzeit, vertrauenswürdige Zertifikate und HTTPS-Proxy. Lassen Sie die TLS-Prüfung aktiviert."
+      ]
+    },
+    "it": {
+      "title": "Test HTTP sui server del cliente e nelle reti private",
+      "languages": "Scegli la lingua",
+      "intro": "Tutti gli indirizzi dei server, gli IP e i nomi host in questa guida appartengono all'installazione Launch del cliente. I clienti non devono accedere alla rete privata di Licentivo o dello sviluppatore. Sono supportati sia i server di test pubblici sia quelli nella rete privata del cliente.",
+      "protocol": "L'SDK usa il protocollo indicato in `merchant_origin`: `https://` usa HTTPS; `http://` è consentito solo con le autorizzazioni di test descritte sotto. Una richiesta HTTPS non riuscita non passa mai a HTTP. Un interruttore non riscrive gli indirizzi e non installa certificati TLS.",
+      "switches": "Due interruttori indipendenti, disattivati per impostazione predefinita",
+      "switchHeaders": [
+        "Interruttore",
+        "Dove lo imposta il cliente",
+        "Effetto"
+      ],
+      "apiSwitch": [
+        "**Consenti HTTP (test)** per una singola chiave API",
+        "Licentivo → Sviluppo e integrazione → API Key → Crea API Key o Impostazioni di accesso",
+        "Consente solo a questa chiave di creare o aggiornare connessioni degli account Launch per origini HTTP del commerciante. Le chiavi di sola lettura non ottengono permessi di scrittura. La rotazione della chiave conserva l'impostazione."
+      ],
+      "sdkSwitch": [
+        "**Consenti HTTP all'SDK (solo ambiente di test)**",
+        "Launch del cliente → Impostazioni di sistema → Sito e sicurezza → Certificati SSL e protocollo di accesso",
+        "Consente a questa installazione Launch di accettare richieste HTTP degli account SDK e generare codice di test HTTP. Lo scambio di identità per l'autorizzazione in esecuzione via HTTP è limitato a `sandbox`; `live` richiede HTTPS."
+      ],
+      "scope": "Il cliente gestisce entrambi gli interruttori. Non servono un amministratore della piattaforma Licentivo né una modalità di sviluppo globale. Queste impostazioni riguardano solo l'indirizzo Launch del cliente. Launch e l'SDK ufficiale di licenza continuano a chiamare Licentivo tramite HTTPS.",
+      "setup": "Configurare un server di test del cliente",
+      "steps": [
+        "Aggiorna il server Licentivo, il server Launch e il pacchetto SDK. Gli SDK precedenti che consentono HTTP solo su localhost vanno aggiornati: le impostazioni del server non cambiano la convalida degli URL di un SDK installato.",
+        "Nello spazio di lavoro Licentivo del cliente crea una chiave di test dedicata con permessi di **lettura e scrittura**, oppure apri le **Impostazioni di accesso** di una chiave attiva e seleziona **Consenti HTTP (test)**.",
+        "Nelle impostazioni **Sito e sicurezza** del Launch del cliente inserisci un indirizzo raggiungibile dai client di test, per esempio `http://192.168.1.20:18080`, `http://test-server:18080` o il dominio di test del cliente. Abilita **Consenti HTTP all'SDK (solo ambiente di test)** e salva. Usa un'origine senza percorso, query, frammento o barra finale.",
+        "Ricollega Launch a Licentivo con questa chiave. Leggere prodotti e criteri non basta a stabilire la connessione degli account: verifica anche che la connessione di autorizzazione sia pronta.",
+        "In **Integrazione applicazione → Verifiche di integrazione e codice**, seleziona **sandbox**, esegui le verifiche e copia il nuovo codice generato. Dopo verifiche riuscite include automaticamente l'opzione di test HTTP. Usa account e acquisti di test."
+      ],
+      "network": "Non servono un IP pubblico o un record DNS pubblico. I client di test devono risolvere e raggiungere l'indirizzo Launch configurato. `localhost` indica il computer che esegue l'SDK; un altro computer deve usare l'IP del server o il nome host interno. Licentivo registra l'origine e le chiavi di firma fissate, senza richiamare quell'indirizzo né recuperarvi chiavi. Launch e il client di licenza online richiedono comunque accesso in uscita agli endpoint HTTPS di Licentivo. Una rete privata completamente disconnessa non può eseguire l'autorizzazione online degli account.",
+      "selection": "Come l'SDK sceglie HTTP o HTTPS",
+      "configIntro": "La configurazione pubblica Launch generata per un test abilitato sul server del cliente equivale a:",
+      "configMeaning": "L'indirizzo seleziona il protocollo. `allow_http: true` consente l'origine HTTP del commerciante solo in `sandbox`; non declassa mai un URL HTTPS. La configurazione ufficiale del prodotto di licenza resta HTTPS. Opzioni equivalenti per chiamate dirette nei nove linguaggi:",
+      "sdkHeaders": [
+        "SDK",
+        "Opzione esplicita per test HTTP"
+      ],
+      "sdkScope": "Queste opzioni richiedono un SDK aggiornato. L'SDK non riceve e non richiede mai la chiave API di gestione del commerciante. Launch esporta configurazioni pubbliche e verifica anche sul server il proprio interruttore HTTP: cambiare solo un parametro client non abilita HTTP quando l'interruttore server è spento. I costruttori precedenti mantengono per compatibilità l'eccezione localhost in sandbox, ma non aggirano l'interruttore server disattivato per impostazione predefinita.",
+      "production": "Terminare i test o passare a HTTPS",
+      "risk": "HTTP non crittografa password, token degli account o altri dati. Anche la rete privata del cliente può essere monitorata o compromessa. Inserire una chiave API nell'amministrazione Launch tramite HTTP espone anche la richiesta dal browser a Launch, sebbene le chiamate da Launch a Licentivo usino HTTPS. Usa credenziali di test dedicate; usa HTTPS in produzione e per operazioni amministrative sensibili.",
+      "migration": "Dopo aver configurato un listener HTTPS o un proxy TLS funzionante, aggiorna l'origine effettiva del commerciante in Launch, ricollega Licentivo se necessario, poi rigenera e aggiorna la configurazione dei client. Un URL HTTP copiato o compilato non cambia automaticamente. Disattiva entrambi gli interruttori HTTP al termine dei test. Lo scambio di identità SDK in `live` richiede HTTPS a prescindere dagli interruttori.",
+      "closing": "Disattivando l'interruttore Launch, le successive richieste SDK HTTP sono rifiutate con `SDK_HTTP_DISABLED`; le richieste di identità HTTP in `live` restituiscono `SDK_HTTPS_REQUIRED`. I permessi offline già firmati seguono le normali regole di scadenza e revoca di Licentivo. Disattivare il permesso HTTP della chiave API impedisce a quella chiave di creare o aggiornare connessioni HTTP, ma non elimina connessioni esistenti, revoca acquisti o invalida permessi emessi. Disattiva separatamente una connessione se deve smettere di autorizzare.",
+      "failures": "Diagnosticare una connessione non riuscita",
+      "diagnostics": "Launch mostra la fase non riuscita (lettura di prodotti o criteri, ricerca delle connessioni o creazione di una connessione sandbox/live), il motivo preciso e, se forniti, codice di errore e ID richiesta di Licentivo. Gli errori salvati restano visibili dopo un aggiornamento della pagina. I messaggi non mostrano mai la chiave API di gestione.",
+      "errorHeaders": [
+        "Errore",
+        "Azione"
+      ],
+      "actions": [
+        "Abilita HTTP per l'esatta chiave API usata da Launch oppure configura un URL HTTPS funzionante del commerciante.",
+        "Controlla la chiave completa, scadenza, revoca e stato del proprietario e dello spazio di lavoro.",
+        "Usa una chiave di lettura/scrittura di un Owner valido. Il permesso HTTP non aggiunge permessi di scrittura.",
+        "Abilita l'interruttore di test HTTP SDK nel Launch del cliente oppure usa HTTPS.",
+        "Usa HTTPS per `live`; i test HTTP devono usare `sandbox`.",
+        "Controlla rete in uscita, DNS, firewall e proxy sulla macchina di test del cliente.",
+        "Controlla orologio di sistema, certificati attendibili e proxy HTTPS. Mantieni attiva la verifica TLS."
+      ]
+    },
+    "fr": {
+      "title": "Tests HTTP sur les serveurs du client et les réseaux privés",
+      "languages": "Choisir une langue",
+      "intro": "Toutes les adresses de serveur, IP et noms d'hôte de ce guide appartiennent au déploiement Launch du client. Le client ne rejoint pas le réseau privé de Licentivo ni celui du développeur. Les serveurs de test publics et ceux du réseau privé du client sont pris en charge.",
+      "protocol": "Le SDK utilise le protocole de `merchant_origin` : `https://` utilise HTTPS ; `http://` n'est autorisé qu'avec les permissions de test ci-dessous. Une requête HTTPS en échec ne se rabat jamais sur HTTP. Un interrupteur ne réécrit pas les adresses et n'installe aucun certificat TLS.",
+      "switches": "Deux interrupteurs indépendants, désactivés par défaut",
+      "switchHeaders": [
+        "Interrupteur",
+        "Où le client le règle",
+        "Effet"
+      ],
+      "apiSwitch": [
+        "**Autoriser HTTP (tests)** pour une clé API",
+        "Licentivo → Développement et intégration → API Key → Créer une clé API ou Paramètres d'accès",
+        "Autorise cette clé précise à créer ou modifier les connexions de comptes Launch pour des origines marchand HTTP. Les clés en lecture seule n'obtiennent aucun droit d'écriture. La rotation de la clé conserve ce réglage."
+      ],
+      "sdkSwitch": [
+        "**Autoriser HTTP pour le SDK (environnement de test uniquement)**",
+        "Launch du client → Paramètres système → Site et sécurité → Certificats SSL et protocole d'accès",
+        "Autorise cette installation Launch à accepter les requêtes de compte SDK en HTTP et à générer le code de test HTTP. L'échange d'identité pour l'autorisation d'exécution en HTTP est limité à `sandbox` ; `live` exige HTTPS."
+      ],
+      "scope": "Le client gère lui-même les deux interrupteurs. Aucun administrateur de plateforme Licentivo ni mode développement global n'est nécessaire. Ces réglages concernent uniquement l'adresse Launch du client. Launch et le SDK officiel de licence continuent d'appeler Licentivo en HTTPS.",
+      "setup": "Configurer un serveur de test du client",
+      "steps": [
+        "Mettez à jour le serveur Licentivo, le serveur Launch et le paquet SDK. Les anciens SDK n'autorisant HTTP que sur localhost doivent être mis à jour ; les réglages serveur ne changent pas la validation d'URL d'un SDK déjà installé.",
+        "Dans l'espace de travail Licentivo du client, créez une clé de test dédiée en **lecture/écriture**, ou ouvrez les **Paramètres d'accès** d'une clé active et sélectionnez **Autoriser HTTP (tests)**.",
+        "Dans les paramètres **Site et sécurité** du Launch du client, saisissez une adresse accessible aux clients de test, par exemple `http://192.168.1.20:18080`, `http://test-server:18080` ou le domaine de test du client. Activez **Autoriser HTTP pour le SDK (environnement de test uniquement)** et enregistrez. L'origine ne doit contenir ni chemin, ni requête, ni fragment, ni barre oblique finale.",
+        "Reconnectez Launch à Licentivo avec cette clé. Lire les produits et les politiques ne suffit pas à établir la connexion de comptes ; vérifiez aussi que la connexion d'autorisation des comptes est prête.",
+        "Dans **Intégration de l'application → Vérifications d'intégration et code**, sélectionnez **sandbox**, lancez les vérifications et copiez le nouveau code généré. Après validation, l'option de test HTTP y est ajoutée automatiquement. Utilisez des comptes et des achats de test."
+      ],
+      "network": "Aucune IP publique ni entrée DNS publique n'est requise. Les clients de test doivent pouvoir résoudre et atteindre l'adresse Launch configurée. `localhost` désigne la machine exécutant le SDK ; une autre machine doit utiliser l'IP du serveur ou son nom d'hôte interne. Licentivo enregistre l'origine et les clés de signature épinglées, sans rappeler cette origine ni y récupérer des clés. Launch et le client de licence en ligne doivent toujours pouvoir accéder en sortie aux points de terminaison HTTPS de Licentivo. Un réseau privé totalement déconnecté ne permet pas la licence de comptes en ligne.",
+      "selection": "Comment le SDK choisit HTTP ou HTTPS",
+      "configIntro": "La configuration publique Launch générée pour un test activé sur le serveur du client équivaut à :",
+      "configMeaning": "L'adresse détermine le protocole. `allow_http: true` autorise l'origine marchand HTTP uniquement dans `sandbox` ; une URL HTTPS n'est jamais rétrogradée. La configuration officielle du produit de licence reste en HTTPS. Options équivalentes d'appel direct pour les neuf langages :",
+      "sdkHeaders": [
+        "SDK",
+        "Option explicite de test HTTP"
+      ],
+      "sdkScope": "Ces options exigent une version à jour du SDK. Le SDK ne reçoit et ne demande jamais la clé API de gestion du marchand. Launch exporte une configuration publique et vérifie également son interrupteur HTTP côté serveur : modifier un paramètre client seul ne peut donc pas activer HTTP lorsque cet interrupteur est désactivé. Les anciens constructeurs conservent l'exception localhost en sandbox pour compatibilité ; elle ne contourne pas l'interrupteur serveur désactivé par défaut.",
+      "production": "Terminer les tests ou passer à HTTPS",
+      "risk": "HTTP ne chiffre ni les mots de passe, ni les jetons de compte, ni les autres données. Le réseau privé du client peut lui aussi être surveillé ou compromis. Saisir une clé API dans l'administration Launch en HTTP expose également la requête du navigateur vers Launch, même si Launch appelle Licentivo en HTTPS. Utilisez des identifiants de test dédiés ; utilisez HTTPS en production et pour l'administration sensible.",
+      "migration": "Après avoir configuré un écouteur HTTPS ou un proxy TLS fonctionnel, mettez à jour l'origine marchand effective de Launch, reconnectez Licentivo si nécessaire, puis régénérez et mettez à jour la configuration des clients. Une URL HTTP copiée ou compilée ne change pas automatiquement. Désactivez les deux interrupteurs HTTP à la fin des tests. L'échange d'identité SDK en `live` exige HTTPS quels que soient ces réglages.",
+      "closing": "Désactiver l'interrupteur Launch rejette les requêtes SDK HTTP suivantes avec `SDK_HTTP_DISABLED` ; les requêtes d'identité HTTP en `live` renvoient `SDK_HTTPS_REQUIRED`. Les autorisations hors ligne déjà signées suivent toujours les règles normales d'expiration et de révocation de Licentivo. Retirer l'autorisation HTTP de la clé API bloque la création ou la modification ultérieure de connexions HTTP avec cette clé ; cela ne supprime pas les connexions existantes, ne révoque pas les achats et n'invalide pas les autorisations émises. Désactivez séparément une connexion si elle doit cesser d'autoriser.",
+      "failures": "Diagnostiquer un échec de connexion",
+      "diagnostics": "Launch affiche l'étape en échec (lecture des produits ou politiques, recherche des connexions ou création d'une connexion sandbox/live), sa cause précise et, lorsqu'ils sont fournis, le code d'erreur et l'identifiant de requête Licentivo. Les erreurs enregistrées restent visibles après actualisation. Les messages ne montrent jamais la clé API de gestion.",
+      "errorHeaders": [
+        "Erreur",
+        "Action"
+      ],
+      "actions": [
+        "Autorisez HTTP pour la clé API exacte utilisée par Launch, ou configurez une URL marchand HTTPS fonctionnelle.",
+        "Vérifiez la clé complète, son expiration, sa révocation et l'état de son propriétaire et de l'espace de travail.",
+        "Utilisez la clé en lecture/écriture d'un Owner valide. L'autorisation HTTP n'ajoute aucun droit d'écriture.",
+        "Activez l'interrupteur de test HTTP du SDK dans le Launch du client, ou utilisez HTTPS.",
+        "Utilisez HTTPS pour `live` ; les tests HTTP doivent utiliser `sandbox`.",
+        "Vérifiez le réseau sortant, le DNS, le pare-feu et le proxy sur la machine de test du client.",
+        "Vérifiez l'heure système, les certificats de confiance et le proxy HTTPS. Conservez la vérification TLS activée."
+      ]
+    },
+    "es": {
+      "title": "Pruebas HTTP en servidores del cliente y redes privadas",
+      "languages": "Elegir idioma",
+      "intro": "Todas las direcciones de servidor, IP y nombres de host de esta guía pertenecen al despliegue Launch del cliente. El cliente no tiene que entrar en la red privada de Licentivo ni en la del desarrollador. Se admiten tanto servidores de pruebas públicos como servidores de la red privada del cliente.",
+      "protocol": "El SDK usa el protocolo de `merchant_origin`: `https://` usa HTTPS; `http://` solo se permite con los permisos de prueba indicados abajo. Una solicitud HTTPS fallida nunca cambia automáticamente a HTTP. Un interruptor no reescribe direcciones ni instala certificados TLS.",
+      "switches": "Dos interruptores independientes, desactivados por defecto",
+      "switchHeaders": [
+        "Interruptor",
+        "Dónde lo configura el cliente",
+        "Efecto"
+      ],
+      "apiSwitch": [
+        "**Permitir HTTP (pruebas)** para una clave API",
+        "Licentivo → Desarrollo e integración → API Key → Crear API Key o Ajustes de acceso",
+        "Permite que esta clave concreta cree o actualice conexiones de cuentas Launch para orígenes HTTP del comerciante. Las claves de solo lectura no obtienen permisos de escritura. La rotación de la clave conserva el ajuste."
+      ],
+      "sdkSwitch": [
+        "**Permitir HTTP al SDK (solo entorno de pruebas)**",
+        "Launch del cliente → Ajustes del sistema → Sitio y seguridad → Certificados SSL y protocolo de acceso",
+        "Permite que esta instalación Launch acepte solicitudes de cuentas del SDK por HTTP y genere código de prueba HTTP. El intercambio de identidad para la autorización en ejecución por HTTP se limita a `sandbox`; `live` exige HTTPS."
+      ],
+      "scope": "El cliente controla ambos interruptores. No hace falta un administrador de la plataforma Licentivo ni un modo de desarrollo global. Estos ajustes solo afectan a la dirección Launch del cliente. Launch y el SDK oficial de licencias siguen llamando a Licentivo mediante HTTPS.",
+      "setup": "Configurar un servidor de pruebas del cliente",
+      "steps": [
+        "Actualiza el servidor Licentivo, el servidor Launch y el paquete SDK. Los SDK antiguos que solo permiten HTTP en localhost deben actualizarse; los ajustes del servidor no cambian la validación de URL de un SDK instalado.",
+        "En el espacio de trabajo Licentivo del cliente, crea una clave de pruebas dedicada de **lectura y escritura**, o abre los **Ajustes de acceso** de una clave activa y selecciona **Permitir HTTP (pruebas)**.",
+        "En **Sitio y seguridad** del Launch del cliente, introduce una dirección accesible para los clientes de prueba, como `http://192.168.1.20:18080`, `http://test-server:18080` o el dominio de pruebas del cliente. Activa **Permitir HTTP al SDK (solo entorno de pruebas)** y guarda. Usa un origen sin ruta, consulta, fragmento ni barra final.",
+        "Vuelve a conectar Launch con Licentivo mediante esa clave. Leer productos y políticas no basta para establecer la conexión de cuentas; confirma también que la conexión de autorización de cuentas esté lista.",
+        "En **Integración de aplicaciones → Comprobaciones de integración y código**, selecciona **sandbox**, ejecuta las comprobaciones y copia el código recién generado. Tras superarlas, incluye automáticamente la opción de prueba HTTP. Usa cuentas y compras de prueba."
+      ],
+      "network": "No se necesita una IP pública ni un registro DNS público. Los clientes de prueba deben resolver y alcanzar la dirección Launch configurada. `localhost` es la máquina que ejecuta el SDK; otra máquina debe usar la IP del servidor o su nombre de host interno. Licentivo registra el origen y las claves de firma fijadas, sin realizar llamadas de retorno ni recuperar claves de ese origen. Launch y el cliente de licencias en línea siguen necesitando acceso saliente a los endpoints HTTPS de Licentivo. Una red privada totalmente desconectada no puede realizar autorización de cuentas en línea.",
+      "selection": "Cómo elige el SDK HTTP o HTTPS",
+      "configIntro": "La configuración pública Launch generada para una prueba habilitada en el servidor del cliente equivale a:",
+      "configMeaning": "La dirección elige el protocolo. `allow_http: true` permite el origen HTTP del comerciante solo en `sandbox`; nunca rebaja una URL HTTPS. La configuración oficial del producto de licencias permanece en HTTPS. Opciones equivalentes de llamada directa para los nueve lenguajes:",
+      "sdkHeaders": [
+        "SDK",
+        "Opción explícita de prueba HTTP"
+      ],
+      "sdkScope": "Estas opciones requieren un SDK actualizado. El SDK nunca recibe ni consulta la clave API de administración del comerciante. Launch exporta configuración pública y también comprueba su interruptor HTTP en el servidor; cambiar solo un parámetro del cliente no permite HTTP si el interruptor del servidor está apagado. Los constructores antiguos conservan por compatibilidad la excepción localhost de sandbox, pero no evitan el interruptor del servidor, desactivado por defecto.",
+      "production": "Finalizar las pruebas o migrar a HTTPS",
+      "risk": "HTTP no cifra contraseñas, tokens de cuenta ni otros datos. La red privada del cliente también puede ser vigilada o comprometida. Introducir una clave API en la administración Launch por HTTP expone igualmente la solicitud del navegador a Launch, aunque Launch llame a Licentivo por HTTPS. Usa credenciales de prueba dedicadas; usa HTTPS en producción y para tareas administrativas sensibles.",
+      "migration": "Tras configurar un listener HTTPS o proxy TLS que funcione, actualiza el origen efectivo del comerciante en Launch, reconecta Licentivo cuando sea necesario y regenera y actualiza la configuración de integración de los clientes. Una URL HTTP copiada o compilada no cambia automáticamente. Desactiva ambos interruptores HTTP al terminar las pruebas. El intercambio de identidad SDK en `live` exige HTTPS independientemente de los interruptores.",
+      "closing": "Desactivar el interruptor Launch rechaza las solicitudes HTTP posteriores del SDK con `SDK_HTTP_DISABLED`; las solicitudes de identidad HTTP en `live` devuelven `SDK_HTTPS_REQUIRED`. Los permisos sin conexión ya firmados siguen las reglas normales de caducidad y revocación de Licentivo. Desactivar el permiso HTTP de la clave API impide crear o actualizar conexiones HTTP con esa clave, pero no elimina conexiones existentes, revoca compras ni invalida permisos emitidos. Desactiva por separado una conexión si debe dejar de autorizar.",
+      "failures": "Diagnosticar una conexión fallida",
+      "diagnostics": "Launch muestra la fase fallida (lectura de productos o políticas, consulta de conexiones o creación de una conexión sandbox/live), el motivo específico y, cuando se proporcionan, el código de error y el ID de solicitud de Licentivo. Los fallos guardados siguen visibles al actualizar la página. Los mensajes nunca muestran la clave API de administración.",
+      "errorHeaders": [
+        "Error",
+        "Acción"
+      ],
+      "actions": [
+        "Permite HTTP para la clave API exacta usada por Launch o configura una URL HTTPS válida del comerciante.",
+        "Comprueba la clave completa, caducidad, revocación y estado de su propietario y espacio de trabajo.",
+        "Usa una clave de lectura/escritura de un Owner válido. El permiso HTTP no añade permisos de escritura.",
+        "Activa el interruptor de pruebas HTTP del SDK en el Launch del cliente o usa HTTPS.",
+        "Usa HTTPS para `live`; las pruebas HTTP deben usar `sandbox`.",
+        "Comprueba la red saliente, DNS, cortafuegos y proxy de la máquina de pruebas del cliente.",
+        "Comprueba el reloj del sistema, los certificados de confianza y el proxy HTTPS. Mantén activada la verificación TLS."
+      ]
+    },
+    "pt": {
+      "title": "Testes HTTP em servidores do cliente e redes privadas",
+      "languages": "Escolher idioma",
+      "intro": "Todos os endereços de servidor, IPs e nomes de host deste guia pertencem à implantação Launch do próprio cliente. O cliente não precisa entrar na rede privada da Licentivo nem do desenvolvedor. São aceitos servidores de teste públicos e servidores na rede privada do cliente.",
+      "protocol": "O SDK usa o protocolo de `merchant_origin`: `https://` usa HTTPS; `http://` só é permitido pelas autorizações de teste abaixo. Uma solicitação HTTPS com falha nunca muda automaticamente para HTTP. Um interruptor não reescreve endereços nem instala certificados TLS.",
+      "switches": "Dois interruptores independentes, desativados por padrão",
+      "switchHeaders": [
+        "Interruptor",
+        "Onde o cliente configura",
+        "Efeito"
+      ],
+      "apiSwitch": [
+        "**Permitir HTTP (testes)** para uma chave API",
+        "Licentivo → Desenvolvimento e integração → API Key → Criar API Key ou Configurações de acesso",
+        "Permite que esta chave específica crie ou atualize conexões de contas Launch para origens HTTP do comerciante. Chaves somente de leitura não ganham permissão de escrita. A rotação da chave preserva a configuração."
+      ],
+      "sdkSwitch": [
+        "**Permitir HTTP no SDK (somente ambiente de teste)**",
+        "Launch do cliente → Configurações do sistema → Site e segurança → Certificados SSL e protocolo de acesso",
+        "Permite que esta instalação Launch aceite solicitações de contas do SDK por HTTP e gere código de teste HTTP. A troca de identidade para autorização em execução por HTTP é restrita a `sandbox`; `live` exige HTTPS."
+      ],
+      "scope": "O cliente controla os dois interruptores. Não é necessário um administrador da plataforma Licentivo nem um modo de desenvolvimento global. Essas configurações afetam apenas o endereço Launch do cliente. Launch e o SDK oficial de licenciamento continuam acessando Licentivo por HTTPS.",
+      "setup": "Configurar um servidor de teste do cliente",
+      "steps": [
+        "Atualize o servidor Licentivo, o servidor Launch e o pacote SDK. SDKs antigos que só permitem HTTP em localhost devem ser atualizados; configurações do servidor não alteram a validação de URL de um SDK instalado.",
+        "No espaço de trabalho Licentivo do cliente, crie uma chave de teste dedicada com **leitura e escrita**, ou abra as **Configurações de acesso** de uma chave ativa e selecione **Permitir HTTP (testes)**.",
+        "Em **Site e segurança** do Launch do cliente, informe um endereço acessível aos clientes de teste, como `http://192.168.1.20:18080`, `http://test-server:18080` ou o domínio de teste do cliente. Ative **Permitir HTTP no SDK (somente ambiente de teste)** e salve. Use uma origem sem caminho, consulta, fragmento ou barra final.",
+        "Reconecte Launch a Licentivo com essa chave. Ler produtos e políticas não basta para estabelecer a conexão de contas; confirme também que a conexão de autorização de contas está pronta.",
+        "Em **Integração de aplicações → Verificações de integração e código**, selecione **sandbox**, execute as verificações e copie o novo código gerado. Após a validação, a opção de teste HTTP é incluída automaticamente. Use contas e compras de teste."
+      ],
+      "network": "Não é necessário IP público nem registro DNS público. Os clientes de teste precisam resolver e alcançar o endereço Launch configurado. `localhost` é a máquina que executa o SDK; outra máquina deve usar o IP do servidor ou seu nome de host interno. Licentivo registra a origem e as chaves de assinatura fixadas, sem fazer chamadas de retorno nem buscar chaves nessa origem. Launch e o cliente de licenciamento online ainda precisam de acesso de saída aos endpoints HTTPS da Licentivo. Uma rede privada totalmente desconectada não pode executar autorização de contas online.",
+      "selection": "Como o SDK escolhe HTTP ou HTTPS",
+      "configIntro": "A configuração pública Launch gerada para um teste habilitado no servidor do cliente equivale a:",
+      "configMeaning": "O endereço escolhe o protocolo. `allow_http: true` permite a origem HTTP do comerciante apenas em `sandbox`; nunca rebaixa uma URL HTTPS. A configuração oficial do produto de licenciamento permanece em HTTPS. Opções equivalentes de chamada direta para as nove linguagens:",
+      "sdkHeaders": [
+        "SDK",
+        "Opção explícita de teste HTTP"
+      ],
+      "sdkScope": "Essas opções exigem um SDK atualizado. O SDK nunca recebe nem consulta a chave API de gerenciamento do comerciante. Launch exporta a configuração pública e também verifica seu interruptor HTTP no servidor; alterar apenas um parâmetro do cliente não habilita HTTP quando o interruptor do servidor está desligado. Construtores antigos mantêm por compatibilidade a exceção localhost em sandbox, mas ela não ignora o interruptor do servidor, desativado por padrão.",
+      "production": "Encerrar os testes ou migrar para HTTPS",
+      "risk": "HTTP não criptografa senhas, tokens de conta ou outros dados. A rede privada do cliente também pode ser monitorada ou comprometida. Informar uma chave API na administração Launch por HTTP expõe também a solicitação do navegador para Launch, mesmo que Launch acesse Licentivo por HTTPS. Use credenciais de teste dedicadas; use HTTPS em produção e em operações administrativas sensíveis.",
+      "migration": "Após configurar um listener HTTPS ou proxy TLS funcional, atualize a origem efetiva do comerciante em Launch, reconecte Licentivo se necessário e gere novamente e atualize a configuração de integração dos clientes. Uma URL HTTP copiada ou compilada não muda automaticamente. Desative os dois interruptores HTTP ao terminar os testes. A troca de identidade SDK em `live` exige HTTPS, independentemente dos interruptores.",
+      "closing": "Desativar o interruptor Launch rejeita as próximas solicitações HTTP do SDK com `SDK_HTTP_DISABLED`; solicitações de identidade HTTP em `live` retornam `SDK_HTTPS_REQUIRED`. Permissões offline já assinadas seguem as regras normais de expiração e revogação da Licentivo. Desativar o HTTP da chave API bloqueia novas conexões HTTP ou atualizações com essa chave; não exclui conexões existentes, revoga compras nem invalida permissões emitidas. Desative a conexão separadamente se ela precisar parar de autorizar.",
+      "failures": "Diagnosticar uma falha de conexão",
+      "diagnostics": "Launch mostra a etapa com falha (leitura de produtos ou políticas, consulta de conexões ou criação de uma conexão sandbox/live), o motivo específico e, quando fornecidos, o código de erro e o ID da solicitação Licentivo. Falhas salvas continuam visíveis após atualizar a página. As mensagens nunca exibem a chave API de gerenciamento.",
+      "errorHeaders": [
+        "Erro",
+        "Ação"
+      ],
+      "actions": [
+        "Habilite HTTP para a chave API exata usada por Launch ou configure uma URL HTTPS funcional do comerciante.",
+        "Confira a chave completa, validade, revogação e estado do proprietário e do espaço de trabalho.",
+        "Use uma chave de leitura/escrita de um Owner válido. A permissão HTTP não adiciona permissão de escrita.",
+        "Ative o interruptor de teste HTTP do SDK no Launch do próprio cliente ou use HTTPS.",
+        "Use HTTPS para `live`; os testes HTTP devem usar `sandbox`.",
+        "Verifique rede de saída, DNS, firewall e proxy da máquina de teste do cliente.",
+        "Verifique relógio do sistema, certificados confiáveis e proxy HTTPS. Mantenha a verificação TLS ativada."
+      ]
+    },
+    "id": {
+      "title": "Pengujian HTTP pada server pelanggan dan jaringan privat",
+      "languages": "Pilih bahasa",
+      "intro": "Semua alamat server, IP, dan nama host dalam panduan ini merupakan milik instalasi Launch pelanggan sendiri. Pelanggan tidak perlu bergabung dengan jaringan privat Licentivo atau pengembang. Server pengujian publik maupun server di jaringan privat pelanggan didukung.",
+      "protocol": "SDK menggunakan protokol dalam `merchant_origin`: `https://` memakai HTTPS; `http://` hanya diizinkan oleh izin pengujian di bawah. Permintaan HTTPS yang gagal tidak pernah otomatis beralih ke HTTP. Sakelar tidak menulis ulang alamat atau memasang sertifikat TLS.",
+      "switches": "Dua sakelar terpisah, keduanya nonaktif secara default",
+      "switchHeaders": [
+        "Sakelar",
+        "Lokasi pengaturan oleh pelanggan",
+        "Efek"
+      ],
+      "apiSwitch": [
+        "**Izinkan HTTP (pengujian)** untuk satu kunci API",
+        "Licentivo → Pengembangan dan integrasi → API Key → Buat API Key atau Pengaturan akses",
+        "Mengizinkan kunci ini saja membuat atau memperbarui koneksi akun Launch untuk origin merchant HTTP. Kunci hanya-baca tidak memperoleh izin tulis. Rotasi kunci mempertahankan pengaturan ini."
+      ],
+      "sdkSwitch": [
+        "**Izinkan SDK menggunakan HTTP (hanya lingkungan pengujian)**",
+        "Launch milik pelanggan → Pengaturan sistem → Situs dan keamanan → Sertifikat SSL dan protokol akses",
+        "Mengizinkan instalasi Launch ini menerima permintaan akun SDK melalui HTTP dan menghasilkan kode pengujian HTTP. Pertukaran identitas untuk otorisasi saat berjalan melalui HTTP dibatasi ke `sandbox`; `live` memerlukan HTTPS."
+      ],
+      "scope": "Pelanggan mengelola kedua sakelar sendiri. Administrator platform Licentivo maupun mode pengembangan seluruh platform tidak diperlukan. Pengaturan ini hanya memengaruhi alamat Launch pelanggan. Launch dan SDK lisensi resmi tetap menghubungi Licentivo melalui HTTPS.",
+      "setup": "Menyiapkan server pengujian pelanggan",
+      "steps": [
+        "Perbarui server Licentivo, server Launch, dan paket SDK. SDK lama yang hanya mengizinkan HTTP pada localhost harus diperbarui; pengaturan server tidak dapat mengubah validasi URL SDK yang sudah terpasang.",
+        "Di ruang kerja Licentivo pelanggan, buat kunci pengujian khusus dengan izin **baca/tulis**, atau buka **Pengaturan akses** kunci yang aktif dan pilih **Izinkan HTTP (pengujian)**.",
+        "Di pengaturan **Situs dan keamanan** Launch pelanggan, masukkan alamat yang dapat dijangkau klien pengujian, misalnya `http://192.168.1.20:18080`, `http://test-server:18080`, atau domain pengujian pelanggan. Aktifkan **Izinkan SDK menggunakan HTTP (hanya lingkungan pengujian)** lalu simpan. Gunakan origin tanpa path, kueri, fragmen, atau garis miring di akhir.",
+        "Hubungkan kembali Launch ke Licentivo dengan kunci tersebut. Membaca produk dan kebijakan saja belum membentuk koneksi akun; pastikan koneksi otorisasi akun juga siap.",
+        "Di **Integrasi aplikasi → Pemeriksaan integrasi dan kode**, pilih **sandbox**, jalankan pemeriksaan, lalu salin kode yang baru dibuat. Setelah pemeriksaan berhasil, opsi pengujian HTTP disertakan otomatis. Gunakan akun dan pembelian pengujian."
+      ],
+      "network": "IP publik atau catatan DNS publik tidak diperlukan. Klien pengujian harus dapat meresolusikan dan menjangkau alamat Launch yang dikonfigurasi. `localhost` berarti mesin yang menjalankan SDK; mesin lain harus menggunakan IP server atau nama host internalnya. Licentivo mencatat origin dan kunci tanda tangan yang dipatok, tanpa menghubungi kembali origin itu atau mengambil kunci darinya. Launch dan klien lisensi online tetap memerlukan akses keluar ke endpoint HTTPS Licentivo. Jaringan privat yang sepenuhnya terputus tidak dapat menjalankan otorisasi akun online.",
+      "selection": "Cara SDK memilih HTTP atau HTTPS",
+      "configIntro": "Konfigurasi publik Launch yang dihasilkan untuk pengujian aktif pada server pelanggan setara dengan:",
+      "configMeaning": "Alamat menentukan protokol. `allow_http: true` hanya mengizinkan origin merchant HTTP dalam `sandbox`; URL HTTPS tidak pernah diturunkan ke HTTP. Konfigurasi produk lisensi resmi tetap menggunakan HTTPS. Opsi pemanggilan langsung yang setara untuk sembilan bahasa:",
+      "sdkHeaders": [
+        "SDK",
+        "Opsi pengujian HTTP eksplisit"
+      ],
+      "sdkScope": "Opsi ini memerlukan SDK yang diperbarui. SDK tidak pernah menerima atau meminta kunci API pengelolaan merchant. Launch mengekspor konfigurasi publik dan juga memeriksa sakelar HTTP-nya di server; mengubah parameter klien saja tidak dapat mengaktifkan HTTP jika sakelar server nonaktif. Konstruktor lama mempertahankan pengecualian localhost sandbox untuk kompatibilitas, tetapi tidak dapat melewati sakelar server yang nonaktif secara default.",
+      "production": "Mengakhiri pengujian atau beralih ke HTTPS",
+      "risk": "HTTP tidak mengenkripsi kata sandi, token akun, atau data lain. Jaringan privat pelanggan pun dapat dipantau atau disusupi. Memasukkan kunci API ke administrasi Launch melalui HTTP juga mengekspos permintaan browser ke Launch, meskipun Launch menghubungi Licentivo melalui HTTPS. Gunakan kredensial pengujian khusus; gunakan HTTPS untuk produksi dan administrasi sensitif.",
+      "migration": "Setelah menyiapkan listener HTTPS atau proxy TLS yang berfungsi, perbarui origin merchant efektif Launch, hubungkan kembali Licentivo bila perlu, lalu buat ulang dan perbarui konfigurasi integrasi klien. URL HTTP yang disalin atau dikompilasi tidak berubah otomatis. Nonaktifkan kedua sakelar HTTP setelah pengujian selesai. Pertukaran identitas SDK dalam `live` selalu memerlukan HTTPS, apa pun pengaturan kedua sakelar.",
+      "closing": "Menonaktifkan sakelar Launch menolak permintaan SDK HTTP berikutnya dengan `SDK_HTTP_DISABLED`; permintaan identitas HTTP dalam `live` mengembalikan `SDK_HTTPS_REQUIRED`. Izin offline yang sudah ditandatangani tetap mengikuti aturan kedaluwarsa dan pencabutan normal Licentivo. Menonaktifkan izin HTTP kunci API memblokir pembuatan atau pembaruan koneksi HTTP berikutnya oleh kunci itu; tidak menghapus koneksi lama, mencabut pembelian, atau membatalkan izin yang telah diterbitkan. Nonaktifkan koneksi secara terpisah jika harus berhenti memberikan otorisasi.",
+      "failures": "Mendiagnosis kegagalan koneksi",
+      "diagnostics": "Launch menampilkan tahap yang gagal (membaca produk atau kebijakan, mencari koneksi, atau membuat koneksi sandbox/live), penyebab yang spesifik, serta kode kesalahan dan ID permintaan Licentivo bila tersedia. Kegagalan tersimpan tetap terlihat setelah halaman dimuat ulang. Pesan kesalahan tidak pernah menampilkan kunci API pengelolaan.",
+      "errorHeaders": [
+        "Kesalahan",
+        "Tindakan"
+      ],
+      "actions": [
+        "Aktifkan HTTP untuk kunci API yang benar-benar digunakan Launch, atau konfigurasikan URL merchant HTTPS yang berfungsi.",
+        "Periksa kelengkapan kunci, kedaluwarsa, pencabutan, serta status pemilik dan ruang kerjanya.",
+        "Gunakan kunci baca/tulis milik Owner yang valid. Izin HTTP tidak menambah izin tulis.",
+        "Aktifkan sakelar pengujian HTTP SDK di Launch milik pelanggan, atau gunakan HTTPS.",
+        "Gunakan HTTPS untuk `live`; pengujian HTTP harus memakai `sandbox`.",
+        "Periksa jaringan keluar, DNS, firewall, dan proxy pada mesin pengujian pelanggan.",
+        "Periksa jam sistem, sertifikat tepercaya, dan proxy HTTPS. Tetap aktifkan verifikasi TLS."
+      ]
+    },
+    "zh-hant": {
+      "title": "客戶測試伺服器的 HTTP 接入說明",
+      "languages": "選擇語言",
+      "intro": "本文中的伺服器位址、IP 與主機名稱，均屬於客戶自行部署的 Launch。客戶不需要進入 Licentivo 或開發者的內部網路。客戶自己的公開測試伺服器及內網測試伺服器，皆可使用本說明。",
+      "protocol": "SDK 依照 `merchant_origin` 中的位址選擇通訊協定：`https://` 使用 HTTPS；`http://` 僅在下述測試權限允許時使用。HTTPS 請求失敗不會自動降級為 HTTP。開關不會改寫位址，也不會安裝 TLS 憑證。",
+      "switches": "兩個獨立開關，預設皆關閉",
+      "switchHeaders": [
+        "開關",
+        "客戶在哪裡設定",
+        "控制範圍"
+      ],
+      "apiSwitch": [
+        "單一 API Key 的 **允許 HTTP（測試用）**",
+        "Licentivo → 開發與接入 → API Key → 建立 API Key，或現有 Key 的接入設定",
+        "允許使用這一個 Key，為 HTTP 位址的 Launch 網站建立或更新帳號授權連線。唯讀 Key 不會因此取得寫入權限。輪替 Key 會保留此設定。"
+      ],
+      "sdkSwitch": [
+        "**允許 SDK 使用 HTTP（僅測試環境）**",
+        "客戶自己的 Launch → 系統設定 → 網站與安全 → SSL 憑證與存取協定",
+        "允許該 Launch 接受 HTTP SDK 帳號請求，並產生 HTTP 測試接入程式碼。HTTP 執行階段身分交換僅限 `sandbox`；`live` 仍要求 HTTPS。"
+      ],
+      "scope": "兩個開關皆由客戶自行管理，無須 Licentivo 平台管理員操作，也不需要將整個 Licentivo 平台切換為開發模式。它們只影響客戶的 Launch 位址。Launch 與官方授權 SDK 呼叫 Licentivo 時仍使用 HTTPS。",
+      "setup": "客戶如何設定測試伺服器",
+      "steps": [
+        "更新 Licentivo 伺服器、Launch 伺服器及對應語言的 SDK。舊版 SDK 若只允許 localhost HTTP，必須升級；伺服器設定無法改變已安裝 SDK 的位址驗證。",
+        "在客戶自己的 Licentivo 工作空間建立專用的 **讀寫** 測試 Key，或開啟有效 Key 的 **接入設定**，選擇 **允許 HTTP（測試用）**。",
+        "在客戶自己的 Launch **網站與安全** 設定中，填入測試用戶端能存取的位址，例如 `http://192.168.1.20:18080`、`http://test-server:18080` 或客戶自己的測試網域。開啟 **允許 SDK 使用 HTTP（僅測試環境）** 並儲存。位址只包含協定、主機及選用連接埠，不帶路徑、查詢參數、片段或結尾斜線。",
+        "使用該 Key 將 Launch 重新連線至 Licentivo。讀取到產品與策略只代表目錄可讀，還須確認帳號授權連線已建立。",
+        "在 **程式接入 → 接入檢查與程式碼** 選擇 **sandbox 測試環境**，執行檢查，再複製新產生的程式碼。檢查通過後，HTTP 測試參數會自動填入。請使用測試帳號及測試購買。"
+      ],
+      "network": "客戶自己的內網不需要公開 IP 或公開 DNS，但測試用戶端必須能解析並存取所填的 Launch 位址。`localhost` 指執行 SDK 的那台機器，其他機器須使用伺服器的 IP 或內部主機名稱。Licentivo 只登記網站來源與固定簽章公鑰，不會回連該位址，也不會從中擷取公鑰。Launch 與線上授權用戶端仍須能向外存取 Licentivo 的 HTTPS 端點。完全斷網的內網無法進行線上帳號授權整合測試。",
+      "selection": "SDK 如何選擇 HTTP 或 HTTPS",
+      "configIntro": "開啟客戶伺服器的 HTTP 測試後，產生的 Launch 公開設定相當於：",
+      "configMeaning": "位址決定協定。`allow_http: true` 僅允許 `sandbox` 使用 HTTP 商戶位址，不會將 HTTPS 位址降級為 HTTP。官方授權產品的設定仍為 HTTPS。九種語言的直接呼叫參數如下：",
+      "sdkHeaders": [
+        "SDK",
+        "明確的 HTTP 測試參數"
+      ],
+      "sdkScope": "這些參數需要新版 SDK 支援。SDK 不會收到或查詢商戶的管理 API Key。Launch 只匯出公開設定，並在伺服器檢查自身的 HTTP 開關；僅修改用戶端參數無法繞過關閉的伺服器開關。舊建構方式為相容性保留原有的 sandbox 本機 HTTP 例外，但不能繞過伺服器預設關閉的開關。",
+      "production": "關閉測試或切換 HTTPS",
+      "risk": "HTTP 不會加密密碼、帳號權杖等資料，客戶自己的內網也可能遭監聽或入侵。管理員透過 HTTP 開啟 Launch 後台並輸入 API Key 時，瀏覽器到 Launch 的請求也可能洩漏 Key，即使 Launch 到 Licentivo 使用 HTTPS。測試請使用專用憑證；正式部署及敏感管理操作請使用 HTTPS。",
+      "migration": "為 Launch 設定可用的 HTTPS 監聽器或 TLS 代理後，應更新實際商戶位址、視需要重新連線 Licentivo，再重新產生接入設定並更新用戶端。已複製或編譯進程式的 HTTP 位址不會自動變更。測試結束後關閉兩個 HTTP 開關。無論開關如何設定，`live` SDK 身分交換仍須使用 HTTPS。",
+      "closing": "關閉 Launch 開關後，後續 HTTP SDK 請求會回傳 `SDK_HTTP_DISABLED`；`live` 的 HTTP 身分請求會回傳 `SDK_HTTPS_REQUIRED`。已簽發的離線許可仍遵循 Licentivo 正常的到期與撤銷規則。關閉 API Key 的 HTTP 權限後，該 Key 無法再建立或更新 HTTP 網站連線，但不會刪除現有連線、撤銷購買或使已簽發許可失效。需要停止現有連線授權時，須另行停用該連線。",
+      "failures": "連線失敗時如何排查",
+      "diagnostics": "Launch 會顯示失敗階段（讀取產品或策略、查詢連線、建立 sandbox/live 連線）、具體原因，以及 Licentivo 回傳的錯誤碼和請求編號。已儲存的失敗資訊在重新整理後仍可查看。錯誤內容不會顯示管理 API Key。",
+      "errorHeaders": [
+        "錯誤",
+        "處理方式"
+      ],
+      "actions": [
+        "為 Launch 實際使用的那個 API Key 開啟 HTTP，或設定可用的 HTTPS 商戶位址。",
+        "檢查 Key 是否完整、到期、撤銷，以及建立者和工作空間是否有效。",
+        "使用有效 Owner 建立的讀寫 Key。HTTP 權限不會增加寫入權限。",
+        "在客戶自己的 Launch 開啟 SDK HTTP 測試開關，或改用 HTTPS。",
+        "`live` 必須使用 HTTPS；HTTP 測試請選擇 `sandbox`。",
+        "檢查客戶測試機器的對外網路、DNS、防火牆與代理設定。",
+        "檢查系統時間、受信任憑證及 HTTPS 代理，並保持 TLS 憑證驗證開啟。"
+      ]
+    },
+    "ja": {
+      "title": "顧客サーバーとプライベートネットワークでの HTTP テスト",
+      "languages": "言語を選択",
+      "intro": "このガイドのサーバーアドレス、IP、ホスト名はすべて、顧客自身が導入した Launch 環境のものです。顧客が Licentivo や開発者のプライベートネットワークに参加する必要はありません。公開テストサーバーと顧客の社内ネットワーク上のサーバーの両方を利用できます。",
+      "protocol": "SDK は `merchant_origin` に指定されたプロトコルを使います。`https://` は HTTPS、`http://` は以下のテスト許可がある場合に限り使用できます。HTTPS リクエストが失敗しても HTTP に自動で切り替わりません。スイッチはアドレスを書き換えず、TLS 証明書もインストールしません。",
+      "switches": "独立した 2 つのスイッチ（既定では両方とも無効）",
+      "switchHeaders": [
+        "スイッチ",
+        "顧客が設定する場所",
+        "効果"
+      ],
+      "apiSwitch": [
+        "個別の API キーの **HTTP を許可（テスト用）**",
+        "Licentivo → 開発と連携 → API Key → API キーの作成、または接続設定",
+        "このキーで HTTP の販売者オリジンに対する Launch アカウント接続を作成・更新できます。読み取り専用キーに書き込み権限は付与されません。キーをローテーションしても設定は維持されます。"
+      ],
+      "sdkSwitch": [
+        "**SDK の HTTP 使用を許可（テスト環境のみ）**",
+        "顧客自身の Launch → システム設定 → Web サイトとセキュリティ → SSL 証明書とアクセスプロトコル",
+        "この Launch が SDK の HTTP アカウントリクエストを受け付け、HTTP テスト用コードを生成できるようになります。実行時認可用の ID 交換を HTTP で行えるのは `sandbox` のみで、`live` には HTTPS が必要です。"
+      ],
+      "scope": "両方のスイッチを顧客自身が管理します。Licentivo のプラットフォーム管理者による操作や、プラットフォーム全体の開発モードは不要です。設定が影響するのは顧客の Launch アドレスだけです。Launch と公式ライセンス SDK は引き続き HTTPS で Licentivo に接続します。",
+      "setup": "顧客のテストサーバーを設定する",
+      "steps": [
+        "Licentivo サーバー、Launch サーバー、SDK パッケージを更新します。localhost の HTTP しか許可しない旧 SDK は更新が必要です。サーバー設定では、インストール済み SDK の URL 検証は変更できません。",
+        "顧客の Licentivo ワークスペースで **読み書き** 可能な専用テストキーを作成するか、有効なキーの **接続設定** を開き、**HTTP を許可（テスト用）** を選択します。",
+        "顧客の Launch の **Web サイトとセキュリティ** で、テストクライアントが到達できるアドレスを設定します。例：`http://192.168.1.20:18080`、`http://test-server:18080`、顧客のテストドメイン。**SDK の HTTP 使用を許可（テスト環境のみ）** を有効にして保存します。パス、クエリ、フラグメント、末尾のスラッシュを含まないオリジンを使用してください。",
+        "そのキーで Launch を Licentivo に再接続します。製品やポリシーを読み取れただけではアカウント接続は成立していません。アカウント認可接続の準備が完了していることも確認します。",
+        "**アプリケーション連携 → 連携チェックとコード** で **sandbox** を選び、チェックを実行して新しく生成されたコードをコピーします。チェックに成功すると HTTP テスト用オプションが自動で含まれます。テストアカウントとテスト購入を使用してください。"
+      ],
+      "network": "公開 IP や公開 DNS レコードは不要です。テストクライアントから設定済みの Launch アドレスを名前解決し、到達できる必要があります。`localhost` は SDK を実行するマシンを指します。別のマシンではサーバーの IP または内部ホスト名を使用してください。Licentivo はオリジンと固定の署名公開鍵を記録するだけで、そのアドレスへのコールバックや鍵取得は行いません。ただし Launch とオンラインライセンスクライアントは、Licentivo の HTTPS エンドポイントに外向きに接続できる必要があります。完全に切り離された社内ネットワークでは、オンラインのアカウント認可テストはできません。",
+      "selection": "SDK による HTTP と HTTPS の選択",
+      "configIntro": "顧客サーバーで HTTP テストを有効にすると、生成される Launch の公開設定は次の内容に相当します。",
+      "configMeaning": "プロトコルはアドレスが決定します。`allow_http: true` は `sandbox` で HTTP の販売者オリジンを許可するだけで、HTTPS URL を HTTP に変更しません。公式ライセンス製品の設定は HTTPS のままです。9 言語での直接呼び出しに相当するオプションは次のとおりです。",
+      "sdkHeaders": [
+        "SDK",
+        "明示的な HTTP テストオプション"
+      ],
+      "sdkScope": "これらのオプションには更新済みの SDK が必要です。SDK に販売者の管理 API キーを渡したり、SDK から問い合わせたりすることはありません。Launch は公開設定を出力し、サーバー側でも HTTP スイッチを確認します。そのためクライアントのフラグだけを変更しても、サーバーのスイッチが無効なら HTTP 接続は許可されません。従来のコンストラクターは互換性のため sandbox の localhost 例外を維持しますが、既定で無効のサーバースイッチを回避するものではありません。",
+      "production": "テストを終了する、または HTTPS に移行する",
+      "risk": "HTTP はパスワード、アカウントトークンなどのデータを暗号化しません。顧客の社内ネットワークでも盗聴や侵害の可能性があります。HTTP で開いた Launch 管理画面に API キーを入力すると、Launch から Licentivo が HTTPS であっても、ブラウザーから Launch へのリクエストは保護されません。専用のテスト認証情報を使い、本番環境や機密性の高い管理操作には HTTPS を使用してください。",
+      "migration": "動作する HTTPS リスナーまたは TLS プロキシを設定したら、Launch の実際の販売者オリジンを更新し、必要に応じて Licentivo に再接続してから、クライアントの連携設定を再生成・更新します。コピー済み、またはプログラムに組み込んだ HTTP URL は自動では変わりません。テスト後は両方の HTTP スイッチを無効にします。スイッチに関係なく、`live` の SDK ID 交換には HTTPS が必要です。",
+      "closing": "Launch のスイッチを無効にすると、以降の HTTP SDK リクエストは `SDK_HTTP_DISABLED` で拒否されます。`live` の HTTP ID リクエストには `SDK_HTTPS_REQUIRED` が返されます。発行済みの署名付きオフライン許可には、Licentivo の通常の有効期限と取り消し規則が引き続き適用されます。API キーの HTTP 許可を無効にすると、そのキーで HTTP 接続を新規作成・更新できなくなりますが、既存の接続、購入、発行済みの許可は削除・取り消しされません。認可を停止する必要がある接続は別途無効にしてください。",
+      "failures": "接続失敗の原因を調べる",
+      "diagnostics": "Launch は失敗した段階（製品やポリシーの読み取り、接続の照会、sandbox/live 接続の作成）、具体的な原因、および Licentivo から提供されたエラーコードとリクエスト ID を表示します。保存された失敗情報はページを再読み込みしても確認できます。管理 API キーがエラーに表示されることはありません。",
+      "errorHeaders": [
+        "エラー",
+        "対処"
+      ],
+      "actions": [
+        "Launch が実際に使用する API キーで HTTP を有効にするか、動作する HTTPS の販売者 URL を設定してください。",
+        "キー全文、有効期限、取り消し、および所有者とワークスペースの状態を確認してください。",
+        "有効な Owner の読み書き可能なキーを使用してください。HTTP 許可は書き込み権限を追加しません。",
+        "顧客自身の Launch で SDK の HTTP テストスイッチを有効にするか、HTTPS を使用してください。",
+        "`live` では HTTPS を、HTTP テストでは `sandbox` を使用してください。",
+        "顧客のテストマシンの外向き通信、DNS、ファイアウォール、プロキシ設定を確認してください。",
+        "システム時刻、信頼済み証明書、HTTPS プロキシを確認し、TLS 検証は有効のままにしてください。"
+      ]
+    },
+    "hi": {
+      "title": "ग्राहक के सर्वर और निजी नेटवर्क पर HTTP परीक्षण",
+      "languages": "भाषा चुनें",
+      "intro": "इस मार्गदर्शिका के सभी सर्वर पते, IP और होस्टनाम ग्राहक की अपनी Launch स्थापना के हैं। ग्राहक को Licentivo या डेवलपर के निजी नेटवर्क में शामिल होने की आवश्यकता नहीं है। सार्वजनिक परीक्षण सर्वर और ग्राहक के निजी नेटवर्क के सर्वर, दोनों समर्थित हैं।",
+      "protocol": "SDK, `merchant_origin` में दिए प्रोटोकॉल का उपयोग करता है: `https://` से HTTPS का उपयोग होता है; `http://` की अनुमति केवल नीचे दिए परीक्षण अधिकारों के साथ है। HTTPS अनुरोध विफल होने पर वह कभी अपने-आप HTTP पर नहीं जाता। स्विच पता नहीं बदलता और TLS प्रमाणपत्र स्थापित नहीं करता।",
+      "switches": "दो स्वतंत्र स्विच, दोनों डिफ़ॉल्ट रूप से बंद",
+      "switchHeaders": [
+        "स्विच",
+        "ग्राहक कहाँ सेट करता है",
+        "प्रभाव"
+      ],
+      "apiSwitch": [
+        "किसी एक API कुंजी के लिए **HTTP की अनुमति दें (परीक्षण)**",
+        "Licentivo → विकास और एकीकरण → API Key → API कुंजी बनाएँ या एक्सेस सेटिंग",
+        "केवल इस कुंजी को HTTP व्यापारी ओरिजिन के लिए Launch खाता कनेक्शन बनाने या अपडेट करने देता है। केवल-पढ़ने वाली कुंजी को लिखने का अधिकार नहीं मिलता। कुंजी रोटेट करने पर यह सेटिंग बनी रहती है।"
+      ],
+      "sdkSwitch": [
+        "**SDK को HTTP उपयोग करने दें (केवल परीक्षण परिवेश)**",
+        "ग्राहक की अपनी Launch स्थापना → सिस्टम सेटिंग → वेबसाइट और सुरक्षा → SSL प्रमाणपत्र और एक्सेस प्रोटोकॉल",
+        "इस Launch स्थापना को SDK के HTTP खाता अनुरोध स्वीकार करने और HTTP परीक्षण कोड बनाने देता है। रनटाइम अनुमति के लिए HTTP पहचान विनिमय केवल `sandbox` में संभव है; `live` में HTTPS आवश्यक है।"
+      ],
+      "scope": "ग्राहक दोनों स्विच स्वयं नियंत्रित करता है। Licentivo प्लेटफ़ॉर्म के व्यवस्थापक या पूरे प्लेटफ़ॉर्म के विकास मोड की आवश्यकता नहीं है। ये सेटिंग केवल ग्राहक के Launch पते को प्रभावित करती हैं। Launch और आधिकारिक लाइसेंसिंग SDK, Licentivo को अब भी HTTPS से कॉल करते हैं।",
+      "setup": "ग्राहक का परीक्षण सर्वर तैयार करें",
+      "steps": [
+        "Licentivo सर्वर, Launch सर्वर और SDK पैकेज अपडेट करें। केवल localhost HTTP की अनुमति देने वाले पुराने SDK को अपग्रेड करना आवश्यक है; सर्वर की सेटिंग किसी स्थापित SDK का URL सत्यापन नहीं बदल सकती।",
+        "ग्राहक के Licentivo कार्यक्षेत्र में परीक्षण के लिए अलग **पढ़ने/लिखने** वाली कुंजी बनाएँ, या सक्रिय कुंजी की **एक्सेस सेटिंग** खोलकर **HTTP की अनुमति दें (परीक्षण)** चुनें।",
+        "ग्राहक की Launch **वेबसाइट और सुरक्षा** सेटिंग में ऐसा पता भरें जिस तक परीक्षण क्लाइंट पहुँच सकें, जैसे `http://192.168.1.20:18080`, `http://test-server:18080` या ग्राहक का परीक्षण डोमेन। **SDK को HTTP उपयोग करने दें (केवल परीक्षण परिवेश)** चालू करके सहेजें। ओरिजिन में पाथ, क्वेरी, फ़्रैगमेंट या अंत में स्लैश न रखें।",
+        "उसी कुंजी से Launch को Licentivo से दोबारा जोड़ें। उत्पाद और नीतियाँ पढ़ लेना खाता कनेक्शन स्थापित होने का प्रमाण नहीं है; खाता प्राधिकरण कनेक्शन तैयार होने की भी पुष्टि करें।",
+        "**एप्लिकेशन एकीकरण → एकीकरण जाँच और कोड** में **sandbox** चुनें, जाँच चलाएँ और नया बना कोड कॉपी करें। जाँच सफल होने पर HTTP परीक्षण विकल्प अपने-आप जुड़ जाता है। परीक्षण खाते और परीक्षण खरीद का उपयोग करें।"
+      ],
+      "network": "सार्वजनिक IP या सार्वजनिक DNS रिकॉर्ड आवश्यक नहीं है। परीक्षण क्लाइंट को कॉन्फ़िगर किए गए Launch पते को रिज़ॉल्व करके उस तक पहुँच पाना चाहिए। `localhost` उस मशीन को दर्शाता है जिस पर SDK चल रहा है; दूसरी मशीन को सर्वर का IP या आंतरिक होस्टनाम इस्तेमाल करना होगा। Licentivo केवल ओरिजिन और पिन की गई हस्ताक्षर कुंजियाँ दर्ज करता है; उस ओरिजिन पर वापस कॉल नहीं करता और वहाँ से कुंजियाँ नहीं लाता। Launch और ऑनलाइन लाइसेंसिंग क्लाइंट को फिर भी Licentivo के HTTPS एंडपॉइंट तक आउटबाउंड पहुँच चाहिए। पूरी तरह अलग-थलग निजी नेटवर्क में ऑनलाइन खाता लाइसेंसिंग नहीं चल सकती।",
+      "selection": "SDK, HTTP या HTTPS कैसे चुनता है",
+      "configIntro": "ग्राहक के सर्वर पर सक्षम परीक्षण के लिए बनी सार्वजनिक Launch कॉन्फ़िगरेशन इसके बराबर होती है:",
+      "configMeaning": "पता प्रोटोकॉल तय करता है। `allow_http: true` केवल `sandbox` में HTTP व्यापारी ओरिजिन की अनुमति देता है; वह HTTPS URL को कभी HTTP में नहीं बदलता। आधिकारिक लाइसेंस उत्पाद की कॉन्फ़िगरेशन HTTPS पर रहती है। नौ भाषाओं में सीधे कॉल करने के समान विकल्प:",
+      "sdkHeaders": [
+        "SDK",
+        "HTTP परीक्षण की स्पष्ट अनुमति का विकल्प"
+      ],
+      "sdkScope": "इन विकल्पों के लिए अपडेट किया गया SDK आवश्यक है। SDK को व्यापारी की प्रबंधन API कुंजी कभी नहीं दी जाती और वह उसे पूछता भी नहीं है। Launch सार्वजनिक कॉन्फ़िगरेशन निर्यात करता है और सर्वर पर अपना HTTP स्विच भी जाँचता है; इसलिए सर्वर स्विच बंद होने पर केवल क्लाइंट फ़्लैग बदलकर HTTP चालू नहीं किया जा सकता। पुराने कंस्ट्रक्टर अनुकूलता के लिए sandbox में localhost का मौजूदा अपवाद बनाए रखते हैं, लेकिन इससे सर्वर का डिफ़ॉल्ट रूप से बंद स्विच बायपास नहीं होता।",
+      "production": "परीक्षण समाप्त करें या HTTPS पर जाएँ",
+      "risk": "HTTP पासवर्ड, खाता टोकन या अन्य डेटा एन्क्रिप्ट नहीं करता। ग्राहक के निजी नेटवर्क की भी निगरानी हो सकती है या उसमें घुसपैठ हो सकती है। HTTP से खोले गए Launch प्रशासन पृष्ठ में API कुंजी भरने से ब्राउज़र से Launch वाला अनुरोध भी उजागर होता है, भले ही Launch से Licentivo की कॉल HTTPS पर हों। अलग परीक्षण क्रेडेंशियल इस्तेमाल करें; प्रोडक्शन और संवेदनशील प्रशासन के लिए HTTPS का उपयोग करें।",
+      "migration": "काम करने वाला HTTPS लिसनर या TLS प्रॉक्सी तैयार करने के बाद Launch का प्रभावी व्यापारी ओरिजिन अपडेट करें, आवश्यक हो तो Licentivo से दोबारा कनेक्ट करें और फिर क्लाइंट की एकीकरण कॉन्फ़िगरेशन दोबारा बनाकर अपडेट करें। कॉपी या कंपाइल किया हुआ HTTP URL अपने-आप नहीं बदलता। परीक्षण के बाद दोनों HTTP स्विच बंद करें। किसी भी स्विच की स्थिति से स्वतंत्र, `live` SDK पहचान विनिमय के लिए HTTPS आवश्यक है।",
+      "closing": "Launch का स्विच बंद करने पर अगले HTTP SDK अनुरोध `SDK_HTTP_DISABLED` के साथ अस्वीकार होते हैं; `live` में HTTP पहचान अनुरोध `SDK_HTTPS_REQUIRED` लौटाते हैं। पहले से हस्ताक्षरित ऑफ़लाइन अनुमतियाँ Licentivo के सामान्य समाप्ति और निरस्तीकरण नियमों का पालन करती रहती हैं। API कुंजी की HTTP अनुमति बंद करने से उस कुंजी द्वारा नए HTTP कनेक्शन बनाना या अपडेट करना रुकता है; मौजूदा कनेक्शन हटते नहीं, खरीद रद्द नहीं होती और जारी अनुमतियाँ अमान्य नहीं होतीं। किसी कनेक्शन का प्राधिकरण बंद करना हो तो उसे अलग से निष्क्रिय करें।",
+      "failures": "विफल कनेक्शन का कारण खोजें",
+      "diagnostics": "Launch विफल चरण (उत्पाद या नीतियाँ पढ़ना, कनेक्शन खोजना या sandbox/live कनेक्शन बनाना), विशिष्ट कारण तथा उपलब्ध होने पर Licentivo का त्रुटि कोड और अनुरोध ID दिखाता है। सहेजी गई विफलताएँ पृष्ठ रीफ़्रेश करने के बाद भी दिखती हैं। त्रुटि संदेशों में प्रबंधन API कुंजी कभी नहीं दिखाई जाती।",
+      "errorHeaders": [
+        "त्रुटि",
+        "कार्रवाई"
+      ],
+      "actions": [
+        "Launch में वास्तव में इस्तेमाल हो रही उसी API कुंजी के लिए HTTP सक्षम करें, या काम करने वाला HTTPS व्यापारी URL सेट करें।",
+        "पूरी कुंजी, समाप्ति, निरस्तीकरण और उसके स्वामी तथा कार्यक्षेत्र की स्थिति जाँचें।",
+        "मान्य Owner की पढ़ने/लिखने वाली कुंजी उपयोग करें। HTTP अनुमति लिखने का अधिकार नहीं जोड़ती।",
+        "ग्राहक की अपनी Launch स्थापना में SDK HTTP परीक्षण स्विच सक्षम करें, या HTTPS उपयोग करें।",
+        "`live` के लिए HTTPS उपयोग करें; HTTP परीक्षण में `sandbox` आवश्यक है।",
+        "ग्राहक की परीक्षण मशीन पर आउटबाउंड नेटवर्क, DNS, फ़ायरवॉल और प्रॉक्सी सेटिंग जाँचें।",
+        "सिस्टम समय, विश्वसनीय प्रमाणपत्र और HTTPS प्रॉक्सी जाँचें। TLS सत्यापन चालू रखें।"
+      ]
+    },
+    "ar": {
+      "title": "اختبار HTTP على خوادم العميل والشبكات الخاصة",
+      "languages": "اختر اللغة",
+      "intro": "جميع عناوين الخوادم وعناوين IP وأسماء المضيفين في هذا الدليل تخص نشر Launch الخاص بالعميل نفسه. لا يحتاج العميل إلى الانضمام إلى شبكة Licentivo الخاصة أو شبكة المطور. يمكن استخدام خوادم اختبار عامة أو خوادم داخل الشبكة الخاصة بالعميل.",
+      "protocol": "يستخدم SDK البروتوكول المحدد في `merchant_origin`: يستخدم `https://` بروتوكول HTTPS، ولا يُسمح بـ `http://` إلا وفق أذونات الاختبار الموضحة أدناه. لا تتحول طلبات HTTPS الفاشلة تلقائيًا إلى HTTP. لا يعيد أي مفتاح إعداد كتابة العناوين ولا يثبت شهادة TLS.",
+      "switches": "مفتاحا إعداد مستقلان، كلاهما معطل افتراضيًا",
+      "switchHeaders": [
+        "مفتاح الإعداد",
+        "مكان ضبطه من قبل العميل",
+        "التأثير"
+      ],
+      "apiSwitch": [
+        "**السماح بـ HTTP (للاختبار)** لمفتاح API واحد",
+        "Licentivo ← التطوير والتكامل ← API Key ← إنشاء مفتاح API أو إعدادات الوصول",
+        "يسمح لهذا المفتاح تحديدًا بإنشاء اتصالات حسابات Launch أو تحديثها لأصول مواقع التاجر التي تستخدم HTTP. لا تحصل مفاتيح القراءة فقط على صلاحية الكتابة. يحتفظ تدوير المفتاح بهذا الإعداد."
+      ],
+      "sdkSwitch": [
+        "**السماح باستخدام SDK عبر HTTP (بيئة الاختبار فقط)**",
+        "Launch الخاص بالعميل ← إعدادات النظام ← الموقع والأمان ← شهادات SSL وبروتوكول الوصول",
+        "يسمح لتثبيت Launch هذا بقبول طلبات حسابات SDK عبر HTTP وإنشاء كود اختبار HTTP. يقتصر تبادل الهوية للحصول على تفويض وقت التشغيل عبر HTTP على `sandbox`؛ أما `live` فيتطلب HTTPS."
+      ],
+      "scope": "يتحكم العميل بنفسه في مفتاحي الإعداد. لا يلزم تدخل مسؤول منصة Licentivo أو تفعيل وضع تطوير على مستوى المنصة. تؤثر هذه الإعدادات في عنوان Launch الخاص بالعميل فقط. يواصل Launch وSDK الترخيص الرسمي الاتصال بـ Licentivo عبر HTTPS.",
+      "setup": "إعداد خادم اختبار لدى العميل",
+      "steps": [
+        "حدّث خادم Licentivo وخادم Launch وحزمة SDK. يجب ترقية إصدارات SDK القديمة التي لا تسمح بـ HTTP إلا على localhost؛ فلا يمكن لإعدادات الخادم تغيير التحقق من عناوين URL في SDK مثبت مسبقًا.",
+        "في مساحة عمل Licentivo الخاصة بالعميل، أنشئ مفتاح اختبار مخصصًا بصلاحية **القراءة والكتابة**، أو افتح **إعدادات الوصول** لمفتاح نشط، ثم اختر **السماح بـ HTTP (للاختبار)**.",
+        "في إعدادات **الموقع والأمان** في Launch الخاص بالعميل، أدخل عنوانًا يمكن لعملاء الاختبار الوصول إليه، مثل `http://192.168.1.20:18080` أو `http://test-server:18080` أو نطاق اختبار يملكه العميل. فعّل **السماح باستخدام SDK عبر HTTP (بيئة الاختبار فقط)** ثم احفظ. استخدم أصلًا دون مسار أو استعلام أو جزء مرجعي أو شرطة مائلة في النهاية.",
+        "أعد توصيل Launch بـ Licentivo باستخدام هذا المفتاح. قراءة المنتجات والسياسات وحدها لا تنشئ اتصال الحسابات؛ تأكد أيضًا من جاهزية اتصال تفويض الحسابات.",
+        "في **تكامل التطبيق ← فحوص التكامل والكود**، اختر **sandbox**، وشغّل الفحوص، ثم انسخ الكود المولّد حديثًا. بعد نجاح الفحوص يُضاف خيار اختبار HTTP تلقائيًا. استخدم حسابات ومشتريات اختبار."
+      ],
+      "network": "لا يلزم عنوان IP عام أو سجل DNS عام. يجب أن يتمكن عملاء الاختبار من حل اسم عنوان Launch المضبوط والوصول إليه. يشير `localhost` إلى الجهاز الذي يشغّل SDK؛ وعلى جهاز آخر استخدام عنوان IP للخادم أو اسم مضيفه الداخلي. يسجل Licentivo الأصل ومفاتيح التوقيع المثبتة دون الاتصال العكسي بهذا الأصل أو جلب مفاتيح منه. يظل Launch وعميل الترخيص عبر الإنترنت بحاجة إلى وصول صادر إلى نقاط نهاية HTTPS لدى Licentivo. لا يمكن إجراء ترخيص الحسابات عبر الإنترنت في شبكة خاصة معزولة تمامًا.",
+      "selection": "كيف يختار SDK بين HTTP وHTTPS",
+      "configIntro": "تعادل إعدادات Launch العامة المولّدة لاختبار مفعّل على خادم العميل ما يلي:",
+      "configMeaning": "يحدد العنوان البروتوكول. يسمح `allow_http: true` بأصل التاجر الذي يستخدم HTTP في `sandbox` فقط، ولا يخفض عنوان HTTPS إلى HTTP مطلقًا. تظل إعدادات منتج الترخيص الرسمي تستخدم HTTPS. فيما يلي خيارات الاستدعاء المباشر المكافئة للغات التسع:",
+      "sdkHeaders": [
+        "SDK",
+        "خيار صريح لاختبار HTTP"
+      ],
+      "sdkScope": "تتطلب هذه الخيارات إصدارًا محدثًا من SDK. لا يتلقى SDK مفتاح API الإداري للتاجر ولا يستعلم عنه مطلقًا. يصدّر Launch إعدادات عامة ويتحقق من مفتاح إعداد HTTP على الخادم أيضًا؛ لذلك لا يكفي تعديل خيار العميل للسماح بـ HTTP إذا كان مفتاح الخادم معطلًا. تحتفظ المُنشئات القديمة باستثناء localhost في sandbox للتوافق، لكنه لا يتجاوز مفتاح الخادم المعطل افتراضيًا.",
+      "production": "إنهاء الاختبار أو الانتقال إلى HTTPS",
+      "risk": "لا يشفّر HTTP كلمات المرور أو رموز الحسابات أو غيرها من البيانات. وقد تتعرض شبكة العميل الخاصة للمراقبة أو الاختراق أيضًا. يؤدي إدخال مفتاح API في إدارة Launch عبر HTTP إلى كشف الطلب من المتصفح إلى Launch، حتى لو كانت اتصالات Launch بـ Licentivo تستخدم HTTPS. استخدم بيانات اعتماد اختبار مخصصة، واستخدم HTTPS للإنتاج والعمليات الإدارية الحساسة.",
+      "migration": "بعد إعداد مستمع HTTPS أو وكيل TLS يعمل بشكل صحيح، حدّث أصل التاجر الفعلي في Launch، وأعد الاتصال بـ Licentivo عند الحاجة، ثم أعد توليد إعدادات التكامل وحدّثها لدى العملاء. لا يتغير عنوان HTTP المنسوخ أو المضمّن في برنامج مجمّع تلقائيًا. عطّل مفتاحي HTTP عند انتهاء الاختبار. يتطلب تبادل هوية SDK في `live` استخدام HTTPS مهما كانت حالة المفتاحين.",
+      "closing": "تعطيل مفتاح Launch يرفض طلبات SDK اللاحقة عبر HTTP بالخطأ `SDK_HTTP_DISABLED`؛ وتعيد طلبات الهوية عبر HTTP في `live` الخطأ `SDK_HTTPS_REQUIRED`. تظل الأذونات غير المتصلة والموقعة سابقًا خاضعة لقواعد انتهاء الصلاحية والإلغاء المعتادة في Licentivo. يمنع تعطيل إذن HTTP لمفتاح API إنشاء اتصالات HTTP جديدة أو تحديثها بذلك المفتاح؛ لكنه لا يحذف الاتصالات القائمة ولا يلغي المشتريات أو الأذونات الصادرة. عطّل الاتصال بشكل منفصل إن كان يجب إيقاف منح التفويضات منه.",
+      "failures": "تشخيص فشل الاتصال",
+      "diagnostics": "يعرض Launch المرحلة التي فشلت (قراءة المنتجات أو السياسات، أو الاستعلام عن الاتصالات، أو إنشاء اتصال sandbox/live)، والسبب المحدد، ورمز خطأ Licentivo ومعرّف الطلب إذا توفرا. تظل الأخطاء المحفوظة ظاهرة بعد تحديث الصفحة. لا تعرض رسائل الخطأ مفتاح API الإداري مطلقًا.",
+      "errorHeaders": [
+        "الخطأ",
+        "الإجراء"
+      ],
+      "actions": [
+        "فعّل HTTP لمفتاح API نفسه الذي يستخدمه Launch، أو اضبط عنوان تاجر HTTPS يعمل بشكل صحيح.",
+        "تحقق من اكتمال المفتاح وانتهاء صلاحيته وإلغائه وحالة مالكه ومساحة العمل.",
+        "استخدم مفتاح قراءة وكتابة تابعًا لـ Owner صالح. إذن HTTP لا يضيف صلاحية الكتابة.",
+        "فعّل مفتاح اختبار SDK عبر HTTP في Launch الخاص بالعميل نفسه، أو استخدم HTTPS.",
+        "استخدم HTTPS في `live`؛ ويجب أن تستخدم اختبارات HTTP بيئة `sandbox`.",
+        "تحقق من الشبكة الصادرة وDNS والجدار الناري وإعدادات الوكيل على جهاز الاختبار لدى العميل.",
+        "تحقق من ساعة النظام والشهادات الموثوقة ووكيل HTTPS، وأبقِ التحقق من TLS مفعّلًا."
+      ]
+    },
+    "bn": {
+      "title": "গ্রাহকের সার্ভার ও ব্যক্তিগত নেটওয়ার্কে HTTP পরীক্ষা",
+      "languages": "ভাষা বেছে নিন",
+      "intro": "এই নির্দেশিকার সব সার্ভার ঠিকানা, IP এবং হোস্টনাম গ্রাহকের নিজস্ব Launch স্থাপনার। গ্রাহককে Licentivo বা ডেভেলপারের ব্যক্তিগত নেটওয়ার্কে যোগ দিতে হয় না। গ্রাহকের পাবলিক পরীক্ষামূলক সার্ভার এবং নিজস্ব ব্যক্তিগত নেটওয়ার্কের সার্ভার—উভয়ই সমর্থিত।",
+      "protocol": "SDK, `merchant_origin`-এ দেওয়া প্রোটোকল ব্যবহার করে: `https://` হলে HTTPS ব্যবহৃত হয়; নিচের পরীক্ষার অনুমতি থাকলেই `http://` ব্যবহার করা যায়। HTTPS অনুরোধ ব্যর্থ হলে তা কখনো নিজে থেকে HTTP-তে নেমে যায় না। কোনো সুইচ ঠিকানা বদলায় না বা TLS সার্টিফিকেট ইনস্টল করে না।",
+      "switches": "দুটি স্বাধীন সুইচ, ডিফল্টভাবে দুটিই বন্ধ",
+      "switchHeaders": [
+        "সুইচ",
+        "গ্রাহক কোথায় সেট করবেন",
+        "প্রভাব"
+      ],
+      "apiSwitch": [
+        "একটি API কী-এর জন্য **HTTP অনুমোদন করুন (পরীক্ষা)**",
+        "Licentivo → ডেভেলপমেন্ট ও ইন্টিগ্রেশন → API Key → API কী তৈরি বা অ্যাক্সেস সেটিংস",
+        "শুধু এই কী দিয়ে HTTP মার্চেন্ট অরিজিনের জন্য Launch অ্যাকাউন্ট সংযোগ তৈরি বা আপডেট করা যায়। শুধু-পড়ার কী লেখার অনুমতি পায় না। কী রোটেট করলেও এই সেটিং বজায় থাকে।"
+      ],
+      "sdkSwitch": [
+        "**SDK-কে HTTP ব্যবহার করতে দিন (শুধু পরীক্ষার পরিবেশ)**",
+        "গ্রাহকের নিজস্ব Launch → সিস্টেম সেটিংস → ওয়েবসাইট ও নিরাপত্তা → SSL সার্টিফিকেট ও অ্যাক্সেস প্রোটোকল",
+        "এই Launch স্থাপনাকে SDK-এর HTTP অ্যাকাউন্ট অনুরোধ গ্রহণ এবং HTTP পরীক্ষার কোড তৈরি করতে দেয়। রানটাইম অনুমোদনের জন্য HTTP পরিচয় বিনিময় শুধু `sandbox`-এ করা যায়; `live`-এ HTTPS বাধ্যতামূলক।"
+      ],
+      "scope": "গ্রাহক নিজেই দুটি সুইচ নিয়ন্ত্রণ করেন। Licentivo প্ল্যাটফর্ম অ্যাডমিনিস্ট্রেটর বা পুরো প্ল্যাটফর্মের ডেভেলপমেন্ট মোডের দরকার নেই। সেটিংগুলো শুধু গ্রাহকের Launch ঠিকানাকে প্রভাবিত করে। Launch এবং অফিসিয়াল লাইসেন্সিং SDK আগের মতোই HTTPS দিয়ে Licentivo-তে কল করে।",
+      "setup": "গ্রাহকের পরীক্ষার সার্ভার প্রস্তুত করুন",
+      "steps": [
+        "Licentivo সার্ভার, Launch সার্ভার এবং SDK প্যাকেজ আপডেট করুন। পুরোনো SDK যদি শুধু localhost HTTP অনুমোদন করে, সেটি আপগ্রেড করতে হবে; সার্ভারের সেটিং দিয়ে ইনস্টল করা SDK-এর URL যাচাই বদলানো যায় না।",
+        "গ্রাহকের Licentivo ওয়ার্কস্পেসে পরীক্ষার জন্য আলাদা **পড়া/লেখা** অনুমতিসম্পন্ন কী তৈরি করুন, অথবা সক্রিয় কী-এর **অ্যাক্সেস সেটিংস** খুলে **HTTP অনুমোদন করুন (পরীক্ষা)** নির্বাচন করুন।",
+        "গ্রাহকের Launch-এর **ওয়েবসাইট ও নিরাপত্তা** সেটিংসে পরীক্ষার ক্লায়েন্ট থেকে পৌঁছানো যায় এমন ঠিকানা দিন, যেমন `http://192.168.1.20:18080`, `http://test-server:18080` বা গ্রাহকের পরীক্ষার ডোমেইন। **SDK-কে HTTP ব্যবহার করতে দিন (শুধু পরীক্ষার পরিবেশ)** চালু করে সংরক্ষণ করুন। অরিজিনে পাথ, কুয়েরি, ফ্র্যাগমেন্ট বা শেষের স্ল্যাশ রাখবেন না।",
+        "সেই কী দিয়ে Launch-কে আবার Licentivo-র সঙ্গে যুক্ত করুন। পণ্য ও নীতি পড়তে পারা মানেই অ্যাকাউন্ট সংযোগ তৈরি হয়েছে নয়; অ্যাকাউন্ট অনুমোদনের সংযোগও প্রস্তুত আছে কি না নিশ্চিত করুন।",
+        "**অ্যাপ্লিকেশন ইন্টিগ্রেশন → ইন্টিগ্রেশন যাচাই ও কোড** থেকে **sandbox** বেছে যাচাই চালান এবং নতুন তৈরি কোড কপি করুন। যাচাই সফল হলে HTTP পরীক্ষার বিকল্প স্বয়ংক্রিয়ভাবে যুক্ত হয়। পরীক্ষার অ্যাকাউন্ট এবং পরীক্ষার কেনাকাটা ব্যবহার করুন।"
+      ],
+      "network": "পাবলিক IP বা পাবলিক DNS রেকর্ড প্রয়োজন নেই। পরীক্ষার ক্লায়েন্টকে কনফিগার করা Launch ঠিকানা রিজলভ করে সেখানে পৌঁছাতে হবে। `localhost` বলতে SDK চালানো মেশিনকে বোঝায়; অন্য মেশিনকে সার্ভারের IP বা অভ্যন্তরীণ হোস্টনাম ব্যবহার করতে হবে। Licentivo শুধু অরিজিন ও নির্দিষ্ট করা সিগনেচার কী নথিভুক্ত করে; ওই অরিজিনে কলব্যাক করে না বা সেখান থেকে কী আনে না। Launch ও অনলাইন লাইসেন্সিং ক্লায়েন্টের তবুও Licentivo-র HTTPS এন্ডপয়েন্টে আউটবাউন্ড অ্যাক্সেস লাগবে। সম্পূর্ণ বিচ্ছিন্ন ব্যক্তিগত নেটওয়ার্কে অনলাইন অ্যাকাউন্ট লাইসেন্সিং চালানো যায় না।",
+      "selection": "SDK কীভাবে HTTP বা HTTPS বেছে নেয়",
+      "configIntro": "গ্রাহকের সার্ভারে সক্রিয় পরীক্ষার জন্য তৈরি Launch-এর পাবলিক কনফিগারেশন এর সমতুল্য:",
+      "configMeaning": "ঠিকানাই প্রোটোকল নির্ধারণ করে। `allow_http: true` শুধু `sandbox`-এ HTTP মার্চেন্ট অরিজিন অনুমোদন করে; এটি কখনো HTTPS URL-কে HTTP-তে নামায় না। অফিসিয়াল লাইসেন্স পণ্যের কনফিগারেশন HTTPS-ই থাকে। নয়টি ভাষায় সরাসরি কলের সমতুল্য বিকল্পগুলো হলো:",
+      "sdkHeaders": [
+        "SDK",
+        "HTTP পরীক্ষার সুস্পষ্ট অনুমতির বিকল্প"
+      ],
+      "sdkScope": "এই বিকল্পগুলোর জন্য আপডেট করা SDK দরকার। SDK কখনো মার্চেন্টের ম্যানেজমেন্ট API কী পায় না বা সেটি জানতে চায় না। Launch পাবলিক কনফিগারেশন এক্সপোর্ট করে এবং সার্ভারেও নিজের HTTP সুইচ যাচাই করে; তাই সার্ভারের সুইচ বন্ধ থাকলে শুধু ক্লায়েন্টের ফ্ল্যাগ বদলে HTTP চালু করা যায় না। পুরোনো কনস্ট্রাক্টরগুলো সামঞ্জস্যের জন্য sandbox-এ localhost-এর আগের ব্যতিক্রম বজায় রাখে, কিন্তু তা ডিফল্টভাবে বন্ধ সার্ভারের সুইচ এড়ায় না।",
+      "production": "পরীক্ষা শেষ করুন বা HTTPS-এ যান",
+      "risk": "HTTP পাসওয়ার্ড, অ্যাকাউন্ট টোকেন বা অন্য তথ্য এনক্রিপ্ট করে না। গ্রাহকের ব্যক্তিগত নেটওয়ার্কও নজরদারি বা আক্রমণের শিকার হতে পারে। HTTP দিয়ে খোলা Launch প্রশাসন পাতায় API কী লিখলে ব্রাউজার থেকে Launch-এর অনুরোধটিও উন্মুক্ত থাকে, যদিও Launch থেকে Licentivo-র কল HTTPS ব্যবহার করে। আলাদা পরীক্ষার পরিচয়পত্র ব্যবহার করুন; প্রোডাকশন ও সংবেদনশীল প্রশাসনিক কাজে HTTPS ব্যবহার করুন।",
+      "migration": "কার্যকর HTTPS লিসনার বা TLS প্রক্সি কনফিগার করার পর Launch-এর কার্যকর মার্চেন্ট অরিজিন আপডেট করুন, প্রয়োজনে Licentivo-তে আবার সংযোগ দিন, তারপর ক্লায়েন্টের ইন্টিগ্রেশন কনফিগারেশন নতুন করে তৈরি ও আপডেট করুন। কপি করা বা কম্পাইল করা HTTP URL নিজে থেকে বদলায় না। পরীক্ষা শেষে দুটি HTTP সুইচই বন্ধ করুন। সুইচগুলোর অবস্থা যাই হোক, `live` SDK পরিচয় বিনিময়ের জন্য HTTPS বাধ্যতামূলক।",
+      "closing": "Launch-এর সুইচ বন্ধ করলে পরবর্তী HTTP SDK অনুরোধগুলো `SDK_HTTP_DISABLED` দিয়ে প্রত্যাখ্যাত হয়; `live`-এ HTTP পরিচয় অনুরোধ `SDK_HTTPS_REQUIRED` ফেরত দেয়। আগে সই করা অফলাইন অনুমতিগুলো Licentivo-র স্বাভাবিক মেয়াদ ও প্রত্যাহারের নিয়ম মেনে চলতে থাকে। API কী-এর HTTP অনুমতি বন্ধ করলে ওই কী দিয়ে ভবিষ্যতে HTTP সংযোগ তৈরি বা আপডেট বন্ধ হয়; বিদ্যমান সংযোগ মুছে যায় না, কেনাকাটা বাতিল হয় না এবং দেওয়া অনুমতি অকার্যকর হয় না। কোনো সংযোগ থেকে অনুমোদন বন্ধ করতে হলে সেটি আলাদাভাবে নিষ্ক্রিয় করুন।",
+      "failures": "সংযোগ ব্যর্থ হলে কারণ খুঁজুন",
+      "diagnostics": "Launch ব্যর্থ ধাপটি (পণ্য বা নীতি পড়া, সংযোগ খোঁজা অথবা sandbox/live সংযোগ তৈরি), সুনির্দিষ্ট কারণ এবং পাওয়া গেলে Licentivo-র ত্রুটি কোড ও অনুরোধ ID দেখায়। সংরক্ষিত ব্যর্থতার তথ্য পাতা রিফ্রেশ করার পরও দেখা যায়। ত্রুটি বার্তায় ম্যানেজমেন্ট API কী কখনো দেখানো হয় না।",
+      "errorHeaders": [
+        "ত্রুটি",
+        "করণীয়"
+      ],
+      "actions": [
+        "Launch যে নির্দিষ্ট API কী ব্যবহার করছে সেটির জন্য HTTP চালু করুন, অথবা কার্যকর HTTPS মার্চেন্ট URL দিন।",
+        "কী সম্পূর্ণ কি না, মেয়াদ, প্রত্যাহার এবং কী-এর মালিক ও ওয়ার্কস্পেসের অবস্থা যাচাই করুন।",
+        "সক্রিয় Owner-এর পড়া/লেখার কী ব্যবহার করুন। HTTP অনুমতি লেখার অধিকার যোগ করে না।",
+        "গ্রাহকের নিজস্ব Launch-এ SDK HTTP পরীক্ষার সুইচ চালু করুন, অথবা HTTPS ব্যবহার করুন।",
+        "`live`-এ HTTPS ব্যবহার করুন; HTTP পরীক্ষায় `sandbox` ব্যবহার করতে হবে।",
+        "গ্রাহকের পরীক্ষার মেশিনে আউটবাউন্ড নেটওয়ার্ক, DNS, ফায়ারওয়াল ও প্রক্সি সেটিংস যাচাই করুন।",
+        "সিস্টেমের সময়, বিশ্বস্ত সার্টিফিকেট এবং HTTPS প্রক্সি যাচাই করুন। TLS যাচাই চালু রাখুন।"
+      ]
+    },
+    "ur": {
+      "title": "صارف کے سرور اور نجی نیٹ ورک پر HTTP کی آزمائش",
+      "languages": "زبان منتخب کریں",
+      "intro": "اس رہنما میں تمام سرور پتے، IP اور ہوسٹ نام صارف کی اپنی Launch تنصیب کے ہیں۔ صارف کو Licentivo یا ڈویلپر کے نجی نیٹ ورک میں شامل ہونے کی ضرورت نہیں ہے۔ عوامی ٹیسٹ سرور اور صارف کے اپنے نجی نیٹ ورک کے سرور، دونوں استعمال کیے جا سکتے ہیں۔",
+      "protocol": "SDK، `merchant_origin` میں درج پروٹوکول استعمال کرتا ہے: `https://` سے HTTPS استعمال ہوتا ہے؛ `http://` کی اجازت صرف نیچے دی گئی ٹیسٹ اجازتوں کے تحت ہے۔ HTTPS درخواست ناکام ہونے پر کبھی خود بخود HTTP پر منتقل نہیں ہوتی۔ سوئچ پتہ تبدیل نہیں کرتا اور TLS سرٹیفکیٹ نصب نہیں کرتا۔",
+      "switches": "دو آزاد سوئچ، دونوں ڈیفالٹ طور پر بند",
+      "switchHeaders": [
+        "سوئچ",
+        "صارف کہاں ترتیب دے",
+        "اثر"
+      ],
+      "apiSwitch": [
+        "ایک API کلید کے لیے **HTTP کی اجازت دیں (ٹیسٹ)**",
+        "Licentivo ← ڈویلپمنٹ اور انضمام ← API Key ← API کلید بنائیں یا رسائی کی ترتیبات",
+        "صرف اس کلید کو HTTP مرچنٹ اوریجن کے لیے Launch اکاؤنٹ کنکشن بنانے یا اپ ڈیٹ کرنے دیتا ہے۔ صرف پڑھنے والی کلید کو لکھنے کی اجازت نہیں ملتی۔ کلید کی روٹیشن کے بعد بھی یہ ترتیب برقرار رہتی ہے۔"
+      ],
+      "sdkSwitch": [
+        "**SDK کو HTTP استعمال کرنے دیں (صرف ٹیسٹ ماحول)**",
+        "صارف کی اپنی Launch تنصیب ← سسٹم کی ترتیبات ← ویب سائٹ اور سیکیورٹی ← SSL سرٹیفکیٹس اور رسائی کا پروٹوکول",
+        "اس Launch تنصیب کو SDK کی HTTP اکاؤنٹ درخواستیں قبول کرنے اور HTTP ٹیسٹ کوڈ بنانے دیتا ہے۔ چلتے پروگرام کی اجازت کے لیے HTTP پر شناخت کا تبادلہ صرف `sandbox` تک محدود ہے؛ `live` کے لیے HTTPS درکار ہے۔"
+      ],
+      "scope": "صارف دونوں سوئچ خود کنٹرول کرتا ہے۔ Licentivo پلیٹ فارم کے ایڈمنسٹریٹر یا پورے پلیٹ فارم کے ڈویلپمنٹ موڈ کی ضرورت نہیں ہے۔ یہ ترتیبات صرف صارف کے Launch پتے پر اثر انداز ہوتی ہیں۔ Launch اور آفیشل لائسنسنگ SDK، Licentivo سے بدستور HTTPS کے ذریعے رابطہ کرتے ہیں۔",
+      "setup": "صارف کا ٹیسٹ سرور تیار کریں",
+      "steps": [
+        "Licentivo سرور، Launch سرور اور SDK پیکیج اپ ڈیٹ کریں۔ پرانے SDK جو صرف localhost پر HTTP کی اجازت دیتے ہیں، انہیں اپ گریڈ کرنا ہوگا؛ سرور کی ترتیبات پہلے سے نصب SDK کی URL جانچ تبدیل نہیں کر سکتیں۔",
+        "صارف کے Licentivo ورک اسپیس میں ٹیسٹ کے لیے مخصوص **پڑھنے اور لکھنے** والی کلید بنائیں، یا فعال کلید کی **رسائی کی ترتیبات** کھول کر **HTTP کی اجازت دیں (ٹیسٹ)** منتخب کریں۔",
+        "صارف کی اپنی Launch **ویب سائٹ اور سیکیورٹی** کی ترتیبات میں ایسا پتہ درج کریں جس تک ٹیسٹ کلائنٹس پہنچ سکیں، مثلاً `http://192.168.1.20:18080`، `http://test-server:18080` یا صارف کا ٹیسٹ ڈومین۔ **SDK کو HTTP استعمال کرنے دیں (صرف ٹیسٹ ماحول)** فعال کر کے محفوظ کریں۔ اوریجن میں پاتھ، کوئری، فریگمنٹ یا آخر میں سلیش شامل نہ ہو۔",
+        "اسی کلید سے Launch کو دوبارہ Licentivo سے جوڑیں۔ مصنوعات اور پالیسیاں پڑھ لینا اکاؤنٹ کنکشن قائم ہونے کا ثبوت نہیں؛ اکاؤنٹ کی اجازت والا کنکشن تیار ہونے کی بھی تصدیق کریں۔",
+        "**ایپلیکیشن انضمام ← انضمام کی جانچ اور کوڈ** میں **sandbox** منتخب کریں، جانچ چلائیں اور نیا تیار شدہ کوڈ کاپی کریں۔ کامیاب جانچ کے بعد HTTP ٹیسٹ کا اختیار خود بخود شامل ہو جاتا ہے۔ ٹیسٹ اکاؤنٹس اور ٹیسٹ خریداری استعمال کریں۔"
+      ],
+      "network": "عوامی IP یا عوامی DNS ریکارڈ ضروری نہیں۔ ٹیسٹ کلائنٹس کو ترتیب دیے گئے Launch پتے کا نام حل کر کے وہاں پہنچنا چاہیے۔ `localhost` سے مراد وہ مشین ہے جس پر SDK چل رہا ہو؛ دوسری مشین کو سرور کا IP یا اندرونی ہوسٹ نام استعمال کرنا ہوگا۔ Licentivo صرف اوریجن اور مقرر کردہ دستخطی کلیدیں ریکارڈ کرتا ہے؛ نہ اس اوریجن کو واپس کال کرتا ہے، نہ وہاں سے کلیدیں حاصل کرتا ہے۔ Launch اور آن لائن لائسنسنگ کلائنٹ کو پھر بھی Licentivo کے HTTPS اینڈپوائنٹس تک باہر جانے والی رسائی چاہیے۔ مکمل طور پر منقطع نجی نیٹ ورک پر آن لائن اکاؤنٹ لائسنسنگ نہیں چل سکتی۔",
+      "selection": "SDK، HTTP یا HTTPS کیسے منتخب کرتا ہے",
+      "configIntro": "صارف کے سرور پر فعال ٹیسٹ کے لیے تیار کردہ عوامی Launch ترتیب اس کے برابر ہوتی ہے:",
+      "configMeaning": "پتہ پروٹوکول طے کرتا ہے۔ `allow_http: true` صرف `sandbox` میں HTTP مرچنٹ اوریجن کی اجازت دیتا ہے؛ یہ کبھی HTTPS URL کو HTTP میں نہیں بدلتا۔ آفیشل لائسنس پروڈکٹ کی ترتیب HTTPS ہی رہتی ہے۔ نو زبانوں میں براہِ راست کال کے مساوی اختیارات یہ ہیں:",
+      "sdkHeaders": [
+        "SDK",
+        "HTTP ٹیسٹ کی واضح اجازت کا اختیار"
+      ],
+      "sdkScope": "ان اختیارات کے لیے اپ ڈیٹ شدہ SDK ضروری ہے۔ SDK کو مرچنٹ کی مینجمنٹ API کلید کبھی نہیں دی جاتی، نہ وہ اسے طلب کرتا ہے۔ Launch عوامی ترتیب ایکسپورٹ کرتا ہے اور سرور پر اپنا HTTP سوئچ بھی جانچتا ہے؛ اس لیے سرور سوئچ بند ہو تو صرف کلائنٹ فلیگ بدلنے سے HTTP فعال نہیں ہوتا۔ پرانے کنسٹرکٹر مطابقت کے لیے sandbox میں localhost کا موجودہ استثنا برقرار رکھتے ہیں، مگر یہ سرور کے ڈیفالٹ طور پر بند سوئچ کو نظرانداز نہیں کرتا۔",
+      "production": "ٹیسٹ ختم کریں یا HTTPS پر منتقل ہوں",
+      "risk": "HTTP پاس ورڈ، اکاؤنٹ ٹوکن یا دوسرے ڈیٹا کو خفیہ نہیں کرتا۔ صارف کا نجی نیٹ ورک بھی نگرانی یا حملے کا شکار ہو سکتا ہے۔ HTTP سے کھولی گئی Launch انتظامیہ میں API کلید درج کرنے سے براؤزر سے Launch تک کی درخواست بھی ظاہر ہوتی ہے، خواہ Launch سے Licentivo کی کالیں HTTPS پر ہوں۔ مخصوص ٹیسٹ اسناد استعمال کریں؛ پروڈکشن اور حساس انتظامی کاموں کے لیے HTTPS استعمال کریں۔",
+      "migration": "کام کرنے والا HTTPS لسنر یا TLS پراکسی ترتیب دینے کے بعد Launch کا مؤثر مرچنٹ اوریجن اپ ڈیٹ کریں، ضرورت ہو تو Licentivo سے دوبارہ رابطہ قائم کریں، پھر کلائنٹس کی انضمام ترتیب دوبارہ تیار اور اپ ڈیٹ کریں۔ کاپی کیا گیا یا پروگرام میں کمپائل کیا گیا HTTP URL خود بخود نہیں بدلتا۔ ٹیسٹ کے بعد دونوں HTTP سوئچ بند کریں۔ دونوں سوئچ کی حالت کچھ بھی ہو، `live` SDK شناخت کے تبادلے کے لیے HTTPS لازم ہے۔",
+      "closing": "Launch کا سوئچ بند کرنے پر بعد کی HTTP SDK درخواستیں `SDK_HTTP_DISABLED` کے ساتھ مسترد ہوتی ہیں؛ `live` کی HTTP شناختی درخواستیں `SDK_HTTPS_REQUIRED` واپس کرتی ہیں۔ پہلے سے دستخط شدہ آف لائن اجازتیں Licentivo کے معمول کے اختتامِ مدت اور منسوخی کے اصولوں کے مطابق رہتی ہیں۔ API کلید کی HTTP اجازت بند کرنے سے اس کلید کے ذریعے نئے HTTP کنکشن بنانا یا اپ ڈیٹ کرنا رک جاتا ہے؛ موجودہ کنکشن حذف نہیں ہوتے، خریداری منسوخ نہیں ہوتی اور جاری اجازتیں بے اثر نہیں ہوتیں۔ کسی کنکشن سے مزید اجازت دینا بند کرنا ہو تو اسے الگ سے غیر فعال کریں۔",
+      "failures": "ناکام کنکشن کی تشخیص",
+      "diagnostics": "Launch ناکام مرحلہ (مصنوعات یا پالیسیاں پڑھنا، کنکشن تلاش کرنا، یا sandbox/live کنکشن بنانا)، مخصوص وجہ اور دستیاب ہونے پر Licentivo کا ایرر کوڈ اور درخواست ID دکھاتا ہے۔ محفوظ شدہ ناکامیوں کی تفصیل صفحہ ریفریش کرنے کے بعد بھی نظر آتی ہے۔ ایرر پیغامات میں مینجمنٹ API کلید کبھی نہیں دکھائی جاتی۔",
+      "errorHeaders": [
+        "خرابی",
+        "کارروائی"
+      ],
+      "actions": [
+        "Launch میں واقعی استعمال ہونے والی اسی API کلید کے لیے HTTP فعال کریں، یا کام کرنے والا HTTPS مرچنٹ URL ترتیب دیں۔",
+        "پوری کلید، مدتِ اختتام، منسوخی اور اس کے مالک اور ورک اسپیس کی حالت جانچیں۔",
+        "فعال Owner کی پڑھنے اور لکھنے والی کلید استعمال کریں۔ HTTP اجازت لکھنے کی اجازت نہیں بڑھاتی۔",
+        "صارف کی اپنی Launch تنصیب میں SDK HTTP ٹیسٹ سوئچ فعال کریں، یا HTTPS استعمال کریں۔",
+        "`live` کے لیے HTTPS استعمال کریں؛ HTTP ٹیسٹ کے لیے `sandbox` لازم ہے۔",
+        "صارف کی ٹیسٹ مشین پر باہر جانے والا نیٹ ورک، DNS، فائر وال اور پراکسی کی ترتیبات جانچیں۔",
+        "سسٹم کا وقت، قابلِ اعتماد سرٹیفکیٹس اور HTTPS پراکسی جانچیں۔ TLS تصدیق فعال رکھیں۔"
+      ]
+    }
+  },
+  "source_sha256": "47cb3a29f3c31b0a10d87ff001964d3e8f2e5de19a6957f6253ae3aaa40eadc4"
+}

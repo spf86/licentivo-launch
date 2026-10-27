@@ -47,12 +47,22 @@ class Handler(BaseHTTPRequestHandler):
             state['pending_started'] = time.monotonic()
             return self.data({})
         if state['mode'] == 'offline': return self.error('SERVICE_UNAVAILABLE', 503)
+        if state['mode'] in ('SDK_HTTP_DISABLED', 'SDK_HTTPS_REQUIRED'): return self.error(state['mode'], 403)
         if state['mode'] == 'denied': return self.error('UNAUTHORIZED', 401)
-        if self.path == '/api/v1/me': return self.data({'user': {'id': str(state['user'])}})
+        if self.path == '/api/v1/me':
+            malformed = {
+                'me_missing_user': {}, 'me_null_user': {'user': None}, 'me_missing_id': {'user': {}},
+                'me_empty_id': {'user': {'id': ''}}, 'me_null_id': {'user': {'id': None}},
+                'me_number_id': {'user': {'id': 42}}, 'me_array_user': {'user': []}, 'me_string_user': {'user': 'invalid'},
+            }
+            if state['mode'] in malformed: return self.data(malformed[state['mode']])
+            if state['mode'] == 'me_other': return self.data({'user': {'id': 'other-account'}})
+            return self.data({'user': {'id': str(state['user'])}})
         self.error('NOT_FOUND', 404)
     def do_POST(self):
         body = json.loads(self.rfile.read(int(self.headers.get('Content-Length', '0'))) or '{}')
         if self.path == '/api/v1/auth/logout' and state['mode'] == 'logout_denied': return self.error('UNAUTHENTICATED', 401)
+        if self.path == '/api/v1/auth/logout' and state['mode'] == 'logout_accepted': return self.reply(202, {'data': {'accepted': True}})
         if state['mode'] == 'offline': return self.error('SERVICE_UNAVAILABLE', 503)
         if self.path == '/api/v1/auth/login':
             state['user'] += 1

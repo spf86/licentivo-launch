@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "source_sha256": "47cb3a29f3c31b0a10d87ff001964d3e8f2e5de19a6957f6253ae3aaa40eadc4",
+  "locales": [
+    {
+      "code": "en",
+      "name": "English",
+      "tag": "en",
+      "file": "http-testing.md",
+      "dir": "ltr"
+    },
+    {
+      "code": "de",
+      "name": "Deutsch",
+      "tag": "de",
+      "file": "http-testing.de.md",
+      "dir": "ltr"
+    },
+    {
+      "code": "it",
+      "name": "Italiano",
+      "tag": "it",
+      "file": "http-testing.it.md",
+      "dir": "ltr"
+    },
+    {
+      "code": "zh",
+      "name": "简体中文",
+      "tag": "zh-Hans",
+      "file": "http-testing.zh-CN.md",
+      "dir": "ltr"
+    },
+    {
+      "code": "zh-hant",
+      "name": "繁體中文",
+      "tag": "zh-Hant",
+      "file": "http-testing.zh-hant.md",
+      "dir": "ltr"
+    },
+    {
+      "code": "hi",
+      "name": "हिन्दी",
+      "tag": "hi",
+      "file": "http-testing.hi.md",
+      "dir": "ltr"
+    },
+    {
+      "code": "es",
+      "name": "Español",
+      "tag": "es",
+      "file": "http-testing.es.md",
+      "dir": "ltr"
+    },
+    {
+      "code": "ar",
+      "name": "العربية",
+      "tag": "ar",
+      "file": "http-testing.ar.md",
+      "dir": "rtl"
+    },
+    {
+      "code": "fr",
+      "name": "Français",
+      "tag": "fr",
+      "file": "http-testing.fr.md",
+      "dir": "ltr"
+    },
+    {
+      "code": "bn",
+      "name": "বাংলা",
+      "tag": "bn",
+      "file": "http-testing.bn.md",
+      "dir": "ltr"
+    },
+    {
+      "code": "pt",
+      "name": "Português",
+      "tag": "pt",
+      "file": "http-testing.pt.md",
+      "dir": "ltr"
+    },
+    {
+      "code": "id",
+      "name": "Bahasa Indonesia",
+      "tag": "id",
+      "file": "http-testing.id.md",
+      "dir": "ltr"
+    },
+    {
+      "code": "ur",
+      "name": "اردو",
+      "tag": "ur",
+      "file": "http-testing.ur.md",
+      "dir": "rtl"
+    },
+    {
+      "code": "ja",
+      "name": "日本語",
+      "tag": "ja",
+      "file": "http-testing.ja.md",
+      "dir": "ltr"
+    }
+  ]
+}

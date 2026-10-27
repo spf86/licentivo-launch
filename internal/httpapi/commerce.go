@@ -8,6 +8,7 @@ import (
 )
 
 func (a *application) registerCommerce(mux *http.ServeMux) {
+	a.registerStorePolicies(mux)
 	a.route(mux, "POST /api/v1/webhooks/licentivo/{connection}", false, 1200, func(w http.ResponseWriter, r *http.Request, p app.Principal) (any, error) {
 		r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
 		body, err := io.ReadAll(r.Body)

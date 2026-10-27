@@ -4,7 +4,7 @@ This guide starts with a ready-to-run Licentivo Launch release package. The proj
 
 ## Download the server package
 
-Choose a Windows or Linux package for amd64 or arm64 from [GitHub Releases](https://github.com/spf86/licentivo-launch/releases/tag/v0.3.1-beta), then extract it. The package includes the executable, installation guide, public configuration example and license notices.
+Choose a Windows or Linux package for amd64 or arm64 from [GitHub Releases](https://github.com/spf86/licentivo-launch/releases/tag/v0.3.2-beta), then extract it. The package includes the executable, installation guide, public configuration example and license notices.
 
 You need MySQL 8.0.16+, an empty database and an account permitted to create/alter application tables. Go, Git, Node.js and a compiler are not required to run the package. The [binary guide](binary-installation.md) lists direct downloads, architecture selection and checksum verification.
 

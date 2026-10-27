@@ -96,6 +96,14 @@ func (a *application) route(mux *http.ServeMux, pattern string, authenticated bo
 			} else if cookie, err := r.Cookie("launch_session"); err == nil {
 				token, kind = cookie.Value, "website"
 			}
+			// Revocation must remain available to previously issued sessions
+			// after the merchant turns off HTTP test access.
+			if kind == "desktop" && pattern != "POST /api/v1/auth/logout" {
+				if err := a.service.RequireSDKTransport(r.Context(), "sandbox"); err != nil {
+					apiFail(w, r, err)
+					return
+				}
+			}
 			var err error
 			p, err = a.service.Authenticate(r.Context(), token, kind)
 			if err != nil {
@@ -279,6 +287,11 @@ func (a *application) register(mux *http.ServeMux) {
 		}
 		if in.Kind == "desktop" && r.Header.Get("Origin") != "" {
 			return nil, app.ErrForbidden
+		}
+		if in.Kind == "desktop" {
+			if err := a.service.RequireSDKTransport(r.Context(), "sandbox"); err != nil {
+				return nil, err
+			}
 		}
 		grant, err := a.service.Login(r.Context(), in.Email, in.Password, in.Kind)
 		if err != nil {

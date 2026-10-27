@@ -64,16 +64,18 @@ public final class Launch implements AutoCloseable {
     }
     @FunctionalInterface public interface RuntimeFactory { Runtime create(Map<String, Object> settings) throws Exception; }
     @FunctionalInterface public interface Sleeper { void sleep(long milliseconds) throws InterruptedException; }
-    public record Config(String merchantOrigin, String launchProductID, String licentivoProductID, String environment) {
+    public record Config(String merchantOrigin, String launchProductID, String licentivoProductID, String environment, boolean allowHTTP) {
+        public Config(String merchantOrigin, String launchProductID, String licentivoProductID, String environment) { this(merchantOrigin, launchProductID, licentivoProductID, environment, false); }
         public Config {
             if (!uuid(launchProductID) || !uuid(licentivoProductID) || !Set.of("sandbox", "live").contains(environment)) throw new IllegalArgumentException("invalid Launch configuration");
-            merchantOrigin = origin(merchantOrigin, environment.equals("sandbox"));
+            if (allowHTTP && !environment.equals("sandbox")) throw new IllegalArgumentException("HTTP opt-in is restricted to sandbox");
+            merchantOrigin = origin(merchantOrigin, environment.equals("sandbox"), allowHTTP);
         }
         public static Config load(Path path) throws Exception {
             var data = readPublic(path);
-            if (!Set.of("schema_version", "merchant_origin", "launch_product_id", "licentivo_product_id", "environment").containsAll(data.keySet())) throw new Failure("CONFIGURATION_ERROR");
+            if (!Set.of("schema_version", "merchant_origin", "launch_product_id", "licentivo_product_id", "environment", "allow_http").containsAll(data.keySet()) || data.containsKey("allow_http") && !(data.get("allow_http") instanceof Boolean)) throw new Failure("CONFIGURATION_ERROR");
             if (!Long.valueOf(1).equals(data.get("schema_version"))) throw new Failure("CONFIGURATION_ERROR");
-            return new Config(Json.text(data, "merchant_origin"), Json.text(data, "launch_product_id"), Json.text(data, "licentivo_product_id"), Json.text(data, "environment"));
+            return new Config(Json.text(data, "merchant_origin"), Json.text(data, "launch_product_id"), Json.text(data, "licentivo_product_id"), Json.text(data, "environment"), Boolean.TRUE.equals(data.get("allow_http")));
         }
     }
 
@@ -119,7 +121,10 @@ public final class Launch implements AutoCloseable {
         this.scope = hash("launch-account-v2\n" + config.merchantOrigin + "\n" + config.launchProductID + "\n" + config.licentivoProductID + "\n" + config.environment);
     }
     public static Launch connect(String merchantOrigin, String productId, String licentivoProductId, Map<String, String> trustedKeys, String environment) throws Exception {
-        return new Launch(new Config(merchantOrigin, productId, licentivoProductId, environment),
+        return connect(merchantOrigin, productId, licentivoProductId, trustedKeys, environment, false);
+    }
+    public static Launch connect(String merchantOrigin, String productId, String licentivoProductId, Map<String, String> trustedKeys, String environment, boolean allowHTTP) throws Exception {
+        return new Launch(new Config(merchantOrigin, productId, licentivoProductId, environment, allowHTTP),
             Map.of("base_url", "https://www.licentivo.com", "product_id", licentivoProductId, "trusted_keys", trustedKeys),
             Path.of(System.getProperty("user.home"), ".cache", "LicentivoLaunch"));
     }
@@ -183,10 +188,10 @@ public final class Launch implements AutoCloseable {
         Map<String, Object> envelope;
         try { envelope = Json.object(Json.parse(new String(response.body, StandardCharsets.UTF_8), LIMIT)); }
         catch (RuntimeException error) {
-            if (response.status < 200 || response.status >= 300) throw new Failure("HTTP_ERROR", response.status, "", retryAfter(response.retryAfter), false);
+            if (response.status != 200) throw new Failure("HTTP_ERROR", response.status, "", retryAfter(response.retryAfter), false);
             throw new Failure("INVALID_RESPONSE");
         }
-        if (response.status < 200 || response.status >= 300) {
+        if (response.status != 200) {
             var detail = envelope.get("error") instanceof Map<?, ?> ? Json.object(envelope.get("error")) : Map.<String, Object>of();
             throw new Failure(text(detail, "code"), response.status, text(envelope, "request_id"), retryAfter(response.retryAfter), false);
         }
@@ -222,12 +227,15 @@ public final class Launch implements AutoCloseable {
         retryOtherAccounts(token());
         requireFresh();
         try {
-            var user = Json.object(call("GET", "/me", null, token()).get("user"));
+            var current = call("GET", "/me", null, token());
+            if (!(current.get("user") instanceof Map<?, ?>)) throw new Failure("INVALID_RESPONSE");
+            var user = Json.object(current.get("user"));
+            if (text(user, "id").isEmpty()) throw new Failure("INVALID_RESPONSE");
             if (!text(user, "id").equals(userID())) throw new Failure("SESSION_MISMATCH");
             session.put("credential", credential());
             State result = start(false); save(); return result;
         } catch (Failure error) {
-
+            close();
             if (denied(error)) { try { clear(); } catch (Exception cleanup) { error.addSuppressed(cleanup); } }
             throw error;
         } catch (Exception error) { close(); throw error;
@@ -265,12 +273,12 @@ public final class Launch implements AutoCloseable {
  Exception otherFailure=null;try{retryOtherAccounts(session==null?"":token());}catch(Exception e){otherFailure=e;}
  Exception persistFailure=null;if(session!=null){session.put("logout_pending",true);try{markLogout();}catch(Exception e){persistFailure=e;}}
  try{var active=activeAccount();if(runtime==null&&session!=null&&(active==null||recordToken(active).equals(token()))&&session.get("credential") instanceof Map)runtime=factory.create(runtimeSettings());if(runtime!=null)runtime.releaseDevice();}catch(Exception e){failure=e;}
- close();boolean confirmed=true;
+ try{close();}catch(RuntimeException error){if(failure==null)failure=error;else if(failure!=error)failure.addSuppressed(error);}boolean confirmed=true;
  if(session!=null)try{call("POST","/auth/logout",Map.of(),token());}catch(Exception e){confirmed=e instanceof Failure api&&api.status==401;if(!confirmed&&failure==null)failure=e;}
  if(confirmed){try{if(session!=null)finishAccount(session);clear();}catch(Exception e){if(failure==null)failure=e;else failure.addSuppressed(e);}}else if(persistFailure!=null){if(failure!=null)persistFailure.addSuppressed(failure);failure=persistFailure;}if(failure==null)failure=otherFailure;if(failure!=null)throw failure;
  }
     /** Keeps remembered login; the official SDK handles floating-seat shutdown. */
-    @Override public synchronized void close() { if (runtime != null) { runtime.close(); runtime = null; } }
+    @Override public synchronized void close() { Runtime current=runtime;runtime=null;if(current!=null)current.close(); }
     private void save()throws Exception{
  var clean=Json.object(Json.parse(Json.write(session),LIMIT));if(clean.get("credential") instanceof Map)Json.object(clean.get("credential")).keySet().retainAll(Set.of("product_id","licentivo_product_id","launch_connection_id","environment","expires_at"));if(Boolean.TRUE.equals(clean.get("logout_pending"))){clean.put("version",3);if(clean.containsKey("credential"))clean.put("logout_context",clean.remove("credential"));}byte[] secret=Json.write(clean).getBytes(StandardCharsets.UTF_8);try{store.save(scope,secret);}finally{Arrays.fill(secret,(byte)0);}
  }
@@ -320,16 +328,19 @@ public final class Launch implements AutoCloseable {
     private Map<String, Object> grant() { return Json.object(session.get("grant")); }
     private String token() { return Json.text(grant(), "access_token"); }
     private String userID() { return Json.text(Json.object(grant().get("user")), "id"); }
-    private static boolean denied(Failure error) { return !error.code.equals("ENTITLEMENT_PENDING") && (error.status == 401 || error.status == 403 || error.status == 404 || error.code.equals("SESSION_MISMATCH")); }
+    private static boolean denied(Failure error) { return !error.code.equals("ENTITLEMENT_PENDING") && !(error.status == 403 && Set.of("SDK_HTTP_DISABLED", "SDK_HTTPS_REQUIRED").contains(error.code)) && (error.status == 401 || error.status == 403 || error.status == 404 || error.code.equals("SESSION_MISMATCH")); }
     private static String text(Map<String, Object> value, String name) { return value.get(name) instanceof String ? (String)value.get(name) : ""; }
     private static String safeCode(String code) { return code != null && code.matches("[A-Z][A-Z0-9_]{0,63}") ? code : "HTTP_ERROR"; }
     private static boolean uuid(String value) { return value != null && value.matches("[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}"); }
     private static String hash(String value) throws Exception { return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(value.getBytes(StandardCharsets.UTF_8))); }
     private static String origin(String origin, boolean local) {
+        return origin(origin, local, false);
+    }
+    private static String origin(String origin, boolean local, boolean allowHTTP) {
         URI uri;
         try { uri = URI.create(origin); } catch (RuntimeException invalid) { throw new IllegalArgumentException("HTTPS merchant origin required"); }
         String host = uri.getHost();
-        if (host == null || uri.getUserInfo() != null || uri.getQuery() != null || uri.getFragment() != null || !(uri.getPath().isEmpty() || uri.getPath().equals("/")) || !("https".equals(uri.getScheme()) || local && "http".equals(uri.getScheme()) && Set.of("localhost", "127.0.0.1", "[::1]", "::1").contains(host))) throw new IllegalArgumentException("HTTPS merchant origin required");
+        if (host == null || uri.getUserInfo() != null || uri.getQuery() != null || uri.getFragment() != null || !(uri.getPath().isEmpty() || uri.getPath().equals("/")) || !("https".equals(uri.getScheme()) || local && "http".equals(uri.getScheme()) && (allowHTTP || Set.of("localhost", "127.0.0.1", "[::1]", "::1").contains(host)))) throw new IllegalArgumentException("HTTPS merchant origin required");
         return origin.replaceAll("/$", "");
     }
     private static long retryAfter(String raw) {

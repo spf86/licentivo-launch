@@ -19,18 +19,18 @@ public final class LaunchTests {
         public void delete(String key)throws Launch.Failure{if(failDeletes)throw new Launch.Failure("TEST_STORAGE_FAILED");values.remove(key);}
     }
     static final class Runtime implements Launch.Runtime {
-        boolean offline=true,denied=false;int releases,closes,starts,checks;
+        boolean offline=true,denied=false;int releases,closes,starts,checks;RuntimeException closeFailure;
         public boolean canStartOffline(){return offline;}
         public void start(){starts++;}
         public void runFeature(String name,Client.FeatureAction action)throws Exception{checks++;if(denied)throw new Launch.Failure("FEATURE_DENIED");action.run();}
         public void releaseDevice(){releases++;}
-        public void close(){closes++;}
+        public void close(){closes++;if(closeFailure!=null)throw closeFailure;}
     }
     static final class Fixture implements AutoCloseable {
         final Store store=new Store();final Path root=Files.createTempDirectory("launch-java-");
         final String tokenPrefix="private-bearer-"+UUID.randomUUID()+"-";
         final List<Runtime> runtimes=new ArrayList<>();final List<String> paths=new ArrayList<>();final List<Long> waits=new ArrayList<>();
-        String mode="",user="account-a",retry="",blockedToken="";int credentials,logouts,logins;boolean offline=true;
+        String mode="",user="account-a",retry="",blockedToken="",meBody=null;int credentials,logouts,logins,logoutStatus=200;boolean offline=true;
         final Launch.Config config=new Launch.Config("https://merchant.example",PRODUCT,REMOTE,"sandbox");
         final Map<String,Object> product=Map.of("product_id",REMOTE,"trusted_keys",Map.of(KEY,Base64.getUrlEncoder().withoutPadding().encodeToString(new byte[32])));
         Launch app;
@@ -39,12 +39,13 @@ public final class LaunchTests {
             return new Launch(cfg,prod,root,store,(method,uri,token,body)->{
                 if(mode.equals("offline"))throw new Launch.Failure("SERVICE_UNAVAILABLE",0,"",0,true);
                 String path=uri.getPath();Object data=Map.of();int status=200;String code="";
+                if(path.endsWith("/me")&&meBody!=null)return new Launch.Response(200,meBody.getBytes(StandardCharsets.UTF_8),"");
                 if(path.endsWith("/logout")&&!blockedToken.isEmpty()&&token.equals(blockedToken))throw new Launch.Failure("SERVICE_UNAVAILABLE",0,"",0,true);
                 if(path.endsWith("/login"))data=Map.of("access_token",tokenPrefix+(++logins),"expires_at",Instant.now().plusSeconds(3600).toString(),"user",Map.of("id",user,"email","a@example.invalid"));
-                else if(path.endsWith("/logout")){logouts++;data=Map.of("signed_out",true);}
-                else if(path.endsWith("/me")){data=Map.of("user",Map.of("id",user));if(mode.equals("unauthorized")){status=401;code="UNAUTHENTICATED";}}
+                else if(path.endsWith("/logout")){logouts++;status=logoutStatus;data=Map.of("accepted",true);}
+                else if(path.endsWith("/me")){data=Map.of("user",Map.of("id",user));if(mode.equals("unauthorized")){status=401;code="UNAUTHENTICATED";}else if(Set.of("SDK_HTTP_DISABLED","SDK_HTTPS_REQUIRED").contains(mode)){status=403;code=mode;}}
                 else {credentials++;data=Map.of("product_id",PRODUCT,"licentivo_product_id",REMOTE,"environment",cfg.environment(),"launch_connection_id",KEY,"identity_token","I".repeat(64),"expires_at",Instant.now().plusSeconds(120).toString());if(!mode.isEmpty()){status=403;code=mode;}}
-                Object envelope=status==200?Map.of("data",data):Map.of("error",Map.of("code",code),"request_id","request-1");
+                Object envelope=status>=200&&status<300?Map.of("data",data):Map.of("error",Map.of("code",code),"request_id","request-1");
                 return new Launch.Response(status,Json.write(envelope).getBytes(StandardCharsets.UTF_8),retry);
             },settings->{Runtime runtime=new Runtime();runtime.offline=offline;runtimes.add(runtime);paths.add((String)settings.get("cache_path"));Files.writeString(Path.of(paths.get(paths.size()-1)),"SDK-owned grant");return runtime;},waits::add);
         }
@@ -78,7 +79,7 @@ public final class LaunchTests {
     }
     static void identityAndExpiry()throws Exception{
         try(var f=new Fixture()){
-            f.login();f.app.close();f.user="account-b";expect("SESSION_MISMATCH",f.app::restore);check(f.runtimes.size()==1,"wrong account started runtime");
+            f.login();f.app.close();f.user="account-b";expect("SESSION_MISMATCH",f.app::restore);check(f.runtimes.size()==1&&f.store.values.isEmpty(),"wrong account started runtime or retained login");
         }
         try(var f=new Fixture()){
             f.login();f.app.close();String key=f.store.values.keySet().iterator().next();var saved=Json.object(Json.parse(new String(f.store.values.get(key),StandardCharsets.UTF_8)));Json.object(saved.get("grant")).put("expires_at","2000-01-01T00:00:00Z");f.store.save(key,Json.write(saved).getBytes(StandardCharsets.UTF_8));expect("SESSION_EXPIRED",f.app::restore);check(f.store.values.isEmpty(),"expired session retained");
@@ -113,8 +114,63 @@ public final class LaunchTests {
     }
     public static void main(String[] args)throws Exception{
         lifecycle();denials();pending();identityAndExpiry();actionsAndScope();configAndRedaction();encryptedStore();
-        failedStoreLogout();staleInstance();
-        System.out.println("Java: 9 lifecycle/security test groups passed");
+        transportPolicyDenials();acceptedLogout();failedStoreRestore();failedStoreLogout();staleInstance();malformedCurrentUser();failedSdkClose();
+        System.out.println("Java: 14 lifecycle/security test groups passed");
+    }
+    static void failedSdkClose()throws Exception{
+        try(var f=new Fixture()){
+            f.login();Runtime runtime=f.runtimes.get(0);runtime.closeFailure=new IllegalStateException("SDK shutdown failed");
+            try{f.app.close();throw new AssertionError("SDK close failure was swallowed");}catch(IllegalStateException e){check(e==runtime.closeFailure,"SDK close failure was lost");}
+            expect("NOT_STARTED",()->f.app.runFeature("export",()->{throw new AssertionError("failed close retained protected work");}));
+            check(!f.store.values.isEmpty()&&f.logouts==0&&runtime.releases==0,"ordinary close released the account or device");
+            f.app.close();check(runtime.closes==1,"failed close retried a detached runtime");
+        }
+        try(var f=new Fixture()){
+            f.login();Runtime runtime=f.runtimes.get(0);runtime.closeFailure=new IllegalStateException("SDK shutdown failed");int logouts=f.logouts;
+            try{f.app.logout();throw new AssertionError("SDK close failure was swallowed");}catch(IllegalStateException e){check(e==runtime.closeFailure,"SDK close failure was lost");}
+            check(f.store.values.isEmpty()&&f.logouts==logouts+1,"SDK close failure prevented account revocation");
+            expect("NOT_STARTED",()->f.app.runFeature("export",()->{throw new AssertionError("failed logout retained protected work");}));
+            f.app.logout();check(f.logouts==logouts+1&&runtime.closes==1,"completed logout repeated a detached runtime or account");
+        }
+    }
+    static void malformedCurrentUser()throws Exception{
+        for(String data:List.of("{\"user\":{\"id\":\"\"}}","{}","{\"user\":null}","{\"user\":{}}","{\"user\":{\"id\":null}}","{\"user\":{\"id\":42}}","{\"user\":[]}","{\"user\":\"invalid\"}"))try(var f=new Fixture()){
+            f.login();String key=f.store.values.keySet().iterator().next();byte[] saved=f.store.values.get(key).clone();int count=f.runtimes.size(),credentials=f.credentials;
+            f.meBody="{\"data\":"+data+"}";expect("INVALID_RESPONSE",f.app::restore);
+            check(Arrays.equals(saved,f.store.values.get(key))&&f.runtimes.size()==count&&f.credentials==credentials,"malformed user lost login or continued startup");
+            expect("NOT_STARTED",()->f.app.runFeature("export",()->{throw new AssertionError("failed restore executed work");}));
+            int logouts=f.logouts;f.app.logout();check(f.store.values.isEmpty()&&f.logouts==logouts+1,"malformed user prevented explicit revocation");
+        }
+    }
+    static void transportPolicyDenials()throws Exception{
+        for(String code:List.of("SDK_HTTP_DISABLED","SDK_HTTPS_REQUIRED"))try(var f=new Fixture()){
+            f.login();f.mode=code;int count=f.runtimes.size();expect(code,f.app::restore);
+            check(!f.store.values.isEmpty()&&f.runtimes.size()==count,"transport policy denial erased account or opened a runtime");
+            expect("NOT_STARTED",()->f.app.runFeature("export",()->{throw new AssertionError("transport policy denial allowed work");}));
+            int logouts=f.logouts;f.app.logout();check(f.store.values.isEmpty()&&f.logouts==logouts+1,"transport policy denial lost account revocation");
+        }
+    }
+    static void acceptedLogout()throws Exception{
+        try(var f=new Fixture()){
+            f.login();f.logoutStatus=202;
+            try{f.app.logout();throw new AssertionError("202 confirmed account logout");}catch(Launch.Failure e){check(e.status==202,"lost unconfirmed logout status");}
+            check(!f.store.values.isEmpty(),"202 discarded account retry records");
+            expect("NOT_STARTED",()->f.app.runFeature("export",()->{throw new AssertionError("signed-out work");}));
+            f.app.close();int credentials=f.credentials;
+            try(var restarted=f.create(f.config,f.product)){
+                try{restarted.restore();throw new AssertionError("accepted logout restored a login");}catch(Launch.Failure e){check(e.status==202,"restart lost pending account status");}
+                f.logoutStatus=200;expect("NO_SESSION",restarted::restore);
+            }
+            check(f.credentials==credentials&&f.store.values.isEmpty(),"logout retry fetched identity or retained a confirmed task");
+        }
+    }
+    static void failedStoreRestore()throws Exception{
+        for(boolean deleteFails:List.of(false,true))try(var f=new Fixture()){
+            f.login();f.app.close();f.store.failSaves=true;f.store.failDeletes=deleteFails;
+            expect("TEST_STORAGE_FAILED",f.app::restore);
+            check(f.runtimes.size()==2&&f.runtimes.get(1).closes==1,"failed restore left its new runtime running");
+            expect("NOT_STARTED",()->f.app.runFeature("export",()->{throw new AssertionError("failed restore executed protected work");}));
+        }
     }
     static void failedStoreLogout()throws Exception{
         for(boolean deleteFails:List.of(false,true))try(var f=new Fixture()){

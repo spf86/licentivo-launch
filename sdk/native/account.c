@@ -51,16 +51,19 @@ static cJSON *request_method(launch_account *a,const char *path,cJSON *input,int
  curl_easy_setopt(curl,CURLOPT_URL,url);if(get)curl_easy_setopt(curl,CURLOPT_HTTPGET,1L);else curl_easy_setopt(curl,CURLOPT_POSTFIELDS,body);curl_easy_setopt(curl,CURLOPT_HTTPHEADER,headers);curl_easy_setopt(curl,CURLOPT_TIMEOUT,15L);curl_easy_setopt(curl,CURLOPT_FOLLOWLOCATION,0L);curl_easy_setopt(curl,CURLOPT_WRITEFUNCTION,receive);curl_easy_setopt(curl,CURLOPT_WRITEDATA,&out);curl_easy_setopt(curl,CURLOPT_HEADERFUNCTION,receive_header);curl_easy_setopt(curl,CURLOPT_HEADERDATA,a);
  if(curl_easy_perform(curl)!=CURLE_OK)goto finish;long status=0;curl_easy_getinfo(curl,CURLINFO_RESPONSE_CODE,&status);cJSON *root=out.data?ln_json(out.data):NULL;
  a->http_status=(int)status;strcpy(a->error_code,"INVALID_RESPONSE");
- if(status>=200 && status<300 && root){cJSON *value=cJSON_GetObjectItemCaseSensitive(root,"data");if(cJSON_IsObject(value)){data=cJSON_Duplicate(value,1);a->error_code[0]=0;}}
+ if(status==200 && root){cJSON *value=cJSON_GetObjectItemCaseSensitive(root,"data");if(cJSON_IsObject(value)){data=cJSON_Duplicate(value,1);a->error_code[0]=0;}}
  else{const char *code=root?text(cJSON_GetObjectItemCaseSensitive(root,"error"),"code"):NULL;if(code && strlen(code)<sizeof(a->error_code) && strspn(code,"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_0123456789")==strlen(code))strcpy(a->error_code,code);}cJSON_Delete(root);
  finish:curl_slist_free_all(headers);curl_easy_cleanup(curl);wipe(body);free(body);free(url);wipe(out.data);free(out.data);return data;
 }
 static cJSON *request(launch_account *a,const char *path,cJSON *input){return request_method(a,path,input,0);}
+static int account_denied(const launch_account *a){
+ return a->http_status==401||a->http_status==404||(a->http_status==403&&strcmp(a->error_code,"SDK_HTTP_DISABLED")&&strcmp(a->error_code,"SDK_HTTPS_REQUIRED"));
+}
 static char *file_text(const char *path){FILE *f=fopen(path,"rb");if(!f)return NULL;if(fseek(f,0,SEEK_END)!=0){fclose(f);return NULL;}long n=ftell(f);if(n<0 || n>1048576 || fseek(f,0,SEEK_SET)!=0){fclose(f);return NULL;}char *s=(char*)calloc((size_t)n+1,1);if(!s || fread(s,1,(size_t)n,f)!=(size_t)n){free(s);s=NULL;}fclose(f);return s;}
-static int origin_ok(const char *origin,int sandbox){
+static int origin_ok(const char *origin,int sandbox,int allow_http){
  CURLU *url=curl_url();if(!url)return 0;int ok=0;char *scheme=NULL,*host=NULL,*part=NULL;if(curl_url_set(url,CURLUPART_URL,origin,0)!=CURLUE_OK)goto done;
  if(curl_url_get(url,CURLUPART_SCHEME,&scheme,0)!=CURLUE_OK || curl_url_get(url,CURLUPART_HOST,&host,0)!=CURLUE_OK)goto done;
- if(strcmp(scheme,"https") && !(sandbox && !strcmp(scheme,"http") && (!strcmp(host,"localhost") || !strcmp(host,"127.0.0.1") || !strcmp(host,"[::1]"))))goto done;
+ if(strcmp(scheme,"https") && !(sandbox && !strcmp(scheme,"http") && (allow_http || !strcmp(host,"localhost") || !strcmp(host,"127.0.0.1") || !strcmp(host,"[::1]"))))goto done;
  for(int i=0;i<4;i++){CURLUPart field=i==0?CURLUPART_USER:i==1?CURLUPART_PASSWORD:i==2?CURLUPART_QUERY:CURLUPART_FRAGMENT;if(curl_url_get(url,field,&part,0)==CURLUE_OK){curl_free(part);part=NULL;goto done;}}
  if(curl_url_get(url,CURLUPART_PATH,&part,0)==CURLUE_OK && strcmp(part,"/"))goto done;ok=1;
  done:curl_free(part);curl_free(scheme);curl_free(host);curl_url_cleanup(url);return ok;
@@ -273,8 +276,8 @@ static char *app_runtime_config(launch_application *a){
 static int app_start(launch_application *a,int offline){
  (void)offline;if(a->runtime){ln_destroy(a->runtime);a->runtime=NULL;}char *raw=app_runtime_config(a);if(!raw)return app_fail(a,"INVALID_CONFIG");ln_client *sdk=ln_init(raw);wipe(raw);free(raw);if(!sdk)return app_fail(a,"SDK_INIT_FAILED");if(!ln_start(sdk)){ln_error_info info={0};ln_get_error_info(sdk,&info);app_fail(a,info.code[0]?info.code:"SDK_AUTHORIZATION_FAILED");ln_destroy(sdk);return 0;}a->runtime=sdk;a->error[0]=0;return 1;
 }
-static launch_application *app_open_config(const char *origin,const char *product,const char *public_json,const char *environment,int remember,const launch_secret_store *store){
- if(!origin||!product||!public_json||strlen(public_json)>65536||!environment||(strcmp(environment,"sandbox")&&strcmp(environment,"live"))||!origin_ok(origin,!strcmp(environment,"sandbox"))||strlen(product)!=36||strspn(product,"0123456789abcdefABCDEF-")!=36)return NULL;
+static launch_application *app_open_config_http(const char *origin,const char *product,const char *public_json,const char *environment,int remember,const launch_secret_store *store,int allow_http){
+ if(!origin||!product||!public_json||strlen(public_json)>65536||!environment||(strcmp(environment,"sandbox")&&strcmp(environment,"live"))||(allow_http&&strcmp(environment,"sandbox"))||!origin_ok(origin,!strcmp(environment,"sandbox"),allow_http)||strlen(product)!=36||strspn(product,"0123456789abcdefABCDEF-")!=36)return NULL;
  if(store&&(!store->load||!store->save||!store->remove))return NULL;
 #ifndef _WIN32
  if(remember&&!store)return NULL;
@@ -287,19 +290,23 @@ static launch_application *app_open_config(const char *origin,const char *produc
  if(!a->account.origin||!a->product||!a->environment||!a->config_json||!a->scope){launch_application_close(a);return NULL;}return a;
 }
 launch_application *launch_application_connect(const char *origin,const char *product,const char *licentivo_product,const char *trusted_keys_json,const char *environment,int remember,const launch_secret_store *store){
+ return launch_application_connect_http(origin,product,licentivo_product,trusted_keys_json,environment,0,remember,store);
+}
+launch_application *launch_application_connect_http(const char *origin,const char *product,const char *licentivo_product,const char *trusted_keys_json,const char *environment,int allow_http,int remember,const launch_secret_store *store){
  if(!licentivo_product||!trusted_keys_json||strlen(trusted_keys_json)>16384)return NULL;
  cJSON *keys=ln_json(trusted_keys_json);if(!cJSON_IsObject(keys)||cJSON_GetArraySize(keys)<1||cJSON_GetArraySize(keys)>32){cJSON_Delete(keys);return NULL;}
  cJSON *pin=NULL;cJSON_ArrayForEach(pin,keys){if(!pin->string||!*pin->string||strlen(pin->string)>128||!cJSON_IsString(pin)||!pin->valuestring||strlen(pin->valuestring)!=43||strspn(pin->valuestring,"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_")!=43||!strchr("AEIMQUYcgkosw048",pin->valuestring[42])){cJSON_Delete(keys);return NULL;}}
  cJSON *config=cJSON_CreateObject();cJSON_AddStringToObject(config,"base_url","https://www.licentivo.com");cJSON_AddStringToObject(config,"product_id",licentivo_product);cJSON_AddItemToObject(config,"trusted_keys",keys);
- char *raw=cJSON_PrintUnformatted(config);cJSON_Delete(config);launch_application *a=raw?app_open_config(origin,product,raw,environment,remember,store):NULL;free(raw);return a;
+ char *raw=cJSON_PrintUnformatted(config);cJSON_Delete(config);launch_application *a=raw?app_open_config_http(origin,product,raw,environment,remember,store,allow_http):NULL;free(raw);return a;
 }
 launch_application *launch_application_open(const char *origin,const char *product,const char *config_path,const char *environment,int remember,const launch_secret_store *store){
- char *raw=file_text(config_path);launch_application *a=raw?app_open_config(origin,product,raw,environment,remember,store):NULL;free(raw);return a;
+ char *raw=file_text(config_path);launch_application *a=raw?app_open_config_http(origin,product,raw,environment,remember,store,0):NULL;free(raw);return a;
 }
 launch_application *launch_application_from_files(const char *launch_path,const char *product_path,int remember,const launch_secret_store *store){
  char *raw=file_text(launch_path);cJSON *config=raw?ln_json(raw):NULL;free(raw);raw=file_text(product_path);cJSON *product=raw?ln_json(raw):NULL;free(raw);launch_application *a=NULL;
  cJSON *version=config?cJSON_GetObjectItemCaseSensitive(config,"schema_version"):NULL;const char *expected=text(config,"licentivo_product_id"),*actual=text(product,"product_id");
- if(cJSON_IsNumber(version)&&version->valuedouble==1&&expected&&actual&&!strcmp(expected,actual))a=launch_application_open(text(config,"merchant_origin"),text(config,"launch_product_id"),product_path,text(config,"environment"),remember,store);
+ cJSON *allow=config?cJSON_GetObjectItemCaseSensitive(config,"allow_http"):NULL;
+ if(cJSON_IsNumber(version)&&version->valuedouble==1&&expected&&actual&&!strcmp(expected,actual)&&(!allow||cJSON_IsBool(allow))){char *public_json=cJSON_PrintUnformatted(product);if(public_json)a=app_open_config_http(text(config,"merchant_origin"),text(config,"launch_product_id"),public_json,text(config,"environment"),remember,store,cJSON_IsTrue(allow));free(public_json);}
  cJSON_Delete(config);cJSON_Delete(product);return a;
 }
 static int app_logout(launch_application *a){
@@ -325,12 +332,20 @@ static int app_restore(launch_application *a){
  cJSON *records=app_pending(a),*task=NULL;if(!records){cJSON_Delete(record);app_fail(a,"SECURE_STORE_FAILED");return -1;}cJSON_ArrayForEach(task,records){const char *token=text(task,"access_token");if(token&&!strcmp(token,a->account.token)){app_attach(a,task);break;}}cJSON_Delete(records);
  if(a->logout_pending){cJSON_Delete(record);return app_logout(a)?0:-1;}
  if(!app_retry_others(a,a->account.token)){cJSON_Delete(record);app_fail(a,"ACCOUNT_LOGOUT_PENDING");return -1;}
- if(app_expiry(text(record,"expires_at"))<=time(NULL)){cJSON_Delete(record);app_forget(a);app_fail(a,"SESSION_EXPIRED");return -1;}cJSON *current=request_method(&a->account,"/me",NULL,1);if(!current){char failure[80];snprintf(failure,sizeof(failure),"%s",a->account.error_code);cJSON_Delete(record);if(a->account.http_status==401||a->account.http_status==403||a->account.http_status==404)app_forget(a);app_fail(a,failure);return -1;}const char *user=text(cJSON_GetObjectItemCaseSensitive(current,"user"),"id");int match=user&&!strcmp(user,a->user);cJSON_Delete(current);if(!match){cJSON_Delete(record);app_forget(a);app_fail(a,"SESSION_REJECTED");return -1;}
- cJSON *own=app_credential(a);if(!own){char failure[80];snprintf(failure,sizeof(failure),"%s",a->error);cJSON_Delete(record);if(strcmp(failure,"ENTITLEMENT_PENDING")&&(a->account.http_status==401||a->account.http_status==403||a->account.http_status==404))app_forget(a);app_fail(a,failure);return -1;}wipe(a->account.key);free(a->account.key);a->account.key=copy(text(own,"identity_token"));cJSON *public_identity=app_public_identity(own);cJSON_Delete(own);own=public_identity;free(a->identity_context);a->identity_context=cJSON_PrintUnformatted(own);cJSON_DeleteItemFromObjectCaseSensitive(record,"identity_context");cJSON_AddItemToObject(record,"identity_context",own);int ok=app_start(a,0);if(ok){raw=cJSON_PrintUnformatted(record);ok=raw&&app_save_record(a,raw);wipe(raw);free(raw);}cJSON_Delete(record);return ok?1:-1;
+ if(app_expiry(text(record,"expires_at"))<=time(NULL)){cJSON_Delete(record);app_forget(a);app_fail(a,"SESSION_EXPIRED");return -1;}cJSON *current=request_method(&a->account,"/me",NULL,1);if(!current){char failure[80];snprintf(failure,sizeof(failure),"%s",a->account.error_code);cJSON_Delete(record);if(account_denied(&a->account))app_forget(a);app_fail(a,failure);return -1;}
+ const char *user=text(cJSON_GetObjectItemCaseSensitive(current,"user"),"id");
+ if(!user||!*user){cJSON_Delete(current);cJSON_Delete(record);app_fail(a,"INVALID_RESPONSE");return -1;}
+ int match=!strcmp(user,a->user);cJSON_Delete(current);if(!match){cJSON_Delete(record);app_forget(a);app_fail(a,"SESSION_REJECTED");return -1;}
+ cJSON *own=app_credential(a);if(!own){char failure[80];snprintf(failure,sizeof(failure),"%s",a->error);cJSON_Delete(record);if(strcmp(failure,"ENTITLEMENT_PENDING")&&account_denied(&a->account))app_forget(a);app_fail(a,failure);return -1;}wipe(a->account.key);free(a->account.key);a->account.key=copy(text(own,"identity_token"));cJSON *public_identity=app_public_identity(own);cJSON_Delete(own);own=public_identity;free(a->identity_context);a->identity_context=cJSON_PrintUnformatted(own);cJSON_DeleteItemFromObjectCaseSensitive(record,"identity_context");cJSON_AddItemToObject(record,"identity_context",own);int ok=app_start(a,0);if(ok){raw=cJSON_PrintUnformatted(record);ok=raw&&app_save_record(a,raw);wipe(raw);free(raw);}cJSON_Delete(record);return ok?1:-1;
 }
 int launch_application_run_feature(launch_application *a,const char *feature,ln_feature_action action,void *context){if(!a||!a->runtime)return a?app_fail(a,"LOGIN_REQUIRED"):0;return ln_run_feature(a->runtime,feature,action,context)?1:app_fail(a,"SDK_FEATURE_DENIED");}
 int launch_application_login(launch_application *a,const char *email,const char *password){if(!a)return 0;app_guard guard;if(!app_account_lock(a,&guard))return app_fail(a,"ACCOUNT_LOCK_BUSY");int ok=app_login(a,email,password);app_account_unlock(&guard);return ok;}
-int launch_application_restore(launch_application *a){if(!a)return -1;app_guard guard;if(!app_account_lock(a,&guard)){app_fail(a,"ACCOUNT_LOCK_BUSY");return -1;}int result=app_restore(a);app_account_unlock(&guard);return result;}
+int launch_application_restore(launch_application *a){
+ if(!a)return -1;app_guard guard;if(!app_account_lock(a,&guard)){app_fail(a,"ACCOUNT_LOCK_BUSY");return -1;}
+ int result=app_restore(a);
+ if(result<0&&a->runtime){ln_destroy(a->runtime);a->runtime=NULL;}
+ app_account_unlock(&guard);return result;
+}
 int launch_application_logout(launch_application *a){if(!a)return 0;app_guard guard;if(!app_account_lock(a,&guard)){if(a->runtime){ln_destroy(a->runtime);a->runtime=NULL;}if(a->account.token)a->logout_pending=1;return app_fail(a,"ACCOUNT_LOCK_BUSY");}int ok=a->account_cleared&&!a->account.token?app_retry_others(a,NULL):app_logout(a);if(!ok&&a->account_cleared&&!a->account.token)app_fail(a,"ACCOUNT_LOGOUT_PENDING");if(a->runtime){ln_destroy(a->runtime);a->runtime=NULL;}if(!ok&&a->account.token)a->logout_pending=1;app_account_unlock(&guard);return ok;}
 int launch_application_release_device(launch_application *a){return launch_application_logout(a);}
 void launch_application_close(launch_application *a){if(!a)return;if(a->runtime)ln_destroy(a->runtime);wipe(a->record);free(a->record);wipe(a->pending_records);free(a->pending_records);wipe(a->account.token);free(a->account.token);wipe(a->account.key);free(a->account.key);free(a->account.origin);free(a->account.cache_path);free(a->product);free(a->environment);free(a->config_json);free(a->scope);free(a->user);free(a->identity_context);free(a);}

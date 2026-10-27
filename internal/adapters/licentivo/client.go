@@ -50,18 +50,23 @@ func NewClient(config ClientConfig) (*Client, error) {
 		}
 		ips, err := net.DefaultResolver.LookupNetIP(ctx, "ip", host)
 		if err != nil {
-			return nil, ErrUnavailable
+			return nil, err
 		}
 		for _, ip := range ips {
 			if !config.AllowPrivate && !publicIP(ip) {
 				return nil, ErrUnavailable
 			}
 		}
+		var dialErr error
 		for _, ip := range ips {
 			conn, err := (&net.Dialer{Timeout: 5 * time.Second}).DialContext(ctx, network, net.JoinHostPort(ip.String(), port))
 			if err == nil {
 				return conn, nil
 			}
+			dialErr = err
+		}
+		if dialErr != nil {
+			return nil, dialErr
 		}
 		return nil, ErrUnavailable
 	}
@@ -92,30 +97,24 @@ func (c *Client) call(ctx context.Context, method, path string, body any, out an
 	r.Header.Set("Content-Type", "application/json")
 	response, err := c.http.Do(r)
 	if err != nil {
-		return ErrUnavailable
+		return transportError(err)
 	}
 	defer response.Body.Close()
-	if response.StatusCode == 404 || response.StatusCode == 501 {
-		return ports.ErrContractUnsupported
+	data, err := io.ReadAll(io.LimitReader(response.Body, (1<<20)+1))
+	if err != nil {
+		return transportError(err)
 	}
-	if response.StatusCode == 401 || response.StatusCode == 403 {
-		return ErrCredentials
-	}
-	if response.StatusCode == 409 {
-		return ErrConflict
+	if len(data) > 1<<20 {
+		return &APIError{Status: response.StatusCode, Code: "LICENTIVO_RESPONSE_INVALID", Message: "Licentivo response exceeds the supported size", cause: ErrUnavailable}
 	}
 	if response.StatusCode < 200 || response.StatusCode >= 300 {
-		return ErrUnavailable
-	}
-	data, err := io.ReadAll(io.LimitReader(response.Body, (1<<20)+1))
-	if err != nil || len(data) > 1<<20 {
-		return ErrUnavailable
+		return decodeAPIError(response.StatusCode, data, c.key)
 	}
 	var envelope struct {
 		Data json.RawMessage `json:"data"`
 	}
 	if json.Unmarshal(data, &envelope) != nil || json.Unmarshal(envelope.Data, out) != nil {
-		return ErrUnavailable
+		return &APIError{Status: response.StatusCode, Code: "LICENTIVO_RESPONSE_INVALID", Message: "Licentivo returned an invalid response", cause: ErrUnavailable}
 	}
 	return nil
 }

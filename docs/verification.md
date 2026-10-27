@@ -114,3 +114,23 @@ The source now supports merchant-owned HTTP licensing alongside the existing Lic
 - A disposable browser preview verified creating a signed loopback sandbox connection, saving product/plan mappings, persistence after refresh and continued access to the Licentivo settings page. A local screenshot is retained at artifacts/custom-licensing/settings.png. The preview uses synthetic credentials and disposable databases.
 
 Payment, licensing and SDK runtime outcomes in this run use controlled fixtures. A merchant must complete acceptance against its own authorization service and application before live sales. See [custom licensing integration](external-licensing.md), [external OpenAPI](external-licensing-openapi.json) and [adapter example](../examples/custom-licensing/README.md).
+
+## Transport and connection regressions, 2026-10-27
+
+Three regressions were reproduced with failing tests and fixed: an existing proxy HTTPS deployment could not save transport settings without Launch's built-in listener; rejecting a replacement Licentivo API key incorrectly marked the unchanged saved connection as failed; and generic HTTP 403 handling hid specific HTTP-origin and immutable-trust diagnostics.
+
+The proxy tests cover preserving the current HTTPS origin, omitted HTTP-switch values, restart persistence, disabling the switch, and rejecting an unconfigured new HTTPS origin without changing saved settings. Connection tests cover rejection during both product and policy discovery, preservation of saved credentials/catalog/check state, and continued failure reporting when the saved key itself is rejected.
+
+`scripts/test-mysql.ps1` passed across all server and Go client packages using fresh isolated databases. The helper now provisions the dedicated HTTP integration database instead of silently skipping that suite. The two SDK logout fixtures explicitly enable merchant-side sandbox HTTP to match their existing client opt-in. Store policy, commerce, licensing recovery and account logout checks passed in the same run. `go vet ./cmd/... ./internal/... ./pkg/...` and the 52 frontend logic tests passed.
+
+The initial sandbox run could not access loopback MySQL or Windows account-lock storage; the successful integration runs used approved host execution. Root-wide `go test ./...` also enumerates ignored SDK publication artifacts, so the authoritative server/client run uses the explicit package roots in the helper. Local before/after evidence is retained in `.cache/bugcheck-regressions-before-20261027.log` and `.cache/bugcheck-regressions-final-20261027.log`. These checks use controlled provider fixtures and do not add real payment or licensing acceptance.
+
+## Editor and public-origin regressions, 2026-10-27
+
+The policy editor previously replaced typing entered while a save or publication request was pending. It now retains that typing, advances the next request's version, and records only the acknowledged content as the saved form baseline. New edits remain unsaved until submitted. Responses arriving after navigation no longer modify the removed editor, and a storefront-refresh failure is reported separately from a successful publication.
+
+The new browser harness at `scripts/store-policies.browser.html` reproduced five failing scenarios before the editor fix; all six scenarios passed afterward, including the existing failed-save/retry behavior. It uses the actual editor module, native DOM forms and controlled asynchronous responses. The saved-baseline checks distinguish reverting to the acknowledged content from reverting to the earlier content. Serve the repository root over localhost HTTP to rerun it.
+
+Startup configuration, transport settings and service restart now share public-origin validation. Regression cases reject empty query/fragment markers, empty/zero/out-of-range ports, invalid IPv6 authorities and unsupported URL components; normalization covers hostname case, default ports, numeric port spelling and IPv6 forms. Restart coverage confirms that a legacy saved origin is normalized. The focused rejection tests failed against the earlier implementation.
+
+`scripts/test-mysql.ps1` passed all server and Go client packages with fresh isolated databases, including the new origin package and the existing commerce, licensing, policy and account recovery checks. `go vet ./cmd/... ./internal/... ./pkg/...`, JavaScript syntax checks and all 52 frontend logic tests passed. Integration evidence is retained locally in `.cache/bugcheck-editor-origin-mysql-20261027.log`. The browser harness uses synthetic content and does not publish real store policies; the running business service was not restarted.

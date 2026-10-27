@@ -51,7 +51,7 @@ export async function integrationAssistant(root, api) {
       const [context, report] = await Promise.all([api("/admin/integration/context"), selected.productID ? api("/admin/integration/check", "POST", {product_id:selected.productID,language:selected.language,environment:selected.environment}) : Promise.resolve(null)]);
       if (current !== generation || !root.isConnected) return;
       clearIntegrationReport(); if (report) rememberIntegrationReport(report); updateConfigStatus();
-      const prompt = buildIntegrationPrompt({language:selected.language, appKind:draft.appKind, platform:draft.platform, feature:draft.feature, projectNotes:draft.projectNotes, report:currentIntegrationReport(), merchantOrigin:context.merchant_origin, environment:selected.environment});
+      const prompt = buildIntegrationPrompt({language:selected.language, appKind:draft.appKind, platform:draft.platform, feature:draft.feature, projectNotes:draft.projectNotes, report:currentIntegrationReport(), merchantOrigin:context.merchant_origin, environment:selected.environment, allowHTTP:context.allow_http===true});
       const issues = report?.checks?.filter(check => check.status !== 'ready') || [];
       if (issues.length) error.textContent = issues.map(check => check.message).join('；');
       output.value = prompt.text; copy.disabled = false; save.disabled = false; status.textContent = "";

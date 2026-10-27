@@ -38,6 +38,7 @@ type IntegrationConfig struct {
 	LaunchProductID    string `json:"launch_product_id"`
 	LicentivoProductID string `json:"licentivo_product_id"`
 	Environment        string `json:"environment"`
+	AllowHTTP          bool   `json:"allow_http,omitempty"`
 }
 
 // PublicProductConfig intentionally omits license keys, device state, cache
@@ -125,8 +126,13 @@ func (s *Service) CheckIntegration(ctx context.Context, p Principal, in Integrat
 		}
 	}
 	origin, originErr := url.Parse(report.Config.MerchantOrigin)
-	if originErr != nil || origin.Host == "" || origin.User != nil || origin.RawQuery != "" || origin.Fragment != "" || (origin.Path != "" && origin.Path != "/") || (origin.Scheme != "https" && !(in.Environment == "sandbox" && origin.Scheme == "http" && (origin.Hostname() == "localhost" || origin.Hostname() == "127.0.0.1" || origin.Hostname() == "::1"))) {
-		check("MERCHANT_ORIGIN_INVALID", "failed", "请在网站设置中配置 HTTPS 公开访问地址；本机 HTTP 仅用于测试环境")
+	allowHTTP, err := s.SDKHTTPEnabled(ctx)
+	if err != nil {
+		return report, err
+	}
+	report.Config.AllowHTTP = allowHTTP && in.Environment == "sandbox" && originErr == nil && origin.Scheme == "http"
+	if originErr != nil || origin.Host == "" || origin.User != nil || origin.RawQuery != "" || origin.Fragment != "" || (origin.Path != "" && origin.Path != "/") || (origin.Scheme != "https" && !report.Config.AllowHTTP) {
+		check("MERCHANT_ORIGIN_INVALID", "failed", "请配置 HTTPS 访问地址；内网 HTTP 测试须在“网站与安全”开启 SDK HTTP 测试接入，并选择测试环境")
 	} else {
 		check("MERCHANT_ORIGIN_READY", "ready", "商户访问地址有效")
 	}

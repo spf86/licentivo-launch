@@ -35,6 +35,25 @@ int main(int argc,char **argv){
   assert(!launch_application_login(bad,"account@example.test","secret"));assert(!strcmp(launch_application_error(bad),!strcmp(invalid[i],"pending_server_error")?"ENTITLEMENT_PENDING":"IDENTITY_MISMATCH"));assert(!bad->runtime&&!saved);
   assert(!launch_application_run_feature(bad,"export",action,NULL)&&calls==before);launch_application_close(bad);
  }
+ const char *malformed_users[]={"me_missing_user","me_null_user","me_missing_id","me_empty_id","me_null_id","me_number_id","me_array_user","me_string_user"};
+ for(size_t i=0;i<sizeof(malformed_users)/sizeof(malformed_users[0]);i++){
+  mode(origin,"online");launch_application *invalid_user=launch_application_open(origin,product,config,"sandbox",0,&store);assert(invalid_user&&launch_application_login(invalid_user,"account@example.test","secret"));char *before=copy(saved);mode(origin,malformed_users[i]);
+  assert(launch_application_restore(invalid_user)==-1&&!strcmp(launch_application_error(invalid_user),"INVALID_RESPONSE"));assert(saved&&!strcmp(saved,before)&&!invalid_user->runtime);
+  int actions=calls;assert(!launch_application_run_feature(invalid_user,"export",action,NULL)&&calls==actions);assert(launch_application_logout(invalid_user)&&!saved);launch_application_close(invalid_user);wipe(before);free(before);
+ }
+ mode(origin,"online");launch_application *different_user=launch_application_open(origin,product,config,"sandbox",0,&store);assert(different_user&&launch_application_login(different_user,"account@example.test","secret"));mode(origin,"me_other");assert(launch_application_restore(different_user)==-1&&!strcmp(launch_application_error(different_user),"SESSION_REJECTED"));assert(!saved&&!different_user->runtime);launch_application_close(different_user);
+ const char *transport_denials[]={"SDK_HTTP_DISABLED","SDK_HTTPS_REQUIRED"};
+ for(size_t i=0;i<2;i++){
+  mode(origin,"online");launch_application *policy=launch_application_open(origin,product,config,"sandbox",0,&store);assert(policy&&launch_application_login(policy,"account@example.test","secret"));char *before=copy(saved);mode(origin,transport_denials[i]);assert(launch_application_restore(policy)==-1&&!strcmp(launch_application_error(policy),transport_denials[i]));assert(saved&&!strcmp(saved,before)&&!policy->runtime);assert(launch_application_logout(policy)&&!saved);launch_application_close(policy);wipe(before);free(before);
+ }
+ mode(origin,"online");launch_application *accepted=launch_application_open(origin,product,config,"sandbox",0,&store);assert(accepted&&launch_application_login(accepted,"account@example.test","secret"));mode(origin,"logout_accepted");assert(!launch_application_logout(accepted));assert(saved&&pending_saved&&!accepted->runtime);launch_application_close(accepted);
+ accepted=launch_application_open(origin,product,config,"sandbox",0,&store);assert(accepted&&launch_application_restore(accepted)==-1&&!accepted->runtime);mode(origin,"online");assert(launch_application_restore(accepted)==0&&!saved&&!pending_saved);launch_application_close(accepted);
+ for(int delete_fails=0;delete_fails<2;delete_fails++){
+  mode(origin,"online");launch_application *restore_fault=launch_application_open(origin,product,config,"sandbox",0,&store);assert(restore_fault&&launch_application_login(restore_fault,"account@example.test","secret"));launch_application_close(restore_fault);
+  restore_fault=launch_application_open(origin,product,config,"sandbox",0,&store);assert(restore_fault);fail_saves=1;fail_deletes=delete_fails;int before=calls;
+  assert(launch_application_restore(restore_fault)==-1);assert(!strcmp(launch_application_error(restore_fault),"SECURE_STORE_FAILED"));assert(!restore_fault->runtime);
+  assert(!launch_application_run_feature(restore_fault,"export",action,NULL)&&calls==before);launch_application_close(restore_fault);fail_saves=fail_deletes=0;delete_record(NULL,NULL);
+ }
  mode(origin,"online");launch_application *offline=launch_application_open(origin,product,config,"sandbox",0,&store);assert(offline&&launch_application_login(offline,"account@example.test","secret"));
  mode(origin,"offline");assert(!launch_application_logout(offline));assert(saved&&strstr(saved,"\"logout_pending\":true")&&!offline->runtime);assert(!launch_application_run_feature(offline,"export",action,NULL));launch_application_close(offline);
  launch_application *retry=launch_application_open(origin,product,config,"sandbox",0,&store);assert(retry);assert(launch_application_restore(retry)==-1);assert(saved&&!retry->runtime);

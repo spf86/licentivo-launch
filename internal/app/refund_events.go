@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"errors"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	"licentivo-launch/internal/ports"
@@ -26,8 +27,24 @@ func (s *Service) processRefundEvent(ctx context.Context, event storage.PaymentE
 	}
 	var payment storage.Payment
 	var order storage.Order
-	if s.db.WithContext(ctx).First(&payment, "account_id = ? AND external_transaction_id = ? AND status = 'succeeded'", account.ID, observed.PaymentID).Error != nil || observed.ExternalID != verified.ResourceID || observed.Amount.Minor != payment.AmountMinor || observed.Amount.Currency != payment.Currency || s.db.WithContext(ctx).First(&order, "id = ?", payment.OrderID).Error != nil {
+	if observed.ExternalID != verified.ResourceID {
 		return review()
+	}
+	lookup := s.db.WithContext(ctx).First(&payment, "account_id = ? AND external_transaction_id = ?", account.ID, observed.PaymentID).Error
+	if errors.Is(lookup, gorm.ErrRecordNotFound) || lookup == nil && payment.Status != "succeeded" {
+		// Providers can deliver refunds before the original settlement event.
+		// Keep the notification in the bounded automatic retry queue until the
+		// verified payment has been recorded locally.
+		return problem(503, "REFUND_EVENT_PENDING", "退款通知已保存，正在等待原付款入账")
+	}
+	if lookup != nil {
+		return ErrStorage
+	}
+	if observed.Amount.Minor != payment.AmountMinor || observed.Amount.Currency != payment.Currency {
+		return review()
+	}
+	if err := s.db.WithContext(ctx).First(&order, "id = ?", payment.OrderID).Error; err != nil {
+		return ErrStorage
 	}
 	err = s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var user storage.User
@@ -65,7 +82,11 @@ func (s *Service) processRefundEvent(ctx context.Context, event storage.PaymentE
 		if r.Status == "succeeded" {
 			return nil
 		}
-		if err := tx.Model(&r).Updates(map[string]any{"status": "pending", "external_refund_id": observed.ExternalID, "approved_at": now(), "review_required": false, "next_check_at": now()}).Error; err != nil {
+		changes := map[string]any{"status": "pending", "external_refund_id": observed.ExternalID, "review_required": false, "next_check_at": now()}
+		if r.ApprovedAt == nil {
+			changes["approved_at"] = now()
+		}
+		if err := tx.Model(&r).Updates(changes).Error; err != nil {
 			return err
 		}
 		if order.Status == "paid" {

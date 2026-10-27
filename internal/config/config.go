@@ -4,9 +4,10 @@ import (
 	"encoding/base64"
 	"errors"
 	"net"
-	"net/url"
 	"path/filepath"
 	"strings"
+
+	"licentivo-launch/internal/origin"
 )
 
 // Config is deliberately not serializable: it contains database credentials.
@@ -51,11 +52,10 @@ func Load(getenv func(string) string) (Config, error) {
 			return c, errors.New("LAUNCH_HTTPS_ADDR must differ from LAUNCH_HTTP_ADDR")
 		}
 	}
-	u, err := url.Parse(c.PublicURL)
-	if err != nil || u.Hostname() == "" || (u.Scheme != "http" && u.Scheme != "https") || u.User != nil || u.RawQuery != "" || u.Fragment != "" || (u.Path != "" && u.Path != "/") {
+	c.PublicURL, err = origin.Normalize(c.PublicURL)
+	if err != nil {
 		return c, errors.New("LAUNCH_PUBLIC_URL must be an HTTP(S) origin without credentials, path, query or fragment")
 	}
-	c.PublicURL = strings.TrimRight(c.PublicURL, "/")
 	if key := getenv("LAUNCH_MASTER_KEY"); key != "" {
 		c.MasterKey, err = base64.StdEncoding.Strict().DecodeString(key)
 		if err != nil || len(c.MasterKey) != 32 {
@@ -63,7 +63,7 @@ func Load(getenv func(string) string) (Config, error) {
 		}
 	}
 	if c.Environment == "production" {
-		if c.DatabaseDSN == "" || len(c.MasterKey) != 32 || u.Scheme != "https" {
+		if c.DatabaseDSN == "" || len(c.MasterKey) != 32 || !strings.HasPrefix(c.PublicURL, "https://") {
 			return c, errors.New("production requires LAUNCH_DATABASE_DSN, LAUNCH_MASTER_KEY and an HTTPS LAUNCH_PUBLIC_URL")
 		}
 	}

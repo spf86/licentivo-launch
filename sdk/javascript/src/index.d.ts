@@ -1,6 +1,6 @@
 export interface LaunchConfig {
   schema_version: 1; merchant_origin: string; launch_product_id: string;
-  licentivo_product_id: string; environment: 'sandbox' | 'live';
+  licentivo_product_id: string; environment: 'sandbox' | 'live'; allow_http?: boolean;
 }
 export interface PublicProductConfig {
   product_id: string; trusted_keys: Record<string, string>; base_url?: string;
@@ -56,7 +56,7 @@ export interface Options {
   sleep?: (milliseconds: number, signal?: AbortSignal) => Promise<void>;
 }
 export class Application {
-  static connect(merchantOrigin: string, productID: string, licentivoProductID: string, trustedKeys: Record<string, string>, options?: Options & {environment?: 'sandbox' | 'live'}): Application;
+  static connect(merchantOrigin: string, productID: string, licentivoProductID: string, trustedKeys: Record<string, string>, options?: Options & {environment?: 'sandbox' | 'live'; allowHTTP?: boolean}): Application;
   constructor(launch: LaunchConfig, product: PublicProductConfig, options?: Options);
   static fromFiles(launchPath: string, productPath: string, options?: Options): Promise<Application>;
   login(email: string, password: string, options?: {signal?: AbortSignal}): Promise<SessionState>;

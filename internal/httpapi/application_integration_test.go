@@ -246,6 +246,31 @@ func TestApplicationFlows(t *testing.T) {
 	if adminView.Role != "admin" || !adminView.FullAccess {
 		t.Fatal("administrator session does not report full access")
 	}
+	// TLS is terminated by the proxy; changing the SDK test switch must not
+	// require a second certificate or an HTTPS listener inside Launch.
+	transportInput := map[string]any{"mode": "https", "public_url": appConfig.PublicURL, "allow_sdk_http": true}
+	transport := data[app.TransportSettingsView](t, a.request("POST", "/api/v1/admin/transport/settings", transportInput, admin))
+	if !transport.AllowSDKHTTP || transport.HTTPSListenerEnabled || transport.TLSCertificatePresent || transport.PublicURL != appConfig.PublicURL {
+		t.Fatal("proxy HTTPS settings were not preserved", transport)
+	}
+	delete(transportInput, "allow_sdk_http")
+	transport = data[app.TransportSettingsView](t, a.request("POST", "/api/v1/admin/transport/settings", transportInput, admin))
+	if !transport.AllowSDKHTTP {
+		t.Fatal("omitting the HTTP switch reset its saved value")
+	}
+	a.handler = newHandler()
+	transport = data[app.TransportSettingsView](t, a.request("GET", "/api/v1/admin/transport/settings", nil, admin))
+	if !transport.AllowSDKHTTP || transport.PublicURL != appConfig.PublicURL {
+		t.Fatal("proxy HTTPS transport settings did not survive a restart", transport)
+	}
+	transportInput["allow_sdk_http"] = false
+	a.expect(a.request("POST", "/api/v1/admin/transport/settings", transportInput, admin), 200)
+	transportInput["public_url"] = "https://different.example"
+	a.expect(a.request("POST", "/api/v1/admin/transport/settings", transportInput, admin), 409)
+	transport = data[app.TransportSettingsView](t, a.request("GET", "/api/v1/admin/transport/settings", nil, admin))
+	if transport.AllowSDKHTTP || transport.PublicURL != appConfig.PublicURL {
+		t.Fatal("a rejected origin change modified saved transport settings", transport)
+	}
 	brand := app.Brand{Name: "Updated Brand", SupportEmail: "support@example.invalid"}
 	a.expect(a.request("PUT", "/api/v1/admin/brand", brand, admin, func(r *http.Request) { r.Header.Del("X-CSRF-Token") }), 403)
 	a.expect(a.request("PUT", "/api/v1/admin/brand", brand, admin, func(r *http.Request) { r.Header.Set("Origin", "https://attacker.invalid") }), 403)
@@ -504,6 +529,7 @@ func TestApplicationFlows(t *testing.T) {
 	if len(sender.messages) != len(outbox) {
 		t.Fatalf("outbox did not drain: got %d messages, want %d", len(sender.messages), len(outbox))
 	}
+	testStorePolicies(a, admin, customer)
 	testCommerce(a, admin, customer, register, next)
 	// Keep the long-running preview honest: the isolated fixture used a fake
 	// DeepL key and translator, so it must not look like a real connection.

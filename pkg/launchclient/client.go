@@ -99,12 +99,16 @@ type Client struct {
 }
 
 func New(origin string, allowLocalHTTP bool) (*Client, error) {
+	return newClient(origin, allowLocalHTTP, false)
+}
+
+func newClient(origin string, allowLocalHTTP, allowHTTP bool) (*Client, error) {
 	u, err := url.Parse(origin)
 	if err != nil || u.Hostname() == "" || u.User != nil || u.RawQuery != "" || u.Fragment != "" || u.Path != "" && u.Path != "/" {
 		return nil, errors.New("merchant URL must be an origin")
 	}
 	local := u.Hostname() == "localhost" || u.Hostname() == "127.0.0.1" || u.Hostname() == "::1"
-	if u.Scheme != "https" && !(u.Scheme == "http" && local && allowLocalHTTP) {
+	if u.Scheme != "https" && !(u.Scheme == "http" && (allowHTTP || local && allowLocalHTTP)) {
 		return nil, errors.New("HTTPS is required")
 	}
 	return &Client{base: strings.TrimRight(origin, "/"), http: &http.Client{Timeout: 15 * time.Second, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}}, nil
@@ -159,10 +163,11 @@ func (c *Client) call(ctx context.Context, method, path string, input, out any) 
 		RequestID string `json:"request_id"`
 	}
 	decodeErr := json.Unmarshal(body, &envelope)
-	if response.StatusCode < 200 || response.StatusCode >= 300 {
+	if response.StatusCode != http.StatusOK {
 		return &APIError{Code: safeCode(envelope.Error.Code), Status: response.StatusCode, RequestID: safeRequestID(envelope.RequestID), RetryAfter: retryAfter(response.Header.Get("Retry-After"), time.Now())}
 	}
-	if decodeErr != nil || out != nil && json.Unmarshal(envelope.Data, out) != nil {
+	data := bytes.TrimSpace(envelope.Data)
+	if decodeErr != nil || len(data) == 0 || data[0] != '{' || out != nil && json.Unmarshal(data, out) != nil {
 		return ErrInvalidResponse
 	}
 	return nil
@@ -188,6 +193,9 @@ func (c *Client) CurrentUser(ctx context.Context) (User, error) {
 		User User `json:"user"`
 	}
 	err := c.call(ctx, "GET", "/me", nil, &result)
+	if err == nil && result.User.ID == "" {
+		return User{}, ErrInvalidResponse
+	}
 	return result.User, err
 }
 

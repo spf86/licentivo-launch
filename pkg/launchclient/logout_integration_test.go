@@ -51,6 +51,10 @@ func TestLaunchAccountLogoutRecovery(t *testing.T) {
 	if err := service.Bootstrap(ctx, app.BootstrapInput{Token: strings.Repeat("q", 43), Email: "logout-audit@example.invalid", Password: "temporary-logout-test-password", BrandName: "Logout Audit"}); err != nil {
 		t.Fatal(err)
 	}
+	// Match the SDK's explicit HTTP opt-in on this isolated test merchant.
+	if err := db.Model(&storage.InstanceSettings{}).Where("id = ?", 1).Update("allow_sdk_http", true).Error; err != nil {
+		t.Fatal(err)
+	}
 	remote := testRemote
 	if err := db.Create(&storage.Product{ID: testProduct, LicentivoProductID: &remote, Slug: "logout-audit", Name: "Logout Audit", Content: []byte(`{}`), Status: "published"}).Error; err != nil {
 		t.Fatal(err)

@@ -127,6 +127,9 @@ func (s *Service) Login(ctx context.Context, address, password, kind string) (Se
 		hash = user.PasswordHash
 	}
 	valid := security.VerifyPassword(hash, password)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return SessionGrant{}, ErrStorage
+	}
 	if !valid || parseErr != nil || err != nil || user.Status != "active" {
 		return SessionGrant{}, problem(401, "LOGIN_FAILED", "邮箱或密码不正确，或账号暂不可用")
 	}
@@ -195,11 +198,17 @@ func (s *Service) Authenticate(ctx context.Context, token, kind string) (Princip
 	}
 	var session storage.Session
 	if err := s.db.WithContext(ctx).Where("token_hash = ? AND revoked_at IS NULL AND expires_at > ? AND kind = ?", security.Digest(token), now(), kind).First(&session).Error; err != nil {
-		return Principal{}, ErrUnauthorized
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return Principal{}, ErrUnauthorized
+		}
+		return Principal{}, ErrStorage
 	}
 	var user storage.User
 	if err := s.db.WithContext(ctx).First(&user, "id = ? AND status = 'active'", session.UserID).Error; err != nil {
-		return Principal{}, ErrUnauthorized
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return Principal{}, ErrUnauthorized
+		}
+		return Principal{}, ErrStorage
 	}
 	role, err := s.role(s.db.WithContext(ctx), user)
 	if err != nil {

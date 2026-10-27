@@ -93,6 +93,7 @@ func NewApplicationFromFiles(launchPath, productPath string, options Config) (*A
 		return nil, errors.New("invalid or mismatched public product configuration")
 	}
 	options.Origin, options.ProductID, options.Environment = launch.MerchantOrigin, launch.ProductID, launch.Environment
+	options.AllowHTTP = launch.AllowHTTP
 	options.AllowLocalHTTP, options.Product = launch.Environment == "sandbox", product
 	if options.CacheDir == "" {
 		root, err := os.UserCacheDir()

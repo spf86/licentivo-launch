@@ -33,6 +33,18 @@ function draft(value, language = "go") {
   return result;
 }
 
+test("HTTP test code carries explicit opt-in for each language and cannot be used in live", () => {
+  const expected={go:'AllowHTTP: true',web:'AllowHTTP: true',python:'allow_http=True',javascript:'allowHTTP: true',csharp:'allowHttp: true',java:'"sandbox", true',rust:'connect_with_http',ruby:'allow_http: true',c:'launch_application_connect_http',cpp:'ConnectHTTP'};
+  for(const language of Object.keys(integrationTargets)) {
+    const value=report(language);value.config.merchant_origin='http://customer-test-server:18080';value.config.allow_http=true;
+    const result=buildIntegrationPrompt({language,report:value,merchantOrigin:value.config.merchant_origin,environment:'sandbox'});
+    assert.equal(result.ready,true,language);
+    assert.ok(result.code.content.includes(expected[language]),language);
+    value.config.environment='live';
+    assert.equal(buildIntegrationPrompt({language,report:value}).ready,false,language+' live');
+  }
+});
+
 test("all nine language wrappers and the separate Go Web option point to real source", () => {
   assert.deepEqual(Object.keys(integrationTargets).sort(), ["c", "cpp", "csharp", "go", "java", "javascript", "python", "ruby", "rust", "web"]);
   for (const [language, target] of Object.entries(integrationTargets)) {
