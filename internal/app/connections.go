@@ -212,17 +212,26 @@ func (s *Service) SaveLicenseSettings(ctx context.Context, p Principal, in Licen
 		}
 		apiKey = string(plain)
 	}
+	checkedConnectionID := saved.ID
+	if in.APIKey != "" && saved.ID != "" {
+		// A failed replacement was never saved. Only attach check failures to
+		// the existing connection when its own credential was being tested.
+		plain, readErr := s.readSecret(ctx, saved.CredentialSecretID)
+		if readErr != nil || string(plain) != apiKey {
+			checkedConnectionID = ""
+		}
+	}
 	client, err := s.licentivoSetupProvider(apiKey)
 	if err != nil {
 		return nil, problem(400, "LICENSE_CONFIG_INVALID", "Licentivo API Key 格式无效")
 	}
 	products, err := client.Products(ctx)
 	if err != nil {
-		return nil, problem(400, "LICENSE_CONNECTION_FAILED", "无法从 Licentivo 读取产品，请检查 API Key 是否有效")
+		return nil, s.recordLicentivoConnectionFailure(ctx, checkedConnectionID, licentivoConnectionError("读取产品", err))
 	}
 	policies, err := client.Policies(ctx)
 	if err != nil {
-		return nil, problem(400, "LICENSE_CONNECTION_FAILED", "授权服务连接或凭证检查未通过")
+		return nil, s.recordLicentivoConnectionFailure(ctx, checkedConnectionID, licentivoConnectionError("读取授权策略", err))
 	}
 	caps, capsErr := client.Capabilities(ctx)
 	catalog := marshal(map[string]json.RawMessage{"products": products, "policies": policies})
@@ -281,7 +290,7 @@ func (s *Service) SaveLicenseSettings(ctx context.Context, p Principal, in Licen
 		return nil, databaseError(err)
 	}
 	if err := s.syncLaunchTrust(ctx, apiKey); err != nil {
-		return nil, err
+		return nil, s.recordLicentivoConnectionFailure(ctx, id, err)
 	}
 	contract := ports.LaunchBridgeVersion
 	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
@@ -342,7 +351,7 @@ func (s *Service) Connections(ctx context.Context, p Principal) (map[string]any,
 				}
 			}
 		}
-		licenses = append(licenses, map[string]any{"id": connection.ID, "base_url": LicentivoServiceURL, "contract_version": contract, "capabilities": capabilities, "catalog": json.RawMessage(connection.Catalog), "last_checked_at": connection.LastCheckedAt})
+		licenses = append(licenses, map[string]any{"id": connection.ID, "base_url": LicentivoServiceURL, "contract_version": contract, "capabilities": capabilities, "catalog": json.RawMessage(connection.Catalog), "last_checked_at": connection.LastCheckedAt, "last_check_error": connection.LastCheckError, "account_protocol_ready": connection.ContractVersion != nil && *connection.ContractVersion == ports.LaunchBridgeVersion && connection.LastCheckError == nil})
 	}
 	var rows []storage.PlanLicenseMapping
 	if s.db.WithContext(ctx).Order("plan_version_id").Find(&rows).Error != nil {

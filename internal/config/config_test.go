@@ -43,3 +43,42 @@ func TestOptionalHTTPSListenerRequiresADistinctAddress(t *testing.T) {
 		t.Fatal("invalid HTTPS listener address was accepted")
 	}
 }
+
+func TestPublicOriginRejectsUnusableAddresses(t *testing.T) {
+	for _, origin := range []string{
+		"https://merchant.example?", "https://merchant.example#",
+		"https://merchant.example:", "https://merchant.example:65536", "http://merchant.example:0",
+	} {
+		t.Run(origin, func(t *testing.T) {
+			if _, err := Load(func(key string) string {
+				if key == "LAUNCH_PUBLIC_URL" {
+					return origin
+				}
+				return ""
+			}); err == nil {
+				t.Fatal("unusable public origin was accepted")
+			}
+		})
+	}
+}
+
+func TestPublicOriginNormalizesBrowserOrigin(t *testing.T) {
+	for raw, want := range map[string]string{
+		"https://MERCHANT.example:443/": "https://merchant.example",
+		"http://merchant.example:80":    "http://merchant.example",
+		"https://[::1]:443/":            "https://[::1]",
+		"http://localhost:18080/":       "http://localhost:18080",
+	} {
+		t.Run(raw, func(t *testing.T) {
+			config, err := Load(func(key string) string {
+				if key == "LAUNCH_PUBLIC_URL" {
+					return raw
+				}
+				return ""
+			})
+			if err != nil || config.PublicURL != want {
+				t.Fatalf("PublicURL = %q, %v; want %q", config.PublicURL, err, want)
+			}
+		})
+	}
+}

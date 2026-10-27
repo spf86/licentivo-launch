@@ -52,6 +52,11 @@ func TestAccountStoreOwnershipHTTP(t *testing.T) {
 	if err := service.Bootstrap(ctx, app.BootstrapInput{Token: strings.Repeat("q", 43), Email: "logout-audit@example.invalid", Password: "temporary-logout-test-password", BrandName: "Logout Audit"}); err != nil {
 		t.Fatal(err)
 	}
+	// The isolated HTTP fixture opts in on the merchant side as well as in
+	// the SDK. Production defaults and live HTTPS requirements stay enabled.
+	if err := db.Model(&storage.InstanceSettings{}).Where("id = ?", 1).Update("allow_sdk_http", true).Error; err != nil {
+		t.Fatal(err)
+	}
 	remote := testRemote
 	if err := db.Create(&storage.Product{ID: testProduct, LicentivoProductID: &remote, Slug: "logout-audit", Name: "Logout Audit", Content: []byte(`{}`), Status: "published"}).Error; err != nil {
 		t.Fatal(err)

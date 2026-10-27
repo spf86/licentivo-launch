@@ -25,7 +25,7 @@ The customer website has ten locales. The administration interface currently use
 
 ## Custom licensing services
 
-Launch 0.3.2-beta can synchronize purchases with an existing licensing service using signed HTTP requests. Select one store-wide provider, map products and plans per environment, and keep runtime authorization in your own service and SDK. See the [receiver protocol and API guide](docs/external-licensing.md), [OpenAPI contract](docs/external-licensing-openapi.json), and [Python adapter example](examples/custom-licensing/README.md).
+Launch 0.3.3-beta can synchronize purchases with an existing licensing service using signed HTTP requests. Select one store-wide provider, map products and plans per environment, and keep runtime authorization in your own service and SDK. See the [receiver protocol and API guide](docs/external-licensing.md), [OpenAPI contract](docs/external-licensing-openapi.json), and [Python adapter example](examples/custom-licensing/README.md).
 
 ## Features
 
@@ -61,14 +61,14 @@ Licentivo receives the data required for licensing, such as opaque customer refe
 
 ## Install the release package
 
-Download the package for your server from [GitHub Releases](https://github.com/spf86/licentivo-launch/releases/tag/v0.3.2-beta) and extract it. **Running the package requires MySQL 8.0.16+; Go, Git, Node.js and a compiler are not required.**
+Download the package for your server from [GitHub Releases](https://github.com/spf86/licentivo-launch/releases/tag/v0.3.3-beta) and extract it. **Running the package requires MySQL 8.0.16+; Go, Git, Node.js and a compiler are not required.**
 
 | Server | Package |
 | --- | --- |
-| Windows, Intel/AMD x64 | [windows_amd64.zip](https://github.com/spf86/licentivo-launch/releases/download/v0.3.2-beta/licentivo-launch_0.3.2-beta_windows_amd64.zip) |
-| Windows, ARM64 | [windows_arm64.zip](https://github.com/spf86/licentivo-launch/releases/download/v0.3.2-beta/licentivo-launch_0.3.2-beta_windows_arm64.zip) |
-| Linux, Intel/AMD x64 | [linux_amd64.tar.gz](https://github.com/spf86/licentivo-launch/releases/download/v0.3.2-beta/licentivo-launch_0.3.2-beta_linux_amd64.tar.gz) |
-| Linux, ARM64 | [linux_arm64.tar.gz](https://github.com/spf86/licentivo-launch/releases/download/v0.3.2-beta/licentivo-launch_0.3.2-beta_linux_arm64.tar.gz) |
+| Windows, Intel/AMD x64 | [windows_amd64.zip](https://github.com/spf86/licentivo-launch/releases/download/v0.3.3-beta/licentivo-launch_0.3.3-beta_windows_amd64.zip) |
+| Windows, ARM64 | [windows_arm64.zip](https://github.com/spf86/licentivo-launch/releases/download/v0.3.3-beta/licentivo-launch_0.3.3-beta_windows_arm64.zip) |
+| Linux, Intel/AMD x64 | [linux_amd64.tar.gz](https://github.com/spf86/licentivo-launch/releases/download/v0.3.3-beta/licentivo-launch_0.3.3-beta_linux_amd64.tar.gz) |
+| Linux, ARM64 | [linux_arm64.tar.gz](https://github.com/spf86/licentivo-launch/releases/download/v0.3.3-beta/licentivo-launch_0.3.3-beta_linux_arm64.tar.gz) |
 
 `amd64` works on compatible Intel and AMD 64-bit processors. Choose the package for the machine hosting Launch. Customer installer platforms are configured separately in the storefront. Prebuilt server packages are currently provided for Windows and Linux.
 
@@ -151,7 +151,7 @@ After installation, configure the services through the administration area:
 | Stripe, PayPal, Waffo, and Paddle | Payments collected directly into your merchant accounts | [Payment integration](docs/payments.md) |
 | Resend or generic SMTP (optional) | Configurable verification, account recovery, and transaction notifications | [Email setup](docs/resend-email.md) |
 | DeepL | Translation of merchant content into customer locales | [Language setup](docs/multilingual-deepl.md) |
-| HTTPS | Secure public origin and callbacks | [Certificates and HTTPS](docs/ssl-https.md) |
+| HTTPS | Secure public origin and callbacks | [Certificates and HTTPS](docs/ssl-https.md) · [HTTP test guide in 14 languages](docs/http-testing/README.md) |
 
 Use a Licentivo management key with product/policy read access and license write access. There is one Licentivo connection shared by Launch's test and live payment modes. The Licentivo service origin is fixed to `https://www.licentivo.com`.
 
@@ -229,7 +229,7 @@ The nine-language Launch application packages below use Licentivo. Custom licens
 
 See the public [installation and development documentation](https://www.licentivo.com/launch-docs.html), [manual nine-language guide](docs/manual-integration.md), [examples/README.md](examples/README.md) and [application integration guide](docs/software-sdk-integration.md). Launch automatically fills the current merchant address and existing product data into direct connection code and English AI prompts. No manual product-ID entry or configuration-file generation is required. Install only the Launch package for your language. Each package embeds the pinned official SDK and manages its adapter and SDK linking. The server itself does not depend on the client packages.
 
-The administration **程序接入 → 接入检查与代码** page reads the current merchant address, existing product mapping and signing public keys, validates them, and provides a ready-to-use connection function for each language. Start with the [manual nine-language guide](docs/manual-integration.md), [Chinese quick start](docs/application-quickstart.zh-CN.md), [versioned integration packages](docs/integration-packages.md), and [automated/external acceptance workflow](docs/acceptance.md). Launch SDK 0.1.3 embeds official SDK 0.11.2, including the C/C++ CMake curl dependency compatibility fix; its licensing protocol and client API are unchanged. The separate [Launch SDK repository](https://github.com/spf86/licentivo-launch-sdk) has published the GitHub release, with **9/9 public installation checks passed** for Go, Python, C#, Java, Node.js/TypeScript, Rust, Ruby, C and C++. Maven Central and all other language registries are publicly available; consult the [versioned publication record](sdk/release/docs/publication-0.1.3.md) and [public installation evidence](https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/registry-verification.json). External merchant/payment/licensing acceptance remains deferred until its environment is configured.
+The administration **程序接入 → 接入检查与代码** page reads the current merchant address, existing product mapping and signing public keys, validates them, and provides a ready-to-use connection function for each language. Start with the [manual nine-language guide](docs/manual-integration.md), [Chinese quick start](docs/application-quickstart.zh-CN.md), [versioned integration packages](docs/integration-packages.md), and [automated/external acceptance workflow](docs/acceptance.md). Launch SDK 0.1.3 embeds official SDK 0.11.5, including the C/C++ CMake curl dependency compatibility fix; its licensing protocol and client API are unchanged. The separate [Launch SDK repository](https://github.com/spf86/licentivo-launch-sdk) has published the GitHub release, with **9/9 public installation checks passed** for Go, Python, C#, Java, Node.js/TypeScript, Rust, Ruby, C and C++. Maven Central and all other language registries are publicly available; consult the [versioned publication record](sdk/release/docs/publication-0.1.3.md) and [public installation evidence](https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/registry-verification.json). External merchant/payment/licensing acceptance remains deferred until its environment is configured.
 
 **运营工具 → AI 快速接入** generates an English prompt from your language, platform, project type and protected feature. Select the existing software and environment to include the automatically filled direct initialization code, or generate a clearly marked unconfigured draft. The prompt includes the exact versioned package-manager command or GitHub download, links to the language README and integration guides, the `Connect/connect → Login/Restore → RunFeature` lifecycle, and an acceptance checklist. No configuration files or manual internal product-ID entry are required. Copy or download the prompt for your own AI coding tool; Launch never automatically sends it to an AI service, and excludes passwords, license credentials, sessions, management keys, payment keys and server configuration. See [AI integration](docs/ai-integration.md).
 

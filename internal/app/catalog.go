@@ -261,6 +261,7 @@ type SiteView struct {
 	Environment               string            `json:"environment"`
 	SalesEnabled              bool              `json:"sales_enabled"`
 	PaymentProviders          []string          `json:"payment_providers"`
+	Policies                  []PublishedPolicy `json:"policies"`
 	Locale                    string            `json:"locale"`
 	SourceLocale              string            `json:"source_locale"`
 	SupportedLocales          []LocaleOption    `json:"supported_locales"`
@@ -278,6 +279,11 @@ func (s *Service) Site(ctx context.Context, environment, productSlug, requestedL
 	}
 	source, locale := requestedContentLocale(s.db.WithContext(ctx), requestedLocale)
 	view := SiteView{Installed: settings.InstallationCompletedAt != nil, Products: []ProductView{}, Plans: []PlanView{}, PaymentProviders: []string{}, Environment: environment, Locale: locale, SourceLocale: source, SupportedLocales: supportedLocales(), TranslationReady: true, UI: builtInUIStrings(locale)}
+	var policyErr error
+	view.Policies, policyErr = publishedStorePolicies(settings.StorePolicies)
+	if policyErr != nil {
+		return view, policyErr
+	}
 	mailRequired, err := emailVerificationRequired(s.db.WithContext(ctx))
 	if err != nil {
 		return view, err

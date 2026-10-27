@@ -33,6 +33,18 @@ function draft(value, language = "go") {
   return result;
 }
 
+test("HTTP test code carries explicit opt-in for each language and cannot be used in live", () => {
+  const expected={go:'AllowHTTP: true',web:'AllowHTTP: true',python:'allow_http=True',javascript:'allowHTTP: true',csharp:'allowHttp: true',java:'"sandbox", true',rust:'connect_with_http',ruby:'allow_http: true',c:'launch_application_connect_http',cpp:'ConnectHTTP'};
+  for(const language of Object.keys(integrationTargets)) {
+    const value=report(language);value.config.merchant_origin='http://customer-test-server:18080';value.config.allow_http=true;
+    const result=buildIntegrationPrompt({language,report:value,merchantOrigin:value.config.merchant_origin,environment:'sandbox'});
+    assert.equal(result.ready,true,language);
+    assert.ok(result.code.content.includes(expected[language]),language);
+    value.config.environment='live';
+    assert.equal(buildIntegrationPrompt({language,report:value}).ready,false,language+' live');
+  }
+});
+
 test("all nine language wrappers and the separate Go Web option point to real source", () => {
   assert.deepEqual(Object.keys(integrationTargets).sort(), ["c", "cpp", "csharp", "go", "java", "javascript", "python", "ruby", "rust", "web"]);
   for (const [language, target] of Object.entries(integrationTargets)) {
@@ -43,7 +55,7 @@ test("all nine language wrappers and the separate Go Web option point to real so
     assert.ok(result.text.includes(target.wrapperPath + "/README.md"));
     assert.ok(result.text.includes(target.examplePath));
     assert.ok(result.text.includes(target.publicReadme));
-    assert.match(result.text, /https:\/\/github\.com\/spf86\/licentivo-launch-sdk\/releases\/tag\/v0\.1\.4/);
+    assert.match(result.text, /https:\/\/github\.com\/spf86\/licentivo-launch-sdk\/releases\/tag\/v0\.1\.5/);
     assert.match(result.text, /https:\/\/www\.licentivo\.com\/launch-docs\.html#developer/);
     assert.equal(Object.isFrozen(target), true);
   }
@@ -190,11 +202,11 @@ test("platform and project type change safe storage and backend isolation instru
 
 test("versions, feature guard, lifecycle and honest acceptance boundaries are retained for every target", () => {
   const upstream = readFileSync(new URL("sdk/UPSTREAM_VERSION", root), "utf8").trim();
-  assert.equal(upstream, "0.11.2");
+  assert.equal(upstream, "0.11.5");
   for (const language of Object.keys(integrationTargets)) {
     const {text} = buildIntegrationPrompt({language, report: report(language)});
     assert.doesNotMatch(text, /0\.1\.1\b|0\.11\.0\b/, `${language} must not recommend superseded package versions`);
-    for (const required of ["Launch integration package 0.1.4", "SDK 0.11.2", "expires_at", "feature guard", "close", "logout", "release device", "ENTITLEMENT_PENDING", "Retry-After", "ENTITLEMENT_EXPIRED", "ENTITLEMENT_SUSPENDED", "ENTITLEMENT_NOT_PURCHASED", "EMAIL_VERIFICATION_REQUIRED", "401/403/404", "HTTP 5xx", "Cancellation and 429", "tampered/expired cache is rejected", "scripts/acceptance.py", "acceptance_complete"]) assert.ok(text.includes(required), `${language} is missing ${required}`);
+    for (const required of ["Launch integration package 0.1.5", "SDK 0.11.5", "expires_at", "feature guard", "close", "logout", "release device", "ENTITLEMENT_PENDING", "Retry-After", "ENTITLEMENT_EXPIRED", "ENTITLEMENT_SUSPENDED", "ENTITLEMENT_NOT_PURCHASED", "EMAIL_VERIFICATION_REQUIRED", "401/403/404", "HTTP 5xx", "Cancellation and 429", "tampered/expired cache is rejected", "scripts/acceptance.py", "acceptance_complete"]) assert.ok(text.includes(required), `${language} is missing ${required}`);
     assert.match(text, /Do not separately install an official SDK package, copy an adapter or configure upstream SDK paths/);
     assert.doesNotMatch(text, /pip install \.\/examples\/vendor|Licentivo\.SDK 0\.11|licentivo-sdk-0\.11\.1\.jar|exact official peer dependency|Install or compile the official licentivo-sdk/);
     assert.match(text, /no launch-config.json or product.json file is required/);

@@ -1,4 +1,4 @@
-# Launch Ruby 0.1.4
+# Launch Ruby 0.1.5
 
 [Website](https://www.licentivo.com/en/launch.html) · [Documentation](https://www.licentivo.com/en/launch-docs.html) · [Source code](https://github.com/spf86/licentivo-launch-sdk)
 
@@ -7,10 +7,10 @@
 Ruby 3.1+. Install only the Launch gem matching the platform:
 
 ```sh
-gem install licentivo-launch --version 0.1.4
+gem install licentivo-launch --version 0.1.5
 ```
 
-SDK 0.11.2 Ruby code, its private native core and Windows curl DLL are included. RubyGems resolves the ordinary base64 dependency. The generic source gem builds its own embedded core automatically and needs normal C11/curl/OpenSSL tools for the platform. No official SDK gem or external native-library override is needed.
+SDK 0.11.5 Ruby code, its private native core and Windows curl DLL are included. RubyGems resolves the ordinary base64 dependency. The generic source gem builds its own embedded core automatically and needs normal C11/curl/OpenSSL tools for the platform. No official SDK gem or external native-library override is needed.
 
 ## Direct initialization and manual lifecycle
 
@@ -47,3 +47,9 @@ Account logout tasks use a separate key in the configured secure store. Custom s
 Logout also records a local, session-specific account exit intent using hashes of the account scope and bearer; it stores no bearer or licensing grant there. Restore checks that intent before requesting identity, so a failed vault write or lifecycle-lock timeout cannot turn an interrupted logout into a remembered login. A storage failure is reported explicitly. If both vault persistence and local intent storage are unavailable, handle the failure and retry before terminating; the SDK does not claim durable completion.
 
 An old instance only changes its own account record and logout task. Repeating a completed logout does not adopt a newer remembered account. Retrying other sessions' account tasks never opens their licensing runtime. Licentivo owns device revocation, signed leases, offline permission and its shared cache files; ordinary close still preserves remembered login.
+
+## HTTP test opt-in on customer servers
+
+The merchant address selects HTTP or HTTPS; failed HTTPS requests never downgrade to HTTP. For an HTTP customer test server, the customer must enable HTTP on the specific Licentivo API key and enable **Allow SDK HTTP (test environment only)** in their own Launch website/security settings. Use `sandbox` and the explicit client option `Application.connect(..., environment: 'sandbox', allow_http: true)`. The generated test integration code includes it after successful checks. `live` requires HTTPS. Old SDK versions must be upgraded; server switches cannot update compiled client URLs. No access to Licentivo’s private network is needed.
+
+See the [setup, failure and HTTPS migration guide in 14 languages](../../docs/http-testing/README.md) ([简体中文](../../docs/http-testing.zh-CN.md)). HTTP does not encrypt credentials; use dedicated test data.

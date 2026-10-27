@@ -666,6 +666,114 @@ func TestPurchaseSnapshotBridge(t *testing.T) {
 		create(&product)
 		return plan(name, 1000)
 	}
+	refundEvent := func(receipt string) storage.PaymentEvent {
+		external := id()
+		event := storage.PaymentEvent{ID: id(), AccountID: account.ID, ExternalEventID: external, Kind: "refund.updated", BodyHash: bytes.Repeat([]byte{1}, 32), BodyCiphertext: []byte{1}, VerifiedPayload: marshal(ports.VerifiedEvent{ID: external, Kind: "refund.updated", ResourceID: receipt, Environment: ports.Sandbox}), Status: "pending", VerifiedAt: now(), AvailableAt: now().Add(-time.Second)}
+		create(&event)
+		return event
+	}
+	run("refund notification arriving before payment settlement is retried", func(t *testing.T) {
+		version := newProduct("Early refund notification")
+		view, err := service.CreateOrder(ctx, customer, CheckoutInput{ProductID: product.ID, PlanVersionID: version.ID, Provider: "stripe", Environment: "sandbox", IdempotencyKey: id()})
+		if err != nil {
+			t.Fatal(err)
+		}
+		var payment storage.Payment
+		if err := db.First(&payment, "order_id = ?", view.ID).Error; err != nil {
+			t.Fatal(err)
+		}
+		if payments.receipts == nil {
+			payments.receipts = map[string]ports.Refund{}
+		}
+		receipt := "refund-early-" + id()
+		payments.receipts[receipt] = ports.Refund{ExternalID: receipt, PaymentID: "paid-" + payment.OperationID, Amount: domain.Money{Currency: payment.Currency, Minor: payment.AmountMinor}, Status: ports.PaymentSucceeded}
+		event := refundEvent(receipt)
+		handled, err := service.ProcessPaymentEvent(ctx)
+		var pending *Error
+		if !handled || !errors.As(err, &pending) || pending.Code != "REFUND_EVENT_PENDING" {
+			t.Fatal("early refund notification was not retained for retry", handled, err)
+		}
+		if err := db.First(&event, "id = ?", event.ID).Error; err != nil || event.Status != "pending" {
+			t.Fatal("early refund notification left the automatic queue", event.Status, err)
+		}
+		if err := service.reconcilePayment(ctx, view.ID); err != nil {
+			t.Fatal(err)
+		}
+		finish()
+		if err := db.Model(&event).Update("available_at", now().Add(-time.Second)).Error; err != nil {
+			t.Fatal(err)
+		}
+		if handled, err := service.ProcessPaymentEvent(ctx); !handled || err != nil {
+			t.Fatal("refund notification did not recover after settlement", handled, err)
+		}
+		posts := len(payments.refundRequests)
+		if handled, err := service.processRefund(ctx); !handled || err != nil {
+			t.Fatal("verified refund did not settle", handled, err)
+		}
+		var order storage.Order
+		if err := db.First(&order, "id = ?", view.ID).Error; err != nil || order.Status != "refunded" {
+			t.Fatal("early refund left the settled order paid", order.Status, err)
+		}
+		if len(payments.refundRequests) != posts || finish().Type != "entitlement.refunded" {
+			t.Fatal("refund recovery moved money again or retained the refunded coverage")
+		}
+	})
+	run("healthy pending refunds do not exhaust failure retries or rewrite approval time", func(t *testing.T) {
+		order := pay(newProduct("Pending refund recovery"), 1, "purchase", "")
+		finish()
+		requested, err := service.RequestRefund(ctx, customer, order.ID, "pending refund regression")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := service.ApproveRefund(ctx, admin, requested.ID, "test approval"); err != nil {
+			t.Fatal(err)
+		}
+		var row storage.Refund
+		var payment storage.Payment
+		if err := db.First(&row, "id = ?", requested.ID).Error; err != nil {
+			t.Fatal(err)
+		}
+		if err := db.First(&payment, "order_id = ?", order.ID).Error; err != nil {
+			t.Fatal(err)
+		}
+		receipt := "refund-pending-" + id()
+		observed := ports.Refund{ExternalID: receipt, PaymentID: *payment.ExternalTransactionID, Amount: domain.Money{Currency: payment.Currency, Minor: row.AmountMinor}, Status: ports.PaymentPending}
+		payments.receipts[receipt] = observed
+		approved := now().Add(-25 * time.Hour)
+		if err := db.Model(&row).Updates(map[string]any{"approved_at": approved, "external_refund_id": receipt, "attempts": 20, "next_check_at": now().Add(-time.Second)}).Error; err != nil {
+			t.Fatal(err)
+		}
+		if handled, err := service.processRefund(ctx); !handled || err != nil {
+			t.Fatal("pending refund polling failed", handled, err)
+		}
+		delete(payments.receipts, receipt)
+		if err := db.Model(&row).Update("next_check_at", now().Add(-time.Second)).Error; err != nil {
+			t.Fatal(err)
+		}
+		if handled, err := service.processRefund(ctx); !handled || err != nil {
+			t.Fatal("temporary refund query outage", handled, err)
+		}
+		if err := db.First(&row, "id = ?", row.ID).Error; err != nil || row.ReviewRequired || row.Attempts != 1 {
+			t.Fatal("healthy polling consumed the failure retry budget", row.ReviewRequired, row.Attempts, err)
+		}
+		payments.receipts[receipt] = observed
+		refundEvent(receipt)
+		if handled, err := service.ProcessPaymentEvent(ctx); !handled || err != nil {
+			t.Fatal("verified pending refund notification", handled, err)
+		}
+		if err := db.First(&row, "id = ?", row.ID).Error; err != nil || row.ApprovedAt == nil || !row.ApprovedAt.Equal(approved) {
+			t.Fatal("refund notification rewrote the original approval time", row.ApprovedAt, err)
+		}
+		observed.Status = ports.PaymentSucceeded
+		payments.receipts[receipt] = observed
+		posts := len(payments.refundRequests)
+		if handled, err := service.processRefund(ctx); !handled || err != nil {
+			t.Fatal("pending refund did not recover automatically", handled, err)
+		}
+		if len(payments.refundRequests) != posts || finish().Type != "entitlement.refunded" {
+			t.Fatal("refund polling moved money again or failed to remove coverage")
+		}
+	})
 	reverse := func(order storage.Order, confirmed bool, adjust func(*ports.PaymentReversal)) storage.PaymentEvent {
 		t.Helper()
 		var payment storage.Payment

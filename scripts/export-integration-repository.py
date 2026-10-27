@@ -13,11 +13,18 @@ EXCLUDED = {'.git', '.cache', '.local', 'bin', 'obj', 'build', 'dist', 'target',
 EXTENSIONS = {'.go', '.sum', '.mod', '.py', '.mjs', '.js', '.ts', '.json', '.toml', '.lock',
               '.cs', '.csproj', '.java', '.xml', '.c', '.h', '.cpp', '.hpp', '.rs',
               '.rb', '.gemspec', '.md', '.txt', '.cmake', '.in', '.ps1', '.sh', '.yml'}
+HTTP_DOCUMENTS = json.loads((ROOT / 'docs/http-testing/locales.json').read_text(encoding='utf-8'))['locales']
+if len(HTTP_DOCUMENTS) != 14 or len({item['code'] for item in HTTP_DOCUMENTS}) != 14:
+    raise ValueError('HTTP testing documentation requires all 14 languages.')
+if any(not re.fullmatch(r'http-testing(?:\.[A-Za-z-]+)?\.md', item['file']) for item in HTTP_DOCUMENTS):
+    raise ValueError('Invalid localized HTTP documentation path.')
 DOCS = ('manual-integration.md', 'application-quickstart.zh-CN.md', 'software-sdk-integration.md',
-        'integration-packages.md', 'ai-integration.md', 'acceptance.md', 'openapi.json')
+        'integration-packages.md', 'ai-integration.md', 'acceptance.md', 'openapi.json',
+        *(item['file'] for item in HTTP_DOCUMENTS), 'http-testing/README.md',
+        'http-testing/locales.json', 'http-testing/translations.json')
 SCRIPTS = ('test-integration-packages.ps1', 'test-managed-installations.ps1',
            'generate-integration-smoke.mjs', 'integration-prompts.test.mjs',
-           'integration-state.test.mjs', 'acceptance.py', 'test_acceptance.py')
+           'integration-state.test.mjs', 'acceptance.py', 'test_acceptance.py', 'http-testing-docs.mjs')
 
 
 def export(destination):

@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Licentivo Launch Integration API",
-    "version": "0.3.2-beta",
+    "version": "0.3.3-beta",
     "description": "System, account, desktop licensing, integration wizard and basic purchase APIs. This is not the full staff administration/payment-webhook API. Runtime access must still pass the official Licentivo SDK. Email verification is required only when enabled by the merchant. Custom licensing connections and customer delivery are also documented. External receiver endpoints are specified separately in external-licensing-openapi.json.",
     "license": {
       "name": "MIT",
@@ -1937,11 +1937,16 @@
                         },
                         "licensing_origin": {
                           "type": "string"
+                        },
+                        "allow_http": {
+                          "type": "boolean",
+                          "description": "Whether the merchant has enabled SDK HTTP testing; still restricted to sandbox."
                         }
                       },
                       "required": [
                         "merchant_origin",
-                        "licensing_origin"
+                        "licensing_origin",
+                        "allow_http"
                       ],
                       "additionalProperties": false
                     },
@@ -3174,6 +3179,630 @@
           }
         ]
       }
+    },
+    "/api/v1/admin/policies": {
+      "get": {
+        "operationId": "listStorePolicies",
+        "summary": "Read the three independent policy drafts and publication status",
+        "tags": [
+          "Store policies"
+        ],
+        "security": [
+          {
+            "websiteCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/StorePolicy"
+                      }
+                    },
+                    "request_id": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Administrator required or CSRF validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Storage unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/policies/{key}": {
+      "put": {
+        "operationId": "saveStorePolicyDraft",
+        "summary": "Save a policy draft without changing the public version",
+        "tags": [
+          "Store policies"
+        ],
+        "security": [
+          {
+            "websiteCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/StorePolicy"
+                    },
+                    "request_id": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid title/body/key; publishing requires nonempty body",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Administrator required or CSRF validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "POLICY_VERSION_CONFLICT: another administrator saved a newer draft",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Storage unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "terms",
+                "refunds",
+                "privacy"
+              ]
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PolicyInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/policies/{key}/publish": {
+      "post": {
+        "operationId": "publishStorePolicy",
+        "summary": "Atomically save and publish a policy",
+        "tags": [
+          "Store policies"
+        ],
+        "security": [
+          {
+            "websiteCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/StorePolicy"
+                    },
+                    "request_id": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid title/body/key; publishing requires nonempty body",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Administrator required or CSRF validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "POLICY_VERSION_CONFLICT: another administrator saved a newer draft",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Storage unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "terms",
+                "refunds",
+                "privacy"
+              ]
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PolicyInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/policies/{key}": {
+      "get": {
+        "operationId": "readPublishedStorePolicy",
+        "summary": "Read a published policy; never includes private draft fields",
+        "tags": [
+          "Store policies"
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/PublishedPolicy"
+                    },
+                    "request_id": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown or unpublished policy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Storage unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "terms",
+                "refunds",
+                "privacy"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/transport/settings": {
+      "get": {
+        "operationId": "getTransportSettings",
+        "summary": "Read the effective merchant origin and SDK HTTP test switch",
+        "tags": [
+          "Application integration"
+        ],
+        "responses": {
+          "200": {
+            "description": "Public deployment context; no private startup settings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/TransportSettings"
+                    },
+                    "request_id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid fields, product ID or environment.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "LOGIN_FAILED (login) or AUTH_REQUIRED (expired/revoked session). Clear rejected sessions; never fall back after an explicit denial.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden, email verification required, initial password change required or explicit entitlement denial.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "RATE_LIMITED; do not retry in a tight loop.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before another attempt. Respect this value and bound total retries.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Temporary service or database failure. Offline access is permitted only by a valid official SDK signed grant.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "desktopBearer": []
+          },
+          {
+            "websiteCookie": []
+          }
+        ],
+        "description": "Requires the admin role. Website callers must supply Origin and X-CSRF-Token. ready=false reports incomplete configuration; no secret fields are returned. licentivo_product_id may be empty in an incomplete report."
+      },
+      "post": {
+        "operationId": "saveTransportSettings",
+        "summary": "Update the merchant origin and SDK HTTP test switch",
+        "tags": [
+          "Licentivo connection"
+        ],
+        "security": [
+          {
+            "websiteCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/TransportSettings"
+                    },
+                    "request_id": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid configuration/input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Administrator required, invalid CSRF, or forbidden scope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No owned resource",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Immutable mapping, migration required or purchase not ready",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Storage/external service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransportSettingsInput"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "description": "Merchant administrator authentication required. Website sessions require CSRF. HTTP SDK access defaults off and is sandbox-only. HTTPS requires a configured listener and valid certificate. Existing generated client URLs do not change automatically."
+      }
     }
   },
   "components": {
@@ -3554,6 +4183,10 @@
                   "sandbox",
                   "live"
                 ]
+              },
+              "allow_http": {
+                "type": "boolean",
+                "description": "Included as true only for a sandbox HTTP origin after the merchant enables SDK HTTP testing. Direct code includes the language-specific opt-in."
               }
             },
             "required": [
@@ -4672,6 +5305,188 @@
             "description": "Optional secret of 32–256 bytes. Omit or leave empty to retain the saved secret."
           }
         }
+      },
+      "PolicyContent": {
+        "type": "object",
+        "required": [
+          "title",
+          "body"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "body": {
+            "type": "string",
+            "maxLength": 16000,
+            "description": "A safe Markdown subset: headings, emphasis, lists, and HTTP/HTTPS or relative links. Raw HTML is displayed as text."
+          }
+        }
+      },
+      "PolicyInput": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PolicyContent"
+          },
+          {
+            "type": "object",
+            "required": [
+              "version"
+            ],
+            "properties": {
+              "version": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Expected current draft version; use 0 before the first save. Conflicting edits return POLICY_VERSION_CONFLICT."
+              }
+            }
+          }
+        ]
+      },
+      "PublishedPolicy": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PolicyContent"
+          },
+          {
+            "type": "object",
+            "required": [
+              "key",
+              "version",
+              "published_at"
+            ],
+            "properties": {
+              "key": {
+                "type": "string",
+                "enum": [
+                  "terms",
+                  "refunds",
+                  "privacy"
+                ]
+              },
+              "version": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "published_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        ]
+      },
+      "StorePolicy": {
+        "type": "object",
+        "required": [
+          "key",
+          "draft",
+          "version",
+          "published_version",
+          "has_draft_changes"
+        ],
+        "properties": {
+          "key": {
+            "type": "string",
+            "enum": [
+              "terms",
+              "refunds",
+              "privacy"
+            ]
+          },
+          "draft": {
+            "$ref": "#/components/schemas/PolicyContent"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "published": {
+            "$ref": "#/components/schemas/PolicyContent"
+          },
+          "published_version": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "published_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "has_draft_changes": {
+            "type": "boolean"
+          }
+        }
+      },
+      "TransportSettingsInput": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": [
+              "http",
+              "https"
+            ]
+          },
+          "public_url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "allow_sdk_http": {
+            "type": "boolean",
+            "default": false,
+            "description": "Explicit merchant-controlled HTTP SDK test opt-in. Only sandbox runtime identity requests may use HTTP; the SDK still needs an HTTP merchant origin and allow_http=true. Does not downgrade HTTPS or change Licentivo API transport."
+          }
+        },
+        "required": [
+          "mode",
+          "public_url"
+        ],
+        "additionalProperties": false
+      },
+      "TransportSettings": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": [
+              "http",
+              "https"
+            ]
+          },
+          "public_url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "redirect_url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "https_listener_enabled": {
+            "type": "boolean"
+          },
+          "tls_certificate_present": {
+            "type": "boolean"
+          },
+          "allow_sdk_http": {
+            "type": "boolean",
+            "default": false,
+            "description": "Explicit merchant-controlled HTTP SDK test opt-in. Only sandbox runtime identity requests may use HTTP; the SDK still needs an HTTP merchant origin and allow_http=true. Does not downgrade HTTPS or change Licentivo API transport."
+          }
+        },
+        "required": [
+          "mode",
+          "public_url",
+          "https_listener_enabled",
+          "tls_certificate_present",
+          "allow_sdk_http"
+        ],
+        "additionalProperties": false
       }
     },
     "securitySchemes": {

@@ -1,5 +1,7 @@
 # SSL certificates and HTTP/HTTPS switching
 
+For customer-server and private-network SDK tests, see [HTTP testing and the two independent switches in 14 languages](http-testing/README.md). The configured address selects the protocol; production SDK access requires HTTPS.
+
 Launch supports TLS termination at Caddy, Nginx, a load balancer, or a cloud platform, and an optional built-in HTTPS listener. Only certificates for the built-in listener are managed inside Launch. Manage a reverse proxy's certificates at the proxy.
 
 ## Enable built-in HTTPS
@@ -31,5 +33,9 @@ HTTP can be selected again from the same settings. It carries login and administ
 - Removing or changing `LAUNCH_MASTER_KEY` makes saved secrets, including TLS keys, unreadable.
 - Readiness/release checks show the public protocol, listener state, expiration, and certificates expiring within 30 days.
 - When a proxy handles TLS, keep its key at the proxy and set `LAUNCH_PUBLIC_URL` to the actual public HTTPS origin.
+
+For an existing proxy HTTPS deployment, saving the current public origin or the SDK HTTP test switch does not require uploading a second certificate or enabling Launch's built-in HTTPS listener. Switching to a different HTTPS origin through this administration form still requires the managed listener and a matching certificate. For a proxy-managed origin change, deployment configuration and any saved database public-origin override must be updated together; the database override takes precedence on restart.
+
+Public origins use lowercase hostnames and omit default ports (`:80` for HTTP, `:443` for HTTPS) so that browser Origin checks use the same address. Empty query/fragment markers, credentials, paths, empty ports and ports outside 1–65535 are rejected. Internationalized hostnames must use Punycode. Existing valid saved origins are normalized when the service starts.
 
 The administration labels above are English descriptions of the current settings.

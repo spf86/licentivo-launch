@@ -10,6 +10,7 @@ struct Shared {
     offline: bool,
     credentials: usize,
     logouts: usize,
+    logout_status: u16,
     opens: usize,
     releases: usize,
     checks: usize,
@@ -21,6 +22,7 @@ struct Shared {
     logins: usize,
     blocked_token: String,
     token_prefix: String,
+    me_data: Option<Value>,
 }
 struct TestStore(Rc<RefCell<Shared>>);
 impl Store for TestStore {
@@ -53,6 +55,9 @@ impl Transport for TestTransport {
             s.logouts += 1;
             json!({"signed_out":true})
         } else if url.ends_with("/me") {
+            if ["SDK_HTTP_DISABLED", "SDK_HTTPS_REQUIRED"].contains(&s.mode.as_str()) {
+                return Ok(Response { status: 403, body: json!({"error":{"code":s.mode}}).to_string().into_bytes(), retry_after: String::new() });
+            }
             if s.mode == "unauthorized" {
                 return Ok(Response {
                     status: 401,
@@ -62,7 +67,7 @@ impl Transport for TestTransport {
                     retry_after: String::new(),
                 });
             }
-            json!({"user":{"id":s.user}})
+            s.me_data.clone().unwrap_or_else(|| json!({"user":{"id":s.user}}))
         } else {
             s.credentials += 1;
             if !s.mode.is_empty() {
@@ -75,7 +80,7 @@ impl Transport for TestTransport {
             json!({"product_id":PRODUCT,"licentivo_product_id":REMOTE,"environment":"sandbox","launch_connection_id":KEY,"identity_token":"I".repeat(64),"expires_at":"2099-01-01T00:00:00Z"})
         };
         Ok(Response {
-            status: 200,
+            status: if url.ends_with("/logout") && s.logout_status != 0 { s.logout_status } else { 200 },
             body: json!({"data":data}).to_string().into_bytes(),
             retry_after: String::new(),
         })
@@ -157,6 +162,80 @@ fn fixture(name: &str) -> (Application, Rc<RefCell<Shared>>, PathBuf) {
         shared,
         root,
     )
+}
+#[test]
+fn malformed_current_user_preserves_account_for_logout() {
+    for data in [json!({}),json!({"user":null}),json!({"user":{}}),json!({"user":{"id":""}}),
+                 json!({"user":{"id":null}}),json!({"user":{"id":42}}),json!({"user":[]}),json!({"user":"invalid"})] {
+        let (mut app, shared, root) = fixture("malformed-user");
+        app.login("a", "b").unwrap();
+        let before = shared.borrow().values.clone();
+        let opens = shared.borrow().opens;
+        let credentials = shared.borrow().credentials;
+        shared.borrow_mut().me_data = Some(data);
+        assert_eq!(app.restore().unwrap_err().code, "INVALID_RESPONSE");
+        assert_eq!(shared.borrow().values, before);
+        assert_eq!(shared.borrow().opens, opens);
+        assert_eq!(shared.borrow().credentials, credentials);
+        assert!(app.runtime.is_none());
+        assert_eq!(app.run_feature("export", || -> Result<(),Failure> { panic!("failed restore executed work") }).unwrap_err().code,"NOT_STARTED");
+        let logouts = shared.borrow().logouts;
+        app.logout().unwrap();
+        assert_eq!(shared.borrow().logouts, logouts + 1);
+        assert!(shared.borrow().values.is_empty());
+        drop(app);
+        fs::remove_dir_all(root).unwrap();
+    }
+}
+#[test]
+fn different_current_user_still_clears_account() {
+    let (mut app, shared, root) = fixture("different-current-user");
+    app.login("a", "b").unwrap();
+    shared.borrow_mut().me_data = Some(json!({"user":{"id":"account-b"}}));
+    assert_eq!(app.restore().unwrap_err().code, "SESSION_MISMATCH");
+    assert!(shared.borrow().values.is_empty());
+    assert!(app.runtime.is_none());
+    drop(app);
+    fs::remove_dir_all(root).unwrap();
+}
+#[test]
+fn transport_policy_denial_preserves_account_for_logout() {
+    for code in ["SDK_HTTP_DISABLED", "SDK_HTTPS_REQUIRED"] {
+        let (mut app, shared, root) = fixture(code);
+        app.login("a", "b").unwrap();
+        let before = shared.borrow().values.clone();
+        let opens = shared.borrow().opens;
+        shared.borrow_mut().mode = code.into();
+        assert_eq!(app.restore().unwrap_err().code, code);
+        assert_eq!(shared.borrow().values, before);
+        assert_eq!(shared.borrow().opens, opens);
+        assert!(app.runtime.is_none());
+        let logouts = shared.borrow().logouts;
+        app.logout().unwrap();
+        assert_eq!(shared.borrow().logouts, logouts + 1);
+        assert!(shared.borrow().values.is_empty());
+        drop(app);
+        fs::remove_dir_all(root).unwrap();
+    }
+}
+#[test]
+fn accepted_logout_keeps_its_task_across_restart() {
+    let (mut app, shared, root) = fixture("accepted-logout");
+    app.login("a", "b").unwrap();
+    shared.borrow_mut().logout_status = 202;
+    assert_eq!(app.logout().unwrap_err().status, 202);
+    assert!(app.runtime.is_none());
+    assert!(!shared.borrow().values.is_empty());
+    let credentials = shared.borrow().credentials;
+    drop(app);
+    let mut restarted = create(shared.clone(), root.clone(), "sandbox");
+    assert_eq!(restarted.restore().unwrap_err().status, 202);
+    shared.borrow_mut().logout_status = 200;
+    assert_eq!(restarted.restore().unwrap_err().code, "NO_SESSION");
+    assert_eq!(shared.borrow().credentials, credentials);
+    assert!(shared.borrow().values.is_empty());
+    drop(restarted);
+    fs::remove_dir_all(root).unwrap();
 }
 #[test]
 fn failed_saves_and_offline_logout_never_restore_the_old_account() {

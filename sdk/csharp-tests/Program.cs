@@ -54,6 +54,33 @@ await using(var restarted=Open(logoutOutage)){
  try{await restarted.Restore();throw new Exception("Pending account restored");}catch(LaunchException e){Check(e.Code=="ACCOUNT_LOGOUT_PENDING","Restore did not retry logout");}
  logoutOutage.Offline=false;Check(!await restarted.Restore(),"Completed logout restored a login");Check(store.Record is null,"Completed account logout retained task");
 }
+foreach(var code in new[]{"SDK_HTTP_DISABLED","SDK_HTTPS_REQUIRED"}){
+ var policyStore=new InspectStore();var policyMerchant=new Merchant();
+ await using var app=new Application("https://merchant.example",Product,config,store:policyStore,cacheDirectory:root,handler:policyMerchant,runtimeFactory:Factory);
+ await app.Login("a","b");var saved=policyStore.Record!.ToArray();int opens=runtimes.Count;policyMerchant.TransportDenial=code;
+ try{await app.Restore();throw new Exception("Transport policy denial restored a login");}catch(LaunchException e){Check(e.Code==code,"Wrong transport policy failure");}
+ Check(policyStore.Record is not null&&policyStore.Record.SequenceEqual(saved)&&runtimes.Count==opens&&app.Status() is null,"Transport policy denial lost account or started runtime");
+ await app.Logout();Check(policyStore.Record is null,"Transport policy denial prevented explicit account logout");
+}
+var acceptedStore=new InspectStore();var acceptedMerchant=new Merchant();
+Application Accepted()=>new("https://merchant.example",Product,config,store:acceptedStore,cacheDirectory:root,handler:acceptedMerchant,runtimeFactory:Factory);
+await using(var app=Accepted()){
+ await app.Login("a","b");acceptedMerchant.LogoutStatus=HttpStatusCode.Accepted;
+ try{await app.Logout();throw new Exception("202 confirmed account logout");}catch(LaunchException e){Check(e.Code=="ACCOUNT_LOGOUT_PENDING","Wrong unconfirmed logout error");}
+ Check(acceptedStore.Record is not null&&app.Status() is null,"202 removed retry records or retained local authorization");
+}
+await using(var restarted=Accepted()){
+ try{await restarted.Restore();throw new Exception("Accepted logout restored a login");}catch(LaunchException e){Check(e.Code=="ACCOUNT_LOGOUT_PENDING","Restart lost its pending logout");}
+ acceptedMerchant.LogoutStatus=HttpStatusCode.OK;Check(!await restarted.Restore(),"Confirmed logout restored a login");Check(acceptedStore.Record is null,"Confirmed logout retained its task");
+}
+foreach(var body in new[]{"null","{\"data\":null}","{\"data\":[]}","{\"error\":{\"code\":\"UNEXPECTED\"}}"}){
+ var invalidStore=new InspectStore();var invalidMerchant=new Merchant{LogoutBody=body};
+ await using var app=new Application("https://merchant.example",Product,config,store:invalidStore,cacheDirectory:root,handler:invalidMerchant,runtimeFactory:Factory);
+ await app.Login("a","b");
+ try{await app.Logout();throw new Exception("Malformed 200 confirmed account logout");}catch(LaunchException e){Check(e.Code=="ACCOUNT_LOGOUT_PENDING","Wrong malformed logout result");}
+ Check(invalidStore.Record is not null&&app.Status() is null,"Malformed logout discarded retry data or kept a runtime");
+ invalidMerchant.LogoutBody=null;await app.Logout();Check(invalidStore.Record is null,"Valid confirmation did not finish pending logout");
+}
 var failingStore=new InspectStore();var failingMerchant=new Merchant();
 await using(var app=new Application("https://merchant.example",Product,config,store:failingStore,cacheDirectory:root,handler:failingMerchant,runtimeFactory:Factory)){
  await app.Login("a","b");failingStore.FailSaves=true;failingMerchant.Offline=true;
@@ -81,7 +108,49 @@ await using(var old=Shared())await using(var newer=Shared()){
  Check(restarted.Status() is null,"Total storage failure retained runtime");
  await using var blocked=Shared();try{await blocked.Restore();throw new Exception("Total storage failure resurrected the account");}catch(LaunchException e){Check(e.Code=="ACCOUNT_LOGOUT_STORAGE_FAILED","Missing account-only exit marker");}
 }
-Console.WriteLine("C#: lifecycle, DPAPI, failed-save logout, total storage failure and stale-instance retry passed.");
+foreach(var data in new[]{"{\"user\":{\"id\":null}}","{}","{\"user\":null}","{\"user\":{}}","{\"user\":{\"id\":\"\"}}","{\"user\":{\"id\":42}}","{\"user\":[]}","{\"user\":\"invalid\"}"}){
+ var currentStore=new InspectStore();var currentMerchant=new Merchant();
+ await using var app=new Application("https://merchant.example",Product,config,store:currentStore,cacheDirectory:root,handler:currentMerchant,runtimeFactory:Factory);
+ await app.Login("a","b");var saved=currentStore.Record!.ToArray();string token=JsonDocument.Parse(saved).RootElement.GetProperty("AccessToken").GetString()!;int opens=runtimes.Count;
+ currentMerchant.MeBody="{\"data\":"+data+"}";
+ try{await app.Restore();throw new Exception("Malformed user restored a login");}catch(LaunchException e){Check(e.Code=="INVALID_RESPONSE","Malformed user was treated as an account change");}
+ Check(currentStore.Record is not null&&currentStore.Record.SequenceEqual(saved)&&runtimes.Count==opens&&app.Status() is null,"Malformed user discarded login or started runtime");
+ try{await app.RunFeature("export",()=>throw new Exception("Failed restore executed work"));throw new Exception("Failed restore retained authorization");}catch(LaunchException e){Check(e.Code=="LOGIN_REQUIRED","Wrong restore failure");}
+ await app.Logout();Check(currentStore.Record is null&&currentMerchant.LastLogoutBearer==token,"Malformed user prevented session revocation");
+}
+{
+ var differentStore=new InspectStore();var differentMerchant=new Merchant();
+ await using var app=new Application("https://merchant.example",Product,config,store:differentStore,cacheDirectory:root,handler:differentMerchant,runtimeFactory:Factory);
+ await app.Login("a","b");differentMerchant.MeBody="{\"data\":{\"user\":{\"id\":\"55555555-5555-4555-8555-555555555555\"}}}";
+ try{await app.Restore();throw new Exception("Different current account was accepted");}catch(LaunchException e){Check(e.Code=="SESSION_REJECTED","Wrong account mismatch result");}
+ Check(differentStore.Record is null&&app.Status() is null,"Different account retained the old login");
+}
+foreach(var operation in new[]{"login","restore"}){
+ var cancelStore=new InspectStore();var cancelMerchant=new Merchant();using var cancellation=new CancellationTokenSource();
+ bool cancelStartup=false;FakeRuntime? candidate=null;
+ IRuntime CancelFactory(Config cfg){var runtime=new FakeRuntime(cfg);runtimes.Add(runtime);if(cancelStartup)runtime.OnStart=()=>{candidate=runtime;cancellation.Cancel();};return runtime;}
+ await using var app=new Application("https://merchant.example",Product,config,store:cancelStore,cacheDirectory:root,handler:cancelMerchant,runtimeFactory:CancelFactory);
+ byte[]? saved=null;if(operation=="restore"){await app.Login("a","b");saved=cancelStore.Record!.ToArray();}
+ cancelStartup=true;
+ try{if(operation=="login")await app.Login("a","b",ct:cancellation.Token);else await app.Restore(cancellation.Token);throw new Exception("Canceled startup reported success");}catch(OperationCanceledException)when(cancellation.IsCancellationRequested){}
+ Check(app.Status() is null&&candidate is not null&&candidate.Disposals==1,"Canceled startup retained an active runtime");
+ try{await app.RunFeature("export",()=>throw new Exception("Canceled startup executed protected work"));throw new Exception("Canceled startup retained authorization");}catch(LaunchException e){Check(e.Code=="LOGIN_REQUIRED","Wrong canceled startup failure");}
+ cancelStartup=false;
+ if(operation=="restore"){
+  Check(cancelStore.Record is not null&&cancelStore.Record.SequenceEqual(saved!),"Canceling restore discarded the remembered login");
+  Check(await app.Restore(),"Restore could not be retried after cancellation");await app.Logout();
+ }else Check(cancelStore.Record is null&&!string.IsNullOrEmpty(cancelMerchant.LastLogoutBearer),"Canceled login did not revoke its account session");
+}
+var shutdownStore=new InspectStore();var shutdownMerchant=new Merchant();
+var shutdownApp=new Application("https://merchant.example",Product,config,store:shutdownStore,cacheDirectory:root,handler:shutdownMerchant,runtimeFactory:Factory);
+await shutdownApp.Login("a","b");var shutdownRuntime=runtimes[^1];shutdownRuntime.FailDispose=true;
+try{await shutdownApp.DisposeAsync();throw new Exception("Failed SDK shutdown reported success");}catch(IOException){}
+Check(shutdownApp.Status() is null,"Failed shutdown retained an active runtime");
+try{await shutdownApp.RunFeature("export",()=>throw new Exception("Closed application executed protected work"));throw new Exception("Closed application retained protected access");}catch(LaunchException e){Check(e.Code=="LOGIN_REQUIRED","Wrong closed application failure");}
+await shutdownApp.DisposeAsync();Check(shutdownRuntime.Disposals==1,"Repeated shutdown retried a detached runtime");
+Check(shutdownMerchant.Disposed,"Failed SDK shutdown leaked the merchant HTTP client");
+Check(shutdownStore.Record is not null&&shutdownRuntime.Releases==0,"Ordinary failed shutdown released the device or account");
+Console.WriteLine("C#: lifecycle, DPAPI, failed-save logout, total storage failure, stale-instance retry and failed shutdown passed.");
 string resolved=Path.GetFullPath(root);if(!resolved.StartsWith(Path.GetFullPath(Path.Combine(Path.GetTempPath(),"launch-account-tests-")),StringComparison.OrdinalIgnoreCase))throw new Exception("Unsafe temporary path");Directory.Delete(resolved,true);
 
 sealed class InspectStore:ISessionStore{
@@ -93,20 +162,26 @@ sealed class InspectStore:ISessionStore{
  public void Delete(string scope){if(FailDeletes)throw new IOException("fixture delete failed");values.Remove(scope);}
 }
 sealed class Merchant:HttpMessageHandler{
- public bool Offline;public string? BlockBearer;static int Logins;static readonly string Prefix=Guid.NewGuid().ToString("N");
+ public bool Offline,Disposed;public string? BlockBearer,LogoutBody,TransportDenial,MeBody,LastLogoutBearer;public HttpStatusCode LogoutStatus=HttpStatusCode.OK;static int Logins;static readonly string Prefix=Guid.NewGuid().ToString("N");
+ protected override void Dispose(bool disposing){if(disposing)Disposed=true;base.Dispose(disposing);}
  protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,CancellationToken ct){
   ct.ThrowIfCancellationRequested();if(Offline||request.RequestUri!.AbsolutePath.EndsWith("/logout")&&BlockBearer is not null&&request.Headers.Authorization?.Parameter==BlockBearer)throw new HttpRequestException("fixture unavailable");
-  string path=request.RequestUri!.AbsolutePath;object value=path.EndsWith("/login")?new{user=new{id="33333333-3333-4333-8333-333333333333"},access_token=Prefix+Interlocked.Increment(ref Logins).ToString().PadLeft(11,'0'),expires_at=DateTimeOffset.UtcNow.AddHours(1).ToString("O")}:
+  string path=request.RequestUri!.AbsolutePath;
+  if(path.EndsWith("/me")&&MeBody is not null)return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK){Content=new StringContent(MeBody,Encoding.UTF8,"application/json")});
+  if(path.EndsWith("/logout"))LastLogoutBearer=request.Headers.Authorization?.Parameter;
+  if(path.EndsWith("/me")&&TransportDenial is not null)return Task.FromResult(new HttpResponseMessage(HttpStatusCode.Forbidden){Content=new StringContent(JsonSerializer.Serialize(new{error=new{code=TransportDenial}}),Encoding.UTF8,"application/json")});
+  object value=path.EndsWith("/login")?new{user=new{id="33333333-3333-4333-8333-333333333333"},access_token=Prefix+Interlocked.Increment(ref Logins).ToString().PadLeft(11,'0'),expires_at=DateTimeOffset.UtcNow.AddHours(1).ToString("O")}:
    path.EndsWith("/identity")?new{product_id="11111111-1111-4111-8111-111111111111",licentivo_product_id="22222222-2222-4222-8222-222222222222",launch_connection_id="44444444-4444-4444-8444-444444444444",environment="live",identity_token=new string('I',64),expires_at=DateTimeOffset.UtcNow.AddMinutes(2).ToString("O")}:
    path.EndsWith("/me")?new{user=new{id="33333333-3333-4333-8333-333333333333"}}:new{};
-  return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK){Content=new StringContent(JsonSerializer.Serialize(new{data=value}),Encoding.UTF8,"application/json")});
+  return Task.FromResult(new HttpResponseMessage(path.EndsWith("/logout")?LogoutStatus:HttpStatusCode.OK){Content=new StringContent(path.EndsWith("/logout")&&LogoutBody is not null?LogoutBody:JsonSerializer.Serialize(new{data=value}),Encoding.UTF8,"application/json")});
  }
 }
 sealed class FakeRuntime(Config config):IRuntime{
- public Config Config=config;public int Releases;public bool Pending;
- public Task Start(CancellationToken ct){ct.ThrowIfCancellationRequested();return Task.CompletedTask;}
+ public Config Config=config;public int Releases,Disposals;public bool Pending,FailDispose;
+ public Action? OnStart;
+ public Task Start(CancellationToken ct){ct.ThrowIfCancellationRequested();OnStart?.Invoke();return Task.CompletedTask;}
  public AuthorizationStatus Status()=>new("fixture",true);
  public Task RunFeature(string feature,Func<Task> action)=>feature=="export"?action():throw new LaunchException("FEATURE_DENIED");
  public Task Deactivate(CancellationToken ct){Releases++;if(Pending)throw new LaunchException("DEVICE_REVOCATION_PENDING");return Task.CompletedTask;}
- public ValueTask DisposeAsync()=>ValueTask.CompletedTask;
+ public ValueTask DisposeAsync(){Disposals++;if(FailDispose)throw new IOException("SDK shutdown failed");return ValueTask.CompletedTask;}
 }

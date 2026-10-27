@@ -1,4 +1,4 @@
-//! Launch account lifecycle. All protected work is authorized by Licentivo 0.11.2.
+//! Launch account lifecycle. All protected work is authorized by Licentivo 0.11.5.
 //! Defaults to memory-only sessions; inject an OS-protected Store to remember login.
 mod store;
 mod account_lock;
@@ -19,7 +19,7 @@ pub use store::EncryptedFileStore;
 use time::{format_description::well_known::Rfc3339, OffsetDateTime};
 pub use transport::CurlTransport;
 
-pub const VERSION: &str = "0.1.4";
+pub const VERSION: &str = "0.1.5";
 #[derive(Debug, Clone)]
 pub struct Failure {
     pub code: String,
@@ -205,6 +205,9 @@ impl Config {
         runtime_product: &str,
         environment: &str,
     ) -> Result<Self, Failure> {
+        Self::new_with_http(origin, product, runtime_product, environment, false)
+    }
+    pub fn new_with_http(origin: &str, product: &str, runtime_product: &str, environment: &str, allow_http: bool) -> Result<Self, Failure> {
         if !valid_id(product)
             || !valid_id(runtime_product)
             || !matches!(environment, "sandbox" | "live")
@@ -212,7 +215,7 @@ impl Config {
             return Err(Failure::new("CONFIGURATION_ERROR"));
         }
         Ok(Self {
-            merchant_origin: validate_origin(origin, environment == "sandbox")?,
+            merchant_origin: validate_merchant_origin(origin, environment, allow_http)?,
             launch_product_id: product.into(),
             licentivo_product_id: runtime_product.into(),
             environment: environment.into(),
@@ -229,6 +232,7 @@ impl Config {
                         "launch_product_id",
                         "licentivo_product_id",
                         "environment",
+                        "allow_http",
                     ]
                     .contains(&key.as_str())
                 })
@@ -236,11 +240,13 @@ impl Config {
         {
             return Err(Failure::new("CONFIGURATION_ERROR"));
         }
-        Self::new(
+        if !value["allow_http"].is_null() && !value["allow_http"].is_boolean() { return Err(Failure::new("CONFIGURATION_ERROR")); }
+        Self::new_with_http(
             text(&value, "merchant_origin"),
             text(&value, "launch_product_id"),
             text(&value, "licentivo_product_id"),
             text(&value, "environment"),
+            value["allow_http"].as_bool().unwrap_or(false),
         )
     }
 }
@@ -265,7 +271,10 @@ pub struct Application {
 }
 impl Application {
     pub fn connect(origin: &str, product_id: &str, licentivo_product_id: &str, trusted_keys: &[(&str, &str)], environment: &str) -> Result<Self, Failure> {
-        let config = Config::new(origin, product_id, licentivo_product_id, environment)?;
+        Self::connect_with_http(origin, product_id, licentivo_product_id, trusted_keys, environment, false)
+    }
+    pub fn connect_with_http(origin: &str, product_id: &str, licentivo_product_id: &str, trusted_keys: &[(&str, &str)], environment: &str, allow_http: bool) -> Result<Self, Failure> {
+        let config = Config::new_with_http(origin, product_id, licentivo_product_id, environment, allow_http)?;
         let keys: serde_json::Map<String, Value> = trusted_keys.iter().map(|(id, value)| ((*id).into(), Value::String((*value).into()))).collect();
         let cache = std::env::var_os("LOCALAPPDATA").or_else(|| std::env::var_os("XDG_CACHE_HOME")).map(PathBuf::from)
             .or_else(|| std::env::var_os("HOME").or_else(|| std::env::var_os("USERPROFILE")).map(|home| PathBuf::from(home).join(".cache")))
@@ -399,7 +408,7 @@ impl Application {
             return Err(Failure::new("INVALID_RESPONSE"));
         }
         let envelope: Value = serde_json::from_slice(&response.body).unwrap_or(Value::Null);
-        if !(200..300).contains(&response.status) {
+        if response.status != 200 {
             let mut error = Failure::new(text(&envelope["error"], "code"));
             error.status = response.status;
             error.request_id = safe_id(text(&envelope, "request_id"));
@@ -471,7 +480,9 @@ impl Application {
     fn restore_online(&mut self) -> Result<State, Failure> {
         let token = self.token()?.to_string();
         let data = self.call("GET", "/me", None, &token)?;
-        if text(&data["user"], "id") != self.user_id()? {
+        let user = data["user"]["id"].as_str().filter(|id| !id.is_empty())
+            .ok_or_else(|| Failure::new("INVALID_RESPONSE"))?;
+        if user != self.user_id()? {
             return Err(Failure::new("SESSION_MISMATCH"));
         }
         let credential = self.credential()?;
@@ -671,6 +682,7 @@ fn safe_id(id: &str) -> String {
 }
 fn denied(error: &Failure) -> bool {
     error.code != "ENTITLEMENT_PENDING"
+        && !(error.status == 403 && matches!(error.code.as_str(), "SDK_HTTP_DISABLED" | "SDK_HTTPS_REQUIRED"))
         && ([401, 403, 404].contains(&error.status) || error.code == "SESSION_MISMATCH")
 }
 fn retry_after(raw: &str) -> Duration {
@@ -684,6 +696,29 @@ fn retry_after(raw: &str) -> Duration {
         );
     }
     Duration::ZERO
+}
+#[cfg(test)]
+mod http_opt_in_tests {
+    use super::Config;
+    #[test]
+    fn remote_http_requires_sandbox_opt_in() {
+        let product="11111111-1111-4111-8111-111111111111";
+        let runtime="22222222-2222-4222-8222-222222222222";
+        assert!(Config::new("http://customer-test-server:18080",product,runtime,"sandbox").is_err());
+        assert!(Config::new_with_http("http://customer-test-server:18080",product,runtime,"sandbox",true).is_ok());
+        assert!(Config::new_with_http("http://customer-test-server:18080",product,runtime,"live",true).is_err());
+    }
+}
+
+fn validate_merchant_origin(raw: &str, environment: &str, allow_http: bool) -> Result<String, Failure> {
+    if allow_http && environment != "sandbox" { return Err(Failure::new("CONFIGURATION_ERROR")); }
+    if allow_http {
+        if let Some(rest) = raw.strip_prefix("http://") {
+            validate_origin(&format!("https://{}", rest), false)?;
+            return Ok(raw.trim_end_matches('/').into());
+        }
+    }
+    validate_origin(raw, environment == "sandbox")
 }
 fn validate_origin(raw: &str, local: bool) -> Result<String, Failure> {
     let origin = raw.strip_suffix('/').unwrap_or(raw);

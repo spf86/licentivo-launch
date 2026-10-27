@@ -17,6 +17,7 @@ import (
 	"gorm.io/gorm/clause"
 
 	"licentivo-launch/internal/mailer"
+	"licentivo-launch/internal/origin"
 	"licentivo-launch/internal/ports"
 	"licentivo-launch/internal/security"
 	"licentivo-launch/internal/storage"
@@ -99,6 +100,12 @@ func New(ctx context.Context, db *gorm.DB, config Config) (*Service, error) {
 	publicURL := strings.TrimRight(config.PublicURL, "/")
 	if settings.PublicOrigin != nil && strings.TrimSpace(*settings.PublicOrigin) != "" {
 		publicURL = strings.TrimRight(strings.TrimSpace(*settings.PublicOrigin), "/")
+	}
+	if publicURL != "" {
+		publicURL, err = origin.Normalize(publicURL)
+		if err != nil {
+			return nil, problem(400, "PUBLIC_URL_INVALID", "网站公开访问地址无效，请检查配置文件或已保存的地址")
+		}
 	}
 	s.publicURL.Store(publicURL)
 	if err := db.WithContext(ctx).Clauses(clause.OnConflict{DoNothing: true}).Create(&storage.RuntimeStatus{ID: 1, UpdatedAt: now()}).Error; err != nil {

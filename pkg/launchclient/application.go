@@ -39,6 +39,7 @@ type Config struct {
 	ProductID      string
 	Environment    string
 	AllowLocalHTTP bool
+	AllowHTTP      bool
 	Store          SessionStore
 	CacheDir       string
 	Product        ProductConfig
@@ -73,7 +74,10 @@ type Application struct {
 }
 
 func NewApplication(config Config) (*Application, error) {
-	client, e := New(config.Origin, config.AllowLocalHTTP && config.Environment == "sandbox")
+	if config.AllowHTTP && config.Environment != "sandbox" {
+		return nil, errors.New("HTTP opt-in is restricted to sandbox")
+	}
+	client, e := newClient(config.Origin, config.AllowLocalHTTP && config.Environment == "sandbox", config.AllowHTTP)
 	if e != nil {
 		return nil, e
 	}
@@ -143,11 +147,20 @@ func (a *Application) makeRuntime(identity Identity) (Runtime, error) {
 	return a.config.RuntimeFactory(RuntimeConfig{Identity: identity, CachePath: path, User: a.record.Session.User, Environment: a.config.Environment})
 }
 func (a *Application) start(ctx context.Context, identity Identity) (State, error) {
+	if e := ctx.Err(); e != nil {
+		return State{}, e
+	}
 	r, e := a.makeRuntime(identity)
 	if e != nil {
 		return State{}, e
 	}
-	if e = r.Start(ctx, a.config.OnRuntimeError); e != nil {
+	if e = ctx.Err(); e == nil {
+		e = r.Start(ctx, a.config.OnRuntimeError)
+	}
+	if e == nil {
+		e = ctx.Err()
+	}
+	if e != nil {
 		r.Close()
 		return State{}, e
 	}
@@ -275,15 +288,18 @@ func (a *Application) Restore(ctx context.Context) (State, error) {
 }
 func authenticationDenied(e error) bool {
 	var api *APIError
-	return errors.As(e, &api) && (api.Status == 401 || api.Status == 403)
+	return errors.As(e, &api) && (api.Status == 401 || api.Status == 403 && api.Code != "SDK_HTTP_DISABLED" && api.Code != "SDK_HTTPS_REQUIRED")
 }
 func (a *Application) RunFeature(feature string, action func() error) error {
 	a.mu.Lock()
-	defer a.mu.Unlock()
-	if a.runtime == nil {
+	runtime := a.runtime
+	a.mu.Unlock()
+	if runtime == nil {
 		return ErrNotStarted
 	}
-	return a.runtime.RunFeature(feature, action)
+	// Business actions may call back into the account lifecycle, including Logout
+	// or Close. The runtime owns authorization and synchronization of its state.
+	return runtime.RunFeature(feature, action)
 }
 
 // Close is ordinary shutdown. Only the official SDK owns its persistent files.

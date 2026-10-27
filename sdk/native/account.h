@@ -22,6 +22,8 @@ typedef struct launch_application launch_application;
 /* Direct initialization. Merchant origin is mandatory; the licensing origin is
    managed inside Launch. trusted_keys_json is an in-memory JSON object. */
 launch_application *launch_application_connect(const char *origin,const char *product_id,const char *licentivo_product_id,const char *trusted_keys_json,const char *environment,int remember,const launch_secret_store *store);
+/* Explicit HTTP opt-in is accepted only for sandbox merchant origins. */
+launch_application *launch_application_connect_http(const char *origin,const char *product_id,const char *licentivo_product_id,const char *trusted_keys_json,const char *environment,int allow_http,int remember,const launch_secret_store *store);
 launch_application *launch_application_open(const char *origin,const char *product_id,const char *product_config_path,const char *environment,int remember,const launch_secret_store *store);
 launch_application *launch_application_from_files(const char *launch_config_path,const char *product_config_path,int remember,const launch_secret_store *store);
 /* Restore: 1=ready, 0=no remembered account, -1=denied/error. */

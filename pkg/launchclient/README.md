@@ -1,8 +1,8 @@
-# Launch Go 0.1.4
+# Launch Go 0.1.5
 
 > Local account-exchange changes are unpublished. Login uses a short-lived identity assertion; Launch calculates purchased dates and Licentivo owns runtime permission. See the repository guide docs/account-purchase-boundary.md.
 
-Go 1.26+. The public module is github.com/spf86/licentivo-launch-sdk; import github.com/spf86/licentivo-launch-sdk/pkg/launchclient. Install with go get github.com/spf86/licentivo-launch-sdk/pkg/launchclient@v0.1.4. A downloaded module ZIP can also be used with a local require/replace for the same module path. The official SDK 0.11.2 is embedded under Go's private internal boundary. No official SDK module, adapter copy or SDK import is needed.
+Go 1.26+. The public module is github.com/spf86/licentivo-launch-sdk; import github.com/spf86/licentivo-launch-sdk/pkg/launchclient. Install with go get github.com/spf86/licentivo-launch-sdk/pkg/launchclient@v0.1.5. A downloaded module ZIP can also be used with a local require/replace for the same module path. The official SDK 0.11.5 is embedded under Go's private internal boundary. No official SDK module, adapter copy or SDK import is needed.
 
 ## Direct initialization
 
@@ -19,6 +19,8 @@ return app.RunFeature("export", func() error { return exportReport() })
 ```
 
 Restore(ctx) returns state/error; handle a missing session with login and treat explicit denial as failure. Logout(ctx) and ReleaseDevice(ctx) are explicit actions. Keep the application-lifetime context alive for SDK heartbeats. Nil Store is memory-only; WindowsDPAPIStore supports remembered login. Trusted backends can use Client and NewRuntime to isolate one runtime per authenticated account. RuntimeAPIError exposes safe official error metadata without another SDK import.
+
+RunFeature invokes business actions without holding the Application lifecycle mutex. An action can call Close, Logout or another RunFeature. Work already in progress handles its own cancellation. Custom Runtime implementations must synchronize their runtime state when lifecycle operations overlap feature calls.
 
 Launch automatically supplies the current merchant URL, existing product mapping and signing public keys when you select the software in its integration page. Copy its connection function, or use the values already shown there when writing code manually. Do not ask the integrator to type two internal product IDs. No launch-config.json or product.json file is required. The merchant URL is mandatory; the official licensing origin is fixed inside the package to https://www.licentivo.com.
 
@@ -39,3 +41,9 @@ Account logout tasks use a separate key in the configured secure store. Custom s
 Logout also records a local, session-specific account exit intent using hashes of the account scope and bearer; it stores no bearer or licensing grant there. Restore checks that intent before requesting identity, so a failed vault write or lifecycle-lock timeout cannot turn an interrupted logout into a remembered login. A storage failure is reported explicitly. If both vault persistence and local intent storage are unavailable, handle the failure and retry before terminating; the SDK does not claim durable completion.
 
 An old instance only changes its own account record and logout task. Repeating a completed logout does not adopt a newer remembered account. Retrying other sessions' account tasks never opens their licensing runtime. Licentivo owns device revocation, signed leases, offline permission and its shared cache files; ordinary close still preserves remembered login.
+
+## HTTP test opt-in on customer servers
+
+The merchant address selects HTTP or HTTPS; failed HTTPS requests never downgrade to HTTP. For an HTTP customer test server, the customer must enable HTTP on the specific Licentivo API key and enable **Allow SDK HTTP (test environment only)** in their own Launch website/security settings. Use `sandbox` and the explicit client option `launchclient.Config{Environment: "sandbox", AllowHTTP: true}`. The generated test integration code includes it after successful checks. `live` requires HTTPS. Old SDK versions must be upgraded; server switches cannot update compiled client URLs. No access to Licentivo’s private network is needed.
+
+See the [setup, failure and HTTPS migration guide in 14 languages](../../docs/http-testing/README.md) ([简体中文](../../docs/http-testing.zh-CN.md)). HTTP does not encrypt credentials; use dedicated test data.

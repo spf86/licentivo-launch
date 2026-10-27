@@ -1,7 +1,7 @@
 #Requires -Version 7.4
 param(
     [ValidatePattern('^[0-9]+\.[0-9]+\.[0-9]+(?:-[A-Za-z0-9.-]+)?$')]
-    [string]$Version = '0.3.2-beta',
+    [string]$Version = '0.3.3-beta',
     [string]$OutputDirectory = ''
 )
 
@@ -36,6 +36,7 @@ try {
             if ($LASTEXITCODE -ne 0) { throw "Build failed: $taskOS/$taskArch" }
             Copy-Item -LiteralPath (Join-Path $taskRoot 'docs/binary-installation.md') -Destination (Join-Path $taskStage 'README.md')
             Copy-Item -LiteralPath (Join-Path $taskRoot 'docs/binary-installation.md') -Destination (Join-Path $taskStage 'INSTALL.md')
+            & (Join-Path $PSScriptRoot 'copy-http-testing-docs.ps1') -SourceRoot $taskRoot -DestinationRoot $taskStage
             Copy-Item -LiteralPath (Join-Path $taskRoot 'LICENSE') -Destination (Join-Path $taskStage 'LICENSE')
             Copy-Item -LiteralPath (Join-Path $taskRoot 'config.example.yaml') -Destination (Join-Path $taskStage 'config.example.yaml')
             Copy-Item -LiteralPath (Join-Path $taskRoot 'third_party') -Destination (Join-Path $taskStage 'third_party') -Recurse

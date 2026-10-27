@@ -101,6 +101,15 @@ func TestNormalizePublicOrigin(t *testing.T) {
 		{name: "path rejected", raw: "https://merchant.example/admin", mode: "https"},
 		{name: "credentials rejected", raw: "https://user:pass@merchant.example", mode: "https"},
 		{name: "unicode hostname requires punycode", raw: "https://例子.测试", mode: "https"},
+		{name: "empty query rejected", raw: "https://merchant.example?", mode: "https"},
+		{name: "empty fragment rejected", raw: "https://merchant.example#", mode: "https"},
+		{name: "empty port rejected", raw: "https://merchant.example:", mode: "https"},
+		{name: "out of range port rejected", raw: "https://merchant.example:65536", mode: "https"},
+		{name: "zero port rejected", raw: "http://merchant.example:0", mode: "http"},
+		{name: "maximum port accepted", raw: "http://localhost:65535/", mode: "http", want: "http://localhost:65535", valid: true},
+		{name: "IPv6 accepted", raw: "https://[::1]:8443/", mode: "https", want: "https://[::1]:8443", valid: true},
+		{name: "default HTTPS port normalized", raw: "https://MERCHANT.example:443/", mode: "https", want: "https://merchant.example", valid: true},
+		{name: "default HTTP port normalized", raw: "http://merchant.example:80", mode: "http", want: "http://merchant.example", valid: true},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			got, err := normalizePublicOrigin(test.raw, test.mode)

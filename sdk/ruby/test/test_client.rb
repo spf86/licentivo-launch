@@ -42,20 +42,22 @@ class FakeRuntime
 end
 class Fixture
   attr_reader :app, :store, :calls, :runtimes, :waits, :root, :options
-  attr_accessor :failure, :pending, :offline, :logout_outage
+  attr_accessor :failure, :pending, :offline, :logout_outage, :logout_status, :me_data
   def initialize(root)
     @root, @store, @calls, @runtimes, @waits, @pending, @offline = root, InspectStore.new, [], [], [], 0, true
+    @logout_status = 200
+    @me_data = { 'user' => USER, 'session_id' => 'opaque' }
     @grant=GRANT.merge('access_token'=>Base64.urlsafe_encode64(OpenSSL::Random.random_bytes(32),padding:false))
     transport = lambda do |request|
       @calls << request
       raise LicentivoLaunch::Error.new('NETWORK_UNAVAILABLE') if @logout_outage && request[:url].end_with?('/auth/logout')
-      next reply({}) if request[:url].end_with?('/auth/logout')
+      next reply({}).merge(status: @logout_status) if request[:url].end_with?('/auth/logout')
       if @failure && !(request[:url].end_with?('/me') && @failure.is_a?(Hash) && @failure[:body].include?('ENTITLEMENT_PENDING'))
         raise @failure if @failure.is_a?(Exception)
         next @failure
       end
       next reply(@grant) if request[:url].end_with?('/auth/login')
-      next reply('user' => USER, 'session_id' => 'opaque') if request[:url].end_with?('/me')
+      next reply(@me_data) if request[:url].end_with?('/me')
       if @pending > 0
         @pending -= 1; next api_failure('ENTITLEMENT_PENDING')
       end
@@ -93,6 +95,48 @@ test('login, callback guard, restore and release') do |f|
   assert(!next_app.restore.key?(:offline_fallback)); next_app.release_device
   assert(f.runtimes[1].released == 1 && f.store.load(f.store.scope).nil?); next_app.close
 end
+test('202 logout retains its retry across restart') do |f|
+  f.app.login('a','b');scope=f.store.scope;f.logout_status=202;assert(!f.app.logout);assert(f.store.load(scope));f.app.close
+  restarted=Application.new(LAUNCH,PRODUCT,**f.options)
+  begin
+    expect('ACCOUNT_LOGOUT_PENDING'){restarted.restore};f.logout_status=200;assert(restarted.restore.nil?);assert(f.store.load(scope).nil?)
+  ensure;restarted.close;end
+end
+
+test('transport policy denial preserves account for explicit logout') do |f|
+  %w[SDK_HTTP_DISABLED SDK_HTTPS_REQUIRED].each do |code|
+    f.failure=nil;f.app.login('a','b');scope=f.store.scope;saved=f.store.load(scope);count=f.runtimes.length;f.failure=api_failure(code,403)
+    expect(code){f.app.restore};assert(f.store.load(scope)==saved);assert(f.runtimes.length==count)
+    expect('LOGIN_REQUIRED'){f.app.run_feature('export'){raise 'configuration denial allowed work'}}
+    assert(f.app.logout);assert(f.store.load(scope).nil?)
+  end
+end
+
+test('SDK close failure still allows account revocation') do |f|
+  f.app.login('a','b');scope=f.store.scope;saved=f.store.load(scope);runtime=f.runtimes.last
+  runtime.define_singleton_method(:close) { super(); raise IOError,'SDK shutdown failed' }
+  begin;f.app.logout;raise 'SDK close failure was swallowed';rescue IOError=>e;assert(e.message=='SDK shutdown failed');end
+  assert(runtime.released==1&&runtime.closed==1);assert(f.store.load(scope).nil?,'SDK close failure prevented account cleanup')
+  assert(f.calls.last[:url].end_with?('/auth/logout')&&f.calls.last[:headers]['Authorization']=='Bearer '+saved['token'])
+  expect('LOGIN_REQUIRED'){f.app.run_feature('export'){raise 'failed logout retained protected work'}}
+  assert(f.app.logout,'completed logout could not be retried')
+end
+
+test('malformed current user preserves account for explicit logout') do |f|
+  [{},{'user'=>nil},{'user'=>{}},{'user'=>{'id'=>''}},{'user'=>{'id'=>nil}},
+   {'user'=>{'id'=>42}},{'user'=>[]},{'user'=>'invalid'}].each do |data|
+    f.app.login('a','b');scope=f.store.scope;saved=f.store.load(scope);count=f.runtimes.length;f.me_data=data
+    expect('INVALID_RESPONSE'){f.app.restore};assert(f.store.load(scope)==saved);assert(f.runtimes.length==count)
+    expect('LOGIN_REQUIRED'){f.app.run_feature('export'){raise 'failed restore executed work'}}
+    assert(f.app.logout);assert(f.calls.last[:headers]['Authorization']=='Bearer '+saved['token']);assert(f.store.load(scope).nil?)
+  end
+end
+
+test('a different current user still clears the remembered login') do |f|
+  f.app.login('a','b');scope=f.store.scope;f.me_data={'user'=>{'id'=>'55555555-5555-4555-8555-555555555555'}}
+  expect('SESSION_MISMATCH'){f.app.restore};assert(f.store.load(scope).nil?)
+end
+
 test('failed saves during offline logout remove the restorable account') do |f|
   f.app.login('a','b');scope=f.store.scope;f.store.fail_saves=true;f.logout_outage=true
   expect('ACCOUNT_LOGOUT_STORAGE_FAILED'){f.app.logout};assert(f.store.load(scope).nil?)

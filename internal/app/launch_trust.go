@@ -16,11 +16,11 @@ import (
 func (s *Service) syncLaunchTrust(ctx context.Context, key string) error {
 	peer, err := s.bridgeWithKey(key)
 	if err != nil {
-		return bridgePending()
+		return licentivoConnectionError("初始化账号连接", err)
 	}
 	rows, err := peer.Connections(ctx)
 	if err != nil {
-		return bridgePending()
+		return licentivoConnectionError("查询账号连接", err)
 	}
 	keys := map[string]string{s.identityKeyID(): base64.RawURLEncoding.EncodeToString(s.identityPrivateKey().Public().(ed25519.PublicKey))}
 	for _, environment := range []string{"sandbox", "live"} {
@@ -42,10 +42,10 @@ func (s *Service) syncLaunchTrust(ctx context.Context, key string) error {
 		}
 		remote, err := peer.SaveConnection(ctx, selected.ID, input)
 		if err != nil {
-			return bridgePending()
+			return licentivoConnectionError("建立 "+environment+" 账号连接", err)
 		}
 		if remote.ID == "" || remote.Environment != environment || remote.Issuer != s.PublicURL() || remote.Audience != IdentityAudience {
-			return ErrStorage
+			return problem(400, "LICENSE_CONNECTION_RESPONSE_INVALID", "Licentivo 返回的账号连接与当前网站地址或环境不一致，请重新连接")
 		}
 		row := storage.LaunchTrustConnection{Environment: environment, RemoteID: remote.ID, Issuer: remote.Issuer, Audience: remote.Audience, UpdatedAt: now()}
 		if err := s.db.WithContext(ctx).Clauses(clause.OnConflict{UpdateAll: true}).Create(&row).Error; err != nil {

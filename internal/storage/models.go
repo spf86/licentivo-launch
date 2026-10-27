@@ -7,6 +7,8 @@ import (
 )
 
 type InstanceSettings struct {
+	AllowSDKHTTP            bool            `gorm:"type:boolean;not null;default:false"`
+	StorePolicies           json.RawMessage `gorm:"type:json"`
 	LicensingProvider       string          `gorm:"type:varchar(32) CHARACTER SET ascii COLLATE ascii_bin;not null;default:''"`
 	RecoveryRequired        bool            `gorm:"type:boolean;not null;default:false"`
 	ID                      uint64          `gorm:"column:id;type:tinyint unsigned;primaryKey;autoIncrement:false;check:ck_single_instance,id = 1"`
@@ -193,7 +195,7 @@ type LicentivoConnection struct {
 	Capabilities       json.RawMessage `gorm:"column:capabilities;type:json;not null"`
 	Catalog            json.RawMessage `gorm:"column:catalog;type:json;not null"`
 	LastCheckedAt      *time.Time      `gorm:"column:last_checked_at;type:datetime(6)"`
-	LastCheckError     *string         `gorm:"column:last_check_error;type:varchar(160)"`
+	LastCheckError     *string         `gorm:"column:last_check_error;type:text"`
 	CreatedAt          time.Time       `gorm:"column:created_at;type:datetime(6);not null;default:CURRENT_TIMESTAMP(6)"`
 	FkConnectionSecret *SecretRecord   `gorm:"foreignKey:CredentialSecretID;references:ID;constraint:fk_connection_secret,OnUpdate:RESTRICT,OnDelete:RESTRICT"`
 	FkWebhookSecret    *SecretRecord   `gorm:"foreignKey:WebhookSecretID;references:ID;constraint:fk_webhook_secret,OnUpdate:RESTRICT,OnDelete:RESTRICT"`

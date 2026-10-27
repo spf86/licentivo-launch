@@ -11,7 +11,7 @@ require 'time'
 require 'monitor'
 
 module LicentivoLaunch
-  VERSION = '0.1.4'
+  VERSION = '0.1.5'
   LIMIT = 1 << 20
   UUID = /\A[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\z/
   class Error < StandardError
@@ -79,16 +79,18 @@ module LicentivoLaunch
     def delete(scope) = FileUtils.rm_f(path(scope))
   end
 
-  def self.origin(value, environment)
+  def self.origin(value, environment, allow_http = false)
     uri = URI.parse(value)
-    allowed = uri.is_a?(URI::HTTPS) || environment == 'sandbox' && uri.is_a?(URI::HTTP) && %w[localhost 127.0.0.1 [::1]].include?(uri.host)
+    allowed = uri.is_a?(URI::HTTPS) || environment == 'sandbox' && uri.is_a?(URI::HTTP) && (allow_http || %w[localhost 127.0.0.1 [::1]].include?(uri.host))
     raise Error.new('INVALID_CONFIG') unless allowed && uri.host && !uri.userinfo && !uri.query && !uri.fragment && ['', '/'].include?(uri.path)
     uri.path = ''; uri.to_s
   rescue URI::InvalidURIError, TypeError
     raise Error.new('INVALID_CONFIG')
   end
   def self.validate_config(launch, product)
-    fields = %w[schema_version merchant_origin launch_product_id licentivo_product_id environment]
+    fields = %w[schema_version merchant_origin launch_product_id licentivo_product_id environment allow_http]
+    raise Error.new('INVALID_CONFIG') unless [nil, true, false].include?(launch.is_a?(Hash) ? launch['allow_http'] : nil)
+    raise Error.new('INVALID_CONFIG') if launch.is_a?(Hash) && launch['allow_http'] == true && launch['environment'] != 'sandbox'
     unless launch.is_a?(Hash) && (launch.keys - fields).empty? && launch['schema_version'] == 1 && UUID.match?(launch['launch_product_id'].to_s) && UUID.match?(launch['licentivo_product_id'].to_s) && %w[sandbox live].include?(launch['environment'])
       raise Error.new('INVALID_CONFIG')
     end
@@ -109,7 +111,7 @@ module LicentivoLaunch
     safe = { 'product_id' => product['product_id'], 'trusted_keys' => keys, 'base_url' => runtime_origin }
     safe['app_version'] = product['app_version'] if product['app_version']
     safe['allow_http'] = true if product['allow_http'] == true
-    [JSON.parse(JSON.generate(launch.merge('merchant_origin' => origin(launch['merchant_origin'], launch['environment'])))), JSON.parse(JSON.generate(safe))]
+    [JSON.parse(JSON.generate(launch.merge('merchant_origin' => origin(launch['merchant_origin'], launch['environment'], launch['allow_http'] == true)))), JSON.parse(JSON.generate(safe))]
   end
   def self.load_config(launch_path, product_path)
     read = lambda do |path|
@@ -163,7 +165,7 @@ module LicentivoLaunch
       @store, @transport = store, transport || LicentivoLaunch.method(:default_transport)
       @factory = runtime_factory || lambda do |config|
         require_relative 'licentivo_launch/vendor/licentivo'
-        raise Error.new('SDK_VERSION_MISMATCH') unless Licentivo::VERSION == '0.11.2'
+        raise Error.new('SDK_VERSION_MISMATCH') unless Licentivo::VERSION == '0.11.5'
         Licentivo::Client.new(config)
       end
       @root = File.expand_path(cache_dir || File.join(Dir.home, '.cache', 'LicentivoLaunch'))
@@ -172,8 +174,8 @@ module LicentivoLaunch
       @account_cleared = false
       @wait = sleep || lambda { |seconds, cancellation| (seconds * 10).ceil.times { cancellation&.check!; Kernel.sleep(0.1) }; cancellation&.check! }
     end
-    def self.connect(merchant_origin, product_id, licentivo_product_id, trusted_keys, environment: 'live', **options)
-      new({ 'schema_version' => 1, 'merchant_origin' => merchant_origin, 'launch_product_id' => product_id, 'licentivo_product_id' => licentivo_product_id, 'environment' => environment },
+    def self.connect(merchant_origin, product_id, licentivo_product_id, trusted_keys, environment: 'live', allow_http: false, **options)
+      new({ 'schema_version' => 1, 'merchant_origin' => merchant_origin, 'launch_product_id' => product_id, 'licentivo_product_id' => licentivo_product_id, 'environment' => environment, 'allow_http' => allow_http },
           { 'base_url' => 'https://www.licentivo.com', 'product_id' => licentivo_product_id, 'trusted_keys' => trusted_keys }, **options)
     end
     def self.from_files(launch_path, product_path, **options) = new(*LicentivoLaunch.load_config(launch_path, product_path), **options)
@@ -210,12 +212,13 @@ module LicentivoLaunch
         end
         begin
           me = call('/me', cancellation: cancellation)
+          raise Error.new('INVALID_RESPONSE') unless me['user'].is_a?(Hash) && me['user']['id'].is_a?(String) && !me['user']['id'].empty?
           raise Error.new('SESSION_MISMATCH', status: 401) unless me.dig('user', 'id') == @record.dig('user', 'id')
           @record['credential'] = credential(cancellation); @record['user'] = me['user']
         rescue Error => e
           cancellation&.check!
 
-          clear if e.code != 'ENTITLEMENT_PENDING' && ([401, 403, 404].include?(e.status) || %w[SESSION_EXPIRED SESSION_MISMATCH ENTITLEMENT_EXPIRED ENTITLEMENT_SUSPENDED ENTITLEMENT_NOT_PURCHASED].include?(e.code))
+          clear if e.code != 'ENTITLEMENT_PENDING' && !(e.status == 403 && %w[SDK_HTTP_DISABLED SDK_HTTPS_REQUIRED].include?(e.code)) && ([401, 403, 404].include?(e.status) || %w[SESSION_EXPIRED SESSION_MISMATCH ENTITLEMENT_EXPIRED ENTITLEMENT_SUSPENDED ENTITLEMENT_NOT_PURCHASED].include?(e.code))
           raise
         end
         begin
@@ -440,7 +443,7 @@ module LicentivoLaunch
       rescue StandardError => error
         failure = error
       ensure
-        stop
+        begin; stop; rescue StandardError => error; failure ||= error; end
       end
       if record
         begin; call('/auth/logout', method: 'POST', body: {}, cancellation: cancellation, token: record['token']); rescue StandardError => error; confirmed = error.is_a?(Error) && error.status == 401; end

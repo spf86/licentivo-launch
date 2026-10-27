@@ -30,6 +30,60 @@ test('already revoked account logout is confirmed by 401',async t=>{
   const restarted=new Application(launch,product,{...f.options,transport:async request=>request.url.endsWith('/auth/logout')?{status:401,body:JSON.stringify({error:{code:'UNAUTHENTICATED'}}),headers:{}}:f.options.transport(request)});
   t.after(()=>restarted.close());assert.equal(await restarted.logout(),true);assert.equal(await f.store.load(f.store.scope),null);
 });
+
+test('202 logout is retained across restart until confirmed by 200',async t=>{
+  const f=await fixture(t);await f.app.login('a','b');await f.app.close();let status=202;
+  const options={...f.options,transport:async request=>request.url.endsWith('/auth/logout')?{status,headers:{},body:JSON.stringify({data:{accepted:true}})}:f.options.transport(request)};
+  const next=new Application(launch,product,options);t.after(()=>next.close());assert.equal(await next.logout(),false);
+  const scope=f.store.scope;assert.equal((await f.store.load(scope)).logout_pending,true);await next.close();
+  const restarted=new Application(launch,product,options);t.after(()=>restarted.close());const before=f.calls.length;
+  await assert.rejects(restarted.restore(),{code:'ACCOUNT_LOGOUT_PENDING'});status=200;assert.equal(await restarted.restore(),null);
+  assert.equal(f.calls.length,before);assert.equal(await f.store.load(scope),null);
+});
+
+test('malformed 200 logout bodies retain account retry records',async t=>{
+  for(const invalid of ['null','{"data":null}','{"data":[]}','{"error":{"code":"UNEXPECTED"}}']){
+    const f=await fixture(t);let body=invalid;
+    const app=new Application(launch,product,{...f.options,transport:async request=>request.url.endsWith('/auth/logout')?{status:200,headers:{},body}:f.options.transport(request)});
+    t.after(()=>app.close());await app.login('a','b');assert.equal(await app.logout(),false);
+    await assert.rejects(app.runFeature('export',()=>assert.fail('signed-out work')),{code:'LOGIN_REQUIRED'});
+    body=JSON.stringify({data:{completed:true}});assert.equal(await app.logout(),true);assert.equal(await app.restore(),null);
+  }
+});
+
+test('transport policy denials preserve a valid account for explicit logout',async t=>{
+  for(const code of ['SDK_HTTP_DISABLED','SDK_HTTPS_REQUIRED']){
+    const f=await fixture(t);
+    const app=new Application(launch,product,{...f.options,transport:async request=>request.url.endsWith('/me')?{status:403,headers:{},body:JSON.stringify({error:{code}})}:f.options.transport(request)});
+    t.after(()=>app.close());await app.login('a','b');const scope=f.store.scope,saved=await f.store.load(scope),count=f.runtimes.length;
+    await assert.rejects(app.restore(),{code,status:403});assert.deepEqual(await f.store.load(scope),saved);assert.equal(f.runtimes.length,count);
+    await assert.rejects(app.runFeature('export',()=>assert.fail('configuration denial allowed work')),{code:'LOGIN_REQUIRED'});
+    assert.equal(await app.logout(),true);assert.equal(await f.store.load(scope),null);
+  }
+});
+
+test('malformed current user preserves account for explicit logout',async t=>{
+  for(const data of [{},{user:null},{user:{}},{user:{id:''}},{user:{id:null}},{user:{id:42}},{user:[]},{user:'invalid'}]){
+    const f=await fixture(t);let logoutBearer;
+    const app=new Application(launch,product,{...f.options,transport:async request=>{
+      if(request.url.endsWith('/me'))return reply(data);
+      if(request.url.endsWith('/auth/logout'))logoutBearer=request.headers.Authorization;
+      return f.options.transport(request);
+    }});
+    t.after(()=>app.close());await app.login('a','b');const scope=f.store.scope,saved=await f.store.load(scope),count=f.runtimes.length;
+    await assert.rejects(app.restore(),{code:'INVALID_RESPONSE'});
+    assert.deepEqual(await f.store.load(scope),saved);assert.equal(f.runtimes.length,count);
+    await assert.rejects(app.runFeature('export',()=>assert.fail('failed restore executed work')),{code:'LOGIN_REQUIRED'});
+    assert.equal(await app.logout(),true);assert.equal(logoutBearer,'Bearer '+saved.token);assert.equal(await f.store.load(scope),null);
+  }
+});
+
+test('a different current user still clears the remembered account',async t=>{
+  const f=await fixture(t);
+  const app=new Application(launch,product,{...f.options,transport:request=>request.url.endsWith('/me')?reply({user:{id:'55555555-5555-4555-8555-555555555555'}}):f.options.transport(request)});
+  t.after(()=>app.close());await app.login('a','b');const scope=f.store.scope;
+  await assert.rejects(app.restore(),{code:'SESSION_MISMATCH'});assert.equal(await f.store.load(scope),null);
+});
 test('explicit logout releases device and retains durable SDK journal',async t=>{const f=await fixture(t);await f.app.login('a','b');const path=f.runtimes[0].config.cache_path;assert.equal(await f.app.logout(),true);assert.equal(f.runtimes[0].released,1);assert.equal(await readFile(path+'.logout.json','utf8'),'SDK-owned journal');assert.equal(await f.store.load(f.store.scope),null);await assert.rejects(f.app.runFeature('export',()=>0),{code:'LOGIN_REQUIRED'});});
 test('ordinary close preserves login; fresh-process logout recovers SDK',async t=>{const f=await fixture(t);await f.app.login('a','b');await f.app.close();assert.equal(f.runtimes[0].released,0);const next=new Application(launch,product,f.options);assert.equal(await next.logout(),true);assert.equal(f.runtimes[1].released,1);assert.equal(f.runtimes[1].config.identity_token,'');await next.close();});
 test('Launch outage never grants offline permission',async t=>{const f=await fixture(t);await f.app.login('a','b');f.setOffline(true);await assert.rejects(f.app.restore(),{code:'NETWORK_UNAVAILABLE'});assert.equal(f.runtimes.length,1);});

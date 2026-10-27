@@ -1,10 +1,10 @@
-# Launch Rust 0.1.4
+# Launch Rust 0.1.5
 
 [Website](https://www.licentivo.com/en/launch.html) · [Documentation](https://www.licentivo.com/en/launch-docs.html) · [Source code](https://github.com/spf86/licentivo-launch-sdk)
 
 > Local account-exchange changes are unpublished. Login uses a short-lived identity assertion; Launch calculates purchased dates and Licentivo owns runtime permission. See the repository guide docs/account-purchase-boundary.md.
 
-Rust 1.85+. Install from crates.io with `cargo add licentivo-launch@=0.1.4`. A downloaded .crate or source ZIP can also be used as a local path dependency. SDK 0.11.2 Rust bindings and C11 sources are embedded. build.rs compiles and links the core automatically; no separate licentivo crate or SDK link path is needed.
+Rust 1.85+. Install from crates.io with `cargo add licentivo-launch@=0.1.5`. A downloaded .crate or source ZIP can also be used as a local path dependency. SDK 0.11.5 Rust bindings and C11 sources are embedded. build.rs compiles and links the core automatically; no separate licentivo crate or SDK link path is needed.
 
 Windows uses the GNU/MinGW Rust toolchain. The Windows distribution bundles curl and copies DLLs beside Cargo executables/tests. Other operating systems use normal C11, curl and OpenSSL development libraries. Preserve Cargo.lock. Ordinary Rust dependencies are resolved by Cargo.
 
@@ -40,3 +40,9 @@ Account logout tasks use a separate key in the configured secure store. Custom s
 Logout also records a local, session-specific account exit intent using hashes of the account scope and bearer; it stores no bearer or licensing grant there. Restore checks that intent before requesting identity, so a failed vault write or lifecycle-lock timeout cannot turn an interrupted logout into a remembered login. A storage failure is reported explicitly. If both vault persistence and local intent storage are unavailable, handle the failure and retry before terminating; the SDK does not claim durable completion.
 
 An old instance only changes its own account record and logout task. Repeating a completed logout does not adopt a newer remembered account. Retrying other sessions' account tasks never opens their licensing runtime. Licentivo owns device revocation, signed leases, offline permission and its shared cache files; ordinary close still preserves remembered login.
+
+## HTTP test opt-in on customer servers
+
+The merchant address selects HTTP or HTTPS; failed HTTPS requests never downgrade to HTTP. For an HTTP customer test server, the customer must enable HTTP on the specific Licentivo API key and enable **Allow SDK HTTP (test environment only)** in their own Launch website/security settings. Use `sandbox` and the explicit client option `Application::connect_with_http(..., "sandbox", true)`. The generated test integration code includes it after successful checks. `live` requires HTTPS. Old SDK versions must be upgraded; server switches cannot update compiled client URLs. No access to Licentivo’s private network is needed.
+
+See the [setup, failure and HTTPS migration guide in 14 languages](../../docs/http-testing/README.md) ([简体中文](../../docs/http-testing.zh-CN.md)). HTTP does not encrypt credentials; use dedicated test data.

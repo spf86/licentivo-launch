@@ -64,14 +64,14 @@ export class EncryptedFileStore {
   async delete(scope) { await rm(this.#path(scope), {force: true}); }
 }
 
-function origin(value, environment) {
+function origin(value, environment, allowHTTP=false) {
   let parsed; try { parsed = new URL(value); } catch { throw new LaunchError('INVALID_CONFIG'); }
   if (parsed.username || parsed.password || parsed.search || parsed.hash || parsed.pathname !== '/' ||
-      (parsed.protocol !== 'https:' && !(environment === 'sandbox' && parsed.protocol === 'http:' && ['localhost','127.0.0.1','[::1]'].includes(parsed.hostname)))) throw new LaunchError('INVALID_CONFIG');
+      (parsed.protocol !== 'https:' && !(environment === 'sandbox' && parsed.protocol === 'http:' && (allowHTTP || ['localhost','127.0.0.1','[::1]'].includes(parsed.hostname))))) throw new LaunchError('INVALID_CONFIG');
   return parsed.origin;
 }
 export function validateConfig(launch, product) {
-  if (!launch || Object.keys(launch).some(k => !['schema_version','merchant_origin','launch_product_id','licentivo_product_id','environment'].includes(k)) || launch.schema_version !== 1 || !UUID.test(launch.launch_product_id) || !UUID.test(launch.licentivo_product_id) || !['sandbox','live'].includes(launch.environment)) throw new LaunchError('INVALID_CONFIG');
+  if (!launch || Object.keys(launch).some(k => !['schema_version','merchant_origin','launch_product_id','licentivo_product_id','environment','allow_http'].includes(k)) || launch.schema_version !== 1 || !UUID.test(launch.launch_product_id) || !UUID.test(launch.licentivo_product_id) || !['sandbox','live'].includes(launch.environment) || launch.allow_http!==undefined&&typeof launch.allow_http!=='boolean' || launch.allow_http===true&&launch.environment!=='sandbox') throw new LaunchError('INVALID_CONFIG');
   if (!product || product.product_id !== launch.licentivo_product_id || Object.keys(product).some(k => !['product_id','trusted_keys','base_url','app_version','license_key','cache_path','device_name','allow_http'].includes(k)) || product.license_key || product.cache_path) throw new LaunchError('PUBLIC_CONFIG_INVALID');
   if (['license_key','cache_path'].some(k => product[k] !== undefined && product[k] !== null && typeof product[k] !== 'string')) throw new LaunchError('PUBLIC_CONFIG_INVALID');
   const keys = product.trusted_keys;
@@ -79,7 +79,7 @@ export function validateConfig(launch, product) {
   if (!keys || typeof keys !== 'object' || Array.isArray(keys) || !Object.keys(keys).length || Object.keys(keys).length > 32 || Object.entries(keys).some(([id,key]) => !id || id.length > 128 || typeof key !== 'string' || !/^[A-Za-z0-9_-]{43}$/.test(key) || Buffer.from(key,'base64url').toString('base64url') !== key)) throw new LaunchError('PUBLIC_CONFIG_INVALID');
   const runtimeOrigin = origin(product.base_url || 'https://www.licentivo.com', launch.environment);
   if (runtimeOrigin.startsWith('http:') && product.allow_http !== true) throw new LaunchError('PUBLIC_CONFIG_INVALID');
-  return {launch: {...clone(launch), merchant_origin: origin(launch.merchant_origin, launch.environment)}, product: {product_id: product.product_id, trusted_keys: clone(keys), base_url: runtimeOrigin, ...(product.app_version ? {app_version: product.app_version} : {}), ...(product.allow_http === true ? {allow_http:true} : {})}};
+  return {launch: {...clone(launch), merchant_origin: origin(launch.merchant_origin, launch.environment, launch.allow_http===true)}, product: {product_id: product.product_id, trusted_keys: clone(keys), base_url: runtimeOrigin, ...(product.app_version ? {app_version: product.app_version} : {}), ...(product.allow_http === true ? {allow_http:true} : {})}};
 }
 export async function loadConfig(launchPath, productPath) {
   const read = async path => { if ((await stat(path)).size > 65536) throw new LaunchError('CONFIG_TOO_LARGE'); return JSON.parse((await readFile(path,'utf8')).replace(/^\uFEFF/,'')); };
@@ -97,7 +97,7 @@ export async function defaultTransport(request) {
     return {status:response.status, headers:Object.fromEntries(response.headers), body:Buffer.concat(chunks).toString('utf8')};
   } catch (error) { cancelled(request.signal); if (error instanceof LaunchError) throw error; throw new LaunchError('NETWORK_UNAVAILABLE'); }
 }
-const denied = error => error instanceof LaunchError && error.code !== 'ENTITLEMENT_PENDING' && ([401,403,404].includes(error.status) || ['SESSION_EXPIRED','SESSION_MISMATCH','ENTITLEMENT_EXPIRED','ENTITLEMENT_SUSPENDED','ENTITLEMENT_NOT_PURCHASED'].includes(error.code));
+const denied = error => error instanceof LaunchError && error.code !== 'ENTITLEMENT_PENDING' && !(error.status === 403 && ['SDK_HTTP_DISABLED','SDK_HTTPS_REQUIRED'].includes(error.code)) && ([401,403,404].includes(error.status) || ['SESSION_EXPIRED','SESSION_MISMATCH','ENTITLEMENT_EXPIRED','ENTITLEMENT_SUSPENDED','ENTITLEMENT_NOT_PURCHASED'].includes(error.code));
 const unavailable = error => error instanceof LaunchError && (error.code === 'NETWORK_UNAVAILABLE' || error.status >= 500 && error.status <= 599);
 
 export class Application {
@@ -114,8 +114,8 @@ export class Application {
     if (!Number.isInteger(this.#attempts) || this.#attempts < 1 || this.#attempts > 5) throw new LaunchError('INVALID_RETRY_POLICY');
   }
   static async fromFiles(launchPath, productPath, options) { const {launch,product} = await loadConfig(launchPath,productPath); return new Application(launch,product,options); }
-  static connect(merchantOrigin, productID, licentivoProductID, trustedKeys, {environment = 'live', ...options} = {}) {
-    return new Application({schema_version:1,merchant_origin:merchantOrigin,launch_product_id:productID,licentivo_product_id:licentivoProductID,environment},
+  static connect(merchantOrigin, productID, licentivoProductID, trustedKeys, {environment = 'live', allowHTTP=false, ...options} = {}) {
+    return new Application({schema_version:1,merchant_origin:merchantOrigin,launch_product_id:productID,licentivo_product_id:licentivoProductID,environment,...(allowHTTP?{allow_http:allowHTTP}:{})},
       {base_url:'https://www.licentivo.com',product_id:licentivoProductID,trusted_keys:trustedKeys}, options);
   }
   #serial(action) { if(this.#callbacks.getStore()) return Promise.reject(new LaunchError('WORKFLOW_BUSY')); const result = this.#queue.then(action); this.#queue = result.catch(() => {}); return result; }
@@ -137,7 +137,7 @@ export class Application {
       if (/^\d+$/.test(retry ?? '')) seconds = Number(retry); else if (retry && Number.isFinite(Date.parse(retry))) seconds = Math.max(0, Math.ceil((Date.parse(retry)-Date.now())/1000));
       throw new LaunchError(data?.error?.code ?? 'REQUEST_FAILED', response.status, Number.isFinite(seconds) ? seconds : 0);
     }
-    if (!data?.data || typeof data.data !== 'object') throw new LaunchError('INVALID_RESPONSE'); return data.data;
+    if (!data?.data || typeof data.data !== 'object' || Array.isArray(data.data)) throw new LaunchError('INVALID_RESPONSE'); return data.data;
   }
   async #credential(signal) {
     const result=await this.#call('/software/products/'+this.#config.launch.launch_product_id+'/identity','POST',{environment:this.#config.launch.environment},signal);
@@ -191,7 +191,7 @@ export class Application {
     this.#accountCleared=false;
     await this.#retryOthers(this.#record.token,signal);
     if(Date.parse(this.#record.expires_at)<=Date.now()){await this.#clear();throw new LaunchError('SESSION_EXPIRED');}
-    let identity;try{const me=await this.#call('/me','GET',undefined,signal);if(me.user?.id!==this.#record.user.id)throw new LaunchError('SESSION_MISMATCH',401);identity=await this.#credential(signal);this.#record.user=me.user;}catch(error){if(denied(error))await this.#clear();throw error;}
+    let identity;try{const me=await this.#call('/me','GET',undefined,signal);if(typeof me.user?.id!=='string'||!me.user.id)throw new LaunchError('INVALID_RESPONSE');if(me.user.id!==this.#record.user.id)throw new LaunchError('SESSION_MISMATCH',401);identity=await this.#credential(signal);this.#record.user=me.user;}catch(error){if(denied(error))await this.#clear();throw error;}
     this.#record.identityContext=Object.fromEntries(['product_id','licentivo_product_id','launch_connection_id','environment','expires_at'].map(key=>[key,identity[key]]));
     try{const state=await this.#start(identity,signal);await this.#save();return state;}catch(error){await this.#clear();throw error;}
   });}

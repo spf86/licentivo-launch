@@ -196,6 +196,13 @@ func (s *Service) processRefund(ctx context.Context) (bool, error) {
 		if external != nil {
 			changes["external_refund_id"] = *external
 		}
+		if status == "pending" {
+			// A confirmed approval queue is healthy, even when it lasts days.
+			// Count only consecutive unknown outcomes toward manual review and
+			// keep ordinary polling paced independently of the error backoff.
+			changes["attempts"] = 0
+			changes["next_check_at"] = now().Add(2 * time.Minute)
+		}
 		return databaseError(s.db.WithContext(c).Transaction(func(tx *gorm.DB) error {
 			if status == "failed" {
 				var payment storage.Payment
@@ -262,13 +269,16 @@ func (s *Service) processRefund(ctx context.Context) (bool, error) {
 		return true, finish("unknown", true, nil)
 	}
 	if observed.Status != ports.PaymentSucceeded {
-		state := "pending"
-		if observed.Status == ports.PaymentFailed {
-			state = "failed"
+		switch observed.Status {
+		case ports.PaymentPending:
+			return true, finish("pending", false, &observed.ExternalID)
+		case ports.PaymentFailed:
+			return true, finish("failed", false, &observed.ExternalID)
+		case ports.PaymentUnknown:
+			return true, finish("unknown", r.Attempts >= 12, &observed.ExternalID)
+		default:
+			return true, finish("unknown", true, &observed.ExternalID)
 		}
-		// Known pending refunds may need days of provider review. Exhaustion
-		// applies to unknown outcomes, never to a healthy approval queue.
-		return true, finish(state, observed.Status == ports.PaymentUnknown && r.Attempts >= 12, &observed.ExternalID)
 	}
 	// Lock in the same user/order/payment order as payment settlement.
 	var order storage.Order
