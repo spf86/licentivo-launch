@@ -1,146 +1,56 @@
 {
-  "version": "0.1.3",
-  "upstream_sdk_version": "0.11.2",
-  "source_commit": "ff8ca15b592c2e2907e376bc150ebff286fff9fd",
-  "repository": "https://github.com/spf86/licentivo-launch-sdk",
-  "release": "https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.3",
-  "verified_at": "2026-10-24T17:40:02.968328+00:00",
-  "public_installations_verified": 9,
-  "total_languages": 9,
-  "all_nine_published_and_installed": true,
+  "version": "0.1.5",
+  "release": "https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.5",
+  "checked_at": "2026-10-27T10:20:37.981416+00:00",
   "github_release_published": true,
+  "all_six_completed": true,
+  "registry_count": 6,
   "registries": {
-    "go": {
-      "package": "github.com/spf86/licentivo-launch-sdk/pkg/launchclient",
-      "version": "0.1.3",
-      "url": "https://github.com/spf86/licentivo-launch-sdk/tree/v0.1.3/pkg/launchclient",
-      "installation": "go get github.com/spf86/licentivo-launch-sdk/pkg/launchclient@v0.1.3",
-      "status": "published",
-      "install_verified": true,
-      "github_download_available": true,
-      "verified_at": "2026-10-24T17:25:56.348919+00:00",
-      "verification_receipt": "registry-verification.json",
-      "latest_install_verified": true,
-      "default_install_version": "v0.1.3"
+    "npm": {
+      "version": "0.1.5",
+      "url": "https://registry.npmjs.org/@licentivo%2Flaunch/0.1.5",
+      "published": true,
+      "http_status": 200,
+      "observed_version": "0.1.5"
     },
-    "python": {
-      "package": "licentivo-launch",
-      "version": "0.1.3",
-      "url": "https://pypi.org/project/licentivo-launch/0.1.3/",
-      "installation": "python -m pip install licentivo-launch==0.1.3",
-      "status": "published",
-      "install_verified": true,
-      "github_download_available": true,
-      "verified_at": "2026-10-24T17:24:38.178081+00:00",
-      "verification_receipt": "registry-verification.json",
-      "latest_install_verified": true,
-      "default_install_version": "0.1.3"
+    "pypi": {
+      "version": "0.1.5",
+      "url": "https://pypi.org/pypi/licentivo-launch/0.1.5/json",
+      "published": true,
+      "http_status": 200,
+      "observed_version": "0.1.5"
     },
-    "javascript": {
-      "package": "@licentivo/launch",
-      "version": "0.1.3",
-      "url": "https://www.npmjs.com/package/@licentivo/launch/v/0.1.3",
-      "installation": "npm install @licentivo/launch@0.1.3",
-      "status": "published",
-      "install_verified": true,
-      "github_download_available": true,
-      "verified_at": "2026-10-24T17:29:19.866424+00:00",
-      "verification_receipt": "registry-verification.json",
-      "latest_install_verified": true,
-      "default_install_version": "0.1.3"
-    },
-    "csharp": {
-      "package": "Licentivo.Launch",
-      "version": "0.1.3",
-      "url": "https://www.nuget.org/packages/Licentivo.Launch/0.1.3",
-      "installation": "dotnet add package Licentivo.Launch --version 0.1.3",
-      "status": "published",
-      "install_verified": true,
-      "github_download_available": true,
-      "verified_at": "2026-10-24T17:27:18.705611+00:00",
-      "verification_receipt": "registry-verification.json",
-      "latest_install_verified": true,
-      "default_install_version": "0.1.3"
-    },
-    "java": {
-      "package": "com.licentivo.launch:launch-client",
-      "version": "0.1.3",
-      "url": "https://repo.maven.apache.org/maven2/com/licentivo/launch/launch-client/0.1.3/launch-client-0.1.3.jar",
-      "installation": "com.licentivo.launch:launch-client:0.1.3",
-      "status": "published",
-      "install_verified": true,
-      "github_download_available": true,
-      "deployment_id": "feee21fe-4024-4ad6-b293-2cca6367ccaf",
-      "verified_at": "2026-10-24T17:38:57.776894+00:00",
-      "verification_receipt": "registry-verification.json",
-      "latest_install_verified": true,
-      "default_install_version": "0.1.3"
-    },
-    "rust": {
-      "package": "licentivo-launch",
-      "version": "0.1.3",
-      "url": "https://crates.io/crates/licentivo-launch/0.1.3",
-      "installation": "cargo add licentivo-launch@=0.1.3",
-      "status": "published",
-      "install_verified": true,
-      "github_download_available": true,
-      "verified_at": "2026-10-24T17:27:49.258412+00:00",
-      "verification_receipt": "registry-verification.json",
-      "latest_install_verified": true,
-      "default_install_version": "0.1.3"
+    "nuget": {
+      "version": "0.1.5",
+      "url": "https://api.nuget.org/v3-flatcontainer/licentivo.launch/0.1.5/licentivo.launch.nuspec",
+      "published": true,
+      "http_status": 200,
+      "metadata_sha256": "7179135a6cc5f0ac56aea16fc2ea3bb543e1d2f049c90eafedfe2be49c842cad"
     },
     "ruby": {
-      "package": "licentivo-launch",
-      "version": "0.1.3",
-      "url": "https://rubygems.org/gems/licentivo-launch/versions/0.1.3",
-      "installation": "gem install licentivo-launch --version 0.1.3",
-      "status": "published",
-      "install_verified": true,
-      "github_download_available": true,
-      "verified_at": "2026-10-24T17:25:46.684288+00:00",
-      "verification_receipt": "registry-verification.json",
-      "latest_install_verified": true,
-      "default_install_version": "0.1.3"
+      "version": "0.1.5",
+      "url": "https://rubygems.org/api/v2/rubygems/licentivo-launch/versions/0.1.5.json",
+      "published": true,
+      "http_status": 200,
+      "observed_version": "0.1.5"
     },
-    "c": {
-      "package": "LicentivoLaunch::Account",
-      "version": "0.1.3",
-      "url": "https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.3",
-      "installation": "Download the compiler-compatible native CMake archive and verify SHA256SUMS.",
-      "status": "published",
-      "install_verified": true,
-      "github_download_available": true,
-      "verified_at": "2026-10-24T17:27:46.064538+00:00",
-      "verification_receipt": "registry-verification.json",
-      "verified_platform": "windows-amd64-gnu",
-      "curl_discovery_modes": [
-        "default",
-        "module"
-      ],
-      "latest_install_verified": true,
-      "default_install_version": "v0.1.3"
+    "crates": {
+      "version": "0.1.5",
+      "url": "https://crates.io/api/v1/crates/licentivo-launch/0.1.5",
+      "published": true,
+      "http_status": 200,
+      "observed_version": "0.1.5"
     },
-    "cpp": {
-      "package": "LicentivoLaunch::CPP",
-      "version": "0.1.3",
-      "url": "https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.3",
-      "installation": "Download the compiler-compatible native CMake archive and verify SHA256SUMS.",
-      "status": "published",
-      "install_verified": true,
-      "github_download_available": true,
-      "verified_at": "2026-10-24T17:27:46.064538+00:00",
-      "verification_receipt": "registry-verification.json",
-      "verified_platform": "windows-amd64-gnu",
-      "curl_discovery_modes": [
-        "default",
-        "module"
-      ],
-      "latest_install_verified": true,
-      "default_install_version": "v0.1.3"
+    "maven": {
+      "version": "0.1.5",
+      "url": "https://repo.maven.apache.org/maven2/com/licentivo/launch/launch-client/0.1.5/launch-client-0.1.5.pom",
+      "published": true,
+      "http_status": 200,
+      "metadata_sha256": "f3fadeb08b034fcfcf46b22c2e49888fc744b95f2b60954991c9f8f563f0ffed"
     }
   },
-  "external_acceptance_complete": false,
-  "previous_version_status": "registry-status-0.1.2.json",
-  "default_latest_installations_verified": 9,
-  "all_nine_latest_installations_verified": true
+  "central_deployment_id": "cfb3817e-064b-4574-a68f-449c8e595053",
+  "central_signatures_verified": true,
+  "local_consumer_installations_passed": 9,
+  "upstream_sdk_version": "0.11.5"
 }
