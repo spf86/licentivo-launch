@@ -27,7 +27,7 @@ The official Licentivo SDK handles machine identity, signatures, activation, hea
 
 ## Install Launch
 
-Install only the Launch package for your language, following its README. All nine packages embed SDK 0.11.6, the default adapter and SDK linking configuration. No official SDK source checkout, extra official package or adapter copy is required. Windows Ruby/Rust/native distributions bundle curl; source builds on other platforms use their normal C11 and OS curl/OpenSSL tools.
+Install only the Launch package for your language, following its README. All nine packages embed SDK 0.11.7, the default adapter and SDK linking configuration. No official SDK source checkout, extra official package or adapter copy is required. Windows Ruby/Rust/native distributions bundle curl; source builds on other platforms use their normal C11 and OS curl/OpenSSL tools.
 
 The server startup configuration is private config.yaml. Application initialization uses public parameters directly; config files are not a prerequisite. The full CLI harnesses are reference/test utilities; use the direct Connect/connect function in normal applications.
 

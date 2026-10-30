@@ -45,7 +45,7 @@ fn main() {
             }
         }
     }
-    if os == "windows" && target_env == "msvc" { panic!("The bundled C11 SDK requires a Windows GNU/MinGW Rust toolchain; MSVC is not supported by SDK 0.11.6."); }
+    if os == "windows" && target_env == "msvc" { panic!("The bundled C11 SDK requires a Windows GNU/MinGW Rust toolchain; MSVC is not supported by SDK 0.11.7."); }
     build.compile("licentivo_launch_core");
     println!("cargo:rustc-link-lib=curl");
     if os == "windows" {

@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Licentivo Launch Integration API",
-    "version": "0.3.4-beta",
+    "version": "0.3.5-beta",
     "description": "System, account, desktop licensing, integration wizard and basic purchase APIs. This is not the full staff administration/payment-webhook API. Runtime access must still pass the official Licentivo SDK. Email verification is required only when enabled by the merchant. Custom licensing connections and customer delivery are also documented. External receiver endpoints are specified separately in external-licensing-openapi.json.",
     "license": {
       "name": "MIT",

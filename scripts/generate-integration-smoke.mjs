@@ -25,7 +25,7 @@ switch (language) {
   case 'javascript': write('connect-smoke.test.mjs', "import test from 'node:test';\nimport {connectLaunch} from './launch-connection.mjs';\ntest('generated Node direct initialization',async()=>{const app=connectLaunch();await app.close();});\n"); break;
   case 'csharp':
     write('Program.cs', 'await using var app = LaunchConnection.Open();\nSystem.Console.WriteLine("PASS generated C# direct initialization");\n');
-    write('Consumer.csproj', '<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable></PropertyGroup><ItemGroup><PackageReference Include="Licentivo.Launch" Version="0.1.6"/></ItemGroup></Project>\n'); break;
+    write('Consumer.csproj', '<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable></PropertyGroup><ItemGroup><PackageReference Include="Licentivo.Launch" Version="0.1.7"/></ItemGroup></Project>\n'); break;
   case 'java': write('ConnectSmoke.java', 'public final class ConnectSmoke {public static void main(String[] args) throws Exception {try(var app=LaunchConnection.open()){System.out.println("PASS generated Java direct initialization");}}}\n'); break;
   case 'rust': write('main.rs', 'mod launch_connection;\nfn main(){let mut app=launch_connection::connect_launch().expect("connect");app.close();println!("PASS generated Rust direct initialization");}\n'); break;
   case 'ruby': write('main.rb', "require_relative 'launch_connection'\napp=connect_launch\napp.close\nputs 'PASS generated Ruby direct initialization'\n"); break;

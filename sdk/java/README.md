@@ -1,10 +1,10 @@
-# Launch Java 0.1.6
+# Launch Java 0.1.7
 
 [Website](https://www.licentivo.com/en/launch.html) · [Documentation](https://www.licentivo.com/en/launch-docs.html) · [Source code](https://github.com/spf86/licentivo-launch-sdk)
 
 > Local account-exchange changes are unpublished. Login uses a short-lived identity assertion; Launch calculates purchased dates and Licentivo owns runtime permission. See the repository guide docs/account-purchase-boundary.md.
 
-JDK 17+. Add Maven/Gradle dependency `com.licentivo.launch:launch-client:0.1.6` from Maven Central, or use only launch-client-0.1.6.jar from the matching GitHub release on your classpath. SDK 0.11.6 classes and notices are inside this JAR. No second SDK JAR or Maven dependency is required. Standard Java libraries provide the runtime dependencies.
+JDK 17+. Add Maven/Gradle dependency `com.licentivo.launch:launch-client:0.1.7` from Maven Central, or use only launch-client-0.1.7.jar from the matching GitHub release on your classpath. SDK 0.11.7 classes and notices are inside this JAR. No second SDK JAR or Maven dependency is required. Standard Java libraries provide the runtime dependencies.
 
 ## Direct initialization and manual lifecycle
 

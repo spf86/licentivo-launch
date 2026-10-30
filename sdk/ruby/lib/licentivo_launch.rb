@@ -11,7 +11,7 @@ require 'time'
 require 'monitor'
 
 module LicentivoLaunch
-  VERSION = '0.1.6'
+  VERSION = '0.1.7'
   LIMIT = 1 << 20
   UUID = /\A[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\z/
   class Error < StandardError
@@ -165,7 +165,7 @@ module LicentivoLaunch
       @store, @transport = store, transport || LicentivoLaunch.method(:default_transport)
       @factory = runtime_factory || lambda do |config|
         require_relative 'licentivo_launch/vendor/licentivo'
-        raise Error.new('SDK_VERSION_MISMATCH') unless Licentivo::VERSION == '0.11.6'
+        raise Error.new('SDK_VERSION_MISMATCH') unless Licentivo::VERSION == '0.11.7'
         Licentivo::Client.new(config)
       end
       @root = File.expand_path(cache_dir || File.join(Dir.home, '.cache', 'LicentivoLaunch'))

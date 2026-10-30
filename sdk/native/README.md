@@ -1,8 +1,8 @@
-# Launch C / C++ 0.1.6
+# Launch C / C++ 0.1.7
 
 > Local account-exchange changes are unpublished. Login uses a short-lived identity assertion; Launch calculates purchased dates and Licentivo owns runtime permission. See the repository guide docs/account-purchase-boundary.md.
 
-C11/C++17 and CMake. Download the Windows amd64 GNU or Linux amd64 native installation ZIP from [GitHub Releases](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.6), verify SHA256SUMS, then add only that Launch prefix to CMake. SDK 0.11.6 core, adapters, import targets and notices are included. The Windows archive bundles curl. Other platforms can build the complete source using standard C11/curl/OpenSSL development libraries.
+C11/C++17 and CMake. Download the Windows amd64 GNU or Linux amd64 native installation ZIP from [GitHub Releases](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.7), verify SHA256SUMS, then add only that Launch prefix to CMake. SDK 0.11.7 core, adapters, import targets and notices are included. The Windows archive bundles curl. Other platforms can build the complete source using standard C11/curl/OpenSSL development libraries.
 
 ```cmake
 find_package(LicentivoLaunch CONFIG REQUIRED)
@@ -13,7 +13,7 @@ licentivo_launch_link(myapp)
 
 The helper handles SDK/transitive linkage and bundled Windows runtime DLLs. No second find_package for an official SDK or copied adapter is required.
 
-Version 0.1.6 embeds the SDK 0.11.6 CMake fix: installed SDK targets resolve curl through the consumer's public `CURL::libcurl` target, including when the SDK was built with curl's config package and the consumer uses FindCURL. Consumers do not need to add curl compatibility aliases. Match the compiler, architecture and curl runtime/development dependencies to the downloaded native package. The licensing protocol and client API are unchanged.
+Version 0.1.7 embeds the SDK 0.11.7 CMake fix: installed SDK targets resolve curl through the consumer's public `CURL::libcurl` target, including when the SDK was built with curl's config package and the consumer uses FindCURL. Consumers do not need to add curl compatibility aliases. Match the compiler, architecture and curl runtime/development dependencies to the downloaded native package. The licensing protocol and client API are unchanged.
 
 ## Direct initialization
 

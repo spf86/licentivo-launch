@@ -1,8 +1,8 @@
-# Launch Go 0.1.6
+# Launch Go 0.1.7
 
 > Local account-exchange changes are unpublished. Login uses a short-lived identity assertion; Launch calculates purchased dates and Licentivo owns runtime permission. See the repository guide docs/account-purchase-boundary.md.
 
-Go 1.26+. The public module is github.com/spf86/licentivo-launch-sdk; import github.com/spf86/licentivo-launch-sdk/pkg/launchclient. Install with go get github.com/spf86/licentivo-launch-sdk/pkg/launchclient@v0.1.6. A downloaded module ZIP can also be used with a local require/replace for the same module path. The official SDK 0.11.6 is embedded under Go's private internal boundary. No official SDK module, adapter copy or SDK import is needed.
+Go 1.26+. The public module is github.com/spf86/licentivo-launch-sdk; import github.com/spf86/licentivo-launch-sdk/pkg/launchclient. Install with go get github.com/spf86/licentivo-launch-sdk/pkg/launchclient@v0.1.7. A downloaded module ZIP can also be used with a local require/replace for the same module path. The official SDK 0.11.7 is embedded under Go's private internal boundary. No official SDK module, adapter copy or SDK import is needed.
 
 ## Direct initialization
 

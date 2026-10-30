@@ -29,32 +29,32 @@ Launch 只在浏览器中生成文本。它不会自动连接任何 AI 服务，
 
 ## 提示词会告诉 AI 在哪里下载 SDK
 
-当前 0.1.6 的九种语言公开安装验证已全部通过（9/9），下列注册表命令和原生下载均已验证。Java 的 Maven Central 文件及四份签名、Rust 的 crates.io 精确版本和全部后台生成的初始化代码也已完成独立消费者检查；[v0.1.6 GitHub Release](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.6) 同时提供原生包和离线文件。
+当前 0.1.7 的九种语言公开安装验证已全部通过（9/9），下列注册表命令和原生下载均已验证。Java 的 Maven Central 文件及四份签名、Rust 的 crates.io 精确版本和全部后台生成的初始化代码也已完成独立消费者检查；[v0.1.7 GitHub Release](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.7) 同时提供原生包和离线文件。
 
 生成的提示词必须包含与所选语言对应的、固定版本的公开安装方式：
 
 ```text
-Go:         go get github.com/spf86/licentivo-launch-sdk/pkg/launchclient@v0.1.6
-Python:     python -m pip install licentivo-launch==0.1.6
-C# / .NET: dotnet add package Licentivo.Launch --version 0.1.6
-Java:       com.licentivo.launch:launch-client:0.1.6
-Node.js:    npm install @licentivo/launch@0.1.6
-Rust:       cargo add licentivo-launch@=0.1.6
-Ruby:       gem install licentivo-launch --version 0.1.6
-C / C++:    https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.6
+Go:         go get github.com/spf86/licentivo-launch-sdk/pkg/launchclient@v0.1.7
+Python:     python -m pip install licentivo-launch==0.1.7
+C# / .NET: dotnet add package Licentivo.Launch --version 0.1.7
+Java:       com.licentivo.launch:launch-client:0.1.7
+Node.js:    npm install @licentivo/launch@0.1.7
+Rust:       cargo add licentivo-launch@=0.1.7
+Ruby:       gem install licentivo-launch --version 0.1.7
+C / C++:    https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.7
 ```
 
 公开源码、各语言 README 和当前发布状态位于：
 
 - [Licentivo Launch SDK 仓库](https://github.com/spf86/licentivo-launch-sdk)
-- [v0.1.6 GitHub Release](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.6)
+- [v0.1.7 GitHub Release](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.7)
 - [九种语言公开安装验证](https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/registry-verification.json)
 - [版本与包说明](integration-packages.md)
 - [九种语言手动接入指南](manual-integration.md)
 - [应用接入架构与安全要求](software-sdk-integration.md)
 - [接入验收清单](acceptance.md)
 
-只安装所选语言的 Launch 包。v0.1.6 已内置官方 Licentivo SDK v0.11.6、默认适配器和链接配置，不再单独安装第二份官方 SDK。
+只安装所选语言的 Launch 包。v0.1.7 已内置官方 Licentivo SDK v0.11.7、默认适配器和链接配置，不再单独安装第二份官方 SDK。
 
 ## 提示词会告诉 AI 如何接入
 
@@ -121,7 +121,7 @@ Launch 的公开配置检查、AI 草稿和本地编译都不能证明真实支�
 
 ## 在源码分发包中使用提示词生成器
 
-`licentivo-launch-0.1.6-source.zip` 保留下列文件，便于在自己的工具中生成相同结构的提示词：
+`licentivo-launch-0.1.7-source.zip` 保留下列文件，便于在自己的工具中生成相同结构的提示词：
 
 - `internal/httpapi/web/integration-prompts.js`：不依赖页面或服务端的提示词生成模块；
 - `scripts/integration-prompts.test.mjs`：本地 Node 测试；

@@ -1,4 +1,4 @@
-# Launch Python 0.1.6
+# Launch Python 0.1.7
 
 [Website](https://www.licentivo.com/en/launch.html) · [Documentation](https://www.licentivo.com/en/launch-docs.html) · [Source code](https://github.com/spf86/licentivo-launch-sdk)
 
@@ -7,10 +7,10 @@
 Python 3.10+. Install only Launch:
 
 ```sh
-python -m pip install licentivo-launch==0.1.6
+python -m pip install licentivo-launch==0.1.7
 ```
 
-From source use python -m pip install ./sdk/python. The wheel embeds SDK 0.11.6 and its default adapter; pip resolves the ordinary cryptography dependency. No separate licentivo-sdk installation or PYTHONPATH entry is needed.
+From source use python -m pip install ./sdk/python. The wheel embeds SDK 0.11.7 and its default adapter; pip resolves the ordinary cryptography dependency. No separate licentivo-sdk installation or PYTHONPATH entry is needed.
 
 ## Direct initialization and manual lifecycle
 

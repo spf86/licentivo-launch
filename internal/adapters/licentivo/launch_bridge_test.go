@@ -25,7 +25,15 @@ func TestLaunchDeviceProtocolPreservesAccountAndGeneration(t *testing.T) {
 			if r.URL.Path != "/api/v1/launch/connections/"+connection+"/entitlements/purchase_ref/devices" || r.URL.Query().Get("account_ref") != "account_ref" || r.URL.Query().Get("environment") != "sandbox" {
 				t.Error("customer scope was changed")
 			}
-			data = ports.LaunchDevices{Items: []ports.Device{{ID: device, Generation: 7}}, Remaining: 2, CanRelease: true}
+			// Use the wire representation so new upstream fields cannot silently
+			// disappear when decoded into Launch's device model.
+			data = map[string]any{"items": []map[string]any{{
+				"id": device, "generation": 7, "status": "active",
+				"device_name": "MacBook Air", "device_alias": "Work Mac", "device_code": "ABCD-1234",
+				"platform": "darwin", "os_version": "macOS 15.6", "cpu": "Apple M2", "memory_mb": 16384,
+				"gpu": "Apple M2 GPU", "system_type": "arm64", "storage_gb": 512, "app_version": "1.2.3",
+				"device_id": "private-fingerprint", "device_key": "private-device-key", "license_key": "private-license-key",
+			}}, "remaining": 2, "can_release": true}
 		} else {
 			var in ports.LaunchDeviceRelease
 			if json.NewDecoder(r.Body).Decode(&in) != nil || in.OperationID != operation || in.ExpectedGeneration != 7 || in.AccountRef != "account_ref" || in.EntitlementRef != "purchase_ref" || in.Environment != "sandbox" {
@@ -47,6 +55,14 @@ func TestLaunchDeviceProtocolPreservesAccountAndGeneration(t *testing.T) {
 	view, err := client.Devices(context.Background(), connection, "purchase_ref", "account_ref", "sandbox")
 	if err != nil || view.Remaining != 2 || !view.CanRelease {
 		t.Fatal("authoritative response not forwarded", err)
+	}
+	expected := ports.Device{ID: device, Generation: 7, Status: "active", Name: "MacBook Air", Alias: "Work Mac", Code: "ABCD-1234", Platform: "darwin", OSVersion: "macOS 15.6", CPU: "Apple M2", MemoryMB: 16384, GPU: "Apple M2 GPU", SystemType: "arm64", StorageGB: 512, AppVersion: "1.2.3"}
+	if len(view.Items) != 1 || view.Items[0] != expected {
+		t.Fatal("device display details were lost or changed", view.Items)
+	}
+	encoded, err := json.Marshal(view.Items)
+	if err != nil || strings.Contains(string(encoded), "private-") {
+		t.Fatal("private upstream device fields escaped the public model", err)
 	}
 	result, err := client.Release(context.Background(), connection, device, ports.LaunchDeviceRelease{OperationID: operation, AccountRef: "account_ref", EntitlementRef: "purchase_ref", Environment: "sandbox", ExpectedGeneration: 7})
 	if err != nil || result.Status != "pending" {

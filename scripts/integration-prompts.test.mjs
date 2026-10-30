@@ -55,7 +55,7 @@ test("all nine language wrappers and the separate Go Web option point to real so
     assert.ok(result.text.includes(target.wrapperPath + "/README.md"));
     assert.ok(result.text.includes(target.examplePath));
     assert.ok(result.text.includes(target.publicReadme));
-    assert.match(result.text, /https:\/\/github\.com\/spf86\/licentivo-launch-sdk\/releases\/tag\/v0\.1\.6/);
+    assert.match(result.text, /https:\/\/github\.com\/spf86\/licentivo-launch-sdk\/releases\/tag\/v0\.1\.7/);
     assert.match(result.text, /https:\/\/www\.licentivo\.com\/launch-docs\.html#developer/);
     assert.equal(Object.isFrozen(target), true);
   }
@@ -202,11 +202,11 @@ test("platform and project type change safe storage and backend isolation instru
 
 test("versions, feature guard, lifecycle and honest acceptance boundaries are retained for every target", () => {
   const upstream = readFileSync(new URL("sdk/UPSTREAM_VERSION", root), "utf8").trim();
-  assert.equal(upstream, "0.11.6");
+  assert.equal(upstream, "0.11.7");
   for (const language of Object.keys(integrationTargets)) {
     const {text} = buildIntegrationPrompt({language, report: report(language)});
     assert.doesNotMatch(text, /0\.1\.1\b|0\.11\.0\b/, `${language} must not recommend superseded package versions`);
-    for (const required of ["Launch integration package 0.1.6", "SDK 0.11.6", "expires_at", "feature guard", "close", "logout", "release device", "ENTITLEMENT_PENDING", "Retry-After", "ENTITLEMENT_EXPIRED", "ENTITLEMENT_SUSPENDED", "ENTITLEMENT_NOT_PURCHASED", "EMAIL_VERIFICATION_REQUIRED", "401/403/404", "HTTP 5xx", "Cancellation and 429", "tampered/expired cache is rejected", "scripts/acceptance.py", "acceptance_complete"]) assert.ok(text.includes(required), `${language} is missing ${required}`);
+    for (const required of ["Launch integration package 0.1.7", "SDK 0.11.7", "expires_at", "feature guard", "close", "logout", "release device", "ENTITLEMENT_PENDING", "Retry-After", "ENTITLEMENT_EXPIRED", "ENTITLEMENT_SUSPENDED", "ENTITLEMENT_NOT_PURCHASED", "EMAIL_VERIFICATION_REQUIRED", "401/403/404", "HTTP 5xx", "Cancellation and 429", "tampered/expired cache is rejected", "scripts/acceptance.py", "acceptance_complete"]) assert.ok(text.includes(required), `${language} is missing ${required}`);
     assert.match(text, /Do not separately install an official SDK package, copy an adapter or configure upstream SDK paths/);
     assert.doesNotMatch(text, /pip install \.\/examples\/vendor|Licentivo\.SDK 0\.11|licentivo-sdk-0\.11\.1\.jar|exact official peer dependency|Install or compile the official licentivo-sdk/);
     assert.match(text, /no launch-config.json or product.json file is required/);

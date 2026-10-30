@@ -215,10 +215,14 @@ func (p *purchasePayments) QueryPaymentReversal(_ context.Context, in ports.Veri
 
 type purchasePolicies struct {
 	ports.LicensingProvider
-	definitions map[string]ports.PolicyDefinition
+	definitions      map[string]ports.PolicyDefinition
+	beforeDefinition func()
 }
 
 func (p *purchasePolicies) PolicyDefinition(_ context.Context, id string) (ports.PolicyDefinition, error) {
+	if p.beforeDefinition != nil {
+		p.beforeDefinition()
+	}
 	return p.definitions[id], nil
 }
 
@@ -406,6 +410,141 @@ func TestPurchaseSnapshotBridge(t *testing.T) {
 			parent.FailNow()
 		}
 	}
+	t.Run("unpublished products reject new purchases", func(t *testing.T) {
+		for _, status := range []string{"draft", "archived", "archived during licensing check"} {
+			t.Run(status, func(t *testing.T) {
+				tx := db.Begin()
+				if tx.Error != nil {
+					t.Fatal(tx.Error)
+				}
+				defer tx.Rollback()
+				trialConfig := config
+				changed := false
+				if status == "archived during licensing check" {
+					trialConfig.LicensingFactory = func(context.Context, storage.LicentivoConnection) (ports.LicensingProvider, error) {
+						return &purchasePolicies{definitions: policies.definitions, beforeDefinition: func() {
+							if err := tx.Model(&product).Update("status", "archived").Error; err != nil {
+								t.Fatal(err)
+							}
+							changed = true
+						}}, nil
+					}
+				}
+				trial, err := New(ctx, tx, trialConfig)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if status != "archived during licensing check" {
+					if err := tx.Model(&product).Update("status", status).Error; err != nil {
+						t.Fatal(err)
+					}
+				}
+				before := len(payments.requests)
+				_, err = trial.CreateOrder(ctx, customer, CheckoutInput{ProductID: product.ID, PlanVersionID: basic.ID, Provider: "stripe", Environment: "sandbox", IdempotencyKey: id()})
+				var failure *Error
+				if !errors.As(err, &failure) || failure.Code != "PRODUCT_NOT_PUBLISHED" {
+					t.Errorf("unpublished product accepted a new purchase: %v", err)
+				}
+				if status == "archived during licensing check" && !changed {
+					t.Fatal("licensing check did not exercise a concurrent product change")
+				}
+				var orders int64
+				if err := tx.Model(&storage.Order{}).Count(&orders).Error; err != nil || orders != 0 || len(payments.requests) != before {
+					t.Fatalf("rejected purchase created an order or checkout: orders=%d, error=%v", orders, err)
+				}
+			})
+		}
+	})
+	t.Run("failed payment reconciliation backs off before returning", func(t *testing.T) {
+		for _, scenario := range []string{"expired checkout creation", "unavailable provider"} {
+			t.Run(scenario, func(t *testing.T) {
+				tx := db.Begin()
+				if tx.Error != nil {
+					t.Fatal(tx.Error)
+				}
+				defer tx.Rollback()
+				trialConfig := config
+				trial, err := New(ctx, tx, trialConfig)
+				if err != nil {
+					t.Fatal(err)
+				}
+				order, err := trial.CreateOrder(ctx, customer, CheckoutInput{ProductID: product.ID, PlanVersionID: basic.ID, Provider: "stripe", Environment: "sandbox", IdempotencyKey: id()})
+				if err != nil {
+					t.Fatal(err)
+				}
+				changes := map[string]any{"next_check_at": now().Add(-time.Minute)}
+				if scenario == "expired checkout creation" {
+					changes["external_checkout_id"], changes["checkout_url"] = nil, nil
+					changes["created_at"] = now().Add(-24 * time.Hour)
+				} else {
+					trial.config.PaymentFactory = func(context.Context, storage.PaymentAccount) (ports.PaymentProvider, error) {
+						return nil, errors.New("provider unavailable")
+					}
+				}
+				if err := tx.Model(&storage.Payment{}).Where("order_id = ?", order.ID).Updates(changes).Error; err != nil {
+					t.Fatal(err)
+				}
+				if err := trial.reconcilePayment(ctx, order.ID); err == nil {
+					t.Fatal("broken payment unexpectedly reconciled")
+				}
+				var payment storage.Payment
+				if err := tx.First(&payment, "order_id = ?", order.ID).Error; err != nil {
+					t.Fatal(err)
+				}
+				if payment.NextCheckAt == nil || !payment.NextCheckAt.After(now()) {
+					t.Fatalf("failed payment remains immediately eligible and can starve newer orders: %v", payment.NextCheckAt)
+				}
+			})
+		}
+	})
+	run("payment batches prioritize the earliest due check", func(t *testing.T) {
+		tx := db.Begin()
+		if tx.Error != nil {
+			t.Fatal(tx.Error)
+		}
+		defer tx.Rollback()
+		trial, err := New(ctx, tx, config)
+		if err != nil {
+			t.Fatal(err)
+		}
+		view, err := trial.CreateOrder(ctx, customer, CheckoutInput{ProductID: product.ID, PlanVersionID: basic.ID, Provider: "stripe", Environment: "sandbox", IdempotencyKey: id()})
+		if err != nil {
+			t.Fatal(err)
+		}
+		var order storage.Order
+		var payment storage.Payment
+		if err := tx.First(&order, "id = ?", view.ID).Error; err != nil {
+			t.Fatal(err)
+		}
+		if err := tx.First(&payment, "order_id = ?", view.ID).Error; err != nil {
+			t.Fatal(err)
+		}
+		due := now().Add(-time.Minute)
+		for i := 0; i < 11; i++ {
+			stalledOrder, stalledPayment := order, payment
+			stalledOrder.ID, stalledOrder.IdempotencyKey = id(), id()
+			stalledOrder.CreatedAt = now().Add(-24 * time.Hour)
+			if err := tx.Create(&stalledOrder).Error; err != nil {
+				t.Fatal(err)
+			}
+			stalledPayment.ID, stalledPayment.OrderID, stalledPayment.OperationID = id(), stalledOrder.ID, id()
+			stalledPayment.CreatedAt, stalledPayment.NextCheckAt = stalledOrder.CreatedAt, &due
+			stalledPayment.ExternalCheckoutID, stalledPayment.CheckoutURL = nil, nil
+			stalledPayment.Status = "unknown"
+			if err := tx.Create(&stalledPayment).Error; err != nil {
+				t.Fatal(err)
+			}
+		}
+		if err := tx.Model(&payment).Update("next_check_at", due.Add(-time.Minute)).Error; err != nil {
+			t.Fatal(err)
+		}
+		if err := trial.processOutstandingPayments(ctx); err != nil {
+			t.Fatal(err)
+		}
+		if err := tx.First(&payment, "id = ?", payment.ID).Error; err != nil || payment.Status != "succeeded" {
+			t.Fatalf("older failures starved the more overdue payment: status=%s, error=%v", payment.Status, err)
+		}
+	})
 	run("purchase loses response and recovers after restart", func(t *testing.T) {
 		order := pay(basic, 3, "purchase", "")
 		task := latest()
@@ -439,6 +578,41 @@ func TestPurchaseSnapshotBridge(t *testing.T) {
 		db.Model(&storage.EntitlementCoverage{}).Where("source_order_id = ?", order.ID).Count(&coverages)
 		if coverages != 1 {
 			t.Fatal("replayed payment duplicated coverage")
+		}
+	})
+	run("unpublished products reject upgrades while keeping renewals available", func(t *testing.T) {
+		quote, err := service.Quote(ctx, customer, QuoteInput{Action: "upgrade", ProductID: product.ID, PlanVersionID: pro.ID, Environment: "sandbox"}, "")
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, status := range []string{"draft", "archived"} {
+			t.Run(status, func(t *testing.T) {
+				tx := db.Begin()
+				if tx.Error != nil {
+					t.Fatal(tx.Error)
+				}
+				defer tx.Rollback()
+				trial, err := New(ctx, tx, config)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if err := tx.Model(&product).Update("status", status).Error; err != nil {
+					t.Fatal(err)
+				}
+				_, err = trial.Quote(ctx, customer, QuoteInput{Action: "upgrade", ProductID: product.ID, PlanVersionID: pro.ID, Environment: "sandbox"}, "")
+				var failure *Error
+				if !errors.As(err, &failure) || failure.Code != "PRODUCT_NOT_PUBLISHED" {
+					t.Errorf("unpublished product accepted an upgrade quote: %v", err)
+				}
+				_, err = trial.CreateOrder(ctx, customer, CheckoutInput{Action: "upgrade", QuoteToken: quote.Token, ProductID: product.ID, PlanVersionID: pro.ID, Provider: "stripe", Environment: "sandbox", IdempotencyKey: id()})
+				if !errors.As(err, &failure) || failure.Code != "PRODUCT_NOT_PUBLISHED" {
+					t.Errorf("old quote accepted an upgrade after unpublishing: %v", err)
+				}
+				// Existing customers retain the plan's explicit renewal permission.
+				if _, err := trial.Quote(ctx, customer, QuoteInput{Action: "renew", ProductID: product.ID, PlanVersionID: basic.ID, Environment: "sandbox"}, ""); err != nil {
+					t.Fatalf("unpublishing removed the customer's renewal option: %v", err)
+				}
+			})
 		}
 	})
 	run("upgrade and refund restore the paid base", func(t *testing.T) {

@@ -551,6 +551,10 @@ fn official_runtime_online_restart_offline_and_tamper() {
                 } else if path.ends_with("/identity") {
                     json!({"product_id":PRODUCT,"licentivo_product_id":REMOTE,"launch_connection_id":"66666666-6666-4666-8666-666666666666","environment":"sandbox","identity_token":"I".repeat(64),"expires_at":"2099-01-01T00:00:00Z"})
                 } else {
+                    if path.ends_with("/launch/exchange") || path.ends_with("/validate") || path.ends_with("/heartbeat") {
+                        assert!(request["device_name"].as_str().is_some_and(|name| !name.trim().is_empty()), "SDK device name missing");
+                        assert!(request["device_info"]["system_type"].as_str().is_some_and(|arch| !arch.is_empty()), "SDK display details missing");
+                    }
                     let now = OffsetDateTime::now_utc().unix_timestamp();
                     let claims = json!({"version":1,"key_id":"signing-test","tenant_id":"33333333-3333-4333-8333-333333333333","product_id":REMOTE,"license_id":"44444444-4444-4444-8444-444444444444","device_id":request["device_id"],"activation_id":"55555555-5555-4555-8555-555555555555","mode":"timed","features":["export"],"max_devices":1,"issued_at":now,"expires_at":now+3600,"runtime_policy":{"offline_mode":"limited","offline_seconds":3600,"heartbeat_seconds":600},"capabilities":{"license_model":"node_locked","launch_connection_id":"66666666-6666-4666-8666-666666666666","environment":"sandbox","session_id":"77777777-7777-4777-8777-777777777777","session_expires_at":now+3600,"binding_version":1}});
                     let payload = claims.to_string();
