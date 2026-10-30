@@ -1,17 +1,30 @@
 # Licentivo Launch
 
-**A self-hosted software storefront, customer account portal, and purchase-to-license integration for [Licentivo](https://www.licentivo.com/).**
+**Integrate software sales, account login, and licensing in just one day.**
 
-Give customers a branded place to discover your software, create an account, purchase a plan, and sign in to your application. Launch connects verified payments to Licentivo licenses so customers can activate software through their merchant account instead of copying license keys.
+Run a branded software storefront and customer portal on your own domain. Customers discover your software, buy a plan, and sign in to your application with their store account. Launch connects verified payments to [Licentivo](https://www.licentivo.com/) authorization while customer and order records stay in your own database.
 
-Built with **Go, GORM, MySQL, and embedded HTML/CSS/JavaScript**. Released under the [MIT license](LICENSE).
+**Free and [MIT-licensed](LICENSE), self-hosted, with SDKs in nine languages.** Use one Launch package and ready-to-use connection code to add account login and protected features to your existing application.
 
-[Download binaries](https://github.com/spf86/licentivo-launch/releases) · [Licentivo website](https://www.licentivo.com/) · [Installation](docs/installation.md) · [Configuration](docs/configuration.md) · [Application integration](docs/software-sdk-integration.md)
+[One-day integration guide](docs/one-day-integration.md) · [Download binaries](https://github.com/spf86/licentivo-launch/releases) · [Installation](docs/installation.md) · [Application integration](docs/software-sdk-integration.md) · [Licentivo website](https://www.licentivo.com/)
+
+## Integrate in one day
+
+With an existing application, a server/MySQL database, an HTTPS domain, and Licentivo/payment sandbox accounts ready, follow this working-day plan for a standard Licentivo integration:
+
+| Stage | Result |
+| --- | --- |
+| Deploy your store | Start Launch and set up your brand, product and sales plan. |
+| Connect payments and licensing | Configure one payment sandbox and map the plan to an existing Licentivo product/policy. |
+| Integrate your application | Install one Launch SDK, copy the generated connection function, and add login plus feature guards. Manual coding and generated AI instructions follow the same APIs. |
+| Verify the complete flow | Complete a sandbox purchase and run a protected operation in your application; check restart and logout behavior. |
+
+The one-day path targets a working integration in your existing app. Payment-provider approval follows the provider's schedule, and production deployment still follows the release's acceptance requirements. See the [step-by-step plan and completion checklist](docs/one-day-integration.md).
 
 ## Why use Launch?
 
 - **Own your customer relationship.** Run your own instance, domain, and database. Customer accounts, contact information, orders, and payment records stay in the merchant database.
-- **Connect purchases to software access.** Use the same merchant account on the website and in your application. Launch retrieves the customer's own license after authentication; the official Licentivo SDK handles activation and runtime checks.
+- **Connect purchases to software access.** Use the same merchant account on the website and in your application. Launch supplies a short-lived account identity assertion; the embedded official Licentivo SDK exchanges it for device credentials and signed permission, then checks protected operations.
 - **Sell multiple products under your brand.** Manage product pages, plans, documentation, policies, and platform-specific installers from one administration area.
 - **Recover from interrupted operations.** Persistent queues, stable operation identifiers, retries, and an entitlement ledger help reconcile payments with licensing after timeouts or restarts.
 - **Keep deployment compact.** The frontend is embedded in the Go executable. No separate frontend server or message broker is required.
@@ -35,7 +48,7 @@ Launch 0.3.5-beta can synchronize purchases with an existing licensing service u
 | Downloads | Separate Windows, macOS, iOS, and Android installers; platform requirements, versions, file sizes, and checksums |
 | Customer accounts | Direct email/password registration without a mail provider, optional required email verification, password recovery, confirmed email changes, and revocable sessions |
 | Payments | Stripe, PayPal, Waffo Payment API, and Paddle Billing; verified callbacks, payment queries, full refunds, and interrupted-operation recovery |
-| Licensing | One encrypted Licentivo management connection, product/policy discovery, versioned plan mappings, license issuance, renewals, policy changes, suspension, and device release |
+| Licensing | One encrypted Licentivo management connection, product/policy discovery, versioned plan mappings, absolute purchase synchronization, short-lived account identity exchange, and SDK-controlled device/runtime authorization |
 | Custom licensing | Choose Licentivo or a merchant-owned HTTP licensing service per product/environment; signed purchase snapshots, durable receipt recovery, and owned license/activation/instructions delivery |
 | Entitlements | Per-account/product/payment-environment isolation, perpetual and fixed-term plans, UTC calendar terms, paid coverage ledger, renewal and upgrade quotes |
 | Reliability | Persistent payment and licensing events, task leases, stable request identifiers, retries, reconciliation, and recovery of interrupted remote operations |
@@ -52,10 +65,12 @@ The redesigned interface uses a persistent administration sidebar, focused setti
 
 1. A merchant deploys Launch and configures their brand, products, payment accounts, and Licentivo management API key.
 2. A customer registers and buys a published plan using a configured provider. Email verification is required only when the merchant enables it.
-3. Launch verifies the payment, records the paid entitlement, and queues a licensing operation.
-4. A worker creates or updates the Licentivo license with a stable request identifier.
-5. The customer signs in to the merchant's application. Launch supplies that account's product credential to the authenticated application.
-6. The official Licentivo SDK validates signatures, binds devices or obtains floating seats, and enforces runtime features and offline rules.
+3. Launch verifies the payment and records the order, paid coverage and synchronization task in one transaction.
+4. A worker sends an absolute, versioned purchase snapshot to Licentivo with a stable event identifier. Only an `applied` receipt confirms synchronization.
+5. The customer signs in to the merchant's application. Launch returns a scoped identity assertion lasting at most 120 seconds; the Launch package passes it to the embedded official SDK in memory.
+6. The official SDK exchanges that assertion with Licentivo for device credentials and signed permission, then enforces every protected operation, device/seat limits and offline rules.
+
+Launch does not return a long-term license key in this account flow. The old `/api/v1/software/products/{id}/credential` endpoint returns **HTTP 410** (`LICENSE_CREDENTIAL_REMOVED`); applications must use `/identity` through a matching Launch package. A paid order or successful identity response does not authorize protected work. See [application integration and migration requirements](docs/software-sdk-integration.md) and the [current Licentivo contract](docs/licentivo-contract.md).
 
 Licentivo receives the data required for licensing, such as opaque customer references and device/runtime metadata. Launch does not send customer passwords, contact details, or complete orders to Licentivo. Payment providers receive the information needed to process the merchant's transactions.
 
@@ -170,7 +185,7 @@ All settings, defaults, and examples are documented in [configuration.md](docs/c
 - Use HTTPS and a persistent MySQL database for a public deployment. `LAUNCH_ENV=production` requires an HTTPS `LAUNCH_PUBLIC_URL`, a database DSN, and a master key; external acceptance checks still gate live sales.
 - Persist `LAUNCH_UPLOAD_DIR` and back it up with the encrypted database backup. Uploaded installers are not part of the executable.
 - Keep the process running: licensing, expiration, payment, email, and translation work depends on persistent background jobs.
-- Launch's sales term starts from verified payment; Licentivo's policy term can start at first activation. Launch reconciles the difference and suspends remote licenses at the local contract deadline. A long server outage can delay that suspension. See the [contract limitations](docs/licentivo-contract.md).
+- Launch calculates absolute purchase dates from verified payments and sends them to Licentivo as versioned snapshots. Launch downtime can delay new purchase, refund and account-revocation synchronization; runtime validity and already-issued offline permission remain governed by Licentivo and its SDK. See the [current contract](docs/licentivo-contract.md).
 - The included [Compose file](compose.yaml) is a development scaffold. Container execution, production hardening, and writable installer storage must be validated for your environment.
 
 Backup, restore, upgrade, and monitoring procedures are in the [installation guide](docs/installation.md).
@@ -191,6 +206,8 @@ Backup, restore, upgrade, and monitoring procedures are in the [installation gui
 Commands shown as `launch` refer to the executable in your extracted package, for example `./launch` or `.\launch.exe`. Server commands automatically select `config.yaml`; `launch serve --config /path/to/config.yaml` selects a specific file. `--config` takes precedence over `LAUNCH_CONFIG_FILE`.
 
 ## Build from source (optional)
+
+Launch is built with **Go, GORM, MySQL, and embedded HTML/CSS/JavaScript**.
 
 Use this path when developing or modifying Launch. It requires Go 1.26+ and Git. Ordinary installations can use the release package above.
 
@@ -229,7 +246,9 @@ The nine-language Launch application packages below use Licentivo. Custom licens
 
 See the public [installation and development documentation](https://www.licentivo.com/launch-docs.html), [manual nine-language guide](docs/manual-integration.md), [examples/README.md](examples/README.md) and [application integration guide](docs/software-sdk-integration.md). Launch automatically fills the current merchant address and existing product data into direct connection code and English AI prompts. No manual product-ID entry or configuration-file generation is required. Install only the Launch package for your language. Each package embeds the pinned official SDK and manages its adapter and SDK linking. The server itself does not depend on the client packages.
 
-The administration **程序接入 → 接入检查与代码** page reads the current merchant address, existing product mapping and signing public keys, validates them, and provides a ready-to-use connection function for each language. Start with the [manual nine-language guide](docs/manual-integration.md), [Chinese quick start](docs/application-quickstart.zh-CN.md), [versioned integration packages](docs/integration-packages.md), and [automated/external acceptance workflow](docs/acceptance.md). Launch SDK 0.1.3 embeds official SDK 0.11.7, including the C/C++ CMake curl dependency compatibility fix; its licensing protocol and client API are unchanged. The separate [Launch SDK repository](https://github.com/spf86/licentivo-launch-sdk) has published the GitHub release, with **9/9 public installation checks passed** for Go, Python, C#, Java, Node.js/TypeScript, Rust, Ruby, C and C++. Maven Central and all other language registries are publicly available; consult the [versioned publication record](sdk/release/docs/publication-0.1.3.md) and [public installation evidence](https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/registry-verification.json). External merchant/payment/licensing acceptance remains deferred until its environment is configured.
+The administration **程序接入 → 接入检查与代码** page reads the current merchant address, existing product mapping and signing public keys, validates them, and provides a ready-to-use connection function for each language. Start with the [manual nine-language guide](docs/manual-integration.md), [Chinese quick start](docs/application-quickstart.zh-CN.md), [versioned integration packages](docs/integration-packages.md), and [automated/external acceptance workflow](docs/acceptance.md).
+
+The current source baseline is **Launch server 0.3.5-beta → Launch SDK 0.1.7 → embedded Licentivo SDK 0.11.7**. The [public SDK v0.1.7 release](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.7) describes device names and optional system/hardware details. Review the [application integration guide](docs/software-sdk-integration.md) and [Licentivo contract](docs/licentivo-contract.md) for the required backend endpoints and migration flow. Check the version and checksums inside each publication/installation report; older reports do not certify a newer package or uncommitted local changes. External merchant/payment/licensing acceptance remains separate.
 
 **运营工具 → AI 快速接入** generates an English prompt from your language, platform, project type and protected feature. Select the existing software and environment to include the automatically filled direct initialization code, or generate a clearly marked unconfigured draft. The prompt includes the exact versioned package-manager command or GitHub download, links to the language README and integration guides, the `Connect/connect → Login/Restore → RunFeature` lifecycle, and an acceptance checklist. No configuration files or manual internal product-ID entry are required. Copy or download the prompt for your own AI coding tool; Launch never automatically sends it to an AI service, and excludes passwords, license credentials, sessions, management keys, payment keys and server configuration. See [AI integration](docs/ai-integration.md).
 
@@ -258,6 +277,7 @@ docs/                          Installation, configuration, contracts, and recor
 
 - [Installation and operations](docs/installation.md)
 - [Configuration reference](docs/configuration.md)
+- [Application integration and backend requirements](docs/software-sdk-integration.md)
 - [Custom licensing API and integration flow](docs/external-licensing.md)
 - [External services](docs/external-services.md)
 - [Product requirements](Licentivo%20Launch.md)

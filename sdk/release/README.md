@@ -1,6 +1,14 @@
 # Licentivo Launch SDKs
 
-Version 0.1.7 is distributed through the GitHub Release assets below. Check [publication status](docs/publication-0.1.7.json) for package registry availability.
+**Add merchant-account login and software licensing to your app in just one day.**
+
+With your existing application and Launch store configured, install one package,
+copy the generated connection function, and add login plus protected business
+actions. Follow the [one-day integration plan](docs/one-day-integration.md) and
+[manual integration guide](docs/manual-integration.md), then verify the sandbox
+purchase-to-use flow before production rollout.
+
+The public [v0.1.7 Release](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.7) describes Launch package 0.1.7 with embedded official SDK 0.11.7. Check the [application integration guide](docs/software-sdk-integration.md) for the account-exchange flow and backend requirements. Match artifact checksums and source revisions when checking whether a public package contains a local fix.
 
 [Website](https://www.licentivo.com/en/launch.html) · [Documentation](https://www.licentivo.com/en/launch-docs.html) · [Source code](https://github.com/spf86/licentivo-launch-sdk)
 
@@ -19,9 +27,9 @@ configuration file or manual entry of two internal product IDs is required.
 
 ## Install into your application
 
-Version: **0.1.7**, with official SDK **0.11.7**. The commands below target this release. Publication and fresh-consumer results are recorded in [publication status](docs/registry-status.json) and [verification receipts](docs/registry-verification.json); the [0.1.7 release record](docs/publication-0.1.7.md) describes this update.
+Version: **0.1.7**, with official SDK **0.11.7**, paired with the Launch server **0.3.5-beta** account-exchange source baseline. The commands below target this release. Check the version, source revision and checksums inside [publication status](docs/registry-status.json) and [verification receipts](docs/registry-verification.json); historical reports do not certify a newer package. The [0.1.7 release notes](docs/releases/0.1.7.md) describe this update.
 
-This update strengthens account logout persistence, restore coordination and the matching official runtime protections across all nine languages. Install one Launch package; it includes its reviewed Licentivo runtime.
+This update includes device-name/system-information reporting and native portability changes while retaining account ownership, recovery and logout retry behavior. Install one Launch package; it includes its reviewed Licentivo runtime. Confirm the matching backend and database revision before deploying the reviewed device-information clients.
 
 | Language | Registry command / distribution | API reference |
 | --- | --- | --- |
@@ -49,9 +57,13 @@ same APIs and automatically filled parameters.
 
 Initialization does not authorize a protected operation. Log in with the
 customer's merchant account, then execute protected business code through the
-package's feature guard. Preserve the SDK lifecycle for heartbeats and use only
-verified, policy-valid grants for offline operation. Explicit denial must not
-fall back to offline authorization.
+package's feature guard. The wrapper obtains a short-lived identity assertion
+from Launch's `/identity` endpoint and passes it in memory to the official SDK
+for `/api/v1/launch/exchange` on Licentivo. The removed `/credential` endpoint
+returns HTTP 410 (`LICENSE_CREDENTIAL_REMOVED`); it no longer supplies keys.
+Launch Restore confirms the account online and obtains a fresh assertion.
+Applications needing offline startup use the official SDK's recovery contract;
+explicit denial must not fall back to offline authorization.
 
 The [Launch server](https://github.com/spf86/licentivo-launch) manages merchant
 accounts, payments and entitlement delivery. This repository contains client
