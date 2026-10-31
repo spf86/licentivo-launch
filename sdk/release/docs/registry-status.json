@@ -2,46 +2,65 @@
   "version": "0.1.8",
   "upstream_sdk_version": "0.11.8",
   "release": "https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.8",
-  "checked_at": "2026-10-31T22:53:16.677841+00:00",
-  "github_release_published": false,
-  "all_six_completed": false,
+  "checked_at": "2026-10-31T23:32:01.052174+00:00",
+  "github_release_published": true,
+  "all_six_completed": true,
   "registry_count": 6,
   "registries": {
     "npm": {
       "version": "0.1.8",
       "url": "https://registry.npmjs.org/@licentivo%2Flaunch/0.1.8",
-      "published": false,
-      "status": "pending_publication"
+      "published": true,
+      "http_status": 200,
+      "observed_version": "0.1.8",
+      "metadata_sha256": "e7bfc07781b18b5d49876e5430ce009a62e14f4be3cac7e280f857621f523e4e"
     },
     "pypi": {
       "version": "0.1.8",
       "url": "https://pypi.org/pypi/licentivo-launch/0.1.8/json",
-      "published": false,
-      "status": "pending_publication"
+      "published": true,
+      "http_status": 200,
+      "observed_version": "0.1.8",
+      "metadata_sha256": "ad854b5f3fc70f256e8de92ff73a65a91eb3f54819ac1f5ccf331b4809e3cc30"
     },
     "nuget": {
       "version": "0.1.8",
       "url": "https://api.nuget.org/v3-flatcontainer/licentivo.launch/0.1.8/licentivo.launch.nuspec",
-      "published": false,
-      "status": "pending_publication"
+      "published": true,
+      "http_status": 200,
+      "observed_version": "0.1.8",
+      "metadata_sha256": "2c1deb253b3d5399722075dc1ac3141a99455ad9550bb2b7435c8eba09508767"
     },
     "ruby": {
       "version": "0.1.8",
       "url": "https://rubygems.org/api/v2/rubygems/licentivo-launch/versions/0.1.8.json",
-      "published": false,
-      "status": "pending_publication"
+      "published": true,
+      "http_status": 200,
+      "observed_version": "0.1.8",
+      "metadata_sha256": "a5d7302134a6e8090b2fcc9e02e3fe1d3d822cdb4646a451e72666f244c71ecf"
     },
     "crates": {
       "version": "0.1.8",
       "url": "https://crates.io/api/v1/crates/licentivo-launch/0.1.8",
-      "published": false,
-      "status": "pending_publication"
+      "published": true,
+      "http_status": 200,
+      "observed_version": "0.1.8",
+      "metadata_sha256": "194e4fe074e320260395b6086a9e48337370a9210c49635c66d3752755e03d58"
     },
     "maven": {
       "version": "0.1.8",
       "url": "https://repo.maven.apache.org/maven2/com/licentivo/launch/launch-client/0.1.8/launch-client-0.1.8.pom",
-      "published": false,
-      "status": "pending_publication"
+      "published": true,
+      "http_status": 200,
+      "observed_version": "0.1.8",
+      "metadata_sha256": "e819a9e92e356c7996bcf7ede9834f7e63c475b0dc5437af57035d78ad19018c"
     }
-  }
+  },
+  "release_source_commit": "9d8bd1be9dffc470cfd2b71d34f5e25f13f5314c",
+  "central_deployment_id": "91e119b7-7931-4af7-bc43-551a51446691",
+  "central_deployment_state": "PUBLISHED",
+  "central_signatures_verified": true,
+  "maven_jar_matches_immutable_github_asset": true,
+  "maven_jar_sha256": "07f7d12b3b701557c91213f3c8f0e1e3d6b6243aaf9d734cee91b593408f5d79",
+  "maven_public_java_consumer_passed": true
 }
