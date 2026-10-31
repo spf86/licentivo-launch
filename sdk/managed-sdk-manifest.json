@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "sdk_version": "0.11.8",
-  "source_revision": "20261101-source-snapshot",
+  "source_revision": "github.com/spf86/licentivo-sdk@40b3b10b75ad4886c4c689baf07d65a752088191",
   "changes": "Private import/native-library relocation, a Windows SDK architecture-constant compatibility guard and an optional Java device-name default, with embedded text line endings normalized to LF; authorization and cryptographic logic are unchanged. Account-lifecycle revisions are released together with the matching Licentivo server.",
   "files": [
     {
