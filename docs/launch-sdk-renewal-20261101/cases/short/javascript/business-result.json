@@ -1,0 +1,24 @@
+{
+  "operation_id": "launch-renewal-000fe6b44b694376-short-javascript",
+  "callback_count": 1,
+  "completed_units": 3,
+  "business_seconds": 2.02,
+  "progress_rows": 2,
+  "artifacts": [
+    {
+      "file": "report-1.csv",
+      "sha256": "b3d663c89cf7bc2e9ee0616cb4bb4a5f2fc8ba564f3145aadbf7f481874749fa",
+      "rows": 100
+    },
+    {
+      "file": "report-2.csv",
+      "sha256": "b3c803e646088f0389009f39b5d89a653bd5032a965fe8072f4ff8e85d53e796",
+      "rows": 100
+    },
+    {
+      "file": "report-3.csv",
+      "sha256": "19753c77ec67702a018fa6f268e47edc8dd140a9f86121fe779301c3ce78d8cc",
+      "rows": 100
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+[
+  {
+    "attempt": "attempt-1",
+    "status": "failed",
+    "passed": false,
+    "error_type": "RuntimeError",
+    "error_message": "short run cpp process succeeded",
+    "observed_codes": [
+      {
+        "log": "attempt-1/logs/short-run-cpp-private.log",
+        "error_codes": [
+          "ACCOUNT_LOCK_BUSY"
+        ]
+      }
+    ],
+    "included_in_successful_matrix": false
+  },
+  {
+    "attempt": "attempt-2",
+    "status": "failed",
+    "passed": false,
+    "error_type": "RuntimeError",
+    "error_message": "c ended before its callback",
+    "observed_codes": [
+      {
+        "log": "attempt-2/logs/short-run-java-private.log",
+        "error_codes": [
+          "DEVICE_CREDENTIAL_REVOKED"
+        ]
+      },
+      {
+        "log": "attempt-2/logs/short-run-go-private.log",
+        "error_codes": [
+          "DEVICE_CREDENTIAL_REVOKED"
+        ]
+      },
+      {
+        "log": "attempt-2/logs/short-run-c-private.log",
+        "error_codes": [
+          "CACHE_UNAVAILABLE"
+        ]
+      },
+      {
+        "log": "attempt-2/logs/short-run-python-private.log",
+        "error_codes": [
+          "DEVICE_CREDENTIAL_REVOKED"
+        ]
+      },
+      {
+        "log": "attempt-2/logs/short-run-csharp-private.log",
+        "error_codes": [
+          "DEVICE_CREDENTIAL_REVOKED"
+        ]
+      }
+    ],
+    "included_in_successful_matrix": false
+  }
+]

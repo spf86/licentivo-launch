@@ -138,8 +138,11 @@ fn product() -> Value {
     json!({"product_id":REMOTE,"trusted_keys":{KEY:URL_SAFE_NO_PAD.encode([0u8;32])}})
 }
 fn create(shared: Rc<RefCell<Shared>>, root: PathBuf, environment: &str) -> Application {
+    // Independent fixtures must not contend for the process-wide account lock.
+    // Reopened applications using the same root retain the same merchant scope.
+    let origin = format!("https://test-{}.merchant.example", &hash(root.to_string_lossy().as_ref())[..16]);
     Application::with_components(
-        Config::new("https://merchant.example", PRODUCT, REMOTE, environment).unwrap(),
+        Config::new(&origin, PRODUCT, REMOTE, environment).unwrap(),
         product(),
         root,
         Box::new(TestStore(shared.clone())),

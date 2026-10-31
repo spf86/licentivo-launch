@@ -20,10 +20,11 @@ New-Item -ItemType Directory -Path $taskStage -Force | Out-Null
 $taskLanguages=[Collections.Generic.List[object]]::new()
 $taskArtifacts=[Collections.Generic.List[string]]::new()
 function Checked([string]$Program,[string[]]$Arguments){ & $Program @Arguments; if($LASTEXITCODE -ne 0){throw "Package command failed: $Program"} }
-function Copy-Tree([string]$From,[string]$To){
+function Copy-Tree([string]$From,[string]$To,[string]$ExcludePattern=""){
  New-Item -ItemType Directory -Path $To -Force | Out-Null
  foreach($taskFile in (Get-ChildItem -LiteralPath $From -Recurse -File -Force)){
   $taskRel=$taskFile.FullName.Substring($From.Length+1).Replace('\','/')
+  if($ExcludePattern -and $taskRel -match $ExcludePattern){continue}
   if($taskRel -match '(^|/)(\.git|__pycache__|node_modules|bin|obj|target|build|dist|[^/]+\.egg-info)(/|$)' -or $taskRel -match '\.(pyc|pyo|class|log|dpapi|secrets\.json)$' -or $taskFile.Name -in @('launch-config.json','product.json','licensed-report.txt')){continue}
   $taskDest=Join-Path $To $taskRel
   New-Item -ItemType Directory -Path (Split-Path $taskDest) -Force | Out-Null
@@ -54,7 +55,8 @@ function Language([string]$Name,[string]$Artifact,[string]$Archive,[string]$Kind
 foreach($taskName in @('python','csharp','javascript','ruby','java','rust','native')){Copy-Tree (Join-Path $taskRoot ('sdk/'+$taskName)) (Join-Path $taskStage $taskName)}
 foreach($taskName in @('rust','ruby','native')){Curl (Join-Path $taskStage ($taskName+'/vendor/curl'))}
 $taskGo=Join-Path $taskStage 'go'
-Copy-Tree (Join-Path $taskRoot 'pkg/launchclient') (Join-Path $taskGo 'pkg/launchclient')
+# Repository HTTP/MySQL integration tests depend on server packages outside the SDK.
+Copy-Tree (Join-Path $taskRoot 'pkg/launchclient') (Join-Path $taskGo 'pkg/launchclient') '_integration_test\.go$'
 Copy-Item -LiteralPath (Join-Path $taskRoot 'LICENSE'),(Join-Path $taskRoot 'go.sum') -Destination $taskGo
 @'
 module github.com/spf86/licentivo-launch-sdk
@@ -138,14 +140,23 @@ if(-not $SourceOnly -and $BuildNative){
 }
 Language 'C' $taskNativeArtifact 'licentivo-launch-native-0.1.8-source.zip' 'self_contained_cmake'
 Language 'C++' $taskNativeArtifact 'licentivo-launch-native-0.1.8-source.zip' 'self_contained_cmake'
-Copy-Item -LiteralPath (Join-Path $taskRoot 'sdk/managed-sdk-manifest.json') -Destination $taskOutput
+$taskPackageManifest=Get-Content -LiteralPath (Join-Path $taskRoot 'sdk/managed-sdk-manifest.json') -Raw | ConvertFrom-Json
+foreach($taskEntry in $taskPackageManifest.files){
+ if($taskEntry.destination.StartsWith('pkg/launchclient/')){
+  $taskEntry.sha256=(Get-FileHash -LiteralPath (Join-Path $taskGo $taskEntry.destination) -Algorithm SHA256).Hash.ToLowerInvariant()
+ }
+}
+$taskPackageManifest.changes+=' Standalone Go imports use the public module path; destination hashes describe the packaged files.'
+$taskPackageManifestPath=Join-Path $taskOutput 'managed-sdk-manifest.json'
+[IO.File]::WriteAllText($taskPackageManifestPath,($taskPackageManifest | ConvertTo-Json -Depth 8)+"`n",[Text.UTF8Encoding]::new($false))
 $taskArtifacts.Add('managed-sdk-manifest.json')
 $taskBundle=Join-Path $taskStage 'source-bundle'
 Copy-Tree $taskGo $taskBundle
 foreach($taskName in @('python','csharp','javascript','ruby','java','rust','native')){Copy-Tree (Join-Path $taskStage $taskName) (Join-Path $taskBundle ('sdk/'+$taskName))}
 foreach($taskName in @('csharp-tests','csharp-runtime-tests')){Copy-Tree (Join-Path $taskRoot ('sdk/'+$taskName)) (Join-Path $taskBundle ('sdk/'+$taskName))}
 foreach($taskName in @('rust','ruby','native')){Curl (Join-Path $taskBundle ('sdk/'+$taskName+'/vendor/curl'))}
-foreach($taskName in @('VERSION','UPSTREAM_VERSION','managed-sdk-manifest.json')){Copy-Item -LiteralPath (Join-Path $taskRoot ('sdk/'+$taskName)) -Destination (Join-Path $taskBundle 'sdk')}
+foreach($taskName in @('VERSION','UPSTREAM_VERSION')){Copy-Item -LiteralPath (Join-Path $taskRoot ('sdk/'+$taskName)) -Destination (Join-Path $taskBundle 'sdk')}
+Copy-Item -LiteralPath $taskPackageManifestPath -Destination (Join-Path $taskBundle 'sdk/managed-sdk-manifest.json')
 foreach($taskName in @('go','python','csharp','javascript','ruby','java','rust','native','c','cpp','web-backend')){Copy-Tree (Join-Path $taskRoot ('examples/'+$taskName)) (Join-Path $taskBundle ('examples/'+$taskName))}
 Copy-Item -LiteralPath (Join-Path $taskRoot 'examples/README.md') -Destination (Join-Path $taskBundle 'examples')
 Copy-Tree (Join-Path $taskRoot 'docs') (Join-Path $taskBundle 'docs')
@@ -153,6 +164,10 @@ New-Item -ItemType Directory -Path (Join-Path $taskBundle 'scripts/fixtures'),(J
 foreach($taskName in @('test-integration-packages.ps1','test-managed-installations.ps1','generate-integration-smoke.mjs','acceptance.py','test_acceptance.py','integration-prompts.test.mjs','integration-state.test.mjs')){Copy-Item -LiteralPath (Join-Path $PSScriptRoot $taskName) -Destination (Join-Path $taskBundle 'scripts')}
 Copy-Item -LiteralPath (Join-Path $taskRoot 'internal/app/integration.go') -Destination (Join-Path $taskBundle 'scripts/fixtures/integration-contract.go.txt')
 foreach($taskName in @('integration-prompts.js','integration-state.js')){Copy-Item -LiteralPath (Join-Path $taskRoot ('internal/httpapi/web/'+$taskName)) -Destination (Join-Path $taskBundle 'internal/httpapi/web')}
+foreach($taskEntry in $taskPackageManifest.files){
+ $taskBundledFile=Join-Path $taskBundle $taskEntry.destination
+ if(-not (Test-Path -LiteralPath $taskBundledFile) -or (Get-FileHash -LiteralPath $taskBundledFile -Algorithm SHA256).Hash.ToLowerInvariant() -ne $taskEntry.sha256){throw ('Packaged SDK manifest mismatch: '+$taskEntry.destination)}
+}
 Zip $taskBundle 'licentivo-launch-0.1.8-source.zip'
 $taskInventory=[ordered]@{schema_version=2;wrapper_version='0.1.8';upstream_sdk_version='0.11.8';sdk_dependency_management='embedded';requires_separate_official_sdk=$false;initialization='direct_parameters';configuration_files_required=$false;published=$false;languages=$taskLanguages.ToArray()}
 $taskInventory.source_bundle='licentivo-launch-0.1.8-source.zip'

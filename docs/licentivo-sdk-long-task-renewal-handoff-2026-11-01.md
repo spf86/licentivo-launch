@@ -1,5 +1,7 @@
 # Licentivo 官方 SDK 八种语言长任务续期修复要求
 
+> 后续状态：官方 SDK 修复已同步到 Launch，九种语言通过 177 上实际 Launch Application 的 920 秒续期、结算及新进程重试。见[后续联合回归](launch-sdk-renewal-regression-2026-11-01.md)。下文保留为当时的缺陷与修复要求记录。
+
 请在 **`D:\GoProject\Licenova`** 修复官方 SDK 的计量任务自动续期，覆盖 **Go、JavaScript、Java、C#、C、C++、Rust、Ruby**。Launch 已补齐高层计量执行和中断结算入口，本次应把续期实现放在官方 SDK。修复完成后，再由 Launch 同步内置 SDK、构建安装包并在 177 联合回归。
 
 ## 问题归属与影响

@@ -1,0 +1,33 @@
+{
+  "native_install_built": true,
+  "installed_package_consumers_built": [
+    "C",
+    "C++"
+  ],
+  "archive_sha256": "54985fdf6e494d72c60d8505db2e956c124569b1fa42b90ba40644ed776c2808",
+  "files": {
+    "native-install/lib/liblicentivo_c.a": "1583492eaff2911fc5dbf4dff053e98de8b1a8f4509934201b389219a2a93d45",
+    "native-install/lib/liblaunch_account.a": "031512d3cee8b584fb68036e85d24f297e9f4a9bdd232b2061a35bb48131d673",
+    "native-install/licenses/NOTICE": "bfe3b498186c6a0309d9fd793ea5ca5f2ab9f19330b40f3410ad6f312d5e0e28",
+    "native-install/licenses/Monocypher-LICENCE.md": "a5781770269d2516e52ba4863f790c10a16da4089a1e81823aee19ff1e9026b0",
+    "native-install/licenses/LICENSE": "5f8e7889da4da8c21039e762ccb1e90bf99de769ce148c37815a082dcf379a90",
+    "native-install/licenses/cJSON-LICENSE": "a36dda207c36db5818729c54e7ad4e8b0c6fba847491ba64f372c1a2037b6d5c",
+    "native-install/include/licentivo-launch/account.h": "93c12e36f38864e128f38d807c03d4739176d9b88db7efc05f1408a41ae1c557",
+    "native-install/include/licentivo-launch/launch.hpp": "80c743fb389c803fa2911b195909b92ca4a8632d388723ba1368b8b75107a06b",
+    "native-install/include/licentivo/c/licentivo.h": "ff217e1032336f0450b2c5301495dcc840791a9c094d28e4ae013e0f973df561",
+    "native-install/include/licentivo/cpp/licentivo.hpp": "0a3799f27340a2a0ef24477d518d8bf7f061edcfa0f0db29ebe5e1cd404146ad",
+    "native-install/include/licentivo/c/vendor/cJSON.h": "25b0145150d500498e4d209cec69c18c42cf818bffcc54690be3b895a2a16dee",
+    "native-install/include/licentivo/c/vendor/monocypher-ed25519.h": "3a3035181f991a158d0e1c7567258f0bae8ba0f1f23c5512b4a1db1b3c9730ce",
+    "native-install/include/licentivo/c/vendor/monocypher.h": "fcaf6ed771358bb4f40fba016f6518ae86ec02b1b877d2cc35ad92d3a26fd7b3",
+    "native-install/lib/cmake/Licentivo/LicentivoTargets.cmake": "df4b1af2110bb99ebccf9ac8723a66fe962e6ffba61b95def181aaa299e849e6",
+    "native-install/lib/cmake/Licentivo/LicentivoConfig.cmake": "04b99ba524484ade947044453ab60cc0434a378bdce08977a80ba504aceca8a7",
+    "native-install/lib/cmake/Licentivo/LicentivoConfigVersion.cmake": "ab9cfa58d79e0ff7e85e26d45de8268627d517d152f6f87ce021cb579ed0cf16",
+    "native-install/lib/cmake/Licentivo/LicentivoTargets-release.cmake": "ed1b1e6cfa208324fb21b60e624f668a2a56ff5b3165d5931697f199c638ed14",
+    "native-install/lib/cmake/LicentivoLaunch/LicentivoLaunchConfig.cmake": "d65b8ad66feb6fe99feccfae6fe85ddf41c35559c6714f3faea75db92d67c878",
+    "native-install/lib/cmake/LicentivoLaunch/LaunchRuntime.cmake": "2c06bf3d6db05e51b17a1404f78296d604829ba7a00a27f67e36f8d29630a8ee",
+    "native-install/lib/cmake/LicentivoLaunch/LicentivoLaunchTargets.cmake": "5b7f7d281c0d3e9aaace3f3f7ed25ee7bc8da077e319d9e27a4638c383019869",
+    "native-install/lib/cmake/LicentivoLaunch/LicentivoLaunchConfigVersion.cmake": "80c33924fed4ec54d9736f42ca31d0dbacc4bade425ae472d57f323870a1e678",
+    "native-install/lib/cmake/LicentivoLaunch/LicentivoLaunchTargets-release.cmake": "15e8db2181a774632a7391854d00431459d19ca02f63a4b36755a2a4442a6650",
+    "native-install/share/licenses/licentivo-launch/LICENSE": "fe837ef457166ff39da307476d021cc42c53aaf9f93079d9b82473d9c13c163d"
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "scope": "fresh_consumer_installations",
+  "package_directory": "D:\\GoProject\\Licentivo Launch\\.local\\launch-sdk-renewal-20261101\\packages-r2",
+  "wrapper_version": "0.1.7",
+  "upstream_sdk_version": "0.11.7",
+  "results": [
+    {
+      "language": "go",
+      "result": "passed",
+      "log": "go.log",
+      "separate_official_sdk": false,
+      "initialization": "direct_parameters",
+      "configuration_files_required": false
+    },
+    {
+      "language": "python",
+      "result": "passed",
+      "log": "python.log",
+      "separate_official_sdk": false,
+      "initialization": "direct_parameters",
+      "configuration_files_required": false
+    },
+    {
+      "language": "csharp",
+      "result": "passed",
+      "log": "csharp.log",
+      "separate_official_sdk": false,
+      "initialization": "direct_parameters",
+      "configuration_files_required": false
+    },
+    {
+      "language": "java",
+      "result": "passed",
+      "log": "java.log",
+      "separate_official_sdk": false,
+      "initialization": "direct_parameters",
+      "configuration_files_required": false
+    },
+    {
+      "language": "javascript",
+      "result": "passed",
+      "log": "javascript.log",
+      "separate_official_sdk": false,
+      "initialization": "direct_parameters",
+      "configuration_files_required": false
+    },
+    {
+      "language": "ruby",
+      "result": "passed",
+      "log": "ruby.log",
+      "separate_official_sdk": false,
+      "initialization": "direct_parameters",
+      "configuration_files_required": false
+    },
+    {
+      "language": "rust",
+      "result": "failed",
+      "log": "rust.log",
+      "separate_official_sdk": false,
+      "initialization": "direct_parameters",
+      "configuration_files_required": false
+    }
+  ],
+  "all_nine_passed": false,
+  "external_acceptance_complete": false,
+  "completed_at": "2026-10-31T23:15:25.8673667+00:00"
+}

@@ -1,0 +1,931 @@
+{
+  "source_revision": "working-tree/n09-original-reservation-renewal-2026-11-01",
+  "files": 132,
+  "passed": true,
+  "checks": [
+    {
+      "source": "go/advanced.go",
+      "destination": "pkg/launchclient/internal/licentivo/advanced.go",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "go/client.go",
+      "destination": "pkg/launchclient/internal/licentivo/client.go",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "go/credential.go",
+      "destination": "pkg/launchclient/internal/licentivo/credential.go",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "go/device.go",
+      "destination": "pkg/launchclient/internal/licentivo/device.go",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "go/device_details.go",
+      "destination": "pkg/launchclient/internal/licentivo/device_details.go",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "go/device_info.go",
+      "destination": "pkg/launchclient/internal/licentivo/device_info.go",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "go/device_resources_unix.go",
+      "destination": "pkg/launchclient/internal/licentivo/device_resources_unix.go",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "go/device_resources_windows.go",
+      "destination": "pkg/launchclient/internal/licentivo/device_resources_windows.go",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "go/feature.go",
+      "destination": "pkg/launchclient/internal/licentivo/feature.go",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "go/feature_tasks.go",
+      "destination": "pkg/launchclient/internal/licentivo/feature_tasks.go",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "go/logout.go",
+      "destination": "pkg/launchclient/internal/licentivo/logout.go",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "go/reservations.go",
+      "destination": "pkg/launchclient/internal/licentivo/reservations.go",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "go/status.go",
+      "destination": "pkg/launchclient/internal/licentivo/status.go",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "go/internal/lease/lease.go",
+      "destination": "pkg/launchclient/internal/licentivo/internal/lease/lease.go",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "LICENSE",
+      "destination": "pkg/launchclient/internal/licentivo/LICENSE",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "NOTICE",
+      "destination": "pkg/launchclient/internal/licentivo/NOTICE",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "VERSION",
+      "destination": "pkg/launchclient/internal/licentivo/VERSION",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "python/licentivo.py",
+      "destination": "sdk/python/src/licentivo_launch/_vendor/licentivo.py",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "python/licentivo_logout.py",
+      "destination": "sdk/python/src/licentivo_launch/_vendor/licentivo_logout.py",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "python/licentivo_tasks.py",
+      "destination": "sdk/python/src/licentivo_launch/_vendor/licentivo_tasks.py",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "LICENSE",
+      "destination": "sdk/python/src/licentivo_launch/_vendor/LICENSE",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "NOTICE",
+      "destination": "sdk/python/src/licentivo_launch/_vendor/NOTICE",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "VERSION",
+      "destination": "sdk/python/src/licentivo_launch/_vendor/VERSION",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "javascript/app.mjs",
+      "destination": "sdk/javascript/src/vendor/app.mjs",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "javascript/feature-tasks.mjs",
+      "destination": "sdk/javascript/src/vendor/feature-tasks.mjs",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "javascript/licentivo.mjs",
+      "destination": "sdk/javascript/src/vendor/licentivo.mjs",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "javascript/logout.mjs",
+      "destination": "sdk/javascript/src/vendor/logout.mjs",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "javascript/quickstart.mjs",
+      "destination": "sdk/javascript/src/vendor/quickstart.mjs",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "LICENSE",
+      "destination": "sdk/javascript/src/vendor/LICENSE",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "NOTICE",
+      "destination": "sdk/javascript/src/vendor/NOTICE",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "VERSION",
+      "destination": "sdk/javascript/src/vendor/VERSION",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "csharp/Advanced.cs",
+      "destination": "sdk/csharp/vendor/Advanced.cs",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "csharp/DeviceCredential.cs",
+      "destination": "sdk/csharp/vendor/DeviceCredential.cs",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "csharp/DeviceInfo.cs",
+      "destination": "sdk/csharp/vendor/DeviceInfo.cs",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "csharp/Feature.cs",
+      "destination": "sdk/csharp/vendor/Feature.cs",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "csharp/FeatureTasks.cs",
+      "destination": "sdk/csharp/vendor/FeatureTasks.cs",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "csharp/LicentivoClient.cs",
+      "destination": "sdk/csharp/vendor/LicentivoClient.cs",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "csharp/Logout.cs",
+      "destination": "sdk/csharp/vendor/Logout.cs",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "csharp/MachineIdentity.cs",
+      "destination": "sdk/csharp/vendor/MachineIdentity.cs",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "csharp/Status.cs",
+      "destination": "sdk/csharp/vendor/Status.cs",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "LICENSE",
+      "destination": "sdk/csharp/vendor/LICENSE",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "NOTICE",
+      "destination": "sdk/csharp/vendor/NOTICE",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "VERSION",
+      "destination": "sdk/csharp/vendor/VERSION",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "java/src/licentivo/Capabilities.java",
+      "destination": "sdk/java/src/licentivo/Capabilities.java",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "java/src/licentivo/Client.java",
+      "destination": "sdk/java/src/licentivo/Client.java",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "java/src/licentivo/Demo.java",
+      "destination": "sdk/java/src/licentivo/Demo.java",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "java/src/licentivo/DesktopDemo.java",
+      "destination": "sdk/java/src/licentivo/DesktopDemo.java",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "java/src/licentivo/DeviceCredential.java",
+      "destination": "sdk/java/src/licentivo/DeviceCredential.java",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "java/src/licentivo/FeatureTasks.java",
+      "destination": "sdk/java/src/licentivo/FeatureTasks.java",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "java/src/licentivo/Json.java",
+      "destination": "sdk/java/src/licentivo/Json.java",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "java/src/licentivo/LogoutJournal.java",
+      "destination": "sdk/java/src/licentivo/LogoutJournal.java",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "java/src/licentivo/MachineIdentity.java",
+      "destination": "sdk/java/src/licentivo/MachineIdentity.java",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "java/src/licentivo/Quickstart.java",
+      "destination": "sdk/java/src/licentivo/Quickstart.java",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "java/src/licentivo/RuntimePolicy.java",
+      "destination": "sdk/java/src/licentivo/RuntimePolicy.java",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "java/src/licentivo/TestVectors.java",
+      "destination": "sdk/java/src/licentivo/TestVectors.java",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "LICENSE",
+      "destination": "sdk/java/vendor/LICENSE",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "NOTICE",
+      "destination": "sdk/java/vendor/NOTICE",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "VERSION",
+      "destination": "sdk/java/vendor/VERSION",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "rust/src/lib.rs",
+      "destination": "sdk/rust/vendor/rust/lib.rs",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/app.c",
+      "destination": "sdk/rust/vendor/c/app.c",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/demo.c",
+      "destination": "sdk/rust/vendor/c/demo.c",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/device_display.h",
+      "destination": "sdk/rust/vendor/c/device_display.h",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/device_logout.h",
+      "destination": "sdk/rust/vendor/c/device_logout.h",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/feature_tasks.h",
+      "destination": "sdk/rust/vendor/c/feature_tasks.h",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/licentivo.c",
+      "destination": "sdk/rust/vendor/c/licentivo.c",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/licentivo.h",
+      "destination": "sdk/rust/vendor/c/licentivo.h",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/quickstart.c",
+      "destination": "sdk/rust/vendor/c/quickstart.c",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/test_feature_deadlines.c",
+      "destination": "sdk/rust/vendor/c/test_feature_deadlines.c",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/test_platform_lines.c",
+      "destination": "sdk/rust/vendor/c/test_platform_lines.c",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/test_state_files.c",
+      "destination": "sdk/rust/vendor/c/test_state_files.c",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/test_vectors.c",
+      "destination": "sdk/rust/vendor/c/test_vectors.c",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/vendor/cJSON-LICENSE",
+      "destination": "sdk/rust/vendor/c/vendor/cJSON-LICENSE",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/vendor/cJSON.c",
+      "destination": "sdk/rust/vendor/c/vendor/cJSON.c",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/vendor/cJSON.h",
+      "destination": "sdk/rust/vendor/c/vendor/cJSON.h",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/vendor/monocypher-ed25519.c",
+      "destination": "sdk/rust/vendor/c/vendor/monocypher-ed25519.c",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/vendor/monocypher-ed25519.h",
+      "destination": "sdk/rust/vendor/c/vendor/monocypher-ed25519.h",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/vendor/Monocypher-LICENCE.md",
+      "destination": "sdk/rust/vendor/c/vendor/Monocypher-LICENCE.md",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/vendor/monocypher.c",
+      "destination": "sdk/rust/vendor/c/vendor/monocypher.c",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/vendor/monocypher.h",
+      "destination": "sdk/rust/vendor/c/vendor/monocypher.h",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "LICENSE",
+      "destination": "sdk/rust/vendor/LICENSE",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "NOTICE",
+      "destination": "sdk/rust/vendor/NOTICE",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "VERSION",
+      "destination": "sdk/rust/vendor/VERSION",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "ruby/lib/licentivo.rb",
+      "destination": "sdk/ruby/lib/licentivo_launch/vendor/licentivo.rb",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/app.c",
+      "destination": "sdk/ruby/vendor/c/app.c",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/demo.c",
+      "destination": "sdk/ruby/vendor/c/demo.c",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/device_display.h",
+      "destination": "sdk/ruby/vendor/c/device_display.h",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/device_logout.h",
+      "destination": "sdk/ruby/vendor/c/device_logout.h",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/feature_tasks.h",
+      "destination": "sdk/ruby/vendor/c/feature_tasks.h",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/licentivo.c",
+      "destination": "sdk/ruby/vendor/c/licentivo.c",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/licentivo.h",
+      "destination": "sdk/ruby/vendor/c/licentivo.h",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/quickstart.c",
+      "destination": "sdk/ruby/vendor/c/quickstart.c",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/test_feature_deadlines.c",
+      "destination": "sdk/ruby/vendor/c/test_feature_deadlines.c",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/test_platform_lines.c",
+      "destination": "sdk/ruby/vendor/c/test_platform_lines.c",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/test_state_files.c",
+      "destination": "sdk/ruby/vendor/c/test_state_files.c",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/test_vectors.c",
+      "destination": "sdk/ruby/vendor/c/test_vectors.c",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/vendor/cJSON-LICENSE",
+      "destination": "sdk/ruby/vendor/c/vendor/cJSON-LICENSE",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/vendor/cJSON.c",
+      "destination": "sdk/ruby/vendor/c/vendor/cJSON.c",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/vendor/cJSON.h",
+      "destination": "sdk/ruby/vendor/c/vendor/cJSON.h",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/vendor/monocypher-ed25519.c",
+      "destination": "sdk/ruby/vendor/c/vendor/monocypher-ed25519.c",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/vendor/monocypher-ed25519.h",
+      "destination": "sdk/ruby/vendor/c/vendor/monocypher-ed25519.h",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/vendor/Monocypher-LICENCE.md",
+      "destination": "sdk/ruby/vendor/c/vendor/Monocypher-LICENCE.md",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/vendor/monocypher.c",
+      "destination": "sdk/ruby/vendor/c/vendor/monocypher.c",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/vendor/monocypher.h",
+      "destination": "sdk/ruby/vendor/c/vendor/monocypher.h",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "LICENSE",
+      "destination": "sdk/ruby/vendor/LICENSE",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "NOTICE",
+      "destination": "sdk/ruby/vendor/NOTICE",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "VERSION",
+      "destination": "sdk/ruby/vendor/VERSION",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "CMakeLists.txt",
+      "destination": "sdk/native/vendor/sdk/CMakeLists.txt",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "LicentivoConfig.cmake.in",
+      "destination": "sdk/native/vendor/sdk/LicentivoConfig.cmake.in",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "LICENSE",
+      "destination": "sdk/native/vendor/sdk/LICENSE",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "NOTICE",
+      "destination": "sdk/native/vendor/sdk/NOTICE",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "VERSION",
+      "destination": "sdk/native/vendor/sdk/VERSION",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/app.c",
+      "destination": "sdk/native/vendor/sdk/c/app.c",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/demo.c",
+      "destination": "sdk/native/vendor/sdk/c/demo.c",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/device_display.h",
+      "destination": "sdk/native/vendor/sdk/c/device_display.h",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/device_logout.h",
+      "destination": "sdk/native/vendor/sdk/c/device_logout.h",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/feature_tasks.h",
+      "destination": "sdk/native/vendor/sdk/c/feature_tasks.h",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/licentivo.c",
+      "destination": "sdk/native/vendor/sdk/c/licentivo.c",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/licentivo.h",
+      "destination": "sdk/native/vendor/sdk/c/licentivo.h",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/quickstart.c",
+      "destination": "sdk/native/vendor/sdk/c/quickstart.c",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/test_feature_deadlines.c",
+      "destination": "sdk/native/vendor/sdk/c/test_feature_deadlines.c",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/test_platform_lines.c",
+      "destination": "sdk/native/vendor/sdk/c/test_platform_lines.c",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/test_state_files.c",
+      "destination": "sdk/native/vendor/sdk/c/test_state_files.c",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/test_vectors.c",
+      "destination": "sdk/native/vendor/sdk/c/test_vectors.c",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/vendor/cJSON-LICENSE",
+      "destination": "sdk/native/vendor/sdk/c/vendor/cJSON-LICENSE",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/vendor/cJSON.c",
+      "destination": "sdk/native/vendor/sdk/c/vendor/cJSON.c",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/vendor/cJSON.h",
+      "destination": "sdk/native/vendor/sdk/c/vendor/cJSON.h",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/vendor/monocypher-ed25519.c",
+      "destination": "sdk/native/vendor/sdk/c/vendor/monocypher-ed25519.c",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/vendor/monocypher-ed25519.h",
+      "destination": "sdk/native/vendor/sdk/c/vendor/monocypher-ed25519.h",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/vendor/Monocypher-LICENCE.md",
+      "destination": "sdk/native/vendor/sdk/c/vendor/Monocypher-LICENCE.md",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/vendor/monocypher.c",
+      "destination": "sdk/native/vendor/sdk/c/vendor/monocypher.c",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "c/vendor/monocypher.h",
+      "destination": "sdk/native/vendor/sdk/c/vendor/monocypher.h",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    },
+    {
+      "source": "cpp/licentivo.hpp",
+      "destination": "sdk/native/vendor/sdk/cpp/licentivo.hpp",
+      "canonical_matches": true,
+      "embedded_matches": true,
+      "default_vendor_matches": true
+    }
+  ]
+}

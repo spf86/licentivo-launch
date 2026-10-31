@@ -1,0 +1,24 @@
+{
+  "operation_id": "launch-renewal-000fe6b44b694376-long-python",
+  "callback_count": 1,
+  "completed_units": 3,
+  "business_seconds": 920.03,
+  "progress_rows": 920,
+  "artifacts": [
+    {
+      "file": "report-1.csv",
+      "sha256": "69c4bb828e149b9a03321602ef0fa51ee8daf1d05ffed195dde24964361d40c5",
+      "rows": 100
+    },
+    {
+      "file": "report-2.csv",
+      "sha256": "fa653a1aab494114889dbafdfa550f7bdd908178c7e48c1c847ce2ee00eb840e",
+      "rows": 100
+    },
+    {
+      "file": "report-3.csv",
+      "sha256": "15fbc3a355dfdfedcc097db06e59c00ff265fedd15680e50a445c4b69264f837",
+      "rows": 100
+    }
+  ]
+}

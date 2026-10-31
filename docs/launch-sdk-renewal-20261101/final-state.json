@@ -1,0 +1,272 @@
+{
+  "scope": "only nine dedicated renewal fixture customers",
+  "customers": [
+    {
+      "language": "python",
+      "user_id": "04812174-6d3c-4fc3-b0cc-ec20839f1003",
+      "email": "renewal-python-94dbb6f4@launch-joint.example",
+      "status": "disabled",
+      "entitlement_id": "13e5641f-8e6b-48ea-a70c-54a399c0b7c4"
+    },
+    {
+      "language": "go",
+      "user_id": "fabefd1d-aa4b-496d-87ea-17056d175780",
+      "email": "renewal-go-94dbb6f4@launch-joint.example",
+      "status": "disabled",
+      "entitlement_id": "9c1c183f-68c3-4fcf-99ec-1760882feb2d"
+    },
+    {
+      "language": "javascript",
+      "user_id": "c565cf2e-34dc-426e-81ee-19bcb716397c",
+      "email": "renewal-javascript-94dbb6f4@launch-joint.example",
+      "status": "disabled",
+      "entitlement_id": "f8e546c5-1211-45a1-8d7f-5cfa0b0bca3e"
+    },
+    {
+      "language": "java",
+      "user_id": "8b0e69f8-8a92-47c3-8d1d-e2653bb2bbe3",
+      "email": "renewal-java-94dbb6f4@launch-joint.example",
+      "status": "disabled",
+      "entitlement_id": "26537119-53f2-439a-9ba5-5d0c990e7c17"
+    },
+    {
+      "language": "csharp",
+      "user_id": "a620a27b-c705-4e83-b756-bc076cc2e7f0",
+      "email": "renewal-csharp-94dbb6f4@launch-joint.example",
+      "status": "disabled",
+      "entitlement_id": "a08ad3f0-c252-46e4-b084-5c14d0311fee"
+    },
+    {
+      "language": "ruby",
+      "user_id": "7914f71b-1436-4835-bddc-0088655eade4",
+      "email": "renewal-ruby-94dbb6f4@launch-joint.example",
+      "status": "disabled",
+      "entitlement_id": "1dc1c9db-e049-4ac7-b26e-6c96199cf311"
+    },
+    {
+      "language": "c",
+      "user_id": "d7a8e821-b8bc-4f12-8dfc-ea456c1ae61b",
+      "email": "renewal-c-94dbb6f4@launch-joint.example",
+      "status": "disabled",
+      "entitlement_id": "96581e53-2ee1-46b4-913d-b31ee614eb92"
+    },
+    {
+      "language": "cpp",
+      "user_id": "bbb8436c-b7a3-4947-a096-b201ef7def9f",
+      "email": "renewal-cpp-94dbb6f4@launch-joint.example",
+      "status": "disabled",
+      "entitlement_id": "25ed5919-f605-4e92-a5fe-1a262f6ce56a"
+    },
+    {
+      "language": "rust",
+      "user_id": "366f44ae-3331-4de7-96ca-7893f0555308",
+      "email": "renewal-rust-94dbb6f4@launch-joint.example",
+      "status": "disabled",
+      "entitlement_id": "623f90ce-4094-4a43-be41-76bede10946d"
+    }
+  ],
+  "checks": [
+    {
+      "name": "disable only dedicated python test customer",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "disable only dedicated go test customer",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "disable only dedicated javascript test customer",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "disable only dedicated java test customer",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "disable only dedicated csharp test customer",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "disable only dedicated ruby test customer",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "disable only dedicated c test customer",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "disable only dedicated cpp test customer",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "disable only dedicated rust test customer",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "nine account suspensions synchronized",
+      "passed": true,
+      "count": 9
+    },
+    {
+      "name": "No orders or payment transactions created",
+      "passed": true,
+      "order_count": 0,
+      "payment_count": 0
+    },
+    {
+      "name": "original_launch ready",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "joint_launch ready",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "joint_licentivo ready",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "Licentivo service binary unchanged",
+      "passed": true
+    }
+  ],
+  "entitlements_after_disable": [
+    {
+      "customer_email": "renewal-rust-94dbb6f4@launch-joint.example",
+      "environment": "sandbox",
+      "hold_reason": null,
+      "id": "623f90ce-4094-4a43-be41-76bede10946d",
+      "manual_hold": false,
+      "product_id": "e2a429cf-c48e-4b70-9652-110b083ed754",
+      "product_name": "Joint meter",
+      "status": "active",
+      "synchronized": true,
+      "user_id": "366f44ae-3331-4de7-96ca-7893f0555308",
+      "valid_until": "2026-11-30T22:57:16.037096Z"
+    },
+    {
+      "customer_email": "renewal-cpp-94dbb6f4@launch-joint.example",
+      "environment": "sandbox",
+      "hold_reason": null,
+      "id": "25ed5919-f605-4e92-a5fe-1a262f6ce56a",
+      "manual_hold": false,
+      "product_id": "e2a429cf-c48e-4b70-9652-110b083ed754",
+      "product_name": "Joint meter",
+      "status": "active",
+      "synchronized": true,
+      "user_id": "bbb8436c-b7a3-4947-a096-b201ef7def9f",
+      "valid_until": "2026-11-30T22:55:48.429843Z"
+    },
+    {
+      "customer_email": "renewal-c-94dbb6f4@launch-joint.example",
+      "environment": "sandbox",
+      "hold_reason": null,
+      "id": "96581e53-2ee1-46b4-913d-b31ee614eb92",
+      "manual_hold": false,
+      "product_id": "e2a429cf-c48e-4b70-9652-110b083ed754",
+      "product_name": "Joint meter",
+      "status": "active",
+      "synchronized": true,
+      "user_id": "d7a8e821-b8bc-4f12-8dfc-ea456c1ae61b",
+      "valid_until": "2026-11-30T22:55:47.613258Z"
+    },
+    {
+      "customer_email": "renewal-ruby-94dbb6f4@launch-joint.example",
+      "environment": "sandbox",
+      "hold_reason": null,
+      "id": "1dc1c9db-e049-4ac7-b26e-6c96199cf311",
+      "manual_hold": false,
+      "product_id": "e2a429cf-c48e-4b70-9652-110b083ed754",
+      "product_name": "Joint meter",
+      "status": "active",
+      "synchronized": true,
+      "user_id": "7914f71b-1436-4835-bddc-0088655eade4",
+      "valid_until": "2026-11-30T22:55:46.987004Z"
+    },
+    {
+      "customer_email": "renewal-csharp-94dbb6f4@launch-joint.example",
+      "environment": "sandbox",
+      "hold_reason": null,
+      "id": "a08ad3f0-c252-46e4-b084-5c14d0311fee",
+      "manual_hold": false,
+      "product_id": "e2a429cf-c48e-4b70-9652-110b083ed754",
+      "product_name": "Joint meter",
+      "status": "active",
+      "synchronized": true,
+      "user_id": "a620a27b-c705-4e83-b756-bc076cc2e7f0",
+      "valid_until": "2026-11-30T22:55:46.471305Z"
+    },
+    {
+      "customer_email": "renewal-java-94dbb6f4@launch-joint.example",
+      "environment": "sandbox",
+      "hold_reason": null,
+      "id": "26537119-53f2-439a-9ba5-5d0c990e7c17",
+      "manual_hold": false,
+      "product_id": "e2a429cf-c48e-4b70-9652-110b083ed754",
+      "product_name": "Joint meter",
+      "status": "active",
+      "synchronized": true,
+      "user_id": "8b0e69f8-8a92-47c3-8d1d-e2653bb2bbe3",
+      "valid_until": "2026-11-30T22:55:45.805413Z"
+    },
+    {
+      "customer_email": "renewal-javascript-94dbb6f4@launch-joint.example",
+      "environment": "sandbox",
+      "hold_reason": null,
+      "id": "f8e546c5-1211-45a1-8d7f-5cfa0b0bca3e",
+      "manual_hold": false,
+      "product_id": "e2a429cf-c48e-4b70-9652-110b083ed754",
+      "product_name": "Joint meter",
+      "status": "active",
+      "synchronized": true,
+      "user_id": "c565cf2e-34dc-426e-81ee-19bcb716397c",
+      "valid_until": "2026-11-30T22:55:44.233843Z"
+    },
+    {
+      "customer_email": "renewal-go-94dbb6f4@launch-joint.example",
+      "environment": "sandbox",
+      "hold_reason": null,
+      "id": "9c1c183f-68c3-4fcf-99ec-1760882feb2d",
+      "manual_hold": false,
+      "product_id": "e2a429cf-c48e-4b70-9652-110b083ed754",
+      "product_name": "Joint meter",
+      "status": "active",
+      "synchronized": true,
+      "user_id": "fabefd1d-aa4b-496d-87ea-17056d175780",
+      "valid_until": "2026-11-30T22:55:43.114517Z"
+    },
+    {
+      "customer_email": "renewal-python-94dbb6f4@launch-joint.example",
+      "environment": "sandbox",
+      "hold_reason": null,
+      "id": "13e5641f-8e6b-48ea-a70c-54a399c0b7c4",
+      "manual_hold": false,
+      "product_id": "e2a429cf-c48e-4b70-9652-110b083ed754",
+      "product_name": "Joint meter",
+      "status": "active",
+      "synchronized": true,
+      "user_id": "04812174-6d3c-4fc3-b0cc-ec20839f1003",
+      "valid_until": "2026-11-30T22:55:41.922952Z"
+    }
+  ],
+  "readiness": {
+    "original_launch": 200,
+    "joint_launch": 200,
+    "joint_licentivo": 200
+  },
+  "licentivo_binary_sha256": "547c9614befbc6d8f3d65af5f9201e1b1f62216624c6e811c4fdb490b929672e",
+  "passed": true,
+  "finished_at_utc": "2026-10-31T23:17:18Z"
+}

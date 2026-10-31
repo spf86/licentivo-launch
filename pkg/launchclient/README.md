@@ -1,6 +1,6 @@
 # Launch Go 0.1.8
 
-> This README describes the current account-exchange source: Launch package 0.1.8 with embedded official SDK 0.11.8, paired with Launch server 0.3.6-beta. Login obtains a short-lived identity assertion; Licentivo owns runtime permission. Check [backend requirements, migration and release evidence](https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/sdk-compatibility.md) and the [account boundary](https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/account-purchase-boundary.md). A public version number alone does not certify uncommitted local changes.
+> This README describes the current account-exchange source: Launch package 0.1.8 with embedded official SDK 0.11.8, paired with Launch server 0.3.5-beta. Login obtains a short-lived identity assertion; Licentivo owns runtime permission. Check [backend requirements, migration and release evidence](https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/sdk-compatibility.md) and the [account boundary](https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/account-purchase-boundary.md). A public version number alone does not certify uncommitted local changes.
 
 Go 1.26+. The public module is github.com/spf86/licentivo-launch-sdk; import github.com/spf86/licentivo-launch-sdk/pkg/launchclient. Install with go get github.com/spf86/licentivo-launch-sdk/pkg/launchclient@v0.1.8. A downloaded module ZIP can also be used with a local require/replace for the same module path. The official SDK 0.11.8 is embedded under Go's private internal boundary. No official SDK module, adapter copy or SDK import is needed.
 
@@ -51,3 +51,5 @@ See the [setup, failure and HTTPS migration guide in 14 languages](../../docs/ht
 ## Metered business tasks
 
 The started Application exposes metered execution and interrupted-task settlement. Use a stable job ID, preserve SDK journals, and check the real business outcome before resolving. Ordinary feature calls do not settle quantity. See [the nine-language API and recovery contract](../../docs/metered-feature-tasks.md). Verify the exact installed artifact includes these APIs; this source does not imply that a public package was republished.
+
+Standalone Go distributions include the library tests. HTTP/MySQL integration tests that import Launch server packages stay in the full Launch repository and run there with dedicated test databases; they are excluded from the standalone SDK archive.

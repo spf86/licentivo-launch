@@ -1,0 +1,134 @@
+{
+  "schema_version": 2,
+  "wrapper_version": "0.1.7",
+  "upstream_sdk_version": "0.11.7",
+  "sdk_dependency_management": "embedded",
+  "requires_separate_official_sdk": false,
+  "initialization": "direct_parameters",
+  "configuration_files_required": false,
+  "published": false,
+  "languages": [
+    {
+      "language": "Go",
+      "version": "0.1.7",
+      "upstream_version": "0.11.7",
+      "artifact": "licentivo-launch-go-0.1.7.zip",
+      "source_archive": "licentivo-launch-go-0.1.7.zip",
+      "artifact_type": "self_contained_go_module",
+      "sdk_managed": true,
+      "requires_separate_official_sdk": false,
+      "initialization": "direct_parameters",
+      "configuration_files_required": false
+    },
+    {
+      "language": "Python",
+      "version": "0.1.7",
+      "upstream_version": "0.11.7",
+      "artifact": "licentivo_launch-0.1.7-py3-none-any.whl",
+      "source_archive": "licentivo-launch-python-0.1.7-source.zip",
+      "artifact_type": "self_contained_wheel",
+      "sdk_managed": true,
+      "requires_separate_official_sdk": false,
+      "initialization": "direct_parameters",
+      "configuration_files_required": false
+    },
+    {
+      "language": "C#",
+      "version": "0.1.7",
+      "upstream_version": "0.11.7",
+      "artifact": "Licentivo.Launch.0.1.7.nupkg",
+      "source_archive": "licentivo-launch-csharp-0.1.7-source.zip",
+      "artifact_type": "self_contained_nuget",
+      "sdk_managed": true,
+      "requires_separate_official_sdk": false,
+      "initialization": "direct_parameters",
+      "configuration_files_required": false
+    },
+    {
+      "language": "JavaScript/Node.js",
+      "version": "0.1.7",
+      "upstream_version": "0.11.7",
+      "artifact": "licentivo-launch-0.1.7.tgz",
+      "source_archive": "licentivo-launch-javascript-0.1.7-source.zip",
+      "artifact_type": "self_contained_npm",
+      "sdk_managed": true,
+      "requires_separate_official_sdk": false,
+      "initialization": "direct_parameters",
+      "configuration_files_required": false
+    },
+    {
+      "language": "Java",
+      "version": "0.1.7",
+      "upstream_version": "0.11.7",
+      "artifact": "launch-client-0.1.7.jar",
+      "source_archive": "licentivo-launch-java-0.1.7-source.zip",
+      "artifact_type": "self_contained_jar",
+      "sdk_managed": true,
+      "requires_separate_official_sdk": false,
+      "initialization": "direct_parameters",
+      "configuration_files_required": false
+    },
+    {
+      "language": "Ruby",
+      "version": "0.1.7",
+      "upstream_version": "0.11.7",
+      "artifact": "licentivo-launch-0.1.7-x64-mingw-ucrt.gem",
+      "source_archive": "licentivo-launch-ruby-0.1.7-source.zip",
+      "artifact_type": "self_contained_gem",
+      "sdk_managed": true,
+      "requires_separate_official_sdk": false,
+      "initialization": "direct_parameters",
+      "configuration_files_required": false
+    },
+    {
+      "language": "Rust",
+      "version": "0.1.7",
+      "upstream_version": "0.11.7",
+      "artifact": "licentivo-launch-0.1.7.crate",
+      "source_archive": "licentivo-launch-rust-0.1.7-source.zip",
+      "artifact_type": "self_contained_crate",
+      "sdk_managed": true,
+      "requires_separate_official_sdk": false,
+      "initialization": "direct_parameters",
+      "configuration_files_required": false
+    },
+    {
+      "language": "C",
+      "version": "0.1.7",
+      "upstream_version": "0.11.7",
+      "artifact": "licentivo-launch-native-0.1.7-source.zip",
+      "source_archive": "licentivo-launch-native-0.1.7-source.zip",
+      "artifact_type": "self_contained_cmake",
+      "sdk_managed": true,
+      "requires_separate_official_sdk": false,
+      "initialization": "direct_parameters",
+      "configuration_files_required": false
+    },
+    {
+      "language": "C++",
+      "version": "0.1.7",
+      "upstream_version": "0.11.7",
+      "artifact": "licentivo-launch-native-0.1.7-source.zip",
+      "source_archive": "licentivo-launch-native-0.1.7-source.zip",
+      "artifact_type": "self_contained_cmake",
+      "sdk_managed": true,
+      "requires_separate_official_sdk": false,
+      "initialization": "direct_parameters",
+      "configuration_files_required": false
+    }
+  ],
+  "source_bundle": "licentivo-launch-0.1.7-source.zip",
+  "source_revision": "working-tree/n09-original-reservation-renewal-2026-11-01",
+  "additional_platform_artifacts": [
+    {
+      "language": [
+        "C",
+        "C++"
+      ],
+      "platform": "linux-amd64",
+      "artifact": "licentivo-launch-native-0.1.7-linux-amd64-renewal.tar.gz",
+      "metadata": "linux-native-package.json",
+      "installed_consumer_replays_passed": true
+    }
+  ]
+}

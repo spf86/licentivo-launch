@@ -1,0 +1,1035 @@
+{
+  "run_id": "launch-renewal-000fe6b44b694376",
+  "started_at_utc": "2026-10-31T22:57:47Z",
+  "status": "complete",
+  "quantity_per_job": 3,
+  "long_duration_seconds": 920,
+  "commands_use_launch_application": true,
+  "server_clock_changed": false,
+  "reservation_ttl_overridden": false,
+  "checks": [
+    {
+      "name": "Launch and Licentivo database configuration is accessible",
+      "passed": true
+    },
+    {
+      "name": "short run python Application process",
+      "passed": true,
+      "exit_code": 0,
+      "process_seconds": 21.887,
+      "result": {
+        "ok": true,
+        "language": "python",
+        "phase": "run",
+        "callbacks": 1
+      }
+    },
+    {
+      "name": "short run go Application process",
+      "passed": true,
+      "exit_code": 0,
+      "process_seconds": 20.065,
+      "result": {
+        "callbacks": 1,
+        "language": "go",
+        "ok": true,
+        "phase": "run"
+      }
+    },
+    {
+      "name": "short run javascript Application process",
+      "passed": true,
+      "exit_code": 0,
+      "process_seconds": 18.843,
+      "result": {
+        "ok": true,
+        "language": "javascript",
+        "phase": "run",
+        "callbacks": 1
+      }
+    },
+    {
+      "name": "short run java Application process",
+      "passed": true,
+      "exit_code": 0,
+      "process_seconds": 15.159,
+      "result": {
+        "language": "java",
+        "callbacks": 1,
+        "ok": true,
+        "phase": "run"
+      }
+    },
+    {
+      "name": "short run csharp Application process",
+      "passed": true,
+      "exit_code": 0,
+      "process_seconds": 11.311,
+      "result": {
+        "ok": true,
+        "language": "csharp",
+        "phase": "run",
+        "callbacks": 1
+      }
+    },
+    {
+      "name": "short run ruby Application process",
+      "passed": true,
+      "exit_code": 0,
+      "process_seconds": 9.084,
+      "result": {
+        "ok": true,
+        "language": "ruby",
+        "phase": "run",
+        "callbacks": 1
+      }
+    },
+    {
+      "name": "short run c Application process",
+      "passed": true,
+      "exit_code": 0,
+      "process_seconds": 6.821,
+      "result": {
+        "ok": true,
+        "language": "c",
+        "phase": "run",
+        "callbacks": 1
+      }
+    },
+    {
+      "name": "short run cpp Application process",
+      "passed": true,
+      "exit_code": 0,
+      "process_seconds": 5.697,
+      "result": {
+        "ok": true,
+        "language": "cpp",
+        "phase": "run",
+        "callbacks": 1
+      }
+    },
+    {
+      "name": "short run rust Application process",
+      "passed": true,
+      "exit_code": 0,
+      "process_seconds": 3.946,
+      "result": {
+        "callbacks": 1,
+        "language": "rust",
+        "ok": true,
+        "phase": "run"
+      }
+    },
+    {
+      "name": "short nine original reservations settled exactly",
+      "passed": true,
+      "count": 9,
+      "committed_units": 27
+    },
+    {
+      "name": "short replay python Application process",
+      "passed": true,
+      "exit_code": 0,
+      "process_seconds": 13.897,
+      "result": {
+        "ok": true,
+        "language": "python",
+        "phase": "replay",
+        "callbacks": 0
+      }
+    },
+    {
+      "name": "short replay go Application process",
+      "passed": true,
+      "exit_code": 0,
+      "process_seconds": 12.781,
+      "result": {
+        "callbacks": 0,
+        "language": "go",
+        "ok": true,
+        "phase": "replay"
+      }
+    },
+    {
+      "name": "short replay javascript Application process",
+      "passed": true,
+      "exit_code": 0,
+      "process_seconds": 12.169,
+      "result": {
+        "ok": true,
+        "language": "javascript",
+        "phase": "replay",
+        "callbacks": 0
+      }
+    },
+    {
+      "name": "short replay java Application process",
+      "passed": true,
+      "exit_code": 0,
+      "process_seconds": 10.04,
+      "result": {
+        "ok": true,
+        "callbacks": 0,
+        "language": "java",
+        "phase": "replay"
+      }
+    },
+    {
+      "name": "short replay csharp Application process",
+      "passed": true,
+      "exit_code": 0,
+      "process_seconds": 5.81,
+      "result": {
+        "ok": true,
+        "language": "csharp",
+        "phase": "replay",
+        "callbacks": 0
+      }
+    },
+    {
+      "name": "short replay ruby Application process",
+      "passed": true,
+      "exit_code": 0,
+      "process_seconds": 3.89,
+      "result": {
+        "ok": true,
+        "language": "ruby",
+        "phase": "replay",
+        "callbacks": 0
+      }
+    },
+    {
+      "name": "short replay c Application process",
+      "passed": true,
+      "exit_code": 0,
+      "process_seconds": 2.677,
+      "result": {
+        "ok": true,
+        "language": "c",
+        "phase": "replay",
+        "callbacks": 0
+      }
+    },
+    {
+      "name": "short replay cpp Application process",
+      "passed": true,
+      "exit_code": 0,
+      "process_seconds": 2.173,
+      "result": {
+        "ok": true,
+        "language": "cpp",
+        "phase": "replay",
+        "callbacks": 0
+      }
+    },
+    {
+      "name": "short replay rust Application process",
+      "passed": true,
+      "exit_code": 0,
+      "process_seconds": 1.664,
+      "result": {
+        "callbacks": 0,
+        "language": "rust",
+        "ok": true,
+        "phase": "replay"
+      }
+    },
+    {
+      "name": "short python durable business output and replay",
+      "passed": true,
+      "callback_count": 1,
+      "completed_units": 3,
+      "business_seconds": 2.022,
+      "progress_rows": 2
+    },
+    {
+      "name": "short go durable business output and replay",
+      "passed": true,
+      "callback_count": 1,
+      "completed_units": 3,
+      "business_seconds": 2.042,
+      "progress_rows": 2
+    },
+    {
+      "name": "short javascript durable business output and replay",
+      "passed": true,
+      "callback_count": 1,
+      "completed_units": 3,
+      "business_seconds": 2.02,
+      "progress_rows": 2
+    },
+    {
+      "name": "short java durable business output and replay",
+      "passed": true,
+      "callback_count": 1,
+      "completed_units": 3,
+      "business_seconds": 2.015,
+      "progress_rows": 2
+    },
+    {
+      "name": "short csharp durable business output and replay",
+      "passed": true,
+      "callback_count": 1,
+      "completed_units": 3,
+      "business_seconds": 2.021,
+      "progress_rows": 2
+    },
+    {
+      "name": "short ruby durable business output and replay",
+      "passed": true,
+      "callback_count": 1,
+      "completed_units": 3,
+      "business_seconds": 2.023,
+      "progress_rows": 2
+    },
+    {
+      "name": "short c durable business output and replay",
+      "passed": true,
+      "callback_count": 1,
+      "completed_units": 3,
+      "business_seconds": 2.036,
+      "progress_rows": 2
+    },
+    {
+      "name": "short cpp durable business output and replay",
+      "passed": true,
+      "callback_count": 1,
+      "completed_units": 3,
+      "business_seconds": 2.011,
+      "progress_rows": 2
+    },
+    {
+      "name": "short rust durable business output and replay",
+      "passed": true,
+      "callback_count": 1,
+      "completed_units": 3,
+      "business_seconds": 2.029,
+      "progress_rows": 2
+    },
+    {
+      "name": "Nine languages use nine independent real Launch entitlements",
+      "passed": true
+    },
+    {
+      "name": "Initial long reservations retain default 900-second TTL",
+      "passed": true,
+      "count": 9
+    },
+    {
+      "name": "After original TTL all nine preoccupations still hold their 27 units",
+      "passed": true,
+      "held_units": 27,
+      "used_delta": 0
+    },
+    {
+      "name": "long run python Application process",
+      "passed": true,
+      "exit_code": 0,
+      "process_seconds": 939.058,
+      "result": {
+        "ok": true,
+        "language": "python",
+        "phase": "run",
+        "callbacks": 1
+      }
+    },
+    {
+      "name": "long run go Application process",
+      "passed": true,
+      "exit_code": 0,
+      "process_seconds": 937.742,
+      "result": {
+        "callbacks": 1,
+        "language": "go",
+        "ok": true,
+        "phase": "run"
+      }
+    },
+    {
+      "name": "long run javascript Application process",
+      "passed": true,
+      "exit_code": 0,
+      "process_seconds": 936.619,
+      "result": {
+        "ok": true,
+        "language": "javascript",
+        "phase": "run",
+        "callbacks": 1
+      }
+    },
+    {
+      "name": "long run java Application process",
+      "passed": true,
+      "exit_code": 0,
+      "process_seconds": 934.188,
+      "result": {
+        "phase": "run",
+        "ok": true,
+        "callbacks": 1,
+        "language": "java"
+      }
+    },
+    {
+      "name": "long run csharp Application process",
+      "passed": true,
+      "exit_code": 0,
+      "process_seconds": 930.734,
+      "result": {
+        "ok": true,
+        "language": "csharp",
+        "phase": "run",
+        "callbacks": 1
+      }
+    },
+    {
+      "name": "long run ruby Application process",
+      "passed": true,
+      "exit_code": 0,
+      "process_seconds": 928.504,
+      "result": {
+        "ok": true,
+        "language": "ruby",
+        "phase": "run",
+        "callbacks": 1
+      }
+    },
+    {
+      "name": "long run c Application process",
+      "passed": true,
+      "exit_code": 0,
+      "process_seconds": 926.677,
+      "result": {
+        "ok": true,
+        "language": "c",
+        "phase": "run",
+        "callbacks": 1
+      }
+    },
+    {
+      "name": "long run cpp Application process",
+      "passed": true,
+      "exit_code": 0,
+      "process_seconds": 925.66,
+      "result": {
+        "ok": true,
+        "language": "cpp",
+        "phase": "run",
+        "callbacks": 1
+      }
+    },
+    {
+      "name": "long run rust Application process",
+      "passed": true,
+      "exit_code": 0,
+      "process_seconds": 924.751,
+      "result": {
+        "callbacks": 1,
+        "language": "rust",
+        "ok": true,
+        "phase": "run"
+      }
+    },
+    {
+      "name": "long nine original reservations settled exactly",
+      "passed": true,
+      "count": 9,
+      "committed_units": 27
+    },
+    {
+      "name": "Long tasks debit neither more nor less than 27 completed units",
+      "passed": true,
+      "usage_delta": 27
+    },
+    {
+      "name": "long replay python Application process",
+      "passed": true,
+      "exit_code": 0,
+      "process_seconds": 9.503,
+      "result": {
+        "ok": true,
+        "language": "python",
+        "phase": "replay",
+        "callbacks": 0
+      }
+    },
+    {
+      "name": "long replay go Application process",
+      "passed": true,
+      "exit_code": 0,
+      "process_seconds": 8.094,
+      "result": {
+        "callbacks": 0,
+        "language": "go",
+        "ok": true,
+        "phase": "replay"
+      }
+    },
+    {
+      "name": "long replay javascript Application process",
+      "passed": true,
+      "exit_code": 0,
+      "process_seconds": 6.983,
+      "result": {
+        "ok": true,
+        "language": "javascript",
+        "phase": "replay",
+        "callbacks": 0
+      }
+    },
+    {
+      "name": "long replay java Application process",
+      "passed": true,
+      "exit_code": 0,
+      "process_seconds": 5.872,
+      "result": {
+        "callbacks": 0,
+        "language": "java",
+        "phase": "replay",
+        "ok": true
+      }
+    },
+    {
+      "name": "long replay csharp Application process",
+      "passed": true,
+      "exit_code": 0,
+      "process_seconds": 3.449,
+      "result": {
+        "ok": true,
+        "language": "csharp",
+        "phase": "replay",
+        "callbacks": 0
+      }
+    },
+    {
+      "name": "long replay ruby Application process",
+      "passed": true,
+      "exit_code": 0,
+      "process_seconds": 2.542,
+      "result": {
+        "ok": true,
+        "language": "ruby",
+        "phase": "replay",
+        "callbacks": 0
+      }
+    },
+    {
+      "name": "long replay c Application process",
+      "passed": true,
+      "exit_code": 0,
+      "process_seconds": 1.535,
+      "result": {
+        "ok": true,
+        "language": "c",
+        "phase": "replay",
+        "callbacks": 0
+      }
+    },
+    {
+      "name": "long replay cpp Application process",
+      "passed": true,
+      "exit_code": 0,
+      "process_seconds": 1.132,
+      "result": {
+        "ok": true,
+        "language": "cpp",
+        "phase": "replay",
+        "callbacks": 0
+      }
+    },
+    {
+      "name": "long replay rust Application process",
+      "passed": true,
+      "exit_code": 0,
+      "process_seconds": 0.519,
+      "result": {
+        "callbacks": 0,
+        "language": "rust",
+        "ok": true,
+        "phase": "replay"
+      }
+    },
+    {
+      "name": "long python durable business output and replay",
+      "passed": true,
+      "callback_count": 1,
+      "completed_units": 3,
+      "business_seconds": 920.03,
+      "progress_rows": 920
+    },
+    {
+      "name": "long go durable business output and replay",
+      "passed": true,
+      "callback_count": 1,
+      "completed_units": 3,
+      "business_seconds": 920.012,
+      "progress_rows": 920
+    },
+    {
+      "name": "long javascript durable business output and replay",
+      "passed": true,
+      "callback_count": 1,
+      "completed_units": 3,
+      "business_seconds": 920.008,
+      "progress_rows": 920
+    },
+    {
+      "name": "long java durable business output and replay",
+      "passed": true,
+      "callback_count": 1,
+      "completed_units": 3,
+      "business_seconds": 920.029,
+      "progress_rows": 919
+    },
+    {
+      "name": "long csharp durable business output and replay",
+      "passed": true,
+      "callback_count": 1,
+      "completed_units": 3,
+      "business_seconds": 920.018,
+      "progress_rows": 919
+    },
+    {
+      "name": "long ruby durable business output and replay",
+      "passed": true,
+      "callback_count": 1,
+      "completed_units": 3,
+      "business_seconds": 920.016,
+      "progress_rows": 920
+    },
+    {
+      "name": "long c durable business output and replay",
+      "passed": true,
+      "callback_count": 1,
+      "completed_units": 3,
+      "business_seconds": 920.016,
+      "progress_rows": 919
+    },
+    {
+      "name": "long cpp durable business output and replay",
+      "passed": true,
+      "callback_count": 1,
+      "completed_units": 3,
+      "business_seconds": 920.02,
+      "progress_rows": 920
+    },
+    {
+      "name": "long rust durable business output and replay",
+      "passed": true,
+      "callback_count": 1,
+      "completed_units": 3,
+      "business_seconds": 920.016,
+      "progress_rows": 920
+    },
+    {
+      "name": "long nine original reservations settled exactly",
+      "passed": true,
+      "count": 9,
+      "committed_units": 27
+    },
+    {
+      "name": "Fresh-process replays do not increase metered usage",
+      "passed": true
+    }
+  ],
+  "operations": {
+    "short": {
+      "python": "launch-renewal-000fe6b44b694376-short-python",
+      "go": "launch-renewal-000fe6b44b694376-short-go",
+      "javascript": "launch-renewal-000fe6b44b694376-short-javascript",
+      "java": "launch-renewal-000fe6b44b694376-short-java",
+      "csharp": "launch-renewal-000fe6b44b694376-short-csharp",
+      "ruby": "launch-renewal-000fe6b44b694376-short-ruby",
+      "c": "launch-renewal-000fe6b44b694376-short-c",
+      "cpp": "launch-renewal-000fe6b44b694376-short-cpp",
+      "rust": "launch-renewal-000fe6b44b694376-short-rust"
+    },
+    "long": {
+      "python": "launch-renewal-000fe6b44b694376-long-python",
+      "go": "launch-renewal-000fe6b44b694376-long-go",
+      "javascript": "launch-renewal-000fe6b44b694376-long-javascript",
+      "java": "launch-renewal-000fe6b44b694376-long-java",
+      "csharp": "launch-renewal-000fe6b44b694376-long-csharp",
+      "ruby": "launch-renewal-000fe6b44b694376-long-ruby",
+      "c": "launch-renewal-000fe6b44b694376-long-c",
+      "cpp": "launch-renewal-000fe6b44b694376-long-cpp",
+      "rust": "launch-renewal-000fe6b44b694376-long-rust"
+    }
+  },
+  "short_final_holds": [
+    {
+      "operation_id": "launch-renewal-000fe6b44b694376-short-c",
+      "license_id": "1e1c893c-ecfa-45d3-a53f-ae3f6e7f3205",
+      "quantity": 3,
+      "status": "committed",
+      "expiry_extension_from_created_seconds": 900.0,
+      "unexpired": true,
+      "remaining_seconds": 893.571
+    },
+    {
+      "operation_id": "launch-renewal-000fe6b44b694376-short-cpp",
+      "license_id": "e6c06c0f-1bfa-47a2-b044-51a4b84aecb9",
+      "quantity": 3,
+      "status": "committed",
+      "expiry_extension_from_created_seconds": 900.0,
+      "unexpired": true,
+      "remaining_seconds": 895.4154
+    },
+    {
+      "operation_id": "launch-renewal-000fe6b44b694376-short-csharp",
+      "license_id": "7b944e86-4e58-4973-9a3c-fc1f50912fb2",
+      "quantity": 3,
+      "status": "committed",
+      "expiry_extension_from_created_seconds": 900.0,
+      "unexpired": true,
+      "remaining_seconds": 890.1782
+    },
+    {
+      "operation_id": "launch-renewal-000fe6b44b694376-short-go",
+      "license_id": "42e81d78-eeb9-407b-8415-04444a9fb9f7",
+      "quantity": 3,
+      "status": "committed",
+      "expiry_extension_from_created_seconds": 900.0,
+      "unexpired": true,
+      "remaining_seconds": 880.4456
+    },
+    {
+      "operation_id": "launch-renewal-000fe6b44b694376-short-java",
+      "license_id": "9efd2131-40e5-4b4d-bc85-5f92d98fd7f9",
+      "quantity": 3,
+      "status": "committed",
+      "expiry_extension_from_created_seconds": 900.0,
+      "unexpired": true,
+      "remaining_seconds": 888.1482
+    },
+    {
+      "operation_id": "launch-renewal-000fe6b44b694376-short-javascript",
+      "license_id": "c0352e8f-59b7-41cc-b852-02cb99ab9b46",
+      "quantity": 3,
+      "status": "committed",
+      "expiry_extension_from_created_seconds": 900.0,
+      "unexpired": true,
+      "remaining_seconds": 884.177
+    },
+    {
+      "operation_id": "launch-renewal-000fe6b44b694376-short-python",
+      "license_id": "b52b1308-e510-4397-8ff3-1f3b513210bc",
+      "quantity": 3,
+      "status": "committed",
+      "expiry_extension_from_created_seconds": 900.0,
+      "unexpired": true,
+      "remaining_seconds": 879.2963
+    },
+    {
+      "operation_id": "launch-renewal-000fe6b44b694376-short-ruby",
+      "license_id": "683f2f94-7c38-4e1e-8646-efdcd933dbc8",
+      "quantity": 3,
+      "status": "committed",
+      "expiry_extension_from_created_seconds": 900.0,
+      "unexpired": true,
+      "remaining_seconds": 892.4229
+    },
+    {
+      "operation_id": "launch-renewal-000fe6b44b694376-short-rust",
+      "license_id": "65a593b6-77ae-42e2-ac63-07c76fb6765a",
+      "quantity": 3,
+      "status": "committed",
+      "expiry_extension_from_created_seconds": 900.0,
+      "unexpired": true,
+      "remaining_seconds": 897.0359
+    }
+  ],
+  "license_ids": [
+    "1e1c893c-ecfa-45d3-a53f-ae3f6e7f3205",
+    "42e81d78-eeb9-407b-8415-04444a9fb9f7",
+    "65a593b6-77ae-42e2-ac63-07c76fb6765a",
+    "683f2f94-7c38-4e1e-8646-efdcd933dbc8",
+    "7b944e86-4e58-4973-9a3c-fc1f50912fb2",
+    "9efd2131-40e5-4b4d-bc85-5f92d98fd7f9",
+    "b52b1308-e510-4397-8ff3-1f3b513210bc",
+    "c0352e8f-59b7-41cc-b852-02cb99ab9b46",
+    "e6c06c0f-1bfa-47a2-b044-51a4b84aecb9"
+  ],
+  "used_before_by_license": {
+    "9efd2131-40e5-4b4d-bc85-5f92d98fd7f9": 3,
+    "b52b1308-e510-4397-8ff3-1f3b513210bc": 3,
+    "683f2f94-7c38-4e1e-8646-efdcd933dbc8": 3,
+    "7b944e86-4e58-4973-9a3c-fc1f50912fb2": 3,
+    "65a593b6-77ae-42e2-ac63-07c76fb6765a": 3,
+    "42e81d78-eeb9-407b-8415-04444a9fb9f7": 3,
+    "c0352e8f-59b7-41cc-b852-02cb99ab9b46": 3,
+    "e6c06c0f-1bfa-47a2-b044-51a4b84aecb9": 3,
+    "1e1c893c-ecfa-45d3-a53f-ae3f6e7f3205": 3
+  },
+  "used_before_long": 27,
+  "long_initial_holds": [
+    {
+      "operation_id": "launch-renewal-000fe6b44b694376-long-c",
+      "license_id": "1e1c893c-ecfa-45d3-a53f-ae3f6e7f3205",
+      "quantity": 3,
+      "status": "pending",
+      "expiry_extension_from_created_seconds": 900.0,
+      "unexpired": true,
+      "remaining_seconds": 897.6637
+    },
+    {
+      "operation_id": "launch-renewal-000fe6b44b694376-long-cpp",
+      "license_id": "e6c06c0f-1bfa-47a2-b044-51a4b84aecb9",
+      "quantity": 3,
+      "status": "pending",
+      "expiry_extension_from_created_seconds": 900.0,
+      "unexpired": true,
+      "remaining_seconds": 898.5739
+    },
+    {
+      "operation_id": "launch-renewal-000fe6b44b694376-long-csharp",
+      "license_id": "7b944e86-4e58-4973-9a3c-fc1f50912fb2",
+      "quantity": 3,
+      "status": "pending",
+      "expiry_extension_from_created_seconds": 900.0,
+      "unexpired": true,
+      "remaining_seconds": 894.7138
+    },
+    {
+      "operation_id": "launch-renewal-000fe6b44b694376-long-go",
+      "license_id": "42e81d78-eeb9-407b-8415-04444a9fb9f7",
+      "quantity": 3,
+      "status": "pending",
+      "expiry_extension_from_created_seconds": 900.0,
+      "unexpired": true,
+      "remaining_seconds": 886.5811
+    },
+    {
+      "operation_id": "launch-renewal-000fe6b44b694376-long-java",
+      "license_id": "9efd2131-40e5-4b4d-bc85-5f92d98fd7f9",
+      "quantity": 3,
+      "status": "pending",
+      "expiry_extension_from_created_seconds": 900.0,
+      "unexpired": true,
+      "remaining_seconds": 892.4143
+    },
+    {
+      "operation_id": "launch-renewal-000fe6b44b694376-long-javascript",
+      "license_id": "c0352e8f-59b7-41cc-b852-02cb99ab9b46",
+      "quantity": 3,
+      "status": "pending",
+      "expiry_extension_from_created_seconds": 900.0,
+      "unexpired": true,
+      "remaining_seconds": 889.0047
+    },
+    {
+      "operation_id": "launch-renewal-000fe6b44b694376-long-python",
+      "license_id": "b52b1308-e510-4397-8ff3-1f3b513210bc",
+      "quantity": 3,
+      "status": "pending",
+      "expiry_extension_from_created_seconds": 900.0,
+      "unexpired": true,
+      "remaining_seconds": 885.5989
+    },
+    {
+      "operation_id": "launch-renewal-000fe6b44b694376-long-ruby",
+      "license_id": "683f2f94-7c38-4e1e-8646-efdcd933dbc8",
+      "quantity": 3,
+      "status": "pending",
+      "expiry_extension_from_created_seconds": 900.0,
+      "unexpired": true,
+      "remaining_seconds": 896.6087
+    },
+    {
+      "operation_id": "launch-renewal-000fe6b44b694376-long-rust",
+      "license_id": "65a593b6-77ae-42e2-ac63-07c76fb6765a",
+      "quantity": 3,
+      "status": "pending",
+      "expiry_extension_from_created_seconds": 900.0,
+      "unexpired": true,
+      "remaining_seconds": 899.3115
+    }
+  ],
+  "business_start_epoch": 1793487525,
+  "latest_progress": {
+    "elapsed_seconds": 901.2,
+    "pending_count": 9,
+    "pending_units": 27,
+    "minimum_remaining_seconds": 883.283,
+    "used_delta": 0
+  },
+  "after_original_expiry_holds": [
+    {
+      "operation_id": "launch-renewal-000fe6b44b694376-long-c",
+      "license_id": "1e1c893c-ecfa-45d3-a53f-ae3f6e7f3205",
+      "quantity": 3,
+      "status": "pending",
+      "expiry_extension_from_created_seconds": 1801.5271,
+      "unexpired": true,
+      "remaining_seconds": 891.2202
+    },
+    {
+      "operation_id": "launch-renewal-000fe6b44b694376-long-cpp",
+      "license_id": "e6c06c0f-1bfa-47a2-b044-51a4b84aecb9",
+      "quantity": 3,
+      "status": "pending",
+      "expiry_extension_from_created_seconds": 1801.1347,
+      "unexpired": true,
+      "remaining_seconds": 891.738
+    },
+    {
+      "operation_id": "launch-renewal-000fe6b44b694376-long-csharp",
+      "license_id": "7b944e86-4e58-4973-9a3c-fc1f50912fb2",
+      "quantity": 3,
+      "status": "pending",
+      "expiry_extension_from_created_seconds": 1802.183,
+      "unexpired": true,
+      "remaining_seconds": 888.9262
+    },
+    {
+      "operation_id": "launch-renewal-000fe6b44b694376-long-go",
+      "license_id": "42e81d78-eeb9-407b-8415-04444a9fb9f7",
+      "quantity": 3,
+      "status": "pending",
+      "expiry_extension_from_created_seconds": 1801.3794,
+      "unexpired": true,
+      "remaining_seconds": 879.9899
+    },
+    {
+      "operation_id": "launch-renewal-000fe6b44b694376-long-java",
+      "license_id": "9efd2131-40e5-4b4d-bc85-5f92d98fd7f9",
+      "quantity": 3,
+      "status": "pending",
+      "expiry_extension_from_created_seconds": 1802.4744,
+      "unexpired": true,
+      "remaining_seconds": 886.918
+    },
+    {
+      "operation_id": "launch-renewal-000fe6b44b694376-long-javascript",
+      "license_id": "c0352e8f-59b7-41cc-b852-02cb99ab9b46",
+      "quantity": 3,
+      "status": "pending",
+      "expiry_extension_from_created_seconds": 1802.4096,
+      "unexpired": true,
+      "remaining_seconds": 883.4437
+    },
+    {
+      "operation_id": "launch-renewal-000fe6b44b694376-long-python",
+      "license_id": "b52b1308-e510-4397-8ff3-1f3b513210bc",
+      "quantity": 3,
+      "status": "pending",
+      "expiry_extension_from_created_seconds": 1801.4046,
+      "unexpired": true,
+      "remaining_seconds": 879.0329
+    },
+    {
+      "operation_id": "launch-renewal-000fe6b44b694376-long-ruby",
+      "license_id": "683f2f94-7c38-4e1e-8646-efdcd933dbc8",
+      "quantity": 3,
+      "status": "pending",
+      "expiry_extension_from_created_seconds": 1801.2016,
+      "unexpired": true,
+      "remaining_seconds": 889.8398
+    },
+    {
+      "operation_id": "launch-renewal-000fe6b44b694376-long-rust",
+      "license_id": "65a593b6-77ae-42e2-ac63-07c76fb6765a",
+      "quantity": 3,
+      "status": "pending",
+      "expiry_extension_from_created_seconds": 1801.0209,
+      "unexpired": true,
+      "remaining_seconds": 892.3618
+    }
+  ],
+  "long_final_holds": [
+    {
+      "operation_id": "launch-renewal-000fe6b44b694376-long-c",
+      "license_id": "1e1c893c-ecfa-45d3-a53f-ae3f6e7f3205",
+      "quantity": 3,
+      "status": "committed",
+      "expiry_extension_from_created_seconds": 1801.5271,
+      "unexpired": true,
+      "remaining_seconds": 862.8966
+    },
+    {
+      "operation_id": "launch-renewal-000fe6b44b694376-long-cpp",
+      "license_id": "e6c06c0f-1bfa-47a2-b044-51a4b84aecb9",
+      "quantity": 3,
+      "status": "committed",
+      "expiry_extension_from_created_seconds": 1801.1347,
+      "unexpired": true,
+      "remaining_seconds": 863.4144
+    },
+    {
+      "operation_id": "launch-renewal-000fe6b44b694376-long-csharp",
+      "license_id": "7b944e86-4e58-4973-9a3c-fc1f50912fb2",
+      "quantity": 3,
+      "status": "committed",
+      "expiry_extension_from_created_seconds": 1802.183,
+      "unexpired": true,
+      "remaining_seconds": 860.6025
+    },
+    {
+      "operation_id": "launch-renewal-000fe6b44b694376-long-go",
+      "license_id": "42e81d78-eeb9-407b-8415-04444a9fb9f7",
+      "quantity": 3,
+      "status": "committed",
+      "expiry_extension_from_created_seconds": 1801.3794,
+      "unexpired": true,
+      "remaining_seconds": 851.6662
+    },
+    {
+      "operation_id": "launch-renewal-000fe6b44b694376-long-java",
+      "license_id": "9efd2131-40e5-4b4d-bc85-5f92d98fd7f9",
+      "quantity": 3,
+      "status": "committed",
+      "expiry_extension_from_created_seconds": 1802.4744,
+      "unexpired": true,
+      "remaining_seconds": 858.5944
+    },
+    {
+      "operation_id": "launch-renewal-000fe6b44b694376-long-javascript",
+      "license_id": "c0352e8f-59b7-41cc-b852-02cb99ab9b46",
+      "quantity": 3,
+      "status": "committed",
+      "expiry_extension_from_created_seconds": 1802.4096,
+      "unexpired": true,
+      "remaining_seconds": 855.12
+    },
+    {
+      "operation_id": "launch-renewal-000fe6b44b694376-long-python",
+      "license_id": "b52b1308-e510-4397-8ff3-1f3b513210bc",
+      "quantity": 3,
+      "status": "committed",
+      "expiry_extension_from_created_seconds": 1801.4046,
+      "unexpired": true,
+      "remaining_seconds": 850.7092
+    },
+    {
+      "operation_id": "launch-renewal-000fe6b44b694376-long-ruby",
+      "license_id": "683f2f94-7c38-4e1e-8646-efdcd933dbc8",
+      "quantity": 3,
+      "status": "committed",
+      "expiry_extension_from_created_seconds": 1801.2016,
+      "unexpired": true,
+      "remaining_seconds": 861.5161
+    },
+    {
+      "operation_id": "launch-renewal-000fe6b44b694376-long-rust",
+      "license_id": "65a593b6-77ae-42e2-ac63-07c76fb6765a",
+      "quantity": 3,
+      "status": "committed",
+      "expiry_extension_from_created_seconds": 1801.0209,
+      "unexpired": true,
+      "remaining_seconds": 864.0382
+    }
+  ],
+  "used_after_long": 54,
+  "used_after_by_license": {
+    "9efd2131-40e5-4b4d-bc85-5f92d98fd7f9": 6,
+    "b52b1308-e510-4397-8ff3-1f3b513210bc": 6,
+    "683f2f94-7c38-4e1e-8646-efdcd933dbc8": 6,
+    "7b944e86-4e58-4973-9a3c-fc1f50912fb2": 6,
+    "65a593b6-77ae-42e2-ac63-07c76fb6765a": 6,
+    "42e81d78-eeb9-407b-8415-04444a9fb9f7": 6,
+    "c0352e8f-59b7-41cc-b852-02cb99ab9b46": 6,
+    "e6c06c0f-1bfa-47a2-b044-51a4b84aecb9": 6,
+    "1e1c893c-ecfa-45d3-a53f-ae3f6e7f3205": 6
+  },
+  "passed": true,
+  "finished_at_utc": "2026-10-31T23:14:20Z"
+}

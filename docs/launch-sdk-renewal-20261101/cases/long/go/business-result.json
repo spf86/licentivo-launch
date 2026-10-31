@@ -1,0 +1,24 @@
+{
+  "operation_id": "launch-renewal-000fe6b44b694376-long-go",
+  "callback_count": 1,
+  "completed_units": 3,
+  "business_seconds": 920.012,
+  "progress_rows": 920,
+  "artifacts": [
+    {
+      "file": "report-1.csv",
+      "sha256": "7cc06425a84e73b7c0cb314a0c1a69bc4c26f612104ea24bce00e3cbf39ea2bd",
+      "rows": 100
+    },
+    {
+      "file": "report-2.csv",
+      "sha256": "2e142d64d677bdc1390ace4a5e52a0c9a4afd3629013648fa68462bcf7a7e4d0",
+      "rows": 100
+    },
+    {
+      "file": "report-3.csv",
+      "sha256": "d92b49e2624c9e80abc507d1e2e739fd4e39266b82fba1484b96bdee67a1c850",
+      "rows": 100
+    }
+  ]
+}

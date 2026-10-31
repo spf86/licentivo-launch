@@ -1,0 +1,24 @@
+{
+  "operation_id": "launch-renewal-000fe6b44b694376-long-ruby",
+  "callback_count": 1,
+  "completed_units": 3,
+  "business_seconds": 920.016,
+  "progress_rows": 920,
+  "artifacts": [
+    {
+      "file": "report-1.csv",
+      "sha256": "06192a3ab017f53ec5eebe53de7636a1a8e4c045c0e4005ff02f9f7509003792",
+      "rows": 100
+    },
+    {
+      "file": "report-2.csv",
+      "sha256": "19e113d75a82ecb4ab0297d339aa06ef93eae2b098554db95bbb897109ed63c3",
+      "rows": 100
+    },
+    {
+      "file": "report-3.csv",
+      "sha256": "784fd3fcaf81cd97861385999079e3dd5d718302fce9c1f7a98300583c33d273",
+      "rows": 100
+    }
+  ]
+}

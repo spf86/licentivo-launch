@@ -1,0 +1,5 @@
+import {Application,MemoryStore} from './sdk-source/sdk/javascript/src/index.mjs';
+import {readFile} from 'node:fs/promises';import {execFile} from 'node:child_process';import {promisify} from 'node:util';
+const root='/home/spf86/launch-sdk-renewal-20261101',report=JSON.parse(await readFile(root+'/meter-public.json','utf8')),secret=JSON.parse(await readFile(root+'/deployment-private.json','utf8'));
+const app=new Application(report.config,{...report.product_config,allow_http:true},{store:new MemoryStore(),cacheDir:root+'/runtime/javascript'});let calls=0;
+try{await app.login(process.env.LAUNCH_EMAIL,secret.customer_password);await app.runMeteredFeature('export',3,process.env.LAUNCH_OPERATION,async()=>{calls++;await promisify(execFile)('python3',[root+'/long_business.py']);});if(process.env.LAUNCH_PHASE==='replay')await app.resolveMeteredFeature(process.env.LAUNCH_OPERATION,true);if(calls!==(process.env.LAUNCH_PHASE==='run'?1:0))throw Error('Unexpected callback count');console.log(JSON.stringify({ok:true,language:'javascript',phase:process.env.LAUNCH_PHASE,callbacks:calls}));}finally{await app.close();}

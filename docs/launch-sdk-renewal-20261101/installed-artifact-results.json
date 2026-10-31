@@ -1,0 +1,58 @@
+{
+  "scope": "installed Linux artifact replays",
+  "checks": [
+    {
+      "name": "Final distribution wheel present",
+      "passed": true,
+      "sha256": "af59b57cb25f3159abb3010ca62197ff0aa1638efd6f3884da5dcba410711fd7"
+    },
+    {
+      "name": "Final distribution wheel installed",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "Installed c artifact committed replay skips business",
+      "passed": true,
+      "exit_code": 0,
+      "result": {
+        "ok": true,
+        "language": "c",
+        "phase": "replay",
+        "callbacks": 0
+      }
+    },
+    {
+      "name": "Installed cpp artifact committed replay skips business",
+      "passed": true,
+      "exit_code": 0,
+      "result": {
+        "ok": true,
+        "language": "cpp",
+        "phase": "replay",
+        "callbacks": 0
+      }
+    },
+    {
+      "name": "Installed python artifact committed replay skips business",
+      "passed": true,
+      "exit_code": 0,
+      "result": {
+        "ok": true,
+        "language": "python",
+        "phase": "replay",
+        "callbacks": 0
+      }
+    },
+    {
+      "name": "Installed artifact replays add zero usage",
+      "passed": true,
+      "used_before": 54,
+      "used_after": 54
+    }
+  ],
+  "started_at_utc": "2026-10-31T23:14:34Z",
+  "used_before": 54,
+  "passed": true,
+  "finished_at_utc": "2026-10-31T23:14:37Z"
+}
