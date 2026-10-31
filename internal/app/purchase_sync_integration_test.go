@@ -625,6 +625,41 @@ func TestPurchaseSnapshotBridge(t *testing.T) {
 			})
 		}
 	})
+	run("unpublished products reject upgrades while keeping renewals available", func(t *testing.T) {
+		quote, err := service.Quote(ctx, customer, QuoteInput{Action: "upgrade", ProductID: product.ID, PlanVersionID: pro.ID, Environment: "sandbox"}, "")
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, status := range []string{"draft", "archived"} {
+			t.Run(status, func(t *testing.T) {
+				tx := db.Begin()
+				if tx.Error != nil {
+					t.Fatal(tx.Error)
+				}
+				defer tx.Rollback()
+				trial, err := New(ctx, tx, config)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if err := tx.Model(&product).Update("status", status).Error; err != nil {
+					t.Fatal(err)
+				}
+				_, err = trial.Quote(ctx, customer, QuoteInput{Action: "upgrade", ProductID: product.ID, PlanVersionID: pro.ID, Environment: "sandbox"}, "")
+				var failure *Error
+				if !errors.As(err, &failure) || failure.Code != "PRODUCT_NOT_PUBLISHED" {
+					t.Errorf("unpublished product accepted an upgrade quote: %v", err)
+				}
+				_, err = trial.CreateOrder(ctx, customer, CheckoutInput{Action: "upgrade", QuoteToken: quote.Token, ProductID: product.ID, PlanVersionID: pro.ID, Provider: "stripe", Environment: "sandbox", IdempotencyKey: id()})
+				if !errors.As(err, &failure) || failure.Code != "PRODUCT_NOT_PUBLISHED" {
+					t.Errorf("old quote accepted an upgrade after unpublishing: %v", err)
+				}
+				// Existing customers retain the plan's explicit renewal permission.
+				if _, err := trial.Quote(ctx, customer, QuoteInput{Action: "renew", ProductID: product.ID, PlanVersionID: basic.ID, Environment: "sandbox"}, ""); err != nil {
+					t.Fatalf("unpublishing removed the customer's renewal option: %v", err)
+				}
+			})
+		}
+	})
 	run("upgrade and refund restore the paid base", func(t *testing.T) {
 		quote, err := service.Quote(ctx, customer, QuoteInput{Action: "upgrade", ProductID: product.ID, PlanVersionID: pro.ID, Environment: "sandbox"}, "")
 		if err != nil {
