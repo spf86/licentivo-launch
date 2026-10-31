@@ -1,0 +1,6 @@
+{
+  "platform": "Windows",
+  "dpapi_exit_code": 0,
+  "official_tasks_exit_code": 0,
+  "native_fork_tests": "Covered by the Linux run, not Windows"
+}

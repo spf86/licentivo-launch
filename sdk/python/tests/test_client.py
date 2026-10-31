@@ -59,6 +59,66 @@ class LifecycleTests(unittest.TestCase):
         def factory(config):
             runtime=Runtime(config);self.runtimes.append(runtime);return runtime
         return Application('https://merchant.example',PRODUCT,CONFIG,'sandbox',store=self.store,opener=self.merchant,cache_dir=self.temp.name,runtime_factory=factory)
+    def test_metered_application_delegates_and_never_uses_ordinary_feature_fallback(self):
+        app=self.app()
+        with self.assertRaises(APIError) as before: app.run_metered_feature('export', 3, 'job-1', lambda: self.fail('not signed in'))
+        self.assertEqual(before.exception.code, 'LOGIN_REQUIRED')
+        app.login('alice', 'password')
+        with self.assertRaises(APIError) as unsupported: app.run_metered_feature('export', 3, 'job-1', lambda: self.fail('ordinary fallback ran'))
+        self.assertEqual(unsupported.exception.code, 'METERING_UNSUPPORTED')
+        runtime=self.runtimes[0]
+        calls=[]
+        runtime.run_metered_feature=lambda *args: (calls.append(args[:3]), args[3]())[1]
+        runtime.resolve_metered_feature=lambda *args: calls.append(args)
+        self.assertEqual(app.run_metered_feature('export', 3, 'job-1', lambda: 42), 42)
+        app.resolve_metered_feature('job-1', True)
+        self.assertEqual(calls, [('export',3,'job-1'),('job-1',True)])
+        error=ValueError('business error')
+        def fail(): raise error
+        with self.assertRaises(ValueError) as failed: app.run_metered_feature('export', 3, 'job-2', fail)
+        self.assertIs(failed.exception, error)
+        app.close()
+
+    def test_startup_denial_survives_runtime_and_logout_cleanup_failures(self):
+        for code in ('LAUNCH_ENTITLEMENT_REQUIRED', 'DEVICE_LIMIT_REACHED'):
+            for broken_close in (False, True):
+                for logout_offline in (False, True):
+                    with self.subTest(code=code, broken_close=broken_close, logout_offline=logout_offline):
+                        merchant, store, candidates = Merchant(), MemoryStore(), []
+                        denied = APIError(code, 403)
+                        class DeniedRuntime(Runtime):
+                            def start(self):
+                                if logout_offline:
+                                    merchant.block_token = merchant.token_prefix + '1'
+                                raise denied
+                            def close(self):
+                                super().close()
+                                if broken_close:
+                                    raise OSError('SDK shutdown failed')
+                        def factory(config):
+                            if not config.get('identity_token'):
+                                raise ValueError('no device credential was issued')
+                            runtime = DeniedRuntime(config)
+                            candidates.append(runtime)
+                            return runtime
+                        app = Application('https://merchant.example', PRODUCT, CONFIG, 'sandbox', store=store,
+                                          opener=merchant, cache_dir=self.temp.name, runtime_factory=factory)
+                        with self.assertRaises(APIError) as caught:
+                            app.login('a', 'b')
+                        self.assertIs(caught.exception, denied)
+                        self.assertTrue(candidates[0].closed)
+                        self.assertIsNone(app.runtime)
+                        self.assertIsNone(store.load(app.scope))
+                        self.assertTrue(any(r.full_url.endswith('/auth/logout') for r in merchant.requests))
+                        queue = store.load(app.scope + '\naccount-logout-queue-v1')
+                        if logout_offline:
+                            self.assertTrue(json.loads(queue)['records'][0]['logout_pending'])
+                            self.assertNotIn(TOKEN.encode(), queue)
+                        else:
+                            self.assertIsNone(queue)
+                        with self.assertRaises(APIError):
+                            app.run_feature('export', lambda: self.fail('denied startup allowed business'))
+                        app.close()
     def test_ephemeral_identity_and_sdk_feature_decision(self):
         app=self.app();app.login('a','b');saved=self.store.load(app.scope)
         self.assertNotIn(TOKEN.encode(),saved);self.assertNotIn(b'license_key',saved)

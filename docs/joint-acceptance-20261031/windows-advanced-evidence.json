@@ -1,0 +1,70 @@
+[
+  {
+    "name": "real Windows policy no-vm",
+    "passed": true,
+    "hardware_available": true,
+    "sdk_reports_virtual_machine": false,
+    "code": "",
+    "expected_code": "",
+    "callback_executed": true,
+    "profile_fabricated": false
+  },
+  {
+    "name": "real Windows policy hardware-required",
+    "passed": true,
+    "hardware_available": true,
+    "sdk_reports_virtual_machine": false,
+    "code": "",
+    "expected_code": "",
+    "callback_executed": true,
+    "profile_fabricated": false
+  },
+  {
+    "name": "real Windows policy hardware-match-required",
+    "passed": true,
+    "hardware_available": true,
+    "sdk_reports_virtual_machine": false,
+    "code": "",
+    "expected_code": "",
+    "callback_executed": true,
+    "profile_fabricated": false
+  },
+  {
+    "name": "Linux signed cache cannot authorize actual Windows while offline",
+    "passed": true,
+    "code": "URLError",
+    "callback_executed": false,
+    "different_real_device": true
+  },
+  {
+    "name": "actual Windows online activation respects Linux occupied device limit",
+    "passed": true,
+    "code": "DEVICE_LIMIT_REACHED",
+    "callback_executed": false
+  },
+  {
+    "name": "actual Windows activates and executes after Linux release",
+    "passed": true,
+    "callback_executed": true
+  },
+  {
+    "name": "Windows successor completes real device logout",
+    "passed": true,
+    "revocation_pending": false
+  },
+  {
+    "name": "real Windows activates a customer portal temporary code and executes business",
+    "passed": true,
+    "original_license_key_supplied": false,
+    "profile_fabricated": false
+  },
+  {
+    "name": "transferred Windows license uses a restricted device credential",
+    "passed": true
+  },
+  {
+    "name": "Windows restores a transferred license without retaining the temporary code",
+    "passed": true,
+    "temporary_code_supplied": false
+  }
+]

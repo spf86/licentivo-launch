@@ -1,0 +1,5 @@
+{"phase": "blocked-two", "actual_host": "Windows", "callbacks": 0, "allowed": false, "code": "SEAT_LIMIT_REACHED"}
+{"phase": "blocked-two", "actual_host": "Windows", "callbacks": 0, "allowed": false, "code": "PermissionError"}
+{"phase": "blocked-two", "actual_host": "Windows", "callbacks": 0, "allowed": false, "code": "SEAT_LIMIT_REACHED"}
+{"phase": "blocked-one", "actual_host": "Windows", "callbacks": 0, "allowed": false, "code": "SEAT_LIMIT_REACHED"}
+{"phase": "replacement", "actual_host": "Windows", "callbacks": 1, "allowed": true, "state": "active", "device": {"name": "LAPTOP-ACAGBUDL", "code": "F00E-1AF1", "platform": "windows", "os_version": "Windows 11 Home China 26H2 (26340)", "cpu": "AMD Ryzen 7 5800H with Radeon Graphics", "memory_mb": 32768, "gpu": "OrayIddDriver Device / AMD Radeon(TM) Graphics / NVIDIA GeForce RTX 3060 Laptop GPU", "system_type": "AMD64", "storage_gb": 475}, "logout_confirmed": true}

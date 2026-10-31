@@ -1,0 +1,99 @@
+{
+  "complete": true,
+  "operation_id": "0aa27845-c0c4-44cf-aeff-6d627fa4885c",
+  "server_clock_changed": false,
+  "reservation_ttl_overridden": false,
+  "started_at_utc": "2026-10-31T20:21:42Z",
+  "receipts": [
+    {
+      "reservation_id": "27371750-d162-4c89-bc8b-18fe36cbfb94",
+      "expires_at": "2026-10-31T20:36:43.426379101Z",
+      "status": "pending"
+    },
+    {
+      "reservation_id": "27371750-d162-4c89-bc8b-18fe36cbfb94",
+      "expires_at": "2026-10-31T20:37:43.540329803Z",
+      "status": "pending"
+    },
+    {
+      "reservation_id": "27371750-d162-4c89-bc8b-18fe36cbfb94",
+      "expires_at": "2026-10-31T20:38:43.609273081Z",
+      "status": "pending"
+    },
+    {
+      "reservation_id": "27371750-d162-4c89-bc8b-18fe36cbfb94",
+      "expires_at": "2026-10-31T20:39:43.659931411Z",
+      "status": "pending"
+    },
+    {
+      "reservation_id": "27371750-d162-4c89-bc8b-18fe36cbfb94",
+      "expires_at": "2026-10-31T20:40:43.731128325Z",
+      "status": "pending"
+    },
+    {
+      "reservation_id": "27371750-d162-4c89-bc8b-18fe36cbfb94",
+      "expires_at": "2026-10-31T20:41:43.817008378Z",
+      "status": "pending"
+    },
+    {
+      "reservation_id": "27371750-d162-4c89-bc8b-18fe36cbfb94",
+      "expires_at": "2026-10-31T20:42:43.886138627Z",
+      "status": "pending"
+    },
+    {
+      "reservation_id": "27371750-d162-4c89-bc8b-18fe36cbfb94",
+      "expires_at": "2026-10-31T20:43:43.929489749Z",
+      "status": "pending"
+    },
+    {
+      "reservation_id": "27371750-d162-4c89-bc8b-18fe36cbfb94",
+      "expires_at": "2026-10-31T20:44:43.988662105Z",
+      "status": "pending"
+    },
+    {
+      "reservation_id": "27371750-d162-4c89-bc8b-18fe36cbfb94",
+      "expires_at": "2026-10-31T20:45:44.051421957Z",
+      "status": "pending"
+    },
+    {
+      "reservation_id": "27371750-d162-4c89-bc8b-18fe36cbfb94",
+      "expires_at": "2026-10-31T20:46:44.098620474Z",
+      "status": "pending"
+    },
+    {
+      "reservation_id": "27371750-d162-4c89-bc8b-18fe36cbfb94",
+      "expires_at": "2026-10-31T20:47:44.141472626Z",
+      "status": "pending"
+    },
+    {
+      "reservation_id": "27371750-d162-4c89-bc8b-18fe36cbfb94",
+      "expires_at": "2026-10-31T20:48:44.194042578Z",
+      "status": "pending"
+    },
+    {
+      "reservation_id": "27371750-d162-4c89-bc8b-18fe36cbfb94",
+      "expires_at": "2026-10-31T20:49:44.25365733Z",
+      "status": "pending"
+    },
+    {
+      "reservation_id": "27371750-d162-4c89-bc8b-18fe36cbfb94",
+      "expires_at": "2026-10-31T20:50:44.307524454Z",
+      "status": "pending"
+    },
+    {
+      "reservation_id": "27371750-d162-4c89-bc8b-18fe36cbfb94",
+      "expires_at": "2026-10-31T20:51:44.379650723Z",
+      "status": "pending"
+    }
+  ],
+  "used_before": 6,
+  "initial_remaining_seconds": 899.92,
+  "rows": 903,
+  "elapsed_seconds": 904.15,
+  "artifact_sha256": "76b3fc170cc0b208f0e60f967896a8bfb02e5cab4d7e93e346be36f20f8d0e6d",
+  "used_after": 7,
+  "callback_count": 1,
+  "journal_state": "committed",
+  "finished_at_utc": "2026-10-31T20:36:48Z",
+  "passed": true
+}

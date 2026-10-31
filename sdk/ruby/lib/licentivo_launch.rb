@@ -11,7 +11,7 @@ require 'time'
 require 'monitor'
 
 module LicentivoLaunch
-  VERSION = '0.1.4'
+  VERSION = '0.1.8'
   LIMIT = 1 << 20
   UUID = /\A[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\z/
   class Error < StandardError
@@ -165,7 +165,7 @@ module LicentivoLaunch
       @store, @transport = store, transport || LicentivoLaunch.method(:default_transport)
       @factory = runtime_factory || lambda do |config|
         require_relative 'licentivo_launch/vendor/licentivo'
-        raise Error.new('SDK_VERSION_MISMATCH') unless Licentivo::VERSION == '0.11.2'
+        raise Error.new('SDK_VERSION_MISMATCH') unless Licentivo::VERSION == '0.11.8'
         Licentivo::Client.new(config)
       end
       @root = File.expand_path(cache_dir || File.join(Dir.home, '.cache', 'LicentivoLaunch'))
@@ -238,6 +238,26 @@ module LicentivoLaunch
             @in_callback = false
           end
         end
+      end
+    end
+    def run_metered_feature(feature, quantity, operation_id, &action)
+      serial do
+        raise Error.new('LOGIN_REQUIRED') unless @runtime
+        raise Error.new('METERING_UNSUPPORTED') unless @runtime.respond_to?(:run_metered_feature)
+        @runtime.run_metered_feature(feature, quantity, operation_id) do
+          begin
+            @in_callback = true; action.call
+          ensure
+            @in_callback = false
+          end
+        end
+      end
+    end
+    def resolve_metered_feature(operation_id, succeeded)
+      serial do
+        raise Error.new('LOGIN_REQUIRED') unless @runtime
+        raise Error.new('METERING_UNSUPPORTED') unless @runtime.respond_to?(:resolve_metered_feature)
+        @runtime.resolve_metered_feature(operation_id, succeeded)
       end
     end
     def logout(cancellation: nil)
@@ -344,8 +364,9 @@ module LicentivoLaunch
       begin
         runtime.start; cancellation&.check!; @runtime = runtime; @account_cleared=false
         { user: JSON.parse(JSON.generate(@record['user'])), expires_at: @record['expires_at'] }
-      rescue StandardError
-        runtime.close; raise
+        rescue StandardError
+          begin; runtime.close; rescue StandardError; end
+          raise
       end
     end
     def stop

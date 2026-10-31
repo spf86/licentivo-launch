@@ -1,0 +1,65 @@
+{
+  "http_status": 200,
+  "view": {
+    "data": {
+      "devices": [
+        {
+          "id": "b11161f2-73a9-4ca7-bd61-74ebcd4e426e",
+          "license_id": "",
+          "device_name": "spf86",
+          "device_code": "FC38-8734",
+          "platform": "linux",
+          "os_version": "Ubuntu 26.04.1 LTS",
+          "cpu": "AMD Ryzen 7 5800H with Radeon Graphics",
+          "memory_mb": 3350,
+          "system_type": "x86_64",
+          "storage_gb": 43,
+          "status": "active",
+          "generation": 10,
+          "last_seen_at": "2026-10-31T13:25:08.507732Z",
+          "lease_expires_at": null
+        },
+        {
+          "id": "833fec1c-8fd4-4d49-abbd-73342fafb6f1",
+          "license_id": "",
+          "device_name": "LAPTOP-ACAGBUDL",
+          "device_code": "72A6-5461",
+          "platform": "windows",
+          "os_version": "Windows 11 Home China 26H2 (26340)",
+          "cpu": "AMD Ryzen 7 5800H with Radeon Graphics",
+          "memory_mb": 32768,
+          "gpu": "OrayIddDriver Device / AMD Radeon(TM) Graphics / NVIDIA GeForce RTX 3060 Laptop GPU",
+          "system_type": "AMD64",
+          "storage_gb": 475,
+          "status": "released",
+          "generation": 1,
+          "last_seen_at": "2026-10-31T13:25:03.315166Z",
+          "lease_expires_at": null
+        }
+      ],
+      "remaining": 2,
+      "can_release": true,
+      "operations": [
+        {
+          "id": "96c5453a-ec00-416f-ba8e-e7de703c805e",
+          "status": "stale",
+          "activation_id": "b11161f2-73a9-4ca7-bd61-74ebcd4e426e",
+          "expected_generation": 8
+        },
+        {
+          "id": "1b15fba7-4fbc-46ba-8539-1d6673aa8845",
+          "status": "stale",
+          "activation_id": "b11161f2-73a9-4ca7-bd61-74ebcd4e426e",
+          "expected_generation": 8
+        },
+        {
+          "id": "a2ff88c6-5413-4111-a186-2f971e2b01af",
+          "status": "succeeded",
+          "activation_id": "b11161f2-73a9-4ca7-bd61-74ebcd4e426e",
+          "expected_generation": 8
+        }
+      ]
+    },
+    "request_id": "0d87360a0d4b0291c89d83182ed8a769"
+  }
+}

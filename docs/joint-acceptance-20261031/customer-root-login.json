@@ -1,0 +1,9 @@
+{
+  "finding": "N03",
+  "route_before_reload": "http://127.0.0.1:18093/#/account",
+  "login_form_remained": true,
+  "login_button_enabled": true,
+  "form_error": "",
+  "authenticated_account_after_reload": true,
+  "product_cards_after_reload": 5
+}

@@ -1,0 +1,13 @@
+[
+  {
+    "path": "/home/spf86/launch-acceptance-20261031/meter-replay-app/runtime/a3c5a822b9590049162ffd2ca714f02feafeed538ded3d244196bb30b4be22f8/lease.json.task-1b76efba8b134f2ad8e0463b8c54a241ab9f21a980faa10f75732ef3a2d15c65.json",
+    "journal": {
+      "version": 1,
+      "operation_id": "f04fafa5-099b-40bd-92cf-1aa850b6840f",
+      "reservation_id": "50bc628d-4f8f-4980-b24d-e134125d2cde",
+      "feature": "export",
+      "quantity": 1,
+      "state": "committed"
+    }
+  }
+]

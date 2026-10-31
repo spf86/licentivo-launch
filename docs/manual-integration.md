@@ -2,9 +2,11 @@
 
 本指南适用于 Licentivo 提供方。已有其他授权系统的商户，可在后台“授权选择与自定义”选择自定义服务，按[自定义授权 API 与对接流程](external-licensing.md)接入，并继续使用自有授权系统的 SDK。
 
-> 当前未发布改动采用账号身份交换，具体职责和迁移约束见 [购买期限与账号 SDK 边界](account-purchase-boundary.md)。Launch 计算购买期限；Licentivo SDK 执行授权。
+> 当前源码采用账号身份交换：Launch 服务端 `0.3.6-beta` → Launch SDK `0.1.8` → 内置官方 SDK `0.11.8`。必需的 Licentivo 接口、服务端/数据库要求及发行包验证边界见[版本兼容性指南](sdk-compatibility.md)，职责与旧数据迁移见[购买期限与账号 SDK 边界](account-purchase-boundary.md)。
 
 只安装对应语言的 Launch 接入包。Launch 包内部包含官方 SDK、默认适配器和链接配置；官方授权地址固定为 `https://www.licentivo.com`。程序使用购买者在当前 Launch 商店注册的账号登录。
+
+已有应用及必要账号、服务器就绪后，可按[一天接入计划](one-day-integration.md)完成标准工程的部署、支付与授权配置、应用集成和沙箱验证。
 
 ## 取得已填写的初始化代码
 
@@ -34,21 +36,21 @@ Connect/connect → Login 或 Restore → RunFeature → Logout / Close
 
 ## 安装与初始化入口
 
-0.1.4 的九种语言公开安装验证已全部通过（9/9），下表安装方式均已验证。[GitHub Release](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.4) 也提供原生包和离线文件，使用方式见[下载包安装说明](integration-packages.md#install-a-downloaded-distribution)。
+下表命令固定到当前源码基线 `0.1.8`，对应内置官方 SDK `0.11.8`。[GitHub Release](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.8) 已存在；使用前应核对所选语言的发布记录、源码提交和包校验值。历史版本的 9/9 安装结果不能证明本版或本地修订已通过公开安装验收。原生包和离线文件用法见[下载包安装说明](integration-packages.md#install-a-downloaded-distribution)。
 
 | 语言 | 只安装 Launch | 页面提供的连接函数 | 包内直接初始化 API |
 | --- | --- | --- | --- |
-| Go | `go get github.com/spf86/licentivo-launch-sdk/pkg/launchclient@v0.1.4` | `connectLaunch()` | `launchclient.Connect` |
-| Python 3.10+ | `python -m pip install licentivo-launch==0.1.4` | `connect_launch()` | `Application.connect` |
-| C# / .NET 8+ | `dotnet add package Licentivo.Launch --version 0.1.4` | `LaunchConnection.Open()` | `Application.Connect` |
-| Java 17+ | Maven/Gradle：`com.licentivo.launch:launch-client:0.1.4` | `LaunchConnection.open()` | `Launch.connect` |
-| Node.js 20.3+ | `npm install @licentivo/launch@0.1.4` | `connectLaunch()` | `Application.connect` |
-| Rust 1.85+ | `cargo add licentivo-launch@=0.1.4` | `connect_launch()` | `Application::connect` |
-| Ruby 3.1+ | `gem install licentivo-launch --version 0.1.4` | `connect_launch` | `Application.connect` |
-| C11 | 从 [GitHub Release](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.4) 下载原生包，CMake 导入 | `connect_launch()` | `launch_application_connect` |
+| Go | `go get github.com/spf86/licentivo-launch-sdk/pkg/launchclient@v0.1.8` | `connectLaunch()` | `launchclient.Connect` |
+| Python 3.10+ | `python -m pip install licentivo-launch==0.1.8` | `connect_launch()` | `Application.connect` |
+| C# / .NET 8+ | `dotnet add package Licentivo.Launch --version 0.1.8` | `LaunchConnection.Open()` | `Application.Connect` |
+| Java 17+ | Maven/Gradle：`com.licentivo.launch:launch-client:0.1.8` | `LaunchConnection.open()` | `Launch.connect` |
+| Node.js 20.3+ | `npm install @licentivo/launch@0.1.8` | `connectLaunch()` | `Application.connect` |
+| Rust 1.85+ | `cargo add licentivo-launch@=0.1.8` | `connect_launch()` | `Application::connect` |
+| Ruby 3.1+ | `gem install licentivo-launch --version 0.1.8` | `connect_launch` | `Application.connect` |
+| C11 | 从 [GitHub Release](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.8) 下载原生包，CMake 导入 | `connect_launch()` | `launch_application_connect` |
 | C++17 | 使用同一 Launch 原生包 | `connectLaunch()` | `Application::Connect` |
 
-公开源码和各语言 README 见 [Launch SDK 仓库](https://github.com/spf86/licentivo-launch-sdk)，原生包与离线文件见 [v0.1.4 Release](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.4)，公开安装结果见 [九种语言注册表验证](https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/registry-verification.json)。每个包自己的 README 提供安装命令和 API。JavaScript 包包含 TypeScript 声明。普通语言依赖由包管理器解析，例如 Python 的 cryptography、C# 的 BouncyCastle 和 Ruby 的 base64；无需安装官方 SDK 包。
+公开源码和各语言 README 见 [Launch SDK 仓库](https://github.com/spf86/licentivo-launch-sdk)，原生包与离线文件见 [v0.1.8 Release](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.8)，公开安装记录见 [九种语言注册表验证](https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/registry-verification.json)，以记录正文中的版本和日期为准。每个包自己的 README 提供安装命令和 API。JavaScript 包包含 TypeScript 声明。普通语言依赖由包管理器解析，例如 Python 的 cryptography、C# 的 BouncyCastle 和 Ruby 的 base64；无需安装官方 SDK 包。
 
 Go 公开模块名为 `github.com/spf86/licentivo-launch-sdk`，导入路径为 `github.com/spf86/licentivo-launch-sdk/pkg/launchclient`，应用无需本地 replace。Windows 原生包采用 amd64 GNU/MinGW，另有 Linux amd64 原生包。Ruby 平台包和 Rust/native 的 Windows 分发包含 curl；其他平台源码构建需要常规 C11、curl/OpenSSL 开发依赖。平台工具链说明见各包 README。
 
@@ -185,9 +187,11 @@ app.RunFeature("export", [&] { exportReport(); });
 
 创建连接对象只完成初始化。程序必须登录或恢复成功，并在每次业务操作中使用功能保护回调。订单已付款、会话存在或按钮可点击都不能代替 SDK 验证。
 
+`Login` / 联网 `Restore` 后，Launch 包请求 `/api/v1/software/products/{id}/identity`，把最长 120 秒的身份断言仅在内存中交给官方 SDK，由 SDK 调用 Licentivo `/api/v1/launch/exchange` 取得设备凭据和签名许可。Launch 不返回长期许可证密钥；旧 `/credential` 返回 HTTP 410（`LICENSE_CREDENTIAL_REMOVED`），需更新客户端，不应将其当作同步中错误重试。
+
 默认会话仅保存在内存。记住登录需要安全存储：Go、Python、C# 和原生 C/C++ 提供 Windows 当前用户 DPAPI；Java、Node、Rust 和 Ruby 提供使用调用方密钥的 AES-GCM 存储。跨平台应用应对接系统凭据库。不能把密钥和密文放在同一普通目录。
 
-普通关闭保留用户主动记住的会话并停止运行时。退出账号先调用官方 SDK 统一退出，再清理 Launch 自有账号记录。ReleaseDevice 是同一流程的兼容入口，远端撤销待完成时不能提示释放成功。不要清理官方 SDK 的缓存目录或退出恢复日志。Launch 的会话保护不代表官方 SDK 的全部设备文件都已加密，应限制缓存目录权限。
+普通关闭保留用户主动记住的会话并停止运行时。退出账号先标记本地账号退出，再执行官方 SDK 统一退出与 Launch 会话撤销；未确认的账号撤销保留安全待办，不能恢复为登录。ReleaseDevice 是同一流程的兼容入口，远端撤销待完成时不能提示释放成功。不要清理官方 SDK 的缓存目录或退出恢复日志。Launch 的会话保护不代表官方 SDK 的全部设备文件都已加密，应限制缓存目录权限。
 
 | 状态 | 程序处理 |
 | --- | --- |
@@ -198,7 +202,7 @@ app.RunFeature("export", [&] { exportReport(); });
 | ENTITLEMENT_EXPIRED | 引导续费，不使用旧凭据绕过拒绝 |
 | ENTITLEMENT_SUSPENDED | 停止受保护功能，联系商家 |
 | 设备数量已满 | 引导管理或明确释放设备 |
-| 网络/HTTP 5xx | 仅可使用 SDK 已验证、仍在有效期内的离线授权 |
+| 网络/HTTP 5xx | Launch 的 Restore 失败时显示连接错误；应用单独接入官方 SDK 恢复契约后，仅由 SDK 决定已有签名许可是否仍可离线使用 |
 
 明确的 401/403/404、账号不符、取消或限流不能变成离线授权成功。首次激活和禁止离线的策略仍需联网。服务端域名/IP 无法访问时应显示连接问题，不能偷偷连接其它站点。
 

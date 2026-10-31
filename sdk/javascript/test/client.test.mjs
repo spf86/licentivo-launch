@@ -13,6 +13,22 @@ class Store extends MemoryStore{record;scope;failSaves=false;async save(scope,va
 async function fixture(t){const root=await mkdtemp(join(tmpdir(),'launch-identity-'));t.after(()=>rm(root,{recursive:true,force:true}));const store=new Store(),calls=[],runtimes=[];const token=randomUUID().replaceAll('-','')+'T'.repeat(11);let offline=false,pending=false;const transport=async request=>{calls.push(request);if(offline)throw new LaunchError('NETWORK_UNAVAILABLE');assert.equal(request.url.endsWith('/credential'),false);if(request.url.endsWith('/auth/login'))return reply({user,access_token:token,expires_at:new Date(Date.now()+3600000).toISOString()});if(request.url.endsWith('/me'))return reply({user});if(request.url.endsWith('/identity'))return reply(identity);return reply({});};const runtimeFactory=config=>{const runtime={config,released:0,closed:0,start:async()=>{},runFeature:async(f,a)=>{if(f!=='export')throw new LaunchError('SDK_DENIED');return a();},logout:async()=>{runtime.released++;await writeFile(config.cache_path+'.logout.json','SDK-owned journal');return {local_complete:true,revocation_pending:pending};},deactivate:async()=>{},close:async()=>{runtime.closed++;}};runtimes.push(runtime);return runtime;};const options={store,transport,runtimeFactory,cacheDir:root};const app=new Application(launch,product,options);t.after(()=>app.close());return {app,options,store,runtimes,calls,setOffline:value=>offline=value,setPending:value=>pending=value};}
 test('identity is ephemeral and feature permission comes from SDK',async t=>{const f=await fixture(t);await f.app.login('user','password');assert.equal(f.runtimes[0].config.license_key,'');assert.equal(f.runtimes[0].config.identity_token,identity.identity_token);assert.equal(JSON.stringify(f.store.record).includes(identity.identity_token),false);assert.equal(await f.app.runFeature('export',()=>42),42);await assert.rejects(f.app.runFeature('other',()=>assert.fail('bypassed')),{code:'SDK_DENIED'});});
 
+test('startup denial survives failing runtime shutdown and logout reconstruction',async t=>{
+ for(const code of ['LAUNCH_ENTITLEMENT_REQUIRED','DEVICE_LIMIT_REACHED'])for(const brokenClose of [false,true])for(const offlineLogout of [false,true]){
+  const f=await fixture(t),denied=new LaunchError(code,403);let closed=false;
+  const app=new Application(launch,product,{...f.options,runtimeFactory:config=>{
+   if(!config.identity_token)throw new Error('no device credential was issued');
+   return {start:async()=>{if(offlineLogout)f.setOffline(true);throw denied;},close:async()=>{closed=true;if(brokenClose)throw new Error('SDK shutdown failed');}};
+  }});
+  t.after(()=>app.close());
+  await assert.rejects(app.login('a','b'),error=>error===denied);
+  assert.equal(closed,true);
+  assert.ok(f.calls.some(r=>r.url.endsWith('/auth/logout')));
+  await assert.rejects(app.runFeature('export',()=>assert.fail('denied startup allowed business')),{code:'LOGIN_REQUIRED'});
+  if(offlineLogout){assert.equal(f.store.record.records[0].logout_pending,true);assert.equal(JSON.stringify(f.store.record).includes(identity.identity_token),false);}
+ }
+});
+
 test('account logout survives restart and cannot be restored as a login',async t=>{
   const f=await fixture(t);await f.app.login('a','b');f.setOffline(true);
   assert.equal(await f.app.logout(),false);assert.equal(f.store.record.logout_pending,true);
@@ -117,4 +133,20 @@ test('late old instance retains its retry without overwriting the new login',asy
   blockOld=false;await a.close();const c=new Application(launch,product,options);t.after(()=>c.close());const count=f.runtimes.length;
   assert.ok(await c.restore());assert.equal(f.runtimes.length,count+1);assert.equal((await f.store.load(scope)).token,newer);
   assert.equal(await f.store.load(scope+'\naccount-logout-queue-v1'),null);
+});
+
+test('application delegates metered tasks to the same runtime without an ordinary fallback',async t=>{
+ const f=await fixture(t);
+ await assert.rejects(f.app.runMeteredFeature('export',3,'job-1',()=>assert.fail('signed out')),{code:'LOGIN_REQUIRED'});
+ await f.app.login('alice','password');
+ await assert.rejects(f.app.runMeteredFeature('export',3,'job-1',()=>assert.fail('ordinary fallback')),{code:'METERING_UNSUPPORTED'});
+ const runtime=f.runtimes[0],calls=[];let completed=false;
+ runtime.runMeteredFeature=async(feature,quantity,id,action)=>{calls.push([feature,quantity,id]);if(completed)return;const result=await action();completed=true;return result;};
+ runtime.resolveMeteredFeature=async(...args)=>{calls.push(args)};
+ assert.equal(await f.app.runMeteredFeature('export',3,'job-1',()=>42),42);
+ assert.equal(await f.app.runMeteredFeature('export',3,'job-1',()=>assert.fail('replayed')),undefined);
+ await f.app.resolveMeteredFeature('job-1',true);
+ assert.deepEqual(calls,[['export',3,'job-1'],['export',3,'job-1'],['job-1',true]]);
+ completed=false;const error=new Error('business error');
+ await assert.rejects(f.app.runMeteredFeature('export',1,'job-2',()=>{throw error}),value=>value===error);
 });

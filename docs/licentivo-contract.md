@@ -2,10 +2,12 @@
 
 This guide describes the current Licentivo provider. Merchants using another licensing system can choose the [custom HTTP provider](external-licensing.md); that mode does not call Licentivo or require its API key.
 
+Pair Launch server `0.3.6-beta` with the account-exchange Launch package `0.1.8` and embedded official SDK `0.11.8` described by this source tree. Confirm the deployed Licentivo backend implements the endpoints below; a readable product catalog is not sufficient. See the [compatibility matrix](sdk-compatibility.md) for device-information schema requirements, release evidence and migration order.
+
 ## Administrator configuration
 
 1. Create products and policies in Licentivo.
-2. Configure a read/write management key in Launch's **System settings → Licentivo**. The Licentivo origin is fixed to `https://www.licentivo.com`.
+2. Configure an Owner-created management key with `write` scope in Launch's **System settings → Licentivo**. The Licentivo origin is fixed to `https://www.licentivo.com`; authentication remains `Authorization: Bearer lv_api_…`. A `read` key can query devices but cannot register connections, synchronize purchases or release devices. After rotating a key in Licentivo, save the replacement in Launch; leaving the field empty reuses the previously saved key.
 3. Choose the policy for each Launch sales-plan version. Launch reads the product, policy version and runtime display settings.
 4. Launch registers separate sandbox/live account-trust connections under its one Licentivo management connection, including its identity-signing public key and merchant origin.
 
@@ -42,5 +44,7 @@ Refunds and confirmed reversals remove the corresponding order's coverage. The n
 A Launch login, paid order or synchronized purchase is not runtime permission. The old `/credential` endpoint returns HTTP 410. Custom-provider delivery is a separate, owner-scoped API and does not restore that endpoint.
 
 Device listing, release quotas, binding generations and logout recovery remain Licentivo responsibilities. Session/account revocations use durable notifications with per-environment receipts; offline revocation remains bounded by already-issued SDK grants.
+
+The device API also returns recognizable display information: `device_name`, `device_alias`, `device_code`, `platform`, `os_version`, `cpu`, `memory_mb`, `gpu`, `system_type`, `storage_gb` and `app_version`. Launch forwards these fields to the customer's device page. The updated embedded SDK supplies the local computer name and available system details automatically. Older clients can omit these optional fields. Display names, hardware descriptions and short device codes do not replace the activation ID and expected binding generation used for release authorization.
 
 See [application integration](software-sdk-integration.md), [the purchase/account boundary](account-purchase-boundary.md), [manual integration](manual-integration.md) and [acceptance](acceptance.md). The implementation is in `internal/adapters/licentivo/launch_bridge.go`, `internal/app/launch_trust.go`, `internal/app/purchase_sync.go` and `internal/app/identity.go`.

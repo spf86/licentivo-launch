@@ -1,4 +1,4 @@
-//! Launch account lifecycle. All protected work is authorized by Licentivo 0.11.2.
+//! Launch account lifecycle. All protected work is authorized by Licentivo 0.11.8.
 //! Defaults to memory-only sessions; inject an OS-protected Store to remember login.
 mod store;
 mod account_lock;
@@ -19,7 +19,7 @@ pub use store::EncryptedFileStore;
 use time::{format_description::well_known::Rfc3339, OffsetDateTime};
 pub use transport::CurlTransport;
 
-pub const VERSION: &str = "0.1.4";
+pub const VERSION: &str = "0.1.8";
 #[derive(Debug, Clone)]
 pub struct Failure {
     pub code: String,
@@ -123,6 +123,13 @@ pub trait Runtime {
         feature: &str,
         action: &mut dyn FnMut() -> Result<(), Failure>,
     ) -> Result<(), Failure>;
+    /// Returns true when business ran, false for an already completed task.
+    fn run_metered_feature(&mut self, _feature: &str, _quantity: i64, _operation_id: &str, _action: &mut dyn FnMut() -> Result<(), Failure>) -> Result<bool, Failure> {
+        Err(Failure::new("METERING_UNSUPPORTED"))
+    }
+    fn resolve_metered_feature(&mut self, _operation_id: &str, _succeeded: bool) -> Result<(), Failure> {
+        Err(Failure::new("METERING_UNSUPPORTED"))
+    }
     fn release_device(&mut self) -> Result<(), Failure>;
     fn close(&mut self);
 }
@@ -132,6 +139,8 @@ pub trait RuntimeFactory {
     fn for_logout(&mut self, settings: &Value) -> Result<Box<dyn Runtime>, Failure> { self.open(settings, false) }
 }
 pub struct OfficialRuntimeFactory;
+/// Completed replays have no callback result because business is not repeated.
+pub enum MeteredExecution<T> { Executed(T), AlreadyCompleted }
 struct OfficialRuntime {
     sdk: Option<licentivo::Client>,
 }
@@ -142,6 +151,20 @@ impl RuntimeFactory for OfficialRuntimeFactory {
  fn for_logout(&mut self,settings:&Value)->Result<Box<dyn Runtime>,Failure>{let sdk=licentivo::Client::init_config(&settings.to_string()).map_err(Failure::from)?;Ok(Box::new(OfficialRuntime{sdk:Some(sdk)}))}
 }
 impl Runtime for OfficialRuntime {
+    fn run_metered_feature(&mut self, feature: &str, quantity: i64, operation_id: &str, action: &mut dyn FnMut() -> Result<(), Failure>) -> Result<bool, Failure> {
+        let mut business_error = None;
+        let result = self.sdk.as_mut().ok_or_else(|| Failure::new("NOT_STARTED"))?
+            .run_metered_feature(feature, quantity, operation_id, || match action() {
+                Ok(()) => Ok(()),
+                Err(error) => { business_error = Some(error); Err(licentivo::Error::business("Business action failed")) }
+            });
+        if let Some(error) = business_error { return Err(error); }
+        result.map(|outcome| matches!(outcome, licentivo::Execution::Executed(_))).map_err(Failure::from)
+    }
+    fn resolve_metered_feature(&mut self, operation_id: &str, succeeded: bool) -> Result<(), Failure> {
+        self.sdk.as_mut().ok_or_else(|| Failure::new("NOT_STARTED"))?.resolve_metered_feature(operation_id, succeeded).map_err(Failure::from)
+    }
+
     fn run_feature(
         &mut self,
         feature: &str,
@@ -535,6 +558,24 @@ impl Application {
             Ok(())
         })?;
         output.ok_or_else(|| Failure::new("FEATURE_DENIED"))
+    }
+    /// Retries use the same operation ID. Replays return AlreadyCompleted.
+    pub fn run_metered_feature<T, F: FnOnce() -> Result<T, Failure>>(&mut self, feature: &str, quantity: i64, operation_id: &str, action: F) -> Result<MeteredExecution<T>, Failure> {
+        let runtime = self.runtime.as_mut().ok_or_else(|| Failure::new("NOT_STARTED"))?;
+        let mut action = Some(action);
+        let mut output = None;
+        let executed = runtime.run_metered_feature(feature, quantity, operation_id, &mut || {
+            output = Some(action.take().ok_or_else(|| Failure::new("CALLBACK_REPEATED"))?()?);
+            Ok(())
+        })?;
+        match (executed, output) {
+            (true, Some(value)) => Ok(MeteredExecution::Executed(value)),
+            (false, None) => Ok(MeteredExecution::AlreadyCompleted),
+            _ => Err(Failure::new("INVALID_RUNTIME_RESPONSE"))
+        }
+    }
+    pub fn resolve_metered_feature(&mut self, operation_id: &str, succeeded: bool) -> Result<(), Failure> {
+        self.runtime.as_mut().ok_or_else(|| Failure::new("NOT_STARTED"))?.resolve_metered_feature(operation_id, succeeded)
     }
     pub fn release_device(&mut self)->Result<(),Failure>{self.logout()}
     pub fn logout(&mut self)->Result<(),Failure>{

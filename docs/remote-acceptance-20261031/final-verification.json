@@ -1,0 +1,38 @@
+{
+  "/healthz": {
+    "status": 200,
+    "data": {
+      "status": "ok"
+    }
+  },
+  "/readyz": {
+    "status": 200,
+    "data": {
+      "status": "ready"
+    }
+  },
+  "successful_purchase_sync_tasks": 10,
+  "orders": 6,
+  "successful_refunds": 3,
+  "unresolved_software_status": {
+    "status": 200,
+    "data": {
+      "product_id": "2d779e4e-80f9-445b-b850-3c125dd61f58",
+      "environment": "sandbox",
+      "status": "pending",
+      "code": "ENTITLEMENT_PENDING",
+      "message": "软件凭证正在恢复，请稍后重试；持续未完成时请联系商家",
+      "next_action": "retry",
+      "account_url": "http://192.168.2.177:18080/#/account",
+      "valid_from": "2026-10-31T13:28:51.377337Z",
+      "valid_until": "2026-11-30T13:28:51.377337Z",
+      "synchronized": true,
+      "retry_after_seconds": 3,
+      "max_retry_attempts": 5
+    },
+    "request_id": "69630ad15681bb695849573d8ee42f7d"
+  },
+  "payment_providers_at_handover": [],
+  "report_links": "passed",
+  "secret_scan": "passed"
+}

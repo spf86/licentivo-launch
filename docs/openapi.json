@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Licentivo Launch Integration API",
-    "version": "0.3.2-beta",
-    "description": "System, account, desktop licensing, integration wizard and basic purchase APIs. This is not the full staff administration/payment-webhook API. Runtime access must still pass the official Licentivo SDK. Email verification is required only when enabled by the merchant. Custom licensing connections and customer delivery are also documented. External receiver endpoints are specified separately in external-licensing-openapi.json.",
+    "version": "0.3.6-beta",
+    "description": "System, account, desktop identity exchange, integration wizard and basic purchase APIs. This is not the full staff administration/payment-webhook API. The Licentivo account flow returns an identity assertion valid for at most 120 seconds; the embedded official SDK exchanges it with Licentivo and checks every protected operation. The removed /credential endpoint returns HTTP 410, never a license key. See sdk-compatibility.md for the Launch 0.3.6-beta / Launch SDK 0.1.8 / official SDK 0.11.8 source baseline and backend requirements. Email verification is required only when enabled by the merchant. Custom licensing connections and customer delivery are also documented. External receiver endpoints are specified separately in external-licensing-openapi.json.",
     "license": {
       "name": "MIT",
       "identifier": "MIT"
@@ -1114,7 +1114,7 @@
             "desktopBearer": []
           }
         ],
-        "description": "Browser sessions cannot retrieve license keys. No client-selected user ID is accepted. 403 ENTITLEMENT_PENDING includes Retry-After: 3; retries must be bounded. EXPIRED/SUSPENDED require user action. 404 ENTITLEMENT_NOT_PURCHASED means no owned entitlement.",
+        "description": "Removed compatibility endpoint. A valid request returns HTTP 410 with LICENSE_CREDENTIAL_REMOVED and no license key. Upgrade to the matching account-exchange wrapper, which uses /api/v1/software/products/{id}/identity and the official SDK's Licentivo exchange. Do not retry this endpoint as pending authorization or fall back to an old license key.",
         "requestBody": {
           "required": true,
           "content": {
@@ -2036,6 +2036,7 @@
       "post": {
         "operationId": "exchangeAccountIdentity",
         "summary": "Get a short-lived account identity assertion for the official SDK",
+        "description": "Requires a current desktop account session. Returns identity context scoped to issuer, audience, login session, product, environment and purchase context, valid for at most 120 seconds and bounded by session expiry. Pass the assertion only in memory to the official SDK for POST /api/v1/launch/exchange on Licentivo; never persist it in remembered account records. Successful identity acquisition is not proof of purchase or runtime permission; the SDK must guard every protected operation.",
         "security": [
           {
             "desktopBearer": []
@@ -3961,37 +3962,6 @@
           "user",
           "kind",
           "expires_at"
-        ]
-      },
-      "Credential": {
-        "type": "object",
-        "properties": {
-          "product_id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "license_key": {
-            "type": "string",
-            "x-sensitive": true,
-            "description": "For the official SDK only; never authorize access by inspecting this value."
-          },
-          "valid_until": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "date-time"
-          },
-          "version": {
-            "type": "integer",
-            "minimum": 1
-          }
-        },
-        "required": [
-          "product_id",
-          "license_key",
-          "valid_until",
-          "version"
         ]
       },
       "EntitlementStatus": {

@@ -1,4 +1,7 @@
 #define _POSIX_C_SOURCE 200809L
+#ifdef __APPLE__
+#define _DARWIN_C_SOURCE 1
+#endif
 #ifdef _WIN32
 #ifndef _WIN32_WINNT
 #define _WIN32_WINNT 0x0600
@@ -48,7 +51,17 @@ static int state_windows_stat(const char*path,struct stat*info){
  if(!ok){errno=error==ERROR_FILE_NOT_FOUND||error==ERROR_PATH_NOT_FOUND?ENOENT:EACCES;return -1;}
  memset(info,0,sizeof(*info));info->st_size=data.nFileSizeHigh||data.nFileSizeLow>2147483647?2147483647:(long)data.nFileSizeLow;return 0;
 }
-static int state_windows_move(const char*from,const char*to){wchar_t*a=state_windows_path(from),*b=state_windows_path(to);int ok=a&&b&&MoveFileExW(a,b,MOVEFILE_REPLACE_EXISTING|MOVEFILE_WRITE_THROUGH);free(a);free(b);return ok;}
+static int state_windows_move(const char*from,const char*to){
+ wchar_t*a=state_windows_path(from),*b=state_windows_path(to);int ok=0;
+ if(a&&b)for(unsigned attempt=0;attempt<8;attempt++){
+  if(MoveFileExW(a,b,MOVEFILE_REPLACE_EXISTING|MOVEFILE_WRITE_THROUGH)){ok=1;break;}
+  DWORD error=GetLastError();
+  /* Readers and file scanners can briefly hold either journal file open. */
+  if((error!=ERROR_SHARING_VIOLATION&&error!=ERROR_LOCK_VIOLATION&&error!=ERROR_ACCESS_DENIED)||attempt==7)break;
+  Sleep(10*(attempt+1));
+ }
+ free(a);free(b);return ok;
+}
 #define fopen(path,mode) state_windows_open(path,mode)
 #define remove(path) state_windows_remove(path)
 #define stat(path,info) state_windows_stat(path,info)
@@ -153,7 +166,7 @@ static int advanced_claims(const cJSON*c){
  if(get(x,"app_version")&&!app_version(text(x,"app_version")))return 0;
  if(!num(c,"issued_at",&issued)||!num(c,"expires_at",&expires))return 0;
  const cJSON*policy=get(c,"runtime_policy");int64_t heartbeat=0;if(!strcmp(model,"floating")&&(!uuid(text(x,"session_id"))||session<=issued||expires>session||!num(policy,"heartbeat_seconds",&heartbeat)||heartbeat==0||!strcmp(text(policy,"offline_mode")?text(policy,"offline_mode"):"","permanent")))return 0;
- if(get(x,"launch_connection_id")||get(x,"environment")||get(x,"binding_version")){int64_t binding=0,h=0,o=0;const char*env=text(x,"environment"),*mode=text(policy,"offline_mode");if(!uuid(text(x,"launch_connection_id"))||!env||(strcmp(env,"live")&&strcmp(env,"sandbox"))||!num(x,"binding_version",&binding)||binding<1||strcmp(model,"node_locked")||!uuid(text(x,"session_id"))||session<=issued||expires>session||!num(policy,"heartbeat_seconds",&h)||h<600||!mode||!strcmp(mode,"permanent")||!num(policy,"offline_seconds",&o)||o>86400)return 0;}
+ if(get(x,"launch_connection_id")||get(x,"environment")||get(x,"binding_version")){int64_t binding=0,h=0,o=0;const char*env=text(x,"environment"),*mode=text(policy,"offline_mode");if(!uuid(text(x,"launch_connection_id"))||!env||(strcmp(env,"live")&&strcmp(env,"sandbox"))||!num(x,"binding_version",&binding)||binding<1||!uuid(text(x,"session_id"))||session<=issued||expires>session||!num(policy,"heartbeat_seconds",&h)||h<600||!mode||!strcmp(mode,"permanent")||!num(policy,"offline_seconds",&o)||o>86400)return 0;}
  if(released>issued||(maintenance>0&&(!text(x,"app_version")||released==0||released>maintenance)))return 0;
  return 1;
 }
@@ -176,6 +189,24 @@ static int hash(const char*s,char out[65]){unsigned char raw[32]={0};int ok=0;
  out[64]=0;
  return 1;
 }
+#if defined(__APPLE__) || defined(LICENTIVO_TEST_PLATFORM_LINES)
+/* A host runtime can interrupt pipe reads with a signal. Preserve the partial
+ * line while retrying EINTR so an interrupted ioreg read cannot change the
+ * device identity or make an otherwise valid configuration fail. */
+static char*platform_read_line(FILE*stream,char*line,size_t capacity){
+ if(capacity<2)return NULL;
+ size_t used=0;
+ while(used+1<capacity){
+  errno=0;int ch=fgetc(stream);
+  if(ch==EOF){
+   if(ferror(stream)){if(errno==EINTR){clearerr(stream);continue;}return NULL;}
+   break;
+  }
+  line[used++]=(char)ch;if(ch=='\n')break;
+ }
+ line[used]=0;return used?line:NULL;
+}
+#endif
 /* OS identity is read locally; app folders and cache files cannot provide it. */
 static int system_device_id(const char*product,char out[65]){
  if(!uuid(product))return 0;
@@ -187,7 +218,7 @@ static int system_device_id(const char*product,char out[65]){
  if(result!=ERROR_SUCCESS||type!=REG_SZ||size>=sizeof(identity))return 0;
 #elif defined(__APPLE__)
  FILE*f=popen("/usr/sbin/ioreg -rd1 -c IOPlatformExpertDevice","r");if(!f)return 0;char line[2048];
- while(fgets(line,sizeof(line),f)){char*p=strstr(line,"\"IOPlatformUUID\"");if(!p)continue;p=strchr(p,'=');if(!p)continue;p=strchr(p,'"');if(!p)continue;p++;char*end=strchr(p,'"');if(end&&end-p<127){memcpy(identity,p,(size_t)(end-p));break;}}
+ while(platform_read_line(f,line,sizeof(line))){char*p=strstr(line,"\"IOPlatformUUID\"");if(!p)continue;p=strchr(p,'=');if(!p)continue;p=strchr(p,'"');if(!p)continue;p++;char*end=strchr(p,'"');if(end&&end-p<127){memcpy(identity,p,(size_t)(end-p));break;}}
  pclose(f);
 #else
  const char*paths[]={"/etc/machine-id","/var/lib/dbus/machine-id"};for(int i=0;i<2;i++){FILE*f=fopen(paths[i],"rb");if(!f)continue;size_t n=fread(identity,1,127,f);fclose(f);identity[n]=0;if(n)break;}
@@ -214,7 +245,7 @@ static cJSON*machine_profile(const char*product,char dev[65]){
  char command[]="powershell.exe -NoProfile -NonInteractive -Command \"(Get-CimInstance Win32_ComputerSystemProduct).UUID; $v=Get-CimInstance Win32_ComputerSystem; $v.Manufacturer; $v.Model\"";
  if(CreateProcessA(NULL,command,NULL,NULL,TRUE,CREATE_NO_WINDOW,NULL,NULL,&startup,&process)){CloseHandle(writer);writer=NULL;if(WaitForSingleObject(process.hProcess,5000)==WAIT_TIMEOUT)TerminateProcess(process.hProcess,1);DWORD n=0;ReadFile(reader,description,sizeof(description)-1,&n,NULL);description[n]=0;CloseHandle(process.hProcess);CloseHandle(process.hThread);const char*end=strchr(description,'\n');size_t len=end?(size_t)(end-description):strlen(description);if(len<sizeof(hardware))memcpy(hardware,description,len);}if(writer)CloseHandle(writer);CloseHandle(reader);}
 #elif defined(__APPLE__)
- platform="darwin";FILE*f=popen("/usr/sbin/ioreg -rd1 -c IOPlatformExpertDevice","r");if(f){char line[2048];while(fgets(line,sizeof(line),f)){if(strstr(line,"VMware")||strstr(line,"Parallels"))strcpy(description,"virtual machine");char*p=strstr(line,"\"IOPlatformUUID\"");if(!p)continue;p=strchr(p,'=');if(!p)continue;p=strchr(p,'"');if(!p)continue;p++;char*end=strchr(p,'"');if(end&&end-p<127)memcpy(hardware,p,(size_t)(end-p));}pclose(f);}
+ platform="darwin";FILE*f=popen("/usr/sbin/ioreg -rd1 -c IOPlatformExpertDevice","r");if(f){char line[2048];while(platform_read_line(f,line,sizeof(line))){if(strstr(line,"VMware")||strstr(line,"Parallels"))strcpy(description,"virtual machine");char*p=strstr(line,"\"IOPlatformUUID\"");if(!p)continue;p=strchr(p,'=');if(!p)continue;p=strchr(p,'"');if(!p)continue;p++;char*end=strchr(p,'"');if(end&&end-p<127)memcpy(hardware,p,(size_t)(end-p));}pclose(f);}
 #else
  platform="linux";FILE*f=fopen("/sys/class/dmi/id/product_uuid","rb");if(f){size_t n=fread(hardware,1,sizeof(hardware)-1,f);hardware[n]=0;fclose(f);}const char*paths[]={"/sys/class/dmi/id/sys_vendor","/sys/class/dmi/id/product_name","/.dockerenv"};for(int i=0;i<3;i++){f=fopen(paths[i],"rb");if(f){if(i==2)strcat(description," virtual machine");else{size_t used=strlen(description),n=fread(description+used,1,512,f);description[used+n]=0;strcat(description," ");}fclose(f);}}
 #endif
@@ -271,7 +302,7 @@ static void view_unlock(ln_client*c){
 static void publish(ln_client*c,int online){view_lock(c);cJSON_Delete(c->view);c->view=cJSON_Duplicate(c->cached,1);c->view_wall=c->wall;c->view_tick=c->tick;c->view_online=online;snprintf(c->view_error.code,sizeof(c->view_error.code),"%s",c->error);snprintf(c->view_error.request_id,sizeof(c->view_error.request_id),"%s",c->request_id);c->view_error.http_status=(int)c->http_status;c->view_error.retryable=c->retryable;c->view_error.retry_after_seconds=c->retry_after;view_unlock(c);}
 static cJSON*local_claims(ln_client*c){if(is_denied(c))return NULL;view_lock(c);cJSON*envelope=cJSON_Duplicate(c->view,1);int64_t wall=c->view_wall;double tick=c->view_tick;view_unlock(c);int valid=envelope&&client_context(c,envelope)&&(!wall||time(NULL)>=wall+monotonic()-tick-300)&&ln_verify(envelope,get(c->cfg,"trusted_keys"),text(c->cfg,"product_id"),text(c->cfg,"device_id"),time(NULL));cJSON*claims=valid?claims_from(envelope):NULL;cJSON_Delete(envelope);return claims;}
 int ln_get_error_info(ln_client*c,ln_error_info*out){if(!c||!out)return 0;view_lock(c);*out=c->view_error;view_unlock(c);return 1;}
-char*ln_status(ln_client*c){if(!c)return NULL;cJSON*claims=local_claims(c),*status=cJSON_CreateObject();view_lock(c);ln_error_info e=c->view_error;int online=c->view_online;view_unlock(c);const char*state=claims?(online?"active":"offline_valid"):"verification_required";if(!strcmp(e.code,"LICENSE_EXPIRED"))state="expired";if(!strcmp(e.code,"LICENSE_REVOKED")||!strcmp(e.code,"LICENSE_SUSPENDED"))state="revoked";if(!strcmp(e.code,"DEVICE_RELEASED")||!strcmp(e.code,"DEVICE_CREDENTIAL_REVOKED"))state="released";if(!strcmp(e.code,"FEATURE_QUOTA_EXCEEDED"))state="quota_exhausted";int64_t expires=0;num(claims,"expires_at",&expires);cJSON_AddStringToObject(status,"state",state);cJSON_AddBoolToObject(status,"allowed",claims!=NULL);cJSON_AddStringToObject(status,"code",e.code);cJSON_AddStringToObject(status,"request_id",e.request_id);cJSON_AddBoolToObject(status,"retryable",e.retryable);cJSON_AddNumberToObject(status,"lease_valid_until",(double)expires);char*out=cJSON_PrintUnformatted(status);cJSON_Delete(status);cJSON_Delete(claims);return out;}
+char*ln_status(ln_client*c){if(!c)return NULL;cJSON*claims=local_claims(c),*status=cJSON_CreateObject();view_lock(c);ln_error_info e=c->view_error;int online=c->view_online;view_unlock(c);const char*state=claims?(online?"active":"offline_valid"):"verification_required";if(!strcmp(e.code,"LICENSE_EXPIRED"))state="expired";if(!strcmp(e.code,"LICENSE_REVOKED")||!strcmp(e.code,"LICENSE_SUSPENDED"))state="revoked";if(!strcmp(e.code,"DEVICE_RELEASED")||!strcmp(e.code,"DEVICE_CREDENTIAL_REVOKED"))state="released";if(!strcmp(e.code,"FEATURE_QUOTA_EXCEEDED"))state="quota_exhausted";int64_t expires=0;num(claims,"expires_at",&expires);cJSON_AddStringToObject(status,"state",state);cJSON_AddBoolToObject(status,"allowed",claims!=NULL);cJSON_AddStringToObject(status,"code",e.code);cJSON_AddStringToObject(status,"request_id",e.request_id);cJSON_AddBoolToObject(status,"retryable",e.retryable);cJSON_AddNumberToObject(status,"lease_valid_until",(double)expires);cJSON*info=cJSON_CreateObject();const char*id=text(c->cfg,"device_id");char code[10];snprintf(code,sizeof(code),"%.4s-%.4s",id,id+60);for(char*p=code;*p;p++)*p=(char)toupper((unsigned char)*p);cJSON_AddStringToObject(info,"name",text(c->cfg,"device_name"));cJSON_AddStringToObject(info,"code",code);cJSON_AddStringToObject(info,"platform",text(get(c->cfg,"device_profile"),"platform"));const cJSON*display=get(c->cfg,"device_info");for(const cJSON*field=display?display->child:NULL;field;field=field->next)cJSON_AddItemToObject(info,field->string,cJSON_Duplicate(field,1));cJSON_AddItemToObject(status,"device",info);char*out=cJSON_PrintUnformatted(status);cJSON_Delete(status);cJSON_Delete(claims);return out;}
 char*ln_feature_status(ln_client*c,const char*feature){
  if(!c||!feature)return NULL;
  char*raw=ln_status(c);cJSON*status=raw?ln_json(raw):NULL;ln_free_string(raw);
@@ -286,6 +317,27 @@ char*ln_feature_status(ln_client*c,const char*feature){
 }
 void ln_on_status_changed(ln_client*c,ln_status_callback callback,void*data){if(!c)return;view_lock(c);c->callback=callback;c->callback_data=data;view_unlock(c);}
 static void notify(ln_client*c){view_lock(c);ln_status_callback callback=c->callback;void*data=c->callback_data;view_unlock(c);if(callback){char*status=ln_status(c);if(status){callback(status,data);free(status);}}}
+static void default_device_name(cJSON*cfg){
+ const char*given=text(cfg,"device_name");if(given){const unsigned char*p=(const unsigned char*)given;while(*p&&isspace(*p))p++;if(*p)return;}
+ char name[1024]={0};
+#ifdef _WIN32
+ wchar_t wide[256];DWORD size=256;if(GetComputerNameExW(ComputerNameDnsHostname,wide,&size))WideCharToMultiByte(CP_UTF8,0,wide,-1,name,sizeof(name),NULL,NULL);
+#else
+ if(gethostname(name,sizeof(name)-1)!=0)name[0]=0;
+#endif
+ char clean[512];size_t used=0,count=0;
+ for(size_t i=0;name[i]&&count<120;){
+  unsigned char ch=(unsigned char)name[i];size_t n=ch<0x80?1:ch>=0xc2&&ch<=0xdf?2:ch>=0xe0&&ch<=0xef?3:ch>=0xf0&&ch<=0xf4?4:0;
+  int valid=n>0;for(size_t k=1;k<n;k++)if(!name[i+k]||((unsigned char)name[i+k]&0xc0)!=0x80)valid=0;
+  if(!valid){used=0;break;}
+  if((n==3&&((ch==0xe0&&(unsigned char)name[i+1]<0xa0)||(ch==0xed&&(unsigned char)name[i+1]>=0xa0)))||(n==4&&((ch==0xf0&&(unsigned char)name[i+1]<0x90)||(ch==0xf4&&(unsigned char)name[i+1]>=0x90)))){used=0;break;}
+  if(!(n==1&&(ch<32||ch==127))&&!(n==2&&ch==0xc2&&(unsigned char)name[i+1]<0xa0)){memcpy(clean+used,name+i,n);used+=n;count++;}i+=n;
+ }
+ clean[used]=0;
+ if(!used){const char*os=text(get(cfg,"device_profile"),"platform");snprintf(clean,sizeof(clean),"%s",!strcmp(os,"windows")?"Windows":!strcmp(os,"darwin")?"macOS":"Linux");}
+ cJSON_DeleteItemFromObjectCaseSensitive(cfg,"device_name");cJSON_AddStringToObject(cfg,"device_name",clean);
+}
+#include "device_display.h"
 ln_client*ln_init(const char*config){if(!ensure_curl())return NULL;cJSON*cfg=ln_json(config);if(!cfg)return NULL;if(!text(cfg,"license_key"))cJSON_AddStringToObject(cfg,"license_key","");const char*base=text(cfg,"base_url");if(!base||!base[0]){cJSON_DeleteItemFromObjectCaseSensitive(cfg,"base_url");cJSON_AddStringToObject(cfg,"base_url","https://www.licentivo.com");base=text(cfg,"base_url");}if(base&&strlen(base)>0&&base[strlen(base)-1]=='/'){char*copy=malloc(strlen(base));if(!copy){cJSON_Delete(cfg);return NULL;}memcpy(copy,base,strlen(base)-1);copy[strlen(base)-1]=0;cJSON_ReplaceItemInObjectCaseSensitive(cfg,"base_url",cJSON_CreateString(copy));free(copy);}const char*cache=text(cfg,"cache_path");if(!cache||!cache[0]){char scope[65],context[512],path[2048];snprintf(context,sizeof(context),"%s\n%s",text(cfg,"base_url")?text(cfg,"base_url"):"",text(cfg,"product_id")?text(cfg,"product_id"):"");if(!hash(context,scope)){cJSON_Delete(cfg);return NULL;}
 #ifdef _WIN32
  const char*root=getenv("LOCALAPPDATA");
@@ -293,13 +345,13 @@ ln_client*ln_init(const char*config){if(!ensure_curl())return NULL;cJSON*cfg=ln_
  const char*root=getenv("XDG_CACHE_HOME");
 #endif
  if(!root||!root[0]){root=getenv("HOME");}
- if(!root||!root[0]){cJSON_Delete(cfg);return NULL;}snprintf(path,sizeof(path),"%s/Licentivo/%s/lease.json",root,scope);cJSON_DeleteItemFromObjectCaseSensitive(cfg,"cache_path");cJSON_AddStringToObject(cfg,"cache_path",path);}int64_t timeout=10;if(get(cfg,"timeout_seconds")&&(!num(cfg,"timeout_seconds",&timeout)||timeout<1||timeout>120)){cJSON_Delete(cfg);return NULL;}char dev[65];cJSON*profile=machine_profile(text(cfg,"product_id"),dev);if(!profile){cJSON_Delete(cfg);return NULL;}cJSON_DeleteItemFromObjectCaseSensitive(cfg,"device_profile");cJSON_AddItemToObject(cfg,"device_profile",profile);cJSON_DeleteItemFromObjectCaseSensitive(cfg,"device_id");cJSON_AddStringToObject(cfg,"device_id",dev);const char*secret=text(cfg,"license_key");const cJSON*keys=get(cfg,"trusted_keys");int valid=origin(cfg)&&device(text(cfg,"device_id"))&&uuid(text(cfg,"product_id"))&&secret&&(!secret[0]||(strlen(secret)==50&&(!strncmp(secret,"lv_lic_",7)||!strncmp(secret,"lv_tmp_",7))))&&cJSON_IsObject(keys)&&keys->child;for(const cJSON*k=keys?keys->child:NULL;k;k=k->next){unsigned char raw[32];if(!cJSON_IsString(k)||b64(k->valuestring,raw,32)!=32)valid=0;}if(!valid){cJSON_Delete(cfg);return NULL;}ln_client*c=calloc(1,sizeof(*c));if(!c){cJSON_Delete(cfg);return NULL;}if(!request_uuid(c->session)){cJSON_Delete(cfg);free(c);return NULL;}c->cfg=cfg;c->interval=3600;c->tick=monotonic();
+ if(!root||!root[0]){cJSON_Delete(cfg);return NULL;}snprintf(path,sizeof(path),"%s/Licentivo/%s/lease.json",root,scope);cJSON_DeleteItemFromObjectCaseSensitive(cfg,"cache_path");cJSON_AddStringToObject(cfg,"cache_path",path);}int64_t timeout=10;if(get(cfg,"timeout_seconds")&&(!num(cfg,"timeout_seconds",&timeout)||timeout<1||timeout>120)){cJSON_Delete(cfg);return NULL;}char dev[65];cJSON*profile=machine_profile(text(cfg,"product_id"),dev);if(!profile){cJSON_Delete(cfg);return NULL;}cJSON_DeleteItemFromObjectCaseSensitive(cfg,"device_profile");cJSON_AddItemToObject(cfg,"device_profile",profile);cJSON_DeleteItemFromObjectCaseSensitive(cfg,"device_id");cJSON_AddStringToObject(cfg,"device_id",dev);default_device_name(cfg);collect_display_details(cfg);const char*secret=text(cfg,"license_key");const cJSON*keys=get(cfg,"trusted_keys");int valid=origin(cfg)&&device(text(cfg,"device_id"))&&uuid(text(cfg,"product_id"))&&secret&&(!secret[0]||(strlen(secret)==50&&(!strncmp(secret,"lv_lic_",7)||!strncmp(secret,"lv_tmp_",7))))&&cJSON_IsObject(keys)&&keys->child;for(const cJSON*k=keys?keys->child:NULL;k;k=k->next){unsigned char raw[32];if(!cJSON_IsString(k)||b64(k->valuestring,raw,32)!=32)valid=0;}if(!valid){cJSON_Delete(cfg);return NULL;}ln_client*c=calloc(1,sizeof(*c));if(!c){cJSON_Delete(cfg);return NULL;}if(!request_uuid(c->session)){cJSON_Delete(cfg);free(c);return NULL;}c->cfg=cfg;c->interval=3600;c->tick=monotonic();
 #ifdef _WIN32
  InitializeCriticalSection(&c->mutex);InitializeCriticalSection(&c->view_mutex);
 #else
  pthread_mutex_init(&c->mutex,NULL);pthread_mutex_init(&c->view_mutex,NULL);atomic_init(&c->stop,0);atomic_init(&c->denied,0);
 #endif
- load_credential(c);load_logout_state(c);if(!source_input(c)[0]&&!c->auth&&!is_denied(c)){ln_destroy(c);return NULL;}const char*path=text(cfg,"cache_path");char*b=!is_denied(c)&&path&&path[0]?readfile(path,LIMIT):NULL;if(b){cJSON*s=ln_json(b);int64_t version,observed;char h[65];int hash_ok=source_hash(c,h);if(hash_ok&&s&&num(s,"version",&version)&&version==1&&text(s,"license_hash")&&!strcmp(text(s,"license_hash"),h)&&num(s,"observed_at",&observed)&&time(NULL)+300>=observed&&ln_verify(get(s,"lease"),keys,text(cfg,"product_id"),text(cfg,"device_id"),time(NULL))){int interval=3600,mode=envelope_policy(get(s,"lease"),&interval);if(mode!=1&&client_context(c,get(s,"lease"))){c->cached=cJSON_Duplicate(get(s,"lease"),1);c->wall=observed;c->interval=interval;c->offline=mode;}}cJSON_Delete(s);free(b);}publish(c,0);if(has_pending_logouts(c))ln_start_heartbeat(c);return c;}
+ load_credential(c);load_logout_state(c);if(!source_input(c)[0]&&!c->auth&&!is_denied(c)){ln_destroy(c);return NULL;}const char*path=text(cfg,"cache_path");char*b=!is_denied(c)&&!cJSON_IsTrue(get(c->logout_state,"signed_out"))&&path&&path[0]?readfile(path,LIMIT):NULL;if(b){cJSON*s=ln_json(b);int64_t version,observed;char h[65];int hash_ok=source_hash(c,h);if(hash_ok&&s&&num(s,"version",&version)&&version==1&&text(s,"license_hash")&&!strcmp(text(s,"license_hash"),h)&&num(s,"observed_at",&observed)&&time(NULL)+300>=observed&&ln_verify(get(s,"lease"),keys,text(cfg,"product_id"),text(cfg,"device_id"),time(NULL))){int interval=3600,mode=envelope_policy(get(s,"lease"),&interval);if(mode!=1&&client_context(c,get(s,"lease"))){c->cached=cJSON_Duplicate(get(s,"lease"),1);c->wall=observed;c->interval=interval;c->offline=mode;}}cJSON_Delete(s);free(b);}publish(c,0);if(has_pending_logouts(c))ln_start_heartbeat(c);return c;}
 ln_client*ln_init_file(const char*p){char*b=readfile(p,LIMIT);if(!b)return NULL;ln_client*c=ln_init(b);free(b);return c;}
 ln_client*ln_init_product(const char*product_id,const char*trusted_keys_json,const char*license_key){
     if(!product_id||!trusted_keys_json||!license_key)return NULL;
@@ -367,7 +419,7 @@ static int prepare_credential(ln_client*c){
 static int accept_credential(ln_client*c,const cJSON*result){
  if(logout_binding_blocked(c,result))return 0;
  if(cJSON_IsTrue(get(c->logout_state,"signed_out"))){cJSON_ReplaceItemInObjectCaseSensitive(c->logout_state,"signed_out",cJSON_CreateBool(0));if(!save_logout_state(c))return 0;}
- if(get(result,"logout_ticket")){if(!prepare_credential(c))return 0;cJSON_DeleteItemFromObjectCaseSensitive(c->auth,"logout_ticket");cJSON_AddItemToObject(c->auth,"logout_ticket",cJSON_Duplicate(get(result,"logout_ticket"),1));c->auth_dirty=1;if(!save_credential(c))return 0;}if(!temporary(c)||(text(c->auth,"device_key")&&text(c->auth,"device_key")[0]))return 1;
+ if(get(result,"logout_ticket")){if(!prepare_credential(c))return 0;cJSON_DeleteItemFromObjectCaseSensitive(c->auth,"logout_ticket");cJSON_AddItemToObject(c->auth,"logout_ticket",cJSON_Duplicate(get(result,"logout_ticket"),1));c->auth_dirty=1;if(!save_credential(c))return 0;}if(!temporary(c)||(text(c->auth,"device_key")&&text(c->auth,"device_key")[0]&&(!text(result,"device_key")||!text(result,"device_key")[0])))return 1;
  const char*k=text(result,"device_key");if(!credential_secret(k,"lv_dev_")){if(strncmp(text(c->cfg,"license_key"),"lv_tmp_",7)&&!(text(c->cfg,"identity_token")&&text(c->cfg,"identity_token")[0]))return 1;strcpy(c->error,"DEVICE_CREDENTIAL_MISSING");return 0;}if(!prepare_credential(c))return 0;cJSON_ReplaceItemInObjectCaseSensitive(c->auth,"device_key",cJSON_CreateString(k));c->auth_dirty=1;return save_credential(c);
 }
 struct buffer{char data[LIMIT+1];size_t size;int oversized;};
@@ -380,9 +432,10 @@ static void sleepms(int ms){
 #endif
 }
 static size_t receive_header(char*data,size_t size,size_t n,void*arg){size_t length=size*n;ln_client*c=arg;if(length>12&&!strncmp(data,"Retry-After:",12)){char value[32];size_t count=length-12;if(count>31)count=31;memcpy(value,data+12,count);value[count]=0;long seconds=strtol(value,NULL,10);if(seconds>0)c->retry_after=seconds>86400?86400:(int)seconds;}return length;}
-static cJSON*request_extra(ln_client*c,const char*op,const char*activation,int*transient,const char*operation_id,const cJSON*extra){*transient=0;c->error[0]=0;c->request_id[0]=0;c->retryable=0;c->http_status=0;c->retry_after=0;if(!prepare_credential(c))return NULL;if(!strcmp(op,"activate")&&temporary(c)&&!text(c->auth,"device_key")[0]&&!c->cached)operation_id=text(c->auth,"request_id");unsigned char random[16];if(!random_bytes(random,16)){strcpy(c->error,"RANDOM_SOURCE_FAILED");return NULL;}char idem[120]="Idempotency-Key: ";size_t used=strlen(idem);for(int i=0;i<16;i++)sprintf(idem+used+i*2,"%02x",random[i]);if(operation_id){if(strlen(operation_id)>80||strpbrk(operation_id," \t\r\n")){strcpy(c->error,"INVALID_OPERATION_ID");return NULL;}snprintf(idem,sizeof(idem),"Idempotency-Key: %s",operation_id);}cJSON*body=cJSON_CreateObject();const char*names[]={"product_id","license_key","device_id","device_name","app_version"};for(int i=0;i<5;i++){const char*s=text(c->cfg,names[i]);cJSON_AddStringToObject(body,names[i],s?s:"");}cJSON_ReplaceItemInObjectCaseSensitive(body,"license_key",cJSON_CreateString(runtime_key(c)));cJSON_AddStringToObject(body,"activation_id",activation);cJSON_AddStringToObject(body,"session_id",c->session);cJSON_AddItemToObject(body,"device_profile",cJSON_Duplicate(get(c->cfg,"device_profile"),1));if(extra)for(const cJSON*x=extra->child;x;x=x->next)cJSON_AddItemToObject(body,x->string,cJSON_Duplicate(x,1));if(!get(c->auth,"logout_ticket"))cJSON_AddBoolToObject(body,"request_logout_ticket",1);if(text(c->cfg,"launch_connection_id")){cJSON_AddStringToObject(body,"launch_connection_id",text(c->cfg,"launch_connection_id"));cJSON_AddStringToObject(body,"environment",text(c->cfg,"environment")?text(c->cfg,"environment"):"");}if(!runtime_key(c)[0]&&text(c->cfg,"identity_token")){const char*identity_names[]={"identity_token","launch_connection_id","environment"};for(int i=0;i<3;i++){const char*v=text(c->cfg,identity_names[i]);cJSON_DeleteItemFromObjectCaseSensitive(body,identity_names[i]);cJSON_AddStringToObject(body,identity_names[i],v?v:"");}op="launch/exchange";}char*json=cJSON_PrintUnformatted(body);cJSON_Delete(body);const char*base=text(c->cfg,"base_url");char*url=malloc(strlen(base)+strlen(op)+20);if(!url||!json){free(url);free(json);return NULL;}strcpy(url,base);size_t len=strlen(url);if(len&&url[len-1]=='/')url[len-1]=0;strcat(url,"/api/v1/");strcat(url,op);struct curl_slist*headers=NULL;headers=curl_slist_append(headers,"Content-Type: application/json");headers=curl_slist_append(headers,idem);cJSON*result=NULL;
+static int authorization_rejected(const char*code){return revocation_error(code)||!strcmp(code,"PRODUCT_DISABLED")||!strcmp(code,"TENANT_SUSPENDED")||!strcmp(code,"LICENSE_INVALID")||!strcmp(code,"DEVICE_CREDENTIAL_MISMATCH")||!strcmp(code,"LAUNCH_ENVIRONMENT_MISMATCH")||!strcmp(code,"SESSION_EXPIRED")||!strcmp(code,"VERSION_NOT_ENTITLED")||!strcmp(code,"VERSION_NOT_PUBLISHED")||!strcmp(code,"MAINTENANCE_EXPIRED")||!strcmp(code,"MAINTENANCE_STATE_INVALID")||!strcmp(code,"FEATURE_NOT_ENTITLED")||!strcmp(code,"HARDWARE_ID_REQUIRED")||!strcmp(code,"VIRTUAL_MACHINE_NOT_ALLOWED")||!strcmp(code,"SDK_UPGRADE_REQUIRED")||!strcmp(code,"LAUNCH_POLICY_UNSUPPORTED")||!strcmp(code,"RUNTIME_WINDOW_INVALID");}
+static cJSON*request_extra(ln_client*c,const char*op,const char*activation,int*transient,const char*operation_id,const cJSON*extra){*transient=0;c->error[0]=0;c->request_id[0]=0;c->retryable=0;c->http_status=0;c->retry_after=0;if(!prepare_credential(c))return NULL;if(!strcmp(op,"activate")&&temporary(c)&&!text(c->auth,"device_key")[0]&&!c->cached)operation_id=text(c->auth,"request_id");unsigned char random[16];if(!random_bytes(random,16)){strcpy(c->error,"RANDOM_SOURCE_FAILED");return NULL;}char idem[120]="Idempotency-Key: ";size_t used=strlen(idem);for(int i=0;i<16;i++)sprintf(idem+used+i*2,"%02x",random[i]);if(operation_id){if(strlen(operation_id)>80||strpbrk(operation_id," \t\r\n")){strcpy(c->error,"INVALID_OPERATION_ID");return NULL;}snprintf(idem,sizeof(idem),"Idempotency-Key: %s",operation_id);}cJSON*body=cJSON_CreateObject();const char*names[]={"product_id","license_key","device_id","device_name","app_version"};for(int i=0;i<5;i++){const char*s=text(c->cfg,names[i]);cJSON_AddStringToObject(body,names[i],s?s:"");}cJSON_ReplaceItemInObjectCaseSensitive(body,"license_key",cJSON_CreateString(runtime_key(c)));cJSON_AddStringToObject(body,"activation_id",activation);cJSON_AddStringToObject(body,"session_id",c->session);cJSON_AddItemToObject(body,"device_profile",cJSON_Duplicate(get(c->cfg,"device_profile"),1));cJSON_AddItemToObject(body,"device_info",cJSON_Duplicate(get(c->cfg,"device_info"),1));if(extra)for(const cJSON*x=extra->child;x;x=x->next)cJSON_AddItemToObject(body,x->string,cJSON_Duplicate(x,1));if(!get(c->auth,"logout_ticket"))cJSON_AddBoolToObject(body,"request_logout_ticket",1);if(text(c->cfg,"launch_connection_id")){cJSON_AddStringToObject(body,"launch_connection_id",text(c->cfg,"launch_connection_id"));cJSON_AddStringToObject(body,"environment",text(c->cfg,"environment")?text(c->cfg,"environment"):"");}if(!runtime_key(c)[0]&&text(c->cfg,"identity_token")){const char*identity_names[]={"identity_token","launch_connection_id","environment"};for(int i=0;i<3;i++){const char*v=text(c->cfg,identity_names[i]);cJSON_DeleteItemFromObjectCaseSensitive(body,identity_names[i]);cJSON_AddStringToObject(body,identity_names[i],v?v:"");}op="launch/exchange";}char*json=cJSON_PrintUnformatted(body);cJSON_Delete(body);const char*base=text(c->cfg,"base_url");char*url=malloc(strlen(base)+strlen(op)+20);if(!url||!json){free(url);free(json);return NULL;}strcpy(url,base);size_t len=strlen(url);if(len&&url[len-1]=='/')url[len-1]=0;strcat(url,"/api/v1/");strcat(url,op);struct curl_slist*headers=NULL;headers=curl_slist_append(headers,"Content-Type: application/json");headers=curl_slist_append(headers,idem);cJSON*result=NULL;
  for(int attempt=0;attempt<2;attempt++){if(attempt)sleepms(200);struct buffer b={{0},0,0};CURL*curl=curl_easy_init();if(!curl)break;curl_easy_setopt(curl,CURLOPT_URL,url);curl_easy_setopt(curl,CURLOPT_POSTFIELDS,json);curl_easy_setopt(curl,CURLOPT_HTTPHEADER,headers);curl_easy_setopt(curl,CURLOPT_WRITEFUNCTION,receive);curl_easy_setopt(curl,CURLOPT_WRITEDATA,&b);int64_t timeout=10;num(c->cfg,"timeout_seconds",&timeout);curl_easy_setopt(curl,CURLOPT_TIMEOUT,(long)timeout);const char*proxy=text(c->cfg,"proxy_url");if(proxy&&proxy[0])curl_easy_setopt(curl,CURLOPT_PROXY,proxy);curl_easy_setopt(curl,CURLOPT_HEADERFUNCTION,receive_header);curl_easy_setopt(curl,CURLOPT_HEADERDATA,c);curl_easy_setopt(curl,CURLOPT_CONNECTTIMEOUT,5L);curl_easy_setopt(curl,CURLOPT_NOSIGNAL,1L);curl_easy_setopt(curl,CURLOPT_FOLLOWLOCATION,0L);curl_easy_setopt(curl,CURLOPT_SSL_VERIFYPEER,1L);curl_easy_setopt(curl,CURLOPT_SSL_VERIFYHOST,2L);const char*ca=getenv("LICENTIVO_CA_BUNDLE");if(ca&&ca[0])curl_easy_setopt(curl,CURLOPT_CAINFO,ca);CURLcode err=curl_easy_perform(curl);long status=0;curl_easy_getinfo(curl,CURLINFO_RESPONSE_CODE,&status);curl_easy_cleanup(curl);if(b.oversized){strcpy(c->error,"RESPONSE_TOO_LARGE");*transient=0;break;}c->http_status=status;if(err!=CURLE_OK){*transient=1;c->retryable=1;strcpy(c->error,"SERVER_UNAVAILABLE");continue;}*transient=0;if(memchr(b.data,0,b.size)){strcpy(c->error,"INVALID_JSON");break;}cJSON*env=ln_json(b.data);if(!env){strcpy(c->error,"UNEXPECTED_RESPONSE");c->retryable=status==429||status>=500;*transient=c->retryable;if(c->retry_after>0)c->retry_at=(int64_t)time(NULL)+c->retry_after;if(status>=500)continue;break;}const char*trace=text(env,"request_id");snprintf(c->request_id,sizeof(c->request_id),"%s",trace?trace:"");if(status!=200||get(env,"error")){const char*code=text(get(env,"error"),"code");snprintf(c->error,sizeof(c->error),"%s",code?code:"UNEXPECTED_RESPONSE");c->retryable=status==429||status>=500;*transient=c->retryable;if(c->retry_after>0)c->retry_at=(int64_t)time(NULL)+c->retry_after;cJSON_Delete(env);if(status>=500)continue;break;}result=cJSON_Duplicate(get(env,"data"),1);cJSON_Delete(env);break;}
- curl_slist_free_all(headers);free(url);free(json);if(!result&&revocation_error(c->error))deny_runtime(c);return result;
+ curl_slist_free_all(headers);free(url);free(json);if(!result){if(revocation_error(c->error))deny_runtime(c);else if(authorization_rejected(c->error))invalidate(c);}return result;
 }
 static cJSON*request(ln_client*c,const char*op,const char*activation,int*transient){return request_extra(c,op,activation,transient,NULL,NULL);}
 #include "device_logout.h"
@@ -406,7 +459,7 @@ static DWORD WINAPI heartbeat_run(LPVOID arg){
 #else
 static void*heartbeat_run(void*arg){
 #endif
- ln_client*c=arg;lock(c);int refresh=c->refresh_pending;c->refresh_pending=0;unlock(c);if(refresh&&!stopped(c))ln_refresh_online(c);while(!stopped(c)){unsigned char r=0;random_bytes(&r,1);lock(c);double wait=has_pending_logouts(c)?2:(c->interval<600?600:c->interval)*(1+r/255.0*.1);double retry=(double)c->retry_at-time(NULL);if(retry>wait)wait=retry;int disabled=(c->interval==0||is_denied(c))&&!has_pending_logouts(c);unlock(c);if(disabled)break;double end=monotonic()+wait;while(!stopped(c)&&monotonic()<end)sleepms(100);if(!stopped(c)){if(is_denied(c)||ln_logout_pending(c))ln_retry_pending_logouts(c);if(!is_denied(c))ln_heartbeat(c);}}lock(c);c->finished=1;unlock(c);return 0;}
+ ln_client*c=arg;lock(c);int refresh=c->refresh_pending;c->refresh_pending=0;unlock(c);if(refresh&&!stopped(c))ln_refresh_online(c);while(!stopped(c)){unsigned char r=0;random_bytes(&r,1);lock(c);double wait=has_pending_logouts(c)?2:(c->interval<600?600:c->interval)*(1+r/255.0*.1);if(!has_pending_logouts(c)&&c->cached){cJSON*claims=claims_from(c->cached);int64_t expires=0;if(num(claims,"expires_at",&expires)){double remaining=(double)expires-time(NULL);if(remaining>0){double early=remaining*.8;if(early<1)early=1;if(early<wait)wait=early;}}cJSON_Delete(claims);}double retry=(double)c->retry_at-time(NULL);if(retry>wait)wait=retry;int disabled=(c->interval==0||is_denied(c))&&!has_pending_logouts(c);unlock(c);if(disabled)break;double end=monotonic()+wait;while(!stopped(c)&&monotonic()<end)sleepms(100);if(!stopped(c)){if(is_denied(c)||ln_logout_pending(c))ln_retry_pending_logouts(c);if(!is_denied(c))ln_heartbeat(c);}}lock(c);c->finished=1;unlock(c);return 0;}
 int ln_start_heartbeat(ln_client*c){if(!c)return 0;if(c->started){lock(c);int finished=c->finished;unlock(c);if(!finished)return 1;ln_stop_heartbeat(c);}lock(c);int disabled=c->interval==0;c->finished=0;unlock(c);if(disabled&&!c->refresh_pending)return 1;
 #ifdef _WIN32
  InterlockedExchange(&c->stop,0);c->thread=CreateThread(NULL,0,heartbeat_run,c,0,NULL);if(!c->thread)return 0;
@@ -434,10 +487,48 @@ ln_client*ln_open(const char*path){ln_client*c=ln_init_file(path);if(c&&!ln_star
 ln_client*ln_open_with_license(const char*path,const char*license_key){ln_client*c=ln_init_file_with_license(path,license_key);if(c&&!ln_start(c)){ln_destroy(c);return NULL;}return c;}
 void ln_free_string(char*s){free(s);}
 char*ln_consume(ln_client*c,const char*feature,int64_t quantity,const char*operation_id){if(!c||!feature||!operation_id||!operation_id[0])return NULL;lock(c);if(!cache_valid(c)){strcpy(c->error,"LICENSE_CHECK_REQUIRED");unlock(c);return NULL;}char*activation=activation_id(c);cJSON*extra=cJSON_CreateObject();cJSON_AddStringToObject(extra,"feature",feature);cJSON_AddNumberToObject(extra,"quantity",(double)quantity);int transient=0;cJSON*result=request_extra(c,"consume",activation,&transient,operation_id,extra);char*out=result?cJSON_PrintUnformatted(get(result,"consumption")):NULL;cJSON_Delete(extra);free(activation);if(!result&&(!strcmp(c->error,"LICENSE_REVOKED")||!strcmp(c->error,"LICENSE_SUSPENDED")||!strcmp(c->error,"DEVICE_RELEASED")||!strcmp(c->error,"DEVICE_CREDENTIAL_REVOKED")||!strcmp(c->error,"LICENSE_EXPIRED")))invalidate(c);int success=result!=NULL;cJSON_Delete(result);publish(c,success);unlock(c);notify(c);return out;}
-char*ln_offline_request(ln_client*c,const char*operation){if(!c||is_denied(c)||!operation||(strcmp(operation,"activate")&&strcmp(operation,"deactivate")))return NULL;lock(c);if(!prepare_credential(c)){unlock(c);return NULL;}char*activation=NULL;if(!strcmp(operation,"deactivate")){if(!cache_valid(c)){unlock(c);return NULL;}activation=activation_id(c);invalidate(c);}char id[37];if(!request_uuid(id)){free(activation);unlock(c);return NULL;}cJSON*body=cJSON_CreateObject();const char*names[]={"product_id","license_key","device_id","device_name","app_version"};for(int i=0;i<5;i++){const char*v=text(c->cfg,names[i]);cJSON_AddStringToObject(body,names[i],v?v:"");}cJSON_ReplaceItemInObjectCaseSensitive(body,"license_key",cJSON_CreateString(runtime_key(c)));cJSON_AddStringToObject(body,"activation_id",activation?activation:"");cJSON_AddStringToObject(body,"session_id",c->session);cJSON_AddItemToObject(body,"device_profile",cJSON_Duplicate(get(c->cfg,"device_profile"),1));cJSON_AddBoolToObject(body,"request_logout_ticket",1);cJSON_AddNumberToObject(body,"version",1);cJSON_AddStringToObject(body,"request_id",id);cJSON_AddNumberToObject(body,"created_at",(double)time(NULL));cJSON_AddStringToObject(body,"operation",operation);char*out=cJSON_PrintUnformatted(body);cJSON_Delete(body);free(activation);unlock(c);return out;}
-int ln_import_offline(ln_client*c,const char*request_json,const char*response_json){if(!c||is_denied(c)||!request_json||!response_json||strlen(request_json)>LIMIT||strlen(response_json)>LIMIT)return 0;lock(c);cJSON*req=ln_json(request_json),*res=ln_json(response_json);int64_t version=0;int ok=req&&res&&num(res,"version",&version)&&version==1;const char*fields[]={"request_id","operation"};for(int i=0;i<2;i++){const char*a=text(req,fields[i]),*b=text(res,fields[i]);if(!a||!b||strcmp(a,b))ok=0;}if(!text(req,"operation")||strcmp(text(req,"operation"),"activate"))ok=0;const char*context[]={"product_id","device_id","license_key"};for(int i=0;i<3;i++){const char*a=text(req,context[i]),*b=!strcmp(context[i],"license_key")?runtime_key(c):text(c->cfg,context[i]);if(!a||!b||strcmp(a,b))ok=0;}
- const cJSON*result=get(res,"result"),*envelope=get(result,"lease");if(!client_context(c,envelope)||!ln_verify(envelope,get(c->cfg,"trusted_keys"),text(c->cfg,"product_id"),text(c->cfg,"device_id"),time(NULL)))ok=0;cJSON*claims=claims_from(envelope);const char*id=text(claims,"offline_request_id"),*expected=text(req,"request_id"),*activation=text(claims,"activation_id"),*response_id=text(result,"activation_id");if(!id||!expected||strcmp(id,expected)||!activation||!response_id||strcmp(activation,response_id)||envelope_policy(envelope,NULL)==1)ok=0;
- if(ok){cJSON_Delete(c->cached);c->cached=cJSON_Duplicate(envelope,1);c->wall=time(NULL);c->tick=monotonic();c->offline=envelope_policy(c->cached,&c->interval);ok=accept_credential(c,result)&&save(c);}if(!ok)strcpy(c->error,"INVALID_OFFLINE_RESPONSE");cJSON_Delete(claims);cJSON_Delete(req);cJSON_Delete(res);publish(c,0);unlock(c);notify(c);return ok;
+char*ln_offline_request(ln_client*c,const char*operation){
+ if(!c||is_denied(c)||!operation||(strcmp(operation,"activate")&&strcmp(operation,"deactivate")))return NULL;
+ lock(c);if(!prepare_credential(c)){unlock(c);return NULL;}
+ int deactivate=!strcmp(operation,"deactivate");char*activation=NULL;
+ if(deactivate){if(!cache_valid(c)){unlock(c);return NULL;}activation=activation_id(c);}
+ char id[37];if(!request_uuid(id)){free(activation);unlock(c);return NULL;}
+ cJSON*body=cJSON_CreateObject();const char*names[]={"product_id","license_key","device_id","device_name","app_version"};
+ for(int i=0;i<5;i++){const char*v=text(c->cfg,names[i]);cJSON_AddStringToObject(body,names[i],v?v:"");}
+ cJSON_ReplaceItemInObjectCaseSensitive(body,"license_key",cJSON_CreateString(runtime_key(c)));cJSON_AddStringToObject(body,"activation_id",activation?activation:"");cJSON_AddStringToObject(body,"session_id",c->session);cJSON_AddItemToObject(body,"device_profile",cJSON_Duplicate(get(c->cfg,"device_profile"),1));cJSON_AddItemToObject(body,"device_info",cJSON_Duplicate(get(c->cfg,"device_info"),1));cJSON_AddBoolToObject(body,"request_logout_ticket",1);cJSON_AddNumberToObject(body,"version",1);cJSON_AddStringToObject(body,"request_id",id);cJSON_AddNumberToObject(body,"created_at",(double)time(NULL));cJSON_AddStringToObject(body,"operation",operation);
+ const char*connection=text(c->cfg,"launch_connection_id"),*identity=text(c->cfg,"identity_token"),*environment=text(c->cfg,"environment"),*device_key=text(c->auth,"device_key");
+ if(connection&&connection[0]){cJSON_AddStringToObject(body,"launch_connection_id",connection);cJSON_AddStringToObject(body,"environment",environment?environment:"");}
+ if((!device_key||!device_key[0])&&identity&&identity[0])cJSON_AddStringToObject(body,"identity_token",identity);
+ int ok=1;
+ if(!deactivate){cJSON_DeleteItemFromObjectCaseSensitive(c->auth,"offline_request_id");cJSON_AddStringToObject(c->auth,"offline_request_id",id);c->auth_dirty=1;ok=save_credential(c);
+  if(ok&&cJSON_IsTrue(get(c->logout_state,"signed_out"))){cJSON_DeleteItemFromObjectCaseSensitive(c->logout_state,"offline_request_id");cJSON_AddStringToObject(c->logout_state,"offline_request_id",id);ok=save_logout_state(c);}
+ }
+ char*out=ok?cJSON_PrintUnformatted(body):NULL;cJSON_Delete(body);free(activation);
+ if(out&&deactivate&&!deny_runtime_mode(c,0)){free(out);out=NULL;strcpy(c->error,"LOCAL_CREDENTIAL_CLEANUP_FAILED");}
+ unlock(c);notify(c);return out;
+}
+int ln_import_offline(ln_client*c,const char*request_json,const char*response_json){
+ if(!c||is_denied(c)||!request_json||!response_json||strlen(request_json)>LIMIT||strlen(response_json)>LIMIT)return 0;
+ lock(c);cJSON*req=ln_json(request_json),*res=ln_json(response_json);int64_t version=0;int ok=req&&res&&num(res,"version",&version)&&version==1;
+ const char*fields[]={"request_id","operation"};for(int i=0;i<2;i++){const char*a=text(req,fields[i]),*b=text(res,fields[i]);if(!a||!b||strcmp(a,b))ok=0;}
+ if(!text(req,"operation")||strcmp(text(req,"operation"),"activate"))ok=0;
+ const char*context[]={"product_id","device_id"};for(int i=0;i<2;i++){const char*a=text(req,context[i]),*b=text(c->cfg,context[i]);if(!a||!b||strcmp(a,b))ok=0;}
+ const char*input=text(req,"license_key"),*runtime=runtime_key(c),*source=text(c->auth,"source_hash"),*device_key=text(c->auth,"device_key"),*token=text(req,"identity_token"),*configured=text(c->cfg,"identity_token");char digest[65];
+ const char*request_source=token&&token[0]?token:input;
+ int same_source=request_source&&request_source[0]&&input&&runtime&&!strcmp(input,runtime)&&(!token||!token[0]||(configured&&!strcmp(token,configured)));
+ if(!same_source&&request_source&&request_source[0]&&device_key&&device_key[0]&&source&&hash(request_source,digest)&&!strcmp(digest,source))same_source=1;
+ if(!same_source)ok=0;
+ const char*current=text(c->auth,"offline_request_id"),*expected=text(req,"request_id");
+ if(!current||!current[0]||cJSON_IsTrue(get(c->logout_state,"signed_out")))current=text(c->logout_state,"offline_request_id");
+ if((current&&current[0]&&(!expected||strcmp(current,expected)))||(cJSON_IsTrue(get(c->logout_state,"signed_out"))&&(!current||!current[0])))ok=0;
+ const cJSON*result=get(res,"result"),*envelope=get(result,"lease");if(!client_context(c,envelope)||!ln_verify(envelope,get(c->cfg,"trusted_keys"),text(c->cfg,"product_id"),text(c->cfg,"device_id"),time(NULL)))ok=0;
+ cJSON*claims=claims_from(envelope);const char*id=text(claims,"offline_request_id"),*activation=text(claims,"activation_id"),*response_id=text(result,"activation_id");if(!id||!expected||strcmp(id,expected)||!activation||!response_id||strcmp(activation,response_id)||envelope_policy(envelope,NULL)==1)ok=0;
+ if(ok){
+  ok=accept_credential(c,result)&&prepare_credential(c);
+  if(ok){cJSON_DeleteItemFromObjectCaseSensitive(c->auth,"offline_request_id");cJSON_AddStringToObject(c->auth,"offline_request_id",expected);c->auth_dirty=1;ok=save_credential(c);}
+  if(ok){cJSON_Delete(c->cached);c->cached=cJSON_Duplicate(envelope,1);c->wall=time(NULL);c->tick=monotonic();c->offline=envelope_policy(c->cached,&c->interval);ok=save(c);if(!ok)invalidate(c);}
+ }
+ if(ok)c->error[0]=0;else strcpy(c->error,"INVALID_OFFLINE_RESPONSE");cJSON_Delete(claims);cJSON_Delete(req);cJSON_Delete(res);publish(c,0);unlock(c);notify(c);return ok;
 }
 
 static char*reservation_call(ln_client*c,const char*op,const char*operation_id,const cJSON*extra){if(!c||!operation_id||!operation_id[0])return NULL;lock(c);if(!cache_valid(c)){strcpy(c->error,"LICENSE_CHECK_REQUIRED");publish(c,0);unlock(c);return NULL;}char*activation=activation_id(c);int transient=0;cJSON*result=request_extra(c,op,activation,&transient,operation_id,extra);char*out=result?cJSON_PrintUnformatted(get(result,"reservation")):NULL;if(!result&&(!strcmp(c->error,"LICENSE_REVOKED")||!strcmp(c->error,"LICENSE_SUSPENDED")||!strcmp(c->error,"DEVICE_RELEASED")||!strcmp(c->error,"DEVICE_CREDENTIAL_REVOKED")||!strcmp(c->error,"LICENSE_EXPIRED")))invalidate(c);publish(c,result!=NULL);free(activation);cJSON_Delete(result);unlock(c);notify(c);return out;}

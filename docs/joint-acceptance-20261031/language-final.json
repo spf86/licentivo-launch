@@ -1,0 +1,272 @@
+[
+  {
+    "time": "2026-10-31T16:32:15Z",
+    "name": "Python fixed real Launch SDK lifecycle",
+    "passed": true,
+    "seconds": 1.185,
+    "exit_code": 0,
+    "details": {
+      "ok": true,
+      "language": "Python",
+      "product": "fixed",
+      "callbacks": 2,
+      "startup_denial": "LAUNCH_ENTITLEMENT_REQUIRED",
+      "logout_rejects_restore": true
+    }
+  },
+  {
+    "time": "2026-10-31T16:32:26Z",
+    "name": "Python floating real Launch SDK lifecycle",
+    "passed": true,
+    "seconds": 1.663,
+    "exit_code": 0,
+    "details": {
+      "ok": true,
+      "language": "Python",
+      "product": "floating",
+      "callbacks": 2,
+      "startup_denial": "LAUNCH_ENTITLEMENT_REQUIRED",
+      "logout_rejects_restore": true
+    }
+  },
+  {
+    "time": "2026-10-31T16:32:37Z",
+    "name": "Go fixed real Launch SDK lifecycle",
+    "passed": true,
+    "seconds": 0.805,
+    "exit_code": 0,
+    "details": {
+      "callbacks": 2,
+      "language": "Go",
+      "logout_rejects_restore": true,
+      "ok": true,
+      "product": "fixed",
+      "startup_denial_preserved": true
+    }
+  },
+  {
+    "time": "2026-10-31T16:32:48Z",
+    "name": "Go floating real Launch SDK lifecycle",
+    "passed": true,
+    "seconds": 0.949,
+    "exit_code": 0,
+    "details": {
+      "callbacks": 2,
+      "language": "Go",
+      "logout_rejects_restore": true,
+      "ok": true,
+      "product": "floating",
+      "startup_denial_preserved": true
+    }
+  },
+  {
+    "time": "2026-10-31T16:33:00Z",
+    "name": "JavaScript fixed real Launch SDK lifecycle",
+    "passed": true,
+    "seconds": 1.793,
+    "exit_code": 0,
+    "details": {
+      "ok": true,
+      "language": "JavaScript",
+      "product": "fixed",
+      "callbacks": 2,
+      "startup_denial": "LAUNCH_ENTITLEMENT_REQUIRED",
+      "logout_rejects_restore": true
+    }
+  },
+  {
+    "time": "2026-10-31T16:33:12Z",
+    "name": "JavaScript floating real Launch SDK lifecycle",
+    "passed": true,
+    "seconds": 1.814,
+    "exit_code": 0,
+    "details": {
+      "ok": true,
+      "language": "JavaScript",
+      "product": "floating",
+      "callbacks": 2,
+      "startup_denial": "LAUNCH_ENTITLEMENT_REQUIRED",
+      "logout_rejects_restore": true
+    }
+  },
+  {
+    "time": "2026-10-31T16:33:25Z",
+    "name": "Java fixed real Launch SDK lifecycle",
+    "passed": true,
+    "seconds": 3.433,
+    "exit_code": 0,
+    "details": {
+      "startup_denial": "LAUNCH_ENTITLEMENT_REQUIRED",
+      "language": "Java",
+      "logout_rejects_restore": true,
+      "callbacks": 2,
+      "ok": true,
+      "product": "fixed"
+    }
+  },
+  {
+    "time": "2026-10-31T16:33:38Z",
+    "name": "Java floating real Launch SDK lifecycle",
+    "passed": true,
+    "seconds": 3.093,
+    "exit_code": 0,
+    "details": {
+      "language": "Java",
+      "startup_denial": "LAUNCH_ENTITLEMENT_REQUIRED",
+      "product": "floating",
+      "ok": true,
+      "callbacks": 2,
+      "logout_rejects_restore": true
+    }
+  },
+  {
+    "time": "2026-10-31T16:33:50Z",
+    "name": "Ruby fixed real Launch SDK lifecycle",
+    "passed": true,
+    "seconds": 1.738,
+    "exit_code": 0,
+    "details": {
+      "ok": true,
+      "language": "Ruby",
+      "product": "fixed",
+      "callbacks": 2,
+      "startup_denial": "LAUNCH_ENTITLEMENT_REQUIRED",
+      "logout_rejects_restore": true
+    }
+  },
+  {
+    "time": "2026-10-31T16:34:02Z",
+    "name": "Ruby floating real Launch SDK lifecycle",
+    "passed": true,
+    "seconds": 2.052,
+    "exit_code": 0,
+    "details": {
+      "ok": true,
+      "language": "Ruby",
+      "product": "floating",
+      "callbacks": 2,
+      "startup_denial": "LAUNCH_ENTITLEMENT_REQUIRED",
+      "logout_rejects_restore": true
+    }
+  },
+  {
+    "time": "2026-10-31T16:34:14Z",
+    "name": "C fixed real Launch SDK lifecycle",
+    "passed": true,
+    "seconds": 1.623,
+    "exit_code": 0,
+    "details": {
+      "ok": true,
+      "language": "C",
+      "product": "fixed",
+      "callbacks": 2,
+      "startup_denial": "LAUNCH_ENTITLEMENT_REQUIRED",
+      "logout_rejects_restore": true
+    }
+  },
+  {
+    "time": "2026-10-31T16:34:25Z",
+    "name": "C floating real Launch SDK lifecycle",
+    "passed": true,
+    "seconds": 1.325,
+    "exit_code": 0,
+    "details": {
+      "ok": true,
+      "language": "C",
+      "product": "floating",
+      "callbacks": 2,
+      "startup_denial": "LAUNCH_ENTITLEMENT_REQUIRED",
+      "logout_rejects_restore": true
+    }
+  },
+  {
+    "time": "2026-10-31T16:34:36Z",
+    "name": "C++ fixed real Launch SDK lifecycle",
+    "passed": true,
+    "seconds": 0.87,
+    "exit_code": 0,
+    "details": {
+      "ok": true,
+      "language": "C++",
+      "product": "fixed",
+      "callbacks": 2,
+      "startup_denial": "LAUNCH_ENTITLEMENT_REQUIRED",
+      "logout_rejects_restore": true
+    }
+  },
+  {
+    "time": "2026-10-31T16:34:47Z",
+    "name": "C++ floating real Launch SDK lifecycle",
+    "passed": true,
+    "seconds": 1.091,
+    "exit_code": 0,
+    "details": {
+      "ok": true,
+      "language": "C++",
+      "product": "floating",
+      "callbacks": 2,
+      "startup_denial": "LAUNCH_ENTITLEMENT_REQUIRED",
+      "logout_rejects_restore": true
+    }
+  },
+  {
+    "time": "2026-10-31T16:35:00Z",
+    "name": "C# fixed real Launch SDK lifecycle",
+    "passed": true,
+    "seconds": 2.613,
+    "exit_code": 0,
+    "details": {
+      "ok": true,
+      "language": "C#",
+      "product": "fixed",
+      "callbacks": 2,
+      "startup_denial": "LAUNCH_ENTITLEMENT_REQUIRED",
+      "logout_rejects_restore": true
+    }
+  },
+  {
+    "time": "2026-10-31T16:35:12Z",
+    "name": "C# floating real Launch SDK lifecycle",
+    "passed": true,
+    "seconds": 2.273,
+    "exit_code": 0,
+    "details": {
+      "ok": true,
+      "language": "C#",
+      "product": "floating",
+      "callbacks": 2,
+      "startup_denial": "LAUNCH_ENTITLEMENT_REQUIRED",
+      "logout_rejects_restore": true
+    }
+  },
+  {
+    "time": "2026-10-31T16:35:23Z",
+    "name": "Rust fixed real Launch SDK lifecycle",
+    "passed": true,
+    "seconds": 1.263,
+    "exit_code": 0,
+    "details": {
+      "callbacks": 2,
+      "language": "Rust",
+      "logout_rejects_restore": true,
+      "ok": true,
+      "product": "fixed",
+      "startup_denial": "LAUNCH_ENTITLEMENT_REQUIRED"
+    }
+  },
+  {
+    "time": "2026-10-31T16:35:34Z",
+    "name": "Rust floating real Launch SDK lifecycle",
+    "passed": true,
+    "seconds": 1.065,
+    "exit_code": 0,
+    "details": {
+      "callbacks": 2,
+      "language": "Rust",
+      "logout_rejects_restore": true,
+      "ok": true,
+      "product": "floating",
+      "startup_denial": "LAUNCH_ENTITLEMENT_REQUIRED"
+    }
+  }
+]

@@ -1,0 +1,36 @@
+{
+  "original_native_packages": 16,
+  "original_native_package_failures": [],
+  "passed_test_nodes": 343,
+  "passed_top_level_tests": 118,
+  "latest_original_http_observations": [
+    {
+      "name": "F02 synchronized purchase ready without legacy binding",
+      "passed": true,
+      "time": "2026-10-31T23:37:46+0800"
+    },
+    {
+      "name": "F04 real unpurchased account retains SDK denial",
+      "passed": true,
+      "time": "2026-10-31T23:37:49+0800"
+    },
+    {
+      "name": "F04 primary cause is visible",
+      "passed": true,
+      "time": "2026-10-31T23:37:49+0800"
+    },
+    {
+      "name": "real active account still restores and exports after fix",
+      "passed": true,
+      "time": "2026-10-31T23:38:02+0800"
+    },
+    {
+      "name": "protected file remains correct",
+      "passed": true,
+      "time": "2026-10-31T23:38:02+0800"
+    }
+  ],
+  "historical_f04_assertion_failure_retained": true,
+  "later_f04_assertion_passed": true,
+  "scope": "Historical original-fix validation; current deployed service hashes and later real nine-language acceptance are recorded separately."
+}

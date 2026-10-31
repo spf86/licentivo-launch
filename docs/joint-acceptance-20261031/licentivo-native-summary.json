@@ -1,0 +1,57 @@
+{
+  "exit_code": 1,
+  "seconds": 698.65,
+  "top_level_passed": 319,
+  "all_passed": 571,
+  "failed": [
+    "TestManagementDocumentationResponses",
+    "TestCurrentAuthorizationRuntimePolicy",
+    "package"
+  ],
+  "skipped": [
+    "TestBillingEmailBrowserFixture",
+    "TestCommerceBrowserFixture",
+    "TestDashboardBrowser",
+    "TestDeviceIdentityBrowser",
+    "TestFocusedTutorialExamples",
+    "TestFocusedManagementExamples",
+    "TestFocusedFloatingExamples",
+    "TestFocusedOfflineExamples",
+    "TestRuntimeSoak",
+    "TestPlatformBrowser",
+    "TestCustomerPortalBrowser",
+    "TestDownloadedSDKApplicationProtocol",
+    "TestSDKAuthorizationDenials",
+    "TestDownloadedSDKOnboarding",
+    "TestSDKDesktopApplication",
+    "TestSDKAutomaticDeviceDetails",
+    "TestSDKFeatureExecutionBoundaries",
+    "TestSDKExtended",
+    "TestSDKExpiredFeatureTasks",
+    "TestSDKImprovements",
+    "TestSDKApplicationExport",
+    "TestSDKOnlineRefresh",
+    "TestSDKEndToEnd",
+    "TestSDKCachePolicy",
+    "TestSDKConfiguredPolicy",
+    "TestSDKLaunchMeteredRecovery",
+    "TestSDKLaunchAccountSessions",
+    "TestSDKLogoutSafety",
+    "TestSDKMeteringAuthorizationRegression",
+    "TestSDKOfflineLifecycleRecovery",
+    "TestSDKQuickstartProtectedOperations",
+    "TestSDKTransfer"
+  ],
+  "runtime_policy_rerun": {
+    "passed": true,
+    "test_fixture_runtime_seconds": {
+      "heartbeat": 3600,
+      "lease": 86400
+    }
+  },
+  "calendar_fixture_rerun": {
+    "passed": true,
+    "passed_nodes": 42,
+    "production_source_unchanged": true
+  }
+}

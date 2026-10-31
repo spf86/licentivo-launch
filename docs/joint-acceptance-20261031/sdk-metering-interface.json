@@ -1,0 +1,39 @@
+{
+  "finding": "N06",
+  "classification": "high_level_integration_capability_gap",
+  "standard_application_metered_method": {
+    "Go": false,
+    "JavaScript": false,
+    "Java": false,
+    "C#": false,
+    "Ruby": false,
+    "C": false,
+    "C++": false,
+    "Rust": false
+  },
+  "python_public_runtime_supports_metering": true,
+  "some_languages_allow_custom_runtime_factory_adapters": true,
+  "sources": [
+    "pkg/launchclient/application.go",
+    "pkg/launchclient/runtime.go",
+    "sdk/javascript/src/index.mjs",
+    "sdk/java/src/com/licentivo/launch/Launch.java",
+    "sdk/csharp/Application.cs",
+    "sdk/ruby/lib/licentivo_launch.rb",
+    "sdk/native/account.h",
+    "sdk/native/launch.hpp",
+    "sdk/rust/src/lib.rs"
+  ],
+  "go_public_api_compile_probe": {
+    "expected_compile_failure": true,
+    "expression": "app.RunMeteredFeature",
+    "result": "undefined (type *launchclient.Application has no field or method RunMeteredFeature)"
+  },
+  "actual_go_feature_guard_probe": {
+    "configured_limit": 2,
+    "used_before": 3,
+    "business_callbacks": 2,
+    "used_after": 3,
+    "note": "RunFeature is unmetered by contract. This is a missing standard integration path, not a server reservation quota bypass."
+  }
+}

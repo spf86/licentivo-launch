@@ -2,6 +2,8 @@
 
 Documentation prepared for public source publication on 2026-10-21. The implementation remains in local development and verification. Desktop browsers are the primary administration target. Historical records describe their original test dates; they are not current production certifications.
 
+The current source baseline is Launch server 0.3.5-beta, Launch package 0.1.7 and embedded official SDK 0.11.7. See the [compatibility matrix](sdk-compatibility.md) for the current account protocol, backend requirements and the separation of source tests, registry installation records and external acceptance.
+
 ## Implemented and locally verified
 
 - Go, GORM, MySQL, automatic schema creation from Go models, and the MIT license.
@@ -13,14 +15,14 @@ Documentation prepared for public source publication on 2026-10-21. The implemen
 - Stripe hosted Checkout and PayPal Orders/Capture, payment queries, refunds, and event verification adapters. HTTP contract tests use doubles; real payment sandboxes remain unverified.
 - Server-calculated purchase amounts, stable payment operation IDs, verified event persistence before processing, and distinct payment/licensing states.
 - Durable licensing tasks with leases, retries, stable IDs, and recovery after remote success with a lost response.
-- Authenticated software credential retrieval scoped to account, product, and payment environment; website sessions cannot retrieve full license keys.
+- Desktop-session identity assertions scoped to account, product and payment environment, valid for at most 120 seconds and passed to the official SDK only in memory. The SDK exchanges them with Licentivo; the old license-key `/credential` endpoint returns HTTP 410.
 - One encrypted Licentivo API connection with product/policy discovery and plan-policy selection. Licensing limits, features, offline settings, heartbeats, seats, and release quotas are synchronized from policy snapshots.
 - PEM certificate/key upload and validation, encrypted private-key storage, built-in HTTPS hot replacement, public protocol/origin changes, and expiry checks.
 - Embedded storefront, setup, account, administration, plans, service settings, checkout, and order interfaces.
 - Ten customer locales; DeepL Free/Pro, encrypted keys, usage display, source hashes, persistent jobs, retry, and source-language fallback.
 - Renewals, encrypted expiring upgrade quotes, fixed-term prorating, and paid-coverage recalculation after refunds.
 - Full-refund requests/review, stable provider operation IDs, and query/replay recovery after uncertain responses.
-- Device listing and self-service release with a 30-day quota, idempotent reservations, and device-generation isolation.
+- Device listing and self-service release delegated to Licentivo, including its release allowance, stable operation IDs and expected binding generations. Launch does not maintain a competing quota or device-release executor.
 - Separate customers and staff; administrator/operator/support roles, staff creation and disable/enable, and last-administrator protection. Disabled customer accounts trigger licensing suspension.
 - Safe-field CSV export, encrypted backup, empty-database restore, and a post-restore transaction pause.
 - Signed Licentivo events with remote verification, terminal revocation handling, and late-payment reconciliation.
@@ -44,7 +46,7 @@ Documentation prepared for public source publication on 2026-10-21. The implemen
 
 - Review the remaining administration pages, long lists, empty states, role failures, and full accessibility.
 - Complete concurrency boundaries and real SDK activation, restart, offline behavior, account switching, and each release target's acceptance matrix.
-- Extend OpenAPI coverage beyond the current 18 system/account/integration/basic order operations to the remaining administrative and provider-webhook APIs.
+- Extend OpenAPI coverage from the documented system/account/integration/purchase operations to the remaining administrative and provider-webhook APIs.
 - Validate actual Docker/Compose and Linux operation, persistent upload mounts, backup drills, and performance.
 - Complete real Stripe, PayPal, Resend, and DeepL acceptance with merchant-supplied credentials.
 - Verify the complete test payment-to-license-to-application path. A successful catalog read is not license-issuance acceptance.

@@ -118,7 +118,7 @@ func (s *Service) registerLaunchPlan(ctx context.Context, environment string, ve
 		}
 	}
 	if err := peer.MapPlan(ctx, trust.RemoteID, version.ID, ports.LaunchPlanMapping{LaunchProductID: version.ProductID, ProductID: mapping.RemoteProductID, PolicyID: mapping.RemotePolicyID, PolicyVersion: mapping.RemotePolicyVersion}); err != nil {
-		return problem(409, "LICENSE_POLICY_CHANGED", "Licentivo 未接受套餐映射，请刷新策略目录并核对对应版本")
+		return licentivoPlanMappingError(err)
 	}
 	return nil
 }

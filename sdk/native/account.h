@@ -30,6 +30,10 @@ launch_application *launch_application_from_files(const char *launch_config_path
 int launch_application_restore(launch_application *app);
 int launch_application_login(launch_application *app,const char *email,const char *password);
 int launch_application_run_feature(launch_application *app,const char *feature,ln_feature_action action,void *context);
+/* Keep operation_id stable on retries. A completed replay does not call action. */
+int launch_application_run_metered_feature(launch_application *app,const char *feature,int64_t quantity,const char *operation_id,ln_feature_action action,void *context);
+/* Call only after verifying the actual outcome of an interrupted callback. */
+int launch_application_resolve_metered_feature(launch_application *app,const char *operation_id,int business_succeeded);
 int launch_application_release_device(launch_application *app);
 int launch_application_logout(launch_application *app);
 void launch_application_close(launch_application *app);

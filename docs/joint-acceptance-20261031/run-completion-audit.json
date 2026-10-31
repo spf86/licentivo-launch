@@ -1,0 +1,99 @@
+{
+  "scope": "Completion of the authorized original fixes and this bounded acceptance/bug-discovery run; not a claim of zero defects or exhaustive platform coverage. New repairs await user decision.",
+  "main_soak_effective_seconds": 14400.21,
+  "requirements": [
+    {
+      "requirement": "Install and run isolated Launch, MySQL and Licentivo on 177",
+      "verified": true,
+      "evidence": [
+        "environment-final-audit.json",
+        "routing-differences.json"
+      ]
+    },
+    {
+      "requirement": "Run the actual main-business soak for at least four effective hours and observe termination",
+      "verified": true,
+      "evidence": [
+        "completed-acceptance-audit.json",
+        "terminal-process-observation.json"
+      ]
+    },
+    {
+      "requirement": "Use real protected business outputs and verify retry/ledger consistency",
+      "verified": true,
+      "evidence": [
+        "snapshot.json",
+        "soak-ledger-check.json",
+        "actual-fixed-report.csv",
+        "actual-floating-report.csv"
+      ]
+    },
+    {
+      "requirement": "Exercise actual Launch SDK lifecycle and denial in all nine languages for fixed and floating",
+      "verified": true,
+      "evidence": [
+        "language-final.json",
+        "language-suspended.json",
+        "language-suspended-artifacts.json"
+      ]
+    },
+    {
+      "requirement": "Complete original Launch fixes and record current worktree/deployment validation",
+      "verified": true,
+      "evidence": [
+        "original-fixes-verification.json",
+        "environment-final-audit.json"
+      ],
+      "scope_note": "Original authorized fixes; new N01-N09 remain reported for user decision."
+    },
+    {
+      "requirement": "Complete authorized order UI changes and real large-list verification",
+      "verified": true,
+      "evidence": [
+        "order-http-regression.json",
+        "order-ui-browser-evidence.json",
+        "order-deployment-history.json"
+      ]
+    },
+    {
+      "requirement": "Continue actual edge testing and preserve new defects without unapproved repairs",
+      "verified": true,
+      "evidence": [
+        "security-followup-evidence.json",
+        "long-meter-final-audit.json",
+        "functional-failure-classification.json",
+        "customer-list-limit.json"
+      ],
+      "confirmed_defects": [
+        "N01",
+        "N02",
+        "N03",
+        "N04",
+        "N05",
+        "N07",
+        "N08",
+        "N09"
+      ],
+      "capability_gap": [
+        "N06"
+      ]
+    },
+    {
+      "requirement": "Remove disposable UI fixtures and retire test-only access",
+      "verified": true,
+      "evidence": [
+        "environment-final-audit.json",
+        "customer-list-limit.json",
+        "security-followup-evidence.json"
+      ]
+    }
+  ],
+  "deliverables": [
+    "docs/test-report-joint-2026-11-01.md",
+    "docs/policy-license-coverage-2026-11-01.md",
+    "examples/acceptance-exporter/main.py",
+    "examples/acceptance-exporter/README.md"
+  ],
+  "limits_documented": true,
+  "all_run_completion_requirements_verified": true
+}

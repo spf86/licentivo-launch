@@ -1,0 +1,32 @@
+[
+  {
+    "file": "internal/app/connections.go",
+    "original_sha256": "2e0de6ee8e31798f256e0adee3d49c307c0ec124c200d241885c8a536018ca01",
+    "test_sha256": "7cb23092855b1418de337dab3a763fb09b52626545bcfa1dd8af4f2d364955b2",
+    "replacements": [
+      [
+        "LicentivoServiceURL   = \"https://www.licentivo.com\"",
+        "LicentivoServiceURL   = \"http://127.0.0.1:18091\""
+      ],
+      [
+        "APIKey: apiKey}",
+        "APIKey: apiKey, AllowHTTP: true, AllowPrivate: true}"
+      ],
+      [
+        "APIKey: string(key)}",
+        "APIKey: string(key), AllowHTTP: true, AllowPrivate: true}"
+      ]
+    ]
+  },
+  {
+    "file": "internal/app/launch_events.go",
+    "original_sha256": "8da9309bd43f10b23a2fa4767d105844bdfba2b0cef776ca03cdb15ed89a5378",
+    "test_sha256": "f2d6df68c25e744b215a3eb75e4dca9ba0533d893c6b325e6c061e67e633afb9",
+    "replacements": [
+      [
+        "NewBridgeClient(LicentivoServiceURL, key, false)",
+        "NewBridgeClient(LicentivoServiceURL, key, true)"
+      ]
+    ]
+  }
+]

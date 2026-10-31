@@ -226,7 +226,8 @@ class Application:
         runtime = self.runtime_factory(config)
         try: runtime.start()
         except Exception:
-            runtime.close()
+            try: runtime.close()
+            except Exception: pass  # Preserve the SDK's original authorization failure.
             raise
         self.runtime, self.session = runtime, session
         self._account_cleared = False
@@ -251,7 +252,11 @@ class Application:
             self.store.save(self.scope, json.dumps(session).encode())
             return self
         except Exception:
-            self.logout()
+            # Account logout still records/retries revocation. A runtime that
+            # never issued a credential may fail to reopen for device cleanup;
+            # that secondary failure must not hide the original SDK error.
+            try: self.logout()
+            except Exception: pass
             raise
 
     def _saved(self):
@@ -319,6 +324,24 @@ class Application:
         if not self.runtime:
             raise APIError("LOGIN_REQUIRED")
         return self.runtime.run_feature(name, action)
+
+    def run_metered_feature(self, name, quantity, operation_id, action):
+        """Reserve, execute and settle using a stable business operation ID."""
+        if not self.runtime:
+            raise APIError("LOGIN_REQUIRED")
+        method = getattr(self.runtime, 'run_metered_feature', None)
+        if not callable(method):
+            raise APIError("METERING_UNSUPPORTED")
+        return method(name, quantity, operation_id, action)
+
+    def resolve_metered_feature(self, operation_id, succeeded):
+        """Settle only after verifying the real business outcome; never rerun it."""
+        if not self.runtime:
+            raise APIError("LOGIN_REQUIRED")
+        method = getattr(self.runtime, 'resolve_metered_feature', None)
+        if not callable(method):
+            raise APIError("METERING_UNSUPPORTED")
+        return method(operation_id, succeeded)
 
     def release_device(self):
         return self.logout()

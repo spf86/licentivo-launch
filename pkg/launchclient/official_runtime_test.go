@@ -41,6 +41,12 @@ func TestOfficialSDKAccountExchangeAndLogout(t *testing.T) {
 			if body["license_key"] != "" || body["identity_token"] == "" {
 				t.Error("exchange used a long-term key")
 			}
+			if name, ok := body["device_name"].(string); !ok || strings.TrimSpace(name) == "" {
+				t.Error("SDK did not supply a recognizable device name")
+			}
+			if details, ok := body["device_info"].(map[string]any); !ok || details["system_type"] == "" {
+				t.Error("SDK did not report the computer's display details")
+			}
 			data = map[string]any{"device_key": "lv_dev_" + strings.Repeat("d", 43), "activation_id": activation, "lease": env, "heartbeat_seconds": 600, "logout_ticket": map[string]any{"operation_id": keyID, "product_id": remote, "activation_id": activation, "expected_generation": 1, "release_token": "lv_out_" + strings.Repeat("o", 43)}}
 		case "/api/v1/sessions/logout":
 			released = true

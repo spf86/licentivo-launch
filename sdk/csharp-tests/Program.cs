@@ -150,7 +150,15 @@ try{await shutdownApp.RunFeature("export",()=>throw new Exception("Closed applic
 await shutdownApp.DisposeAsync();Check(shutdownRuntime.Disposals==1,"Repeated shutdown retried a detached runtime");
 Check(shutdownMerchant.Disposed,"Failed SDK shutdown leaked the merchant HTTP client");
 Check(shutdownStore.Record is not null&&shutdownRuntime.Releases==0,"Ordinary failed shutdown released the device or account");
-Console.WriteLine("C#: lifecycle, DPAPI, failed-save logout, total storage failure, stale-instance retry and failed shutdown passed.");
+foreach(var deniedCode in new[]{"LAUNCH_ENTITLEMENT_REQUIRED","DEVICE_LIMIT_REACHED"})foreach(bool brokenClose in new[]{false,true}){
+ var failureStore=new InspectStore();var failureMerchant=new Merchant();var denied=new LaunchException(deniedCode,403);
+ FakeRuntime? candidate=null;
+ IRuntime FailureFactory(Config cfg){if(string.IsNullOrEmpty(cfg.IdentityToken))throw new InvalidOperationException("no device credential was issued");candidate=new FakeRuntime(cfg){OnStart=()=>throw denied,FailDispose=brokenClose};return candidate;}
+ await using var app=new Application("https://merchant.example",Product,config,store:failureStore,cacheDirectory:root,handler:failureMerchant,runtimeFactory:FailureFactory);
+ try{await app.Login("a","b");throw new Exception("Denied SDK startup succeeded");}catch(LaunchException error){Check(ReferenceEquals(error,denied),"Cleanup replaced original SDK denial");}
+ Check(candidate is not null&&candidate.Disposals>0&&app.Status() is null&&failureStore.Record is null&&!string.IsNullOrEmpty(failureMerchant.LastLogoutBearer),"Failed SDK startup retained account access");
+}
+Console.WriteLine("C#: lifecycle, DPAPI, failed-save logout, total storage failure, stale-instance retry, failed shutdown and preserved startup denial passed.");
 string resolved=Path.GetFullPath(root);if(!resolved.StartsWith(Path.GetFullPath(Path.Combine(Path.GetTempPath(),"launch-account-tests-")),StringComparison.OrdinalIgnoreCase))throw new Exception("Unsafe temporary path");Directory.Delete(resolved,true);
 
 sealed class InspectStore:ISessionStore{

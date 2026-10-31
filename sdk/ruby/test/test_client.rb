@@ -219,7 +219,11 @@ end
 test('AES-GCM encrypted store rejects tamper and isolates scope') do |f|
   store = EncryptedFileStore.new(f.root, 'k' * 32)
   store.save('scope', 'token' => 'secret-token'); assert(store.load('scope') == { 'token' => 'secret-token' })
-  file = Dir[File.join(f.root, '*.aesgcm')].first; raw = File.binread(file); assert(!raw.include?('secret-token'))
+  # Dir glob patterns treat Windows backslashes as escapes. Enumerate names so
+  # the same confidentiality/tamper checks run with native temporary paths.
+  records = Dir.children(f.root).select { |name| name.end_with?('.aesgcm') }
+  assert(records.length == 1, 'expected one encrypted session record')
+  file = File.join(f.root, records.first); raw = File.binread(file); assert(!raw.include?('secret-token'))
   raw.setbyte(raw.bytesize - 1, raw.getbyte(raw.bytesize - 1) ^ 1); File.binwrite(file, raw)
   expect('INVALID_SAVED_SESSION') { store.load('scope') }; assert(store.load('other').nil?)
 end
@@ -259,6 +263,28 @@ test('HTTP connection remains open until an unread-body response is consumed') d
     assert(headers.none? { |h| h.match?(/\AConnection:\s*close\s*\z/i) }, 'implicit Connection: close risks an unread-body reset')
   ensure
     server.close; thread.join(2); thread.kill if thread.alive?
+  end
+end
+test('SDK startup denial survives shutdown and logout reconstruction failure') do |f|
+  %w[LAUNCH_ENTITLEMENT_REQUIRED DEVICE_LIMIT_REACHED].each do |code|
+    [false,true].each do |broken_close|
+      denied=LicentivoLaunch::Error.new(code,status:403)
+      factory=lambda do |config|
+        raise ArgumentError,'no device credential was issued' if config['identity_token'].to_s.empty?
+        runtime=FakeRuntime.new(config,f)
+        runtime.define_singleton_method(:start){raise denied}
+        runtime.define_singleton_method(:close){super();raise IOError,'SDK shutdown failed' if broken_close}
+        runtime
+      end
+      app=Application.new(LAUNCH,PRODUCT,**f.options.merge(runtime_factory:factory))
+      begin
+        begin;app.login('a','b');raise 'Denied SDK startup succeeded';rescue LicentivoLaunch::Error=>error;assert(error.equal?(denied),'Cleanup replaced original SDK denial');end
+        assert(f.calls.any?{|request|request[:url].end_with?('/auth/logout')},'Failed startup retained account session')
+        expect('LOGIN_REQUIRED'){app.run_feature('export'){raise 'denied startup allowed business'}}
+      ensure
+        app.close
+      end
+    end
   end
 end
 puts "#{$passed} Ruby wrapper tests passed"

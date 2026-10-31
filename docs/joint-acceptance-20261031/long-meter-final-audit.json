@@ -1,0 +1,102 @@
+{
+  "audited_at_utc": "2026-10-31T19:53:04Z",
+  "worker_pid_at_start": 119622,
+  "original_worker_no_longer_running": true,
+  "terminal_unit": {
+    "LoadState": "not-found",
+    "ActiveState": "inactive",
+    "SubState": "dead",
+    "MainPID": "0",
+    "Result": "success",
+    "ExecMainCode": "0",
+    "ExecMainStatus": "0"
+  },
+  "systemd_terminal_messages": [
+    {
+      "MESSAGE": "Started launch-joint-long-meter.service - [systemd-run] /home/spf86/launch-acceptance-20261031/venv/bin/python long_meter_matrix.py.",
+      "MESSAGE_ID": "39f53479d3a045ac8e11786248231fbf",
+      "UNIT": "launch-joint-long-meter.service",
+      "JOB_RESULT": "done",
+      "__REALTIME_TIMESTAMP": "1793475424655435"
+    },
+    {
+      "MESSAGE": "launch-joint-long-meter.service: Deactivated successfully.",
+      "MESSAGE_ID": "7ad2d189f7e94e70a38c781354912448",
+      "UNIT": "launch-joint-long-meter.service",
+      "__REALTIME_TIMESTAMP": "1793476328618569"
+    },
+    {
+      "MESSAGE": "launch-joint-long-meter.service: Consumed 2.035s CPU time over 15min 3.965s wall clock time, 19.2M memory peak.",
+      "MESSAGE_ID": "ae8f7b866b0347b9af31fe1c80b127c0",
+      "UNIT": "launch-joint-long-meter.service",
+      "__REALTIME_TIMESTAMP": "1793476328632204"
+    }
+  ],
+  "evidence": {
+    "complete": true,
+    "started_at_utc": "2026-10-31T19:37:05Z",
+    "operation_id": "47cfda4d-ceb3-412a-a110-90ee142116eb",
+    "reservation_request_overrides": false,
+    "server_clock_changed": false,
+    "business_scope": "SDK callback writes a CSV over the real reservation interval; no external system",
+    "reservation_id": "9d4c8b91-4b0a-490e-8994-9241fd184efb",
+    "reservation_expires_at": "2026-10-31T19:52:05.479316789Z",
+    "observed_remaining_seconds": 899.95,
+    "callback_started_at_utc": "2026-10-31T19:37:05Z",
+    "callback_rows": 900,
+    "callback_last_update_utc": "2026-10-31T19:52:06Z",
+    "artifact_sha256": "3aac0e957048ddddc112f692edc1750ce9478e8d69eefb7e7ccf75e05e50af0d",
+    "callback_finished_at_utc": "2026-10-31T19:52:07Z",
+    "first_result_codes": [
+      "RuntimeError",
+      "RESERVATION_EXPIRED"
+    ],
+    "business_callbacks": 1,
+    "initial_used": 0,
+    "fresh_runtime_retry_codes": [
+      "RuntimeError",
+      "RESERVATION_EXPIRED"
+    ],
+    "explicit_success_resolve_codes": [
+      "RuntimeError",
+      "RESERVATION_EXPIRED"
+    ],
+    "retry_new_callbacks": 0,
+    "final_journal_state": "commit_pending",
+    "subsequent_new_operation_id": "ff710f72-3e95-4ce9-b93c-a7228b57fe3a",
+    "subsequent_new_callbacks": 1,
+    "final_server_used": 1,
+    "finished_at_utc": "2026-10-31T19:52:08Z"
+  },
+  "server_reservations": [
+    {
+      "status": "pending",
+      "quantity": 1,
+      "expires_at": "2026-10-31T19:52:05.479317Z",
+      "operation_id": "47cfda4d-ceb3-412a-a110-90ee142116eb",
+      "expired_by_now": true,
+      "reservation_id": "9d4c8b91-4b0a-490e-8994-9241fd184efb"
+    },
+    {
+      "status": "committed",
+      "quantity": 1,
+      "expires_at": "2026-10-31T20:07:07.883304Z",
+      "operation_id": "ff710f72-3e95-4ce9-b93c-a7228b57fe3a",
+      "expired_by_now": false,
+      "reservation_id": "a78cd7ad-a707-4b07-bde2-1c754a7ddde8"
+    }
+  ],
+  "actual_business_callbacks": {
+    "47cfda4d-ceb3-412a-a110-90ee142116eb": 1,
+    "ff710f72-3e95-4ce9-b93c-a7228b57fe3a": 1
+  },
+  "business_csv": {
+    "file": "long-meter-business.csv",
+    "rows": 900,
+    "sha256": "3aac0e957048ddddc112f692edc1750ce9478e8d69eefb7e7ccf75e05e50af0d",
+    "sequence_amount_and_checksum_integrity": true
+  },
+  "active_fixture_activations_after_logout": 0,
+  "interpretation": "The server rejects settlement of expired reservations by design. Report the SDK long-task completion/recovery boundary separately from ordinary quota enforcement and from the four-hour soak.",
+  "artifact_and_cleanup_verified": true
+}

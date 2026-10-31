@@ -1,0 +1,57 @@
+Traceback (most recent call last):
+  File "/home/spf86/launch-acceptance-20261031/client-sdk/licentivo_launch/_vendor/licentivo.py", line 403, in start
+    result=self._check()
+  File "/home/spf86/launch-acceptance-20261031/client-sdk/licentivo_launch/_vendor/licentivo.py", line 264, in _check
+    if not self.state: raise ValueError('no valid lease')
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: no valid lease
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/spf86/launch-acceptance-20261031/client-sdk/licentivo_launch/client.py", line 250, in login
+    self._start(session, identity)
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "/home/spf86/launch-acceptance-20261031/client-sdk/licentivo_launch/client.py", line 227, in _start
+    try: runtime.start()
+         ~~~~~~~~~~~~~^^
+  File "/home/spf86/launch-acceptance-20261031/client-sdk/licentivo_launch/_vendor/licentivo.py", line 406, in start
+    result=self.activate();self.start_heartbeat(on_error);return result
+  File "/home/spf86/launch-acceptance-20261031/client-sdk/licentivo_launch/_vendor/licentivo.py", line 350, in activate
+    def activate(self): return self._call('activate')
+                               ~~~~~~~~~~^^^^^^^^^^^^
+  File "/home/spf86/launch-acceptance-20261031/client-sdk/licentivo_launch/_vendor/licentivo.py", line 327, in _call
+    try: result=self._request(operation,activation)
+                ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/spf86/launch-acceptance-20261031/client-sdk/licentivo_launch/_vendor/licentivo.py", line 312, in _request
+    raise error
+licentivo_launch._vendor.licentivo.APIError: Licentivo LAUNCH_ENTITLEMENT_REQUIRED (403)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/spf86/launch-acceptance-20261031/debug_demo.py", line 11, in <module>
+    app.login('bob@launch-test.example',s['customer_password'])
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/spf86/launch-acceptance-20261031/client-sdk/licentivo_launch/_account_lock.py", line 84, in guarded
+    return action(self, *args, **kwargs)
+  File "/home/spf86/launch-acceptance-20261031/client-sdk/licentivo_launch/client.py", line 254, in login
+    self.logout()
+    ~~~~~~~~~~~^^
+  File "/home/spf86/launch-acceptance-20261031/client-sdk/licentivo_launch/_account_lock.py", line 84, in guarded
+    return action(self, *args, **kwargs)
+  File "/home/spf86/launch-acceptance-20261031/client-sdk/licentivo_launch/client.py", line 438, in logout
+    if failure: raise failure
+                ^^^^^^^^^^^^^
+  File "/home/spf86/launch-acceptance-20261031/client-sdk/licentivo_launch/client.py", line 416, in logout
+    self.runtime = self.runtime_factory(self.config | {'license_key': '', 'identity_token': '',
+                   ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        'launch_connection_id': identity['launch_connection_id'], 'environment': self.environment,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        'cache_path': str(self._cache_for(saved))})
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/spf86/launch-acceptance-20261031/client-sdk/licentivo_launch/_vendor/licentivo.py", line 208, in __init__
+    if not config['license_key'] and not config.get('identity_token') and not self.auth and not self.signed_out: raise ValueError('enter a license key or temporary activation code')
+                                                                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: enter a license key or temporary activation code
+

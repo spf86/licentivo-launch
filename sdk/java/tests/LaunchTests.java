@@ -19,9 +19,9 @@ public final class LaunchTests {
         public void delete(String key)throws Launch.Failure{if(failDeletes)throw new Launch.Failure("TEST_STORAGE_FAILED");values.remove(key);}
     }
     static final class Runtime implements Launch.Runtime {
-        boolean offline=true,denied=false;int releases,closes,starts,checks;RuntimeException closeFailure;
+        boolean offline=true,denied=false;int releases,closes,starts,checks;RuntimeException closeFailure;Exception startFailure;
         public boolean canStartOffline(){return offline;}
-        public void start(){starts++;}
+        public void start()throws Exception{starts++;if(startFailure!=null)throw startFailure;}
         public void runFeature(String name,Client.FeatureAction action)throws Exception{checks++;if(denied)throw new Launch.Failure("FEATURE_DENIED");action.run();}
         public void releaseDevice(){releases++;}
         public void close(){closes++;if(closeFailure!=null)throw closeFailure;}
@@ -30,7 +30,7 @@ public final class LaunchTests {
         final Store store=new Store();final Path root=Files.createTempDirectory("launch-java-");
         final String tokenPrefix="private-bearer-"+UUID.randomUUID()+"-";
         final List<Runtime> runtimes=new ArrayList<>();final List<String> paths=new ArrayList<>();final List<Long> waits=new ArrayList<>();
-        String mode="",user="account-a",retry="",blockedToken="",meBody=null;int credentials,logouts,logins,logoutStatus=200;boolean offline=true;
+        String mode="",user="account-a",retry="",blockedToken="",meBody=null;int credentials,logouts,logins,logoutStatus=200;boolean offline=true,failStartupClose;Exception startupFailure;
         final Launch.Config config=new Launch.Config("https://merchant.example",PRODUCT,REMOTE,"sandbox");
         final Map<String,Object> product=Map.of("product_id",REMOTE,"trusted_keys",Map.of(KEY,Base64.getUrlEncoder().withoutPadding().encodeToString(new byte[32])));
         Launch app;
@@ -47,7 +47,7 @@ public final class LaunchTests {
                 else {credentials++;data=Map.of("product_id",PRODUCT,"licentivo_product_id",REMOTE,"environment",cfg.environment(),"launch_connection_id",KEY,"identity_token","I".repeat(64),"expires_at",Instant.now().plusSeconds(120).toString());if(!mode.isEmpty()){status=403;code=mode;}}
                 Object envelope=status>=200&&status<300?Map.of("data",data):Map.of("error",Map.of("code",code),"request_id","request-1");
                 return new Launch.Response(status,Json.write(envelope).getBytes(StandardCharsets.UTF_8),retry);
-            },settings->{Runtime runtime=new Runtime();runtime.offline=offline;runtimes.add(runtime);paths.add((String)settings.get("cache_path"));Files.writeString(Path.of(paths.get(paths.size()-1)),"SDK-owned grant");return runtime;},waits::add);
+            },settings->{if(startupFailure!=null&&String.valueOf(settings.getOrDefault("identity_token","")).isEmpty())throw new IllegalArgumentException("no device credential was issued");Runtime runtime=new Runtime();runtime.offline=offline;runtime.startFailure=startupFailure;if(failStartupClose)runtime.closeFailure=new IllegalStateException("SDK shutdown failed");runtimes.add(runtime);paths.add((String)settings.get("cache_path"));Files.writeString(Path.of(paths.get(paths.size()-1)),"SDK-owned grant");return runtime;},waits::add);
         }
         void login()throws Exception{char[] password="private-password".toCharArray();app.login("a@example.invalid",password);check(password[0]=='\0',"password retained in caller buffer");}
         public void close()throws Exception{app.close();if(Files.exists(root))try(var paths=Files.walk(root)){for(var path:paths.sorted(Comparator.reverseOrder()).toList())Files.deleteIfExists(path);}}
@@ -114,8 +114,17 @@ public final class LaunchTests {
     }
     public static void main(String[] args)throws Exception{
         lifecycle();denials();pending();identityAndExpiry();actionsAndScope();configAndRedaction();encryptedStore();
-        transportPolicyDenials();acceptedLogout();failedStoreRestore();failedStoreLogout();staleInstance();malformedCurrentUser();failedSdkClose();
-        System.out.println("Java: 14 lifecycle/security test groups passed");
+        transportPolicyDenials();acceptedLogout();failedStoreRestore();failedStoreLogout();staleInstance();malformedCurrentUser();failedSdkClose();startupDenials();
+        System.out.println("Java: 15 lifecycle/security test groups passed");
+    }
+    static void startupDenials()throws Exception{
+        for(String code:List.of("LAUNCH_ENTITLEMENT_REQUIRED","DEVICE_LIMIT_REACHED"))for(boolean brokenClose:List.of(false,true))try(var f=new Fixture()){
+            var denied=new Launch.Failure(code,403,"startup-request",0,false);
+            f.startupFailure=denied;f.failStartupClose=brokenClose;
+            try{f.login();throw new AssertionError("Denied SDK startup succeeded");}catch(Launch.Failure error){check(error==denied,"Cleanup replaced original SDK denial");}
+            check(f.logouts>0&&f.store.values.isEmpty(),"Failed SDK startup retained account access");
+            expect("NOT_STARTED",()->f.app.runFeature("export",()->{throw new AssertionError("denied startup allowed business");}));
+        }
     }
     static void failedSdkClose()throws Exception{
         try(var f=new Fixture()){

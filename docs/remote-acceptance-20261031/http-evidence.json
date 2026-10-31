@@ -1,0 +1,1913 @@
+[
+  {
+    "name": "health",
+    "passed": true,
+    "time": "2026-10-31T20:59:55+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "fc9a71139f3911c8fd8a0b7f028b0325"
+  },
+  {
+    "name": "readiness",
+    "passed": true,
+    "time": "2026-10-31T20:59:56+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "df6d9b51cc7dc3ca96cfa6bb4ff75d4e"
+  },
+  {
+    "name": "storefront HTML",
+    "passed": true,
+    "time": "2026-10-31T20:59:56+0800",
+    "status": 200,
+    "code": null,
+    "request_id": null
+  },
+  {
+    "name": "embedded JS",
+    "passed": true,
+    "time": "2026-10-31T20:59:56+0800",
+    "status": 200,
+    "code": null,
+    "request_id": null
+  },
+  {
+    "name": "admin requires login",
+    "passed": true,
+    "time": "2026-10-31T20:59:56+0800",
+    "status": 401,
+    "code": "AUTH_REQUIRED",
+    "request_id": "7bafa03c06801f3573c176980d60b3a2"
+  },
+  {
+    "name": "reject invalid JSON",
+    "passed": true,
+    "time": "2026-10-31T20:59:56+0800",
+    "status": 400,
+    "code": "INVALID_INPUT",
+    "request_id": "10e4343c9906bd05f68ce853d77ff1b1"
+  },
+  {
+    "name": "reject non JSON",
+    "passed": true,
+    "time": "2026-10-31T20:59:56+0800",
+    "status": 415,
+    "code": "JSON_REQUIRED",
+    "request_id": "2eff34cfb68cb083094a802a847b3ee0"
+  },
+  {
+    "name": "bootstrap login",
+    "passed": true,
+    "time": "2026-10-31T20:59:57+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "2b0c589152c39484ae8d21b32d2b9b0e"
+  },
+  {
+    "name": "bootstrap admin blocked",
+    "passed": true,
+    "time": "2026-10-31T20:59:57+0800",
+    "status": 403,
+    "code": "PASSWORD_CHANGE_REQUIRED",
+    "request_id": "dc8de8f48ba847dd37e5ff03d7ca0ef4"
+  },
+  {
+    "name": "bootstrap password change",
+    "passed": true,
+    "time": "2026-10-31T20:59:57+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "1b776dbbc5f4838599168f5d31b48d9b"
+  },
+  {
+    "name": "password change revokes old session",
+    "passed": true,
+    "time": "2026-10-31T20:59:57+0800",
+    "status": 401,
+    "code": "AUTH_REQUIRED",
+    "request_id": "f94091facead4719716d5352907c7294"
+  },
+  {
+    "name": "admin login",
+    "passed": true,
+    "time": "2026-10-31T20:59:58+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "df946197378066b38672c1598ca5098c"
+  },
+  {
+    "name": "admin catalog",
+    "passed": true,
+    "time": "2026-10-31T20:59:58+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "0ebd58ef0b212b9186182e84ccdd77ce"
+  },
+  {
+    "name": "desktop HTTP default denied",
+    "passed": true,
+    "time": "2026-10-31T20:59:58+0800",
+    "status": 403,
+    "code": "SDK_HTTP_DISABLED",
+    "request_id": "e4e66845b30e2d50900bad2bf7cd8308"
+  },
+  {
+    "name": "enable HTTP sandbox SDK",
+    "passed": true,
+    "time": "2026-10-31T20:59:58+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "896d057ad197b6a8e2bf62cc18015919"
+  },
+  {
+    "name": "reject cross origin mutation",
+    "passed": true,
+    "time": "2026-10-31T20:59:58+0800",
+    "status": 403,
+    "code": "FORBIDDEN",
+    "request_id": "e71c23a7690f5301181174769f21eb83"
+  },
+  {
+    "name": "reject invalid CSRF",
+    "passed": true,
+    "time": "2026-10-31T20:59:58+0800",
+    "status": 403,
+    "code": "CSRF_INVALID",
+    "request_id": "20e0abe8856c3745ba7f047b4a3c8cad"
+  },
+  {
+    "name": "register alice",
+    "passed": true,
+    "time": "2026-10-31T20:59:58+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "4c286169e7ff23954b366e314861a190"
+  },
+  {
+    "name": "register bob",
+    "passed": true,
+    "time": "2026-10-31T20:59:58+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "b76bea326a127ff75752e715bed61830"
+  },
+  {
+    "name": "duplicate registration",
+    "passed": false,
+    "time": "2026-10-31T20:59:58+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "3a2356cdeeee1173862c13a0b380a824"
+  },
+  {
+    "name": "bad password denied",
+    "passed": true,
+    "time": "2026-10-31T20:59:58+0800",
+    "status": 401,
+    "code": "LOGIN_FAILED",
+    "request_id": "baf47180f0b83c7fc8ce40f11404eb42"
+  },
+  {
+    "name": "desktop login alice",
+    "passed": true,
+    "time": "2026-10-31T20:59:59+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "dd607cbdfaa00da77be31e4fee788ed5"
+  },
+  {
+    "name": "current account alice",
+    "passed": true,
+    "time": "2026-10-31T20:59:59+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "9dc20dd88473b7f2bd26ffd56f3f185b"
+  },
+  {
+    "name": "customer cannot access admin alice",
+    "passed": true,
+    "time": "2026-10-31T20:59:59+0800",
+    "status": 403,
+    "code": "FORBIDDEN",
+    "request_id": "05846b1a1ddc5b364beee63bc3aace4f"
+  },
+  {
+    "name": "desktop login bob",
+    "passed": true,
+    "time": "2026-10-31T20:59:59+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "e0836f844c05af283ab85f1ecef457ad"
+  },
+  {
+    "name": "current account bob",
+    "passed": true,
+    "time": "2026-10-31T20:59:59+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "4f0354ee885036bb87dd58700a2bec8c"
+  },
+  {
+    "name": "customer cannot access admin bob",
+    "passed": true,
+    "time": "2026-10-31T20:59:59+0800",
+    "status": 403,
+    "code": "FORBIDDEN",
+    "request_id": "d3b8256811adaac59dddb204b77d30a0"
+  },
+  {
+    "name": "real Licentivo connection",
+    "passed": true,
+    "time": "2026-10-31T21:00:02+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "2aa629482a46591be2042d54e05bd332"
+  },
+  {
+    "name": "read saved connections",
+    "passed": true,
+    "time": "2026-10-31T21:00:02+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "9b1efd9361ec85693ca1af3505a3c9b1"
+  },
+  {
+    "name": "save merchant branding",
+    "passed": true,
+    "time": "2026-10-31T21:01:29+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "46898807539440a321d132ab05f5c2c9"
+  },
+  {
+    "name": "create Game product",
+    "passed": true,
+    "time": "2026-10-31T21:01:29+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "65fd8461c7a93b6b7fe015e37c7aff29"
+  },
+  {
+    "name": "create Exporter product",
+    "passed": true,
+    "time": "2026-10-31T21:01:29+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "100e108bd3d47a5a524458f23f3f1f9f"
+  },
+  {
+    "name": "create plan go",
+    "passed": false,
+    "time": "2026-10-31T21:01:29+0800",
+    "status": 400,
+    "code": "INVALID_INPUT",
+    "request_id": "f319d8366dad2b2a312955cb52f82567"
+  },
+  {
+    "name": "create plan pro",
+    "passed": false,
+    "time": "2026-10-31T21:01:29+0800",
+    "status": 400,
+    "code": "INVALID_INPUT",
+    "request_id": "48dacdce3a48d9f493d6fb33cde6719f"
+  },
+  {
+    "name": "create plan 默认授权",
+    "passed": false,
+    "time": "2026-10-31T21:01:29+0800",
+    "status": 400,
+    "code": "INVALID_INPUT",
+    "request_id": "52f7d2eaba243551a98470f0c2a8a1b4"
+  },
+  {
+    "name": "save merchant branding",
+    "passed": true,
+    "time": "2026-10-31T21:02:38+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "a67186aa33f1c3af4d8af4a4209c6a04"
+  },
+  {
+    "name": "create plan go",
+    "passed": true,
+    "time": "2026-10-31T21:02:38+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "b719949fc6ff4e0f32b83cbe36e3dde9"
+  },
+  {
+    "name": "map real policy go",
+    "passed": false,
+    "time": "2026-10-31T21:02:50+0800",
+    "status": 409,
+    "code": "LICENSE_POLICY_CHANGED",
+    "request_id": "b335a5a39b16577851ab8b3ba855b536"
+  },
+  {
+    "name": "publish sandbox go",
+    "passed": true,
+    "time": "2026-10-31T21:02:50+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "a2e67d386114a7ec974aae972e128398"
+  },
+  {
+    "name": "create plan pro",
+    "passed": true,
+    "time": "2026-10-31T21:02:50+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "1977fae4ccd0db06fc4525ba3507ad8b"
+  },
+  {
+    "name": "map real policy pro",
+    "passed": false,
+    "time": "2026-10-31T21:02:54+0800",
+    "status": 409,
+    "code": "LICENSE_POLICY_CHANGED",
+    "request_id": "e219bc7cf3aef9e33e42dbe0bc20e117"
+  },
+  {
+    "name": "publish sandbox pro",
+    "passed": true,
+    "time": "2026-10-31T21:02:54+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "bb19509a29c32b2c43ff31da2f19e39f"
+  },
+  {
+    "name": "create plan 默认授权",
+    "passed": true,
+    "time": "2026-10-31T21:02:54+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "cde234ebe8d51e1379f11659b61a6fda"
+  },
+  {
+    "name": "map real policy 默认授权",
+    "passed": true,
+    "time": "2026-10-31T21:03:01+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "d852a55aa9e5077ba37833aa01612a52"
+  },
+  {
+    "name": "publish sandbox 默认授权",
+    "passed": true,
+    "time": "2026-10-31T21:03:06+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "9dfd5d98b80b189b0255b802c05442a3"
+  },
+  {
+    "name": "sandbox storefront",
+    "passed": true,
+    "time": "2026-10-31T21:03:06+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "93163f0c5425de08cc0937aa8bdcea0c"
+  },
+  {
+    "name": "live publication gated without payments",
+    "passed": true,
+    "time": "2026-10-31T21:03:06+0800",
+    "status": 409,
+    "code": "SALES_CONNECTION_REQUIRED",
+    "request_id": "caa1ca9660b7d2651c18a9a61785c715"
+  },
+  {
+    "name": "duplicate registration uses documented anti-enumeration response",
+    "passed": true,
+    "time": "2026-10-31T21:03:06+0800",
+    "note": "The initial 409 expectation was incorrect; registration intentionally returns 200 for existing accounts."
+  },
+  {
+    "name": "publish mapped plan with database payment fixture",
+    "passed": true,
+    "time": "2026-10-31T21:05:04+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "8239889499e613d63a1d90552b27b7a4"
+  },
+  {
+    "name": "real integration preflight",
+    "passed": true,
+    "time": "2026-10-31T21:05:09+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "ed6211de2917de6a6e036caccea0752f"
+  },
+  {
+    "name": "integration readiness",
+    "passed": true,
+    "time": "2026-10-31T21:05:09+0800",
+    "checks": [
+      {
+        "code": "MERCHANT_ORIGIN_READY",
+        "status": "ready"
+      },
+      {
+        "code": "POLICY_MAPPING_READY",
+        "status": "ready"
+      },
+      {
+        "code": "PUBLIC_KEYS_READY",
+        "status": "ready"
+      }
+    ]
+  },
+  {
+    "name": "no-purchase status",
+    "passed": true,
+    "time": "2026-10-31T21:05:09+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "8ada803cad166b3722e6d90ba292d46a"
+  },
+  {
+    "name": "identity can be issued before purchase",
+    "passed": true,
+    "time": "2026-10-31T21:05:09+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "825adcbdae43255f0ccd945f4d5a59a3"
+  },
+  {
+    "name": "long credential endpoint removed",
+    "passed": true,
+    "time": "2026-10-31T21:05:09+0800",
+    "status": 410,
+    "code": "LICENSE_CREDENTIAL_REMOVED",
+    "request_id": "374a2f43d7dafab755f4076a53ee0976"
+  },
+  {
+    "name": "live identity denied over HTTP",
+    "passed": true,
+    "time": "2026-10-31T21:05:09+0800",
+    "status": 403,
+    "code": "SDK_HTTPS_REQUIRED",
+    "request_id": "3c58e714626ce1f1574e760287b1381c"
+  },
+  {
+    "name": "no-purchase account devices empty or denied",
+    "passed": true,
+    "time": "2026-10-31T21:05:09+0800",
+    "status": 404,
+    "code": "NOT_FOUND",
+    "request_id": "790fddb63d5fd3b522f29fc35cf2f5ce"
+  },
+  {
+    "name": "paid fixture synchronized status",
+    "passed": true,
+    "time": "2026-10-31T21:07:25+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "006bfaf6a53b26fd19246c5a25865c6c"
+  },
+  {
+    "name": "actual authorization queue",
+    "passed": true,
+    "time": "2026-10-31T21:07:25+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "fa99cb6c66513b1dcd79b31aa40b8068"
+  },
+  {
+    "name": "create tiered product",
+    "passed": true,
+    "time": "2026-10-31T21:09:48+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "03653c54be54c62a28125b0ea297640b"
+  },
+  {
+    "name": "create tiered Basic",
+    "passed": true,
+    "time": "2026-10-31T21:09:48+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "a02098683f44f3f195fa3c2c762241f8"
+  },
+  {
+    "name": "map tiered Basic",
+    "passed": true,
+    "time": "2026-10-31T21:10:15+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "eb98aaea35bd235dc3fad4f2b7497688"
+  },
+  {
+    "name": "publish tiered Basic",
+    "passed": true,
+    "time": "2026-10-31T21:10:17+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "1c16b166ffc1752ae7a5eb85d6ee91ad"
+  },
+  {
+    "name": "create tiered Pro",
+    "passed": true,
+    "time": "2026-10-31T21:10:17+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "eb4472c6adb0bcd2506c30fc5e406a82"
+  },
+  {
+    "name": "inspect real authorization state",
+    "passed": true,
+    "time": "2026-10-31T21:10:33+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "2cf92e361096b54dbb8978f09800c3ef"
+  },
+  {
+    "name": "software status after real SDK activation",
+    "passed": true,
+    "time": "2026-10-31T21:10:33+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "701111f96236057e801886d6fb6b0092"
+  },
+  {
+    "name": "software status reports ready after synchronization",
+    "passed": false,
+    "time": "2026-10-31T21:10:33+0800",
+    "actual": "pending",
+    "code": "ENTITLEMENT_PENDING",
+    "synchronized": true,
+    "entitlement_id": "c7a66546-1536-4f56-96d8-12f5c2a6f9b2"
+  },
+  {
+    "name": "real devices and hardware details",
+    "passed": true,
+    "time": "2026-10-31T21:10:42+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "275e12422730dd22113f15813dd74663"
+  },
+  {
+    "name": "admin paid orders",
+    "passed": true,
+    "time": "2026-10-31T21:10:42+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "0b8843efab7b87c7d0576010c26dd496"
+  },
+  {
+    "name": "owner reads paid order",
+    "passed": true,
+    "time": "2026-10-31T21:10:42+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "6276153fc3e2399c80f6e9c291344cab"
+  },
+  {
+    "name": "other customer cannot read order",
+    "passed": true,
+    "time": "2026-10-31T21:10:42+0800",
+    "status": 404,
+    "code": "NOT_FOUND",
+    "request_id": "f02a20c625abd2d0c590a34aebd5f64b"
+  },
+  {
+    "name": "other customer cannot refund order",
+    "passed": true,
+    "time": "2026-10-31T21:10:42+0800",
+    "status": 404,
+    "code": "NOT_FOUND",
+    "request_id": "035d680c3053ba8d84f35d07cb2eedcd"
+  },
+  {
+    "name": "customer invoices",
+    "passed": true,
+    "time": "2026-10-31T21:10:42+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "d7ae38d61a47a2af5b4dd768f809ef7d"
+  },
+  {
+    "name": "read /api/v1/admin/dashboard",
+    "passed": true,
+    "time": "2026-10-31T21:10:42+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "1ee002ff37a60540d70c24528eb35620"
+  },
+  {
+    "name": "read /api/v1/admin/readiness",
+    "passed": true,
+    "time": "2026-10-31T21:10:42+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "b0e59abfe255e59fc30991b12c5ce4ec"
+  },
+  {
+    "name": "read /api/v1/admin/recovery",
+    "passed": true,
+    "time": "2026-10-31T21:10:43+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "2d0b0402cf35036b625adb840885233e"
+  },
+  {
+    "name": "read /api/v1/admin/audit",
+    "passed": true,
+    "time": "2026-10-31T21:10:43+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "fa24b85d2bb32919f8dbc88288e6bf6c"
+  },
+  {
+    "name": "read /api/v1/admin/users",
+    "passed": true,
+    "time": "2026-10-31T21:10:43+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "ef9ee04d7f84c42fbd52a80a22143def"
+  },
+  {
+    "name": "read /api/v1/admin/staff",
+    "passed": true,
+    "time": "2026-10-31T21:10:43+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "0fc3af428ff919af534804228090cdb3"
+  },
+  {
+    "name": "read /api/v1/admin/mail/settings",
+    "passed": true,
+    "time": "2026-10-31T21:10:43+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "ae95496680e5caf6c7e736c8ebaffdf4"
+  },
+  {
+    "name": "read /api/v1/admin/tls/settings",
+    "passed": true,
+    "time": "2026-10-31T21:10:43+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "b96e0de1e13bb78830497df179883a0e"
+  },
+  {
+    "name": "read /api/v1/admin/translations",
+    "passed": true,
+    "time": "2026-10-31T21:10:43+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "b9934edf021463c951d318a271250466"
+  },
+  {
+    "name": "CSV export orders",
+    "passed": true,
+    "time": "2026-10-31T21:10:43+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "e62231338ccab050f9116d712f1f7f01"
+  },
+  {
+    "name": "CSV export customers",
+    "passed": false,
+    "time": "2026-10-31T21:10:43+0800",
+    "status": 400,
+    "code": "INVALID_INPUT",
+    "request_id": "2140c6a393f12c873208c4715208ea10"
+  },
+  {
+    "name": "customer cannot become staff",
+    "passed": false,
+    "time": "2026-10-31T21:10:48+0800",
+    "status": 503,
+    "code": "STORAGE_UNAVAILABLE",
+    "request_id": "0c2d82be67b51672136120c69c0c163a"
+  },
+  {
+    "name": "staff listing",
+    "passed": true,
+    "time": "2026-10-31T21:10:48+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "35e5d7a43d832e98cdfe746702a6fa76"
+  },
+  {
+    "name": "last administrator protected",
+    "passed": true,
+    "time": "2026-10-31T21:10:52+0800",
+    "status": 409,
+    "code": "LAST_ADMIN_PROTECTED",
+    "request_id": "d717f48f683d42d15f329e8d9dfbd0a4"
+  },
+  {
+    "name": "policy drafts",
+    "passed": true,
+    "time": "2026-10-31T21:10:52+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "f8d48e086401cb8306fb7bc11ae705dc"
+  },
+  {
+    "name": "publish tiered Pro",
+    "passed": true,
+    "time": "2026-10-31T21:10:52+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "97b6ca37c204076225f2ef1cdb801064"
+  },
+  {
+    "name": "save policy draft",
+    "passed": true,
+    "time": "2026-10-31T21:10:52+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "25c6159d2dca83b64c1dc8a4bb5ad5eb"
+  },
+  {
+    "name": "unpublished policy stays private",
+    "passed": true,
+    "time": "2026-10-31T21:10:52+0800",
+    "status": 404,
+    "code": "NOT_FOUND",
+    "request_id": "e60d5b1eac568872dd878260e72d1140"
+  },
+  {
+    "name": "publish policy",
+    "passed": true,
+    "time": "2026-10-31T21:10:52+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "10f7a85f24f7e920365eb3c543c7a263"
+  },
+  {
+    "name": "published policy available",
+    "passed": true,
+    "time": "2026-10-31T21:10:52+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "cfabc639fd92fa3761b3d08b45a16818"
+  },
+  {
+    "name": "stale policy edit rejected",
+    "passed": true,
+    "time": "2026-10-31T21:10:52+0800",
+    "status": 409,
+    "code": "POLICY_VERSION_CONFLICT",
+    "request_id": "d2df6db3aa9e46d9fed6122347193fdd"
+  },
+  {
+    "name": "upload installer file",
+    "passed": true,
+    "time": "2026-10-31T21:10:52+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "a5bccc8220cf8654b7e30b4da89b5c7b"
+  },
+  {
+    "name": "installer download bytes and checksum",
+    "passed": true,
+    "time": "2026-10-31T21:10:52+0800",
+    "bytes": 38
+  },
+  {
+    "name": "installer range download",
+    "passed": true,
+    "time": "2026-10-31T21:10:53+0800",
+    "status": 206
+  },
+  {
+    "name": "delete test installer",
+    "passed": true,
+    "time": "2026-10-31T21:10:53+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "4d11e8ac002514a4695066c2a431c8b9"
+  },
+  {
+    "name": "deleted installer unavailable",
+    "passed": true,
+    "time": "2026-10-31T21:10:53+0800",
+    "status": 404,
+    "code": "NOT_FOUND",
+    "request_id": "51d38f81e59dd0f4bc9a8a3ee579caac"
+  },
+  {
+    "name": "storefront locale en",
+    "passed": true,
+    "time": "2026-10-31T21:10:53+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "f9c8f68cdb8d3b622171b3acc7a5c5f5"
+  },
+  {
+    "name": "storefront locale zh-CN",
+    "passed": true,
+    "time": "2026-10-31T21:10:53+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "4c64aacffa0b20cfdf86b6a95ea2b286"
+  },
+  {
+    "name": "storefront locale zh-Hant",
+    "passed": true,
+    "time": "2026-10-31T21:10:53+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "c4f4ecd845cd227cb4bd89c3dc65d680"
+  },
+  {
+    "name": "storefront locale ja",
+    "passed": true,
+    "time": "2026-10-31T21:10:53+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "43def7c6216a2b22a77e1c7d15cf87ca"
+  },
+  {
+    "name": "storefront locale ko",
+    "passed": true,
+    "time": "2026-10-31T21:10:53+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "902b73c0a8e6d3636119c3d458599eab"
+  },
+  {
+    "name": "storefront locale de",
+    "passed": true,
+    "time": "2026-10-31T21:10:53+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "7af14a5d7151d17c141397a605cfca23"
+  },
+  {
+    "name": "storefront locale fr",
+    "passed": true,
+    "time": "2026-10-31T21:10:53+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "858a8e26081ffd56590cb4cad31d25e9"
+  },
+  {
+    "name": "storefront locale es",
+    "passed": true,
+    "time": "2026-10-31T21:10:53+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "ca3bc875550e74d54e66bb5fba2b5713"
+  },
+  {
+    "name": "storefront locale it",
+    "passed": true,
+    "time": "2026-10-31T21:10:53+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "2ab35099265bdbe1d65223f83560797b"
+  },
+  {
+    "name": "storefront locale pt-BR",
+    "passed": true,
+    "time": "2026-10-31T21:10:53+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "633414b20ab969a493be13ba0aec5b39"
+  },
+  {
+    "name": "tiered integration preflight",
+    "passed": true,
+    "time": "2026-10-31T21:11:12+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "f32502f6d6605cfdc27fda107d31c352"
+  },
+  {
+    "name": "tiered integration ready",
+    "passed": false,
+    "time": "2026-10-31T21:11:12+0800"
+  },
+  {
+    "name": "real renewal quote",
+    "passed": true,
+    "time": "2026-10-31T21:13:10+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "2c601b6009c2ac9042d61518946d53a4"
+  },
+  {
+    "name": "renewal quote amount",
+    "passed": true,
+    "time": "2026-10-31T21:13:10+0800",
+    "amount_minor": 1000,
+    "valid_until": "2026-12-31T13:06:54.012831Z"
+  },
+  {
+    "name": "correct CSV users export",
+    "passed": true,
+    "time": "2026-10-31T21:13:10+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "e99b684cbbb5267852192cecef50174b"
+  },
+  {
+    "name": "customer cannot become staff sequential retest",
+    "passed": true,
+    "time": "2026-10-31T21:13:10+0800",
+    "status": 404,
+    "code": "NOT_FOUND",
+    "request_id": "f151f7a7b0829d2ee117b72a4d637aa5"
+  },
+  {
+    "name": "refresh real policy catalogue",
+    "passed": true,
+    "time": "2026-10-31T21:13:31+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "8cbc17f8dce2e7754a51ec9007ca8368"
+  },
+  {
+    "name": "create immutable pro version",
+    "passed": true,
+    "time": "2026-10-31T21:13:31+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "caa9a14ac7412613bda5d421a80abecb"
+  },
+  {
+    "name": "map dedicated node policy",
+    "passed": true,
+    "time": "2026-10-31T21:13:38+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "0cbe17b66762a3726f611d0e59058bd7"
+  },
+  {
+    "name": "publish dedicated pro",
+    "passed": true,
+    "time": "2026-10-31T21:13:40+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "b6bd1ffd53b83930722cfe46262c7477"
+  },
+  {
+    "name": "tiered integration recheck",
+    "passed": true,
+    "time": "2026-10-31T21:13:55+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "b95403b303c87892338180e020e355b2"
+  },
+  {
+    "name": "dedicated tiered policy ready",
+    "passed": true,
+    "time": "2026-10-31T21:13:55+0800"
+  },
+  {
+    "name": "renewal synchronized operations",
+    "passed": true,
+    "time": "2026-10-31T21:14:58+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "491facc08b0a5b0fda38b9fe5d65c3ad"
+  },
+  {
+    "name": "refresh runtime state for lifecycle tests",
+    "passed": true,
+    "time": "2026-10-31T21:15:44+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "e1b734d554ae6da94e673c27b419e793"
+  },
+  {
+    "name": "refresh actual order state",
+    "passed": true,
+    "time": "2026-10-31T21:15:44+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "7bcde5d1bd3f659b0b49f05e43792388"
+  },
+  {
+    "name": "real renewal quote",
+    "passed": true,
+    "time": "2026-10-31T21:16:23+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "5a209519cb1b998d7b1fc4c2af615163"
+  },
+  {
+    "name": "renewal quote amount",
+    "passed": true,
+    "time": "2026-10-31T21:16:23+0800",
+    "amount_minor": 1000,
+    "valid_until": "2026-12-31T13:06:54.012831Z"
+  },
+  {
+    "name": "correct CSV users export",
+    "passed": true,
+    "time": "2026-10-31T21:16:23+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "729e36eefe78b9c761abe67a547afda9"
+  },
+  {
+    "name": "customer cannot become staff sequential retest",
+    "passed": true,
+    "time": "2026-10-31T21:16:23+0800",
+    "status": 404,
+    "code": "NOT_FOUND",
+    "request_id": "8b885d7c294b760ac3183cb39badcfc9"
+  },
+  {
+    "name": "renewal synchronized operations",
+    "passed": true,
+    "time": "2026-10-31T21:16:35+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "8f7ae42020f94849aa3fc60f81ab6796"
+  },
+  {
+    "name": "calendar-month renewal applied exactly once",
+    "passed": false,
+    "time": "2026-10-31T21:16:35+0800",
+    "expected": "2026-12-31T13:06:54.012831Z",
+    "actual": "2026-12-31T13:06:54.012831Z"
+  },
+  {
+    "name": "renewal orders",
+    "passed": true,
+    "time": "2026-10-31T21:16:35+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "d0ab8f14a92b5acbdfce7ebb193b75be"
+  },
+  {
+    "name": "renewal order idempotency",
+    "passed": true,
+    "time": "2026-10-31T21:16:35+0800",
+    "count": 1
+  },
+  {
+    "name": "sandbox invoice blocked",
+    "passed": true,
+    "time": "2026-10-31T21:16:35+0800",
+    "status": 409,
+    "code": "INVOICE_NOT_AVAILABLE",
+    "request_id": "80ceee68ef9b2e2da1324d026c26da53"
+  },
+  {
+    "name": "foreign renewal quote cannot be used",
+    "passed": false,
+    "time": "2026-10-31T21:16:35+0800",
+    "status": 400,
+    "code": "INVALID_INPUT",
+    "request_id": "00d1294169cf823980937d39c7e27251"
+  },
+  {
+    "name": "renewal eventually applied once",
+    "passed": true,
+    "time": "2026-10-31T21:18:18+0800",
+    "valid_until": "2026-12-31T13:06:54.012831Z"
+  },
+  {
+    "name": "read short lived identity for signature validation",
+    "passed": true,
+    "time": "2026-10-31T21:18:18+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "faf8bd877cbf3879a42a9cf0c1ab3570"
+  },
+  {
+    "name": "public identity verification keys",
+    "passed": true,
+    "time": "2026-10-31T21:18:18+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "3f30ad4b5836953beb7db0135617b2cc"
+  },
+  {
+    "name": "real identity signature and scope",
+    "passed": true,
+    "time": "2026-10-31T21:18:18+0800",
+    "ttl_seconds": 120
+  },
+  {
+    "name": "tiered Basic login",
+    "passed": true,
+    "time": "2026-10-31T21:18:23+0800",
+    "exit_code": 0,
+    "result": {
+      "action": "login",
+      "state": "active",
+      "allowed": true,
+      "code": "",
+      "device": {
+        "name": "spf86",
+        "code": "DD76-F06E",
+        "platform": "linux",
+        "os_version": "Ubuntu 26.04.1 LTS",
+        "cpu": "AMD Ryzen 7 5800H with Radeon Graphics",
+        "memory_mb": 3350,
+        "gpu": "",
+        "system_type": "x86_64",
+        "storage_gb": 43
+      },
+      "lease_valid_until": 1793453393
+    },
+    "error": {},
+    "seconds": 5.02
+  },
+  {
+    "name": "Basic denies Pro print callback",
+    "passed": true,
+    "time": "2026-10-31T21:18:41+0800",
+    "exit_code": 1,
+    "result": {},
+    "error": {
+      "error": "RuntimeError",
+      "request_id": ""
+    },
+    "seconds": 17.203
+  },
+  {
+    "name": "real upgrade quote",
+    "passed": true,
+    "time": "2026-10-31T21:18:43+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "ac4221926f9797c5b658be20cd0a70e3"
+  },
+  {
+    "name": "upgrade price is prorated positive difference",
+    "passed": true,
+    "time": "2026-10-31T21:18:43+0800",
+    "amount_minor": 1000
+  },
+  {
+    "name": "upgrade paid fixture",
+    "passed": true,
+    "time": "2026-10-31T21:18:56+0800",
+    "order_id": "5f2c9690-3a83-470c-87f4-2d02525a110d",
+    "scope": "database_payment_fixture_real_launch_logic"
+  },
+  {
+    "name": "upgraded Pro permits real print export",
+    "passed": true,
+    "time": "2026-10-31T21:19:27+0800",
+    "exit_code": 0,
+    "result": {
+      "action": "export",
+      "state": "active",
+      "allowed": true,
+      "code": "",
+      "device": {
+        "name": "spf86",
+        "code": "DD76-F06E",
+        "platform": "linux",
+        "os_version": "Ubuntu 26.04.1 LTS",
+        "cpu": "AMD Ryzen 7 5800H with Radeon Graphics",
+        "memory_mb": 3350,
+        "gpu": "",
+        "system_type": "x86_64",
+        "storage_gb": 43
+      },
+      "lease_valid_until": 1793453457,
+      "callback_executed": true,
+      "business": {
+        "output": "/home/spf86/launch-acceptance-20261031/tiered-after-upgrade.csv",
+        "sha256": "3731f0fd17a8490b28341b00cc3fce455fb33be51020a11c51626b87a981d17d",
+        "rows": 2
+      }
+    },
+    "error": {},
+    "seconds": 23.381
+  },
+  {
+    "name": "desktop session survives Launch restart",
+    "passed": true,
+    "time": "2026-10-31T21:19:31+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "612ea071b2db38b1e658b54dc368e4c5"
+  },
+  {
+    "name": "client restore after Launch service restart",
+    "passed": true,
+    "time": "2026-10-31T21:19:34+0800",
+    "exit_code": 0,
+    "result": {
+      "action": "restore",
+      "state": "active",
+      "allowed": true,
+      "code": "",
+      "device": {
+        "name": "spf86",
+        "code": "DD76-F06E",
+        "platform": "linux",
+        "os_version": "Ubuntu 26.04.1 LTS",
+        "cpu": "AMD Ryzen 7 5800H with Radeon Graphics",
+        "memory_mb": 3350,
+        "gpu": "",
+        "system_type": "x86_64",
+        "storage_gb": 43
+      },
+      "lease_valid_until": 1793453463
+    },
+    "error": {},
+    "seconds": 3.35
+  },
+  {
+    "name": "upgrade refund request",
+    "passed": true,
+    "time": "2026-10-31T21:19:34+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "2f96b6d7e6979f5070e19bf07537d9bc"
+  },
+  {
+    "name": "upgrade refund duplicate request",
+    "passed": true,
+    "time": "2026-10-31T21:19:34+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "f579b18518639b5f9938dccfc524945d"
+  },
+  {
+    "name": "upgrade refund request idempotency",
+    "passed": true,
+    "time": "2026-10-31T21:19:34+0800"
+  },
+  {
+    "name": "upgrade refund approve",
+    "passed": true,
+    "time": "2026-10-31T21:19:34+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "c3d7ed24b2933762bd840545e0b37cfa"
+  },
+  {
+    "name": "refunded upgrade removes Pro callback",
+    "passed": true,
+    "time": "2026-10-31T21:19:49+0800",
+    "exit_code": 1,
+    "result": {},
+    "error": {
+      "error": "RuntimeError",
+      "request_id": ""
+    },
+    "seconds": 1.82
+  },
+  {
+    "name": "suspend active entitlement",
+    "passed": false,
+    "time": "2026-10-31T21:19:49+0800",
+    "status": 410,
+    "code": "AUTHORIZATION_MANAGED_BY_LICENTIVO",
+    "request_id": "08eb703b9eefda74d3b8fd3fbcdf17b1"
+  },
+  {
+    "name": "Launch delegates license suspension to Licentivo",
+    "passed": true,
+    "time": "2026-10-31T21:21:14+0800",
+    "actual_status": 410,
+    "code": "AUTHORIZATION_MANAGED_BY_LICENTIVO",
+    "note": "The earlier HTTP 200 expectation was incorrect; the route intentionally delegates authority."
+  },
+  {
+    "name": "real Licentivo suspension",
+    "passed": true,
+    "time": "2026-10-31T21:21:16+0800",
+    "status": 200,
+    "license_id": "27020073-731c-489d-8f5e-26313ee37d85"
+  },
+  {
+    "name": "provider suspension blocks online restore",
+    "passed": true,
+    "time": "2026-10-31T21:21:17+0800",
+    "exit_code": 1,
+    "result": {},
+    "error": {
+      "error": "LICENSE_SUSPENDED",
+      "request_id": "12242773-9dd6-41aa-8250-4ef341f48f26"
+    },
+    "seconds": 0.988
+  },
+  {
+    "name": "real Licentivo resumption",
+    "passed": true,
+    "time": "2026-10-31T21:21:17+0800",
+    "status": 200
+  },
+  {
+    "name": "resumed purchase accepts fresh login",
+    "passed": true,
+    "time": "2026-10-31T21:21:21+0800",
+    "exit_code": 0,
+    "result": {
+      "action": "login",
+      "state": "active",
+      "allowed": true,
+      "code": "",
+      "device": {
+        "name": "spf86",
+        "code": "FC38-8734",
+        "platform": "linux",
+        "os_version": "Ubuntu 26.04.1 LTS",
+        "cpu": "AMD Ryzen 7 5800H with Radeon Graphics",
+        "memory_mb": 3350,
+        "gpu": "",
+        "system_type": "x86_64",
+        "storage_gb": 43
+      },
+      "lease_valid_until": 1793453571
+    },
+    "error": {},
+    "seconds": 3.866
+  },
+  {
+    "name": "metered callback after provider resumption",
+    "passed": true,
+    "time": "2026-10-31T21:21:26+0800",
+    "exit_code": 0,
+    "result": {
+      "action": "export",
+      "state": "active",
+      "allowed": true,
+      "code": "",
+      "device": {
+        "name": "spf86",
+        "code": "FC38-8734",
+        "platform": "linux",
+        "os_version": "Ubuntu 26.04.1 LTS",
+        "cpu": "AMD Ryzen 7 5800H with Radeon Graphics",
+        "memory_mb": 3350,
+        "gpu": "",
+        "system_type": "x86_64",
+        "storage_gb": 43
+      },
+      "lease_valid_until": 1793453574,
+      "operation_id": "e7505809-f4bb-477c-a498-97ca51054a51",
+      "callback_executed": true,
+      "business": {
+        "output": "/home/spf86/launch-acceptance-20261031/exporter-after-resume.csv",
+        "sha256": "3731f0fd17a8490b28341b00cc3fce455fb33be51020a11c51626b87a981d17d",
+        "rows": 2
+      }
+    },
+    "error": {},
+    "seconds": 4.676
+  },
+  {
+    "name": "metered operation replay does not repeat callback",
+    "passed": false,
+    "time": "2026-10-31T21:21:30+0800",
+    "exit_code": 1,
+    "result": {},
+    "error": {
+      "error": "IDEMPOTENCY_CONFLICT",
+      "request_id": "b714af26-c5c4-41f5-8be8-508386bb4d45"
+    },
+    "seconds": 4.383
+  },
+  {
+    "name": "metered callback exactly once",
+    "passed": false,
+    "time": "2026-10-31T21:21:30+0800"
+  },
+  {
+    "name": "renewal refund request",
+    "passed": true,
+    "time": "2026-10-31T21:21:30+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "5c4b22df115bbb99442bb480e247cf55"
+  },
+  {
+    "name": "renewal refund duplicate request",
+    "passed": true,
+    "time": "2026-10-31T21:21:31+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "4447cd6152d5cb4aaea5dfd6fb539602"
+  },
+  {
+    "name": "renewal refund request idempotency",
+    "passed": true,
+    "time": "2026-10-31T21:21:31+0800"
+  },
+  {
+    "name": "renewal refund approve",
+    "passed": true,
+    "time": "2026-10-31T21:21:31+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "8d927117b8c4d500a26417a50d27a074"
+  },
+  {
+    "name": "renewal refund preserves initial paid month",
+    "passed": true,
+    "time": "2026-10-31T21:21:41+0800",
+    "valid_until": "2026-11-30T13:06:54.012831Z"
+  },
+  {
+    "name": "logout confirmed by SDK and Launch",
+    "passed": true,
+    "time": "2026-10-31T21:22:04+0800",
+    "exit_code": 0,
+    "result": {
+      "action": "logout",
+      "confirmed": true
+    },
+    "error": {},
+    "seconds": 22.593
+  },
+  {
+    "name": "logged out account cannot restore in a new process",
+    "passed": true,
+    "time": "2026-10-31T21:22:04+0800",
+    "exit_code": 3,
+    "result": {
+      "action": "restore",
+      "restored": false,
+      "code": "LOGIN_REQUIRED"
+    },
+    "error": {},
+    "seconds": 0.27
+  },
+  {
+    "name": "fresh login after logout",
+    "passed": true,
+    "time": "2026-10-31T21:22:41+0800",
+    "exit_code": 0,
+    "result": {
+      "action": "login",
+      "state": "active",
+      "allowed": true,
+      "code": "",
+      "device": {
+        "name": "spf86",
+        "code": "FC38-8734",
+        "platform": "linux",
+        "os_version": "Ubuntu 26.04.1 LTS",
+        "cpu": "AMD Ryzen 7 5800H with Radeon Graphics",
+        "memory_mb": 3350,
+        "gpu": "",
+        "system_type": "x86_64",
+        "storage_gb": 43
+      },
+      "lease_valid_until": 1793453651
+    },
+    "error": {},
+    "seconds": 36.5
+  },
+  {
+    "name": "account switch to nonbuyer denied",
+    "passed": true,
+    "time": "2026-10-31T21:22:55+0800",
+    "exit_code": 1,
+    "result": {},
+    "error": {
+      "error": "ValueError",
+      "request_id": ""
+    },
+    "seconds": 13.928
+  },
+  {
+    "name": "failed account switch does not restore Alice",
+    "passed": true,
+    "time": "2026-10-31T21:22:55+0800",
+    "exit_code": 3,
+    "result": {
+      "action": "restore",
+      "restored": false,
+      "code": "LOGIN_REQUIRED"
+    },
+    "error": {},
+    "seconds": 0.241
+  },
+  {
+    "name": "Alice can sign in again after account switch",
+    "passed": true,
+    "time": "2026-10-31T21:22:58+0800",
+    "exit_code": 0,
+    "result": {
+      "action": "login",
+      "state": "active",
+      "allowed": true,
+      "code": "",
+      "device": {
+        "name": "spf86",
+        "code": "FC38-8734",
+        "platform": "linux",
+        "os_version": "Ubuntu 26.04.1 LTS",
+        "cpu": "AMD Ryzen 7 5800H with Radeon Graphics",
+        "memory_mb": 3350,
+        "gpu": "",
+        "system_type": "x86_64",
+        "storage_gb": 43
+      },
+      "lease_valid_until": 1793453668
+    },
+    "error": {},
+    "seconds": 2.767
+  },
+  {
+    "name": "current node device before release",
+    "passed": true,
+    "time": "2026-10-31T21:24:54+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "6359b3f30292192d6e51b5355d518b66"
+  },
+  {
+    "name": "release actual Linux device",
+    "passed": true,
+    "time": "2026-10-31T21:24:56+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "4a315cb975b6ab23479c019394ae5fa3"
+  },
+  {
+    "name": "replay same device release",
+    "passed": true,
+    "time": "2026-10-31T21:24:56+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "c167faf036566f9f52cf1090ec95e04e"
+  },
+  {
+    "name": "release operation ID stable",
+    "passed": true,
+    "time": "2026-10-31T21:24:56+0800",
+    "operation_id": "a2ff88c6-5413-4111-a186-2f971e2b01af"
+  },
+  {
+    "name": "release consumes quota once",
+    "passed": true,
+    "time": "2026-10-31T21:24:58+0800",
+    "remaining_before": 3,
+    "remaining_after": 2
+  },
+  {
+    "name": "second host replacement after release",
+    "passed": true,
+    "time": "2026-10-31T21:25:03+0800",
+    "details": {
+      "phase": "replacement",
+      "scope": "second_actual_host_Windows_with_Linux_slot_active",
+      "allowed": true,
+      "state": "active",
+      "device": {
+        "name": "LAPTOP-ACAGBUDL",
+        "code": "72A6-5461",
+        "platform": "windows",
+        "os_version": "Windows 11 Home China 26H2 (26340)",
+        "cpu": "AMD Ryzen 7 5800H with Radeon Graphics",
+        "memory_mb": 32768,
+        "gpu": "OrayIddDriver Device / AMD Radeon(TM) Graphics / NVIDIA GeForce RTX 3060 Laptop GPU",
+        "system_type": "AMD64",
+        "storage_gb": 475
+      },
+      "export_exists": true,
+      "logout_confirmed": true
+    }
+  },
+  {
+    "name": "Linux reactivation after Windows logout",
+    "passed": true,
+    "time": "2026-10-31T21:25:08+0800",
+    "exit_code": 0,
+    "result": {
+      "action": "login",
+      "state": "active",
+      "allowed": true,
+      "code": "",
+      "device": {
+        "name": "spf86",
+        "code": "FC38-8734",
+        "platform": "linux",
+        "os_version": "Ubuntu 26.04.1 LTS",
+        "cpu": "AMD Ryzen 7 5800H with Radeon Graphics",
+        "memory_mb": 3350,
+        "gpu": "",
+        "system_type": "x86_64",
+        "storage_gb": 43
+      },
+      "lease_valid_until": 1793453798
+    },
+    "error": {},
+    "seconds": 4.427
+  },
+  {
+    "name": "stale generation cannot release replacement",
+    "passed": false,
+    "time": "2026-10-31T21:26:39+0800",
+    "status": 200,
+    "code": null,
+    "old_generation": 8,
+    "new_generation": 10
+  },
+  {
+    "name": "stale release does not consume quota",
+    "passed": true,
+    "time": "2026-10-31T21:26:39+0800"
+  },
+  {
+    "name": "session list",
+    "passed": true,
+    "time": "2026-10-31T21:26:39+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "7ac8d5df84c56b46d2cfd280753135a9"
+  },
+  {
+    "name": "new Bob desktop session",
+    "passed": true,
+    "time": "2026-10-31T21:26:39+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "083d87a38944e8a76e1d448715e1a133"
+  },
+  {
+    "name": "disable customer account",
+    "passed": true,
+    "time": "2026-10-31T21:26:39+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "2c3471cb2e4607613bd2bccc970be5af"
+  },
+  {
+    "name": "disabled account session revoked",
+    "passed": true,
+    "time": "2026-10-31T21:26:40+0800",
+    "status": 401,
+    "code": "AUTH_REQUIRED",
+    "request_id": "e4131d3b901dfa96c23788dd5af0ea7d"
+  },
+  {
+    "name": "disabled account login rejected",
+    "passed": true,
+    "time": "2026-10-31T21:26:40+0800",
+    "status": 401,
+    "code": "LOGIN_FAILED",
+    "request_id": "f8312305c33086018f28b4f68be5dc4a"
+  },
+  {
+    "name": "reactivate customer account",
+    "passed": true,
+    "time": "2026-10-31T21:26:40+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "7db44960bd2b00087a95dd9c178eae40"
+  },
+  {
+    "name": "account revocation receipt permits fresh login after reactivation",
+    "passed": true,
+    "time": "2026-10-31T21:26:44+0800",
+    "status": 200
+  },
+  {
+    "name": "turn off SDK HTTP test access",
+    "passed": true,
+    "time": "2026-10-31T21:26:44+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "5c9c4bd925af036699a2de257536bf45"
+  },
+  {
+    "name": "HTTP disabled blocks existing desktop session",
+    "passed": true,
+    "time": "2026-10-31T21:26:44+0800",
+    "status": 403,
+    "code": "SDK_HTTP_DISABLED",
+    "request_id": "60f5a527545d2662bb42490e618aee6f"
+  },
+  {
+    "name": "logout remains possible with HTTP disabled",
+    "passed": true,
+    "time": "2026-10-31T21:26:44+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "74df472e204852f24e3b8efdcbfa6144"
+  },
+  {
+    "name": "restore authorized SDK HTTP test setting",
+    "passed": true,
+    "time": "2026-10-31T21:26:45+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "ffcd9991f783d6c5910770fbf4c444a0"
+  },
+  {
+    "name": "published mapping immutable",
+    "passed": true,
+    "time": "2026-10-31T21:26:45+0800",
+    "status": 409,
+    "code": "PUBLISHED_MAPPING_IMMUTABLE",
+    "request_id": "88389ce4acbe938eaa9c2edc9e88055c"
+  },
+  {
+    "name": "invalid password reset token rejected",
+    "passed": true,
+    "time": "2026-10-31T21:26:45+0800",
+    "status": 400,
+    "code": "LINK_INVALID",
+    "request_id": "06bd84dbc37ccd223f72e45f1996f724"
+  },
+  {
+    "name": "unknown webhook connection rejected",
+    "passed": true,
+    "time": "2026-10-31T21:26:45+0800",
+    "status": 404,
+    "code": "NOT_FOUND",
+    "request_id": "8740fed7d1cf50e02e74bef608a54c4b"
+  },
+  {
+    "name": "email request endpoint rate limit",
+    "passed": true,
+    "time": "2026-10-31T21:26:45+0800",
+    "status": 429,
+    "retry_after": "60"
+  },
+  {
+    "name": "Russian storefront locale",
+    "passed": true,
+    "time": "2026-10-31T21:26:45+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "b3c86269d8f4ba18da6ca8190c383e12"
+  },
+  {
+    "name": "register expiry test customer",
+    "passed": true,
+    "time": "2026-10-31T21:26:46+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "bfb38a128adebe39f5cecfe83aef4274"
+  },
+  {
+    "name": "register expiry test customer",
+    "passed": true,
+    "time": "2026-10-31T21:27:53+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "c43b0f7b1745bab4fded8ff96e1ba6ce"
+  },
+  {
+    "name": "payment committed while Launch worker is stopped",
+    "passed": true,
+    "time": "2026-10-31T21:27:57+0800",
+    "pending_tasks": 1,
+    "order_id": "cbb5789e-bb11-4d95-aa31-c91b395913f0"
+  },
+  {
+    "name": "pending issuance recovered after actual service restart",
+    "passed": true,
+    "time": "2026-10-31T21:28:07+0800",
+    "entitlement_id": "5bad78b7-936d-4afb-ad80-d8e3881a82d3"
+  },
+  {
+    "name": "expiry fixture initially has online permission",
+    "passed": true,
+    "time": "2026-10-31T21:28:12+0800",
+    "exit_code": 0,
+    "result": {
+      "action": "login",
+      "state": "active",
+      "allowed": true,
+      "code": "",
+      "device": {
+        "name": "spf86",
+        "code": "FC38-8734",
+        "platform": "linux",
+        "os_version": "Ubuntu 26.04.1 LTS",
+        "cpu": "AMD Ryzen 7 5800H with Radeon Graphics",
+        "memory_mb": 3350,
+        "gpu": "",
+        "system_type": "x86_64",
+        "storage_gb": 43
+      },
+      "lease_valid_until": 1793453982
+    },
+    "error": {},
+    "seconds": 4.834
+  },
+  {
+    "name": "real expiration worker and Licentivo snapshot applied",
+    "passed": true,
+    "time": "2026-10-31T21:28:20+0800",
+    "status": "expired"
+  },
+  {
+    "name": "expired purchase blocks online SDK restore",
+    "passed": true,
+    "time": "2026-10-31T21:28:22+0800",
+    "exit_code": 1,
+    "result": {},
+    "error": {
+      "error": "LAUNCH_ENTITLEMENT_REVOKED",
+      "request_id": "dd05e820-c187-48e6-a1dd-b9ab16588f5e"
+    },
+    "seconds": 2.066
+  },
+  {
+    "name": "full purchase refund request",
+    "passed": true,
+    "time": "2026-10-31T21:28:23+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "04cce7930ac667ae61196c4c3502b73a"
+  },
+  {
+    "name": "full purchase refund duplicate request",
+    "passed": true,
+    "time": "2026-10-31T21:28:23+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "b55ecfdf7c2be95ed0e1f0e29940263f"
+  },
+  {
+    "name": "full purchase refund request idempotency",
+    "passed": true,
+    "time": "2026-10-31T21:28:23+0800"
+  },
+  {
+    "name": "full purchase refund approve",
+    "passed": true,
+    "time": "2026-10-31T21:28:23+0800",
+    "status": 200,
+    "code": null,
+    "request_id": "ecbf1e410eedf15d081504ba6dd83bfd"
+  },
+  {
+    "name": "full refund removes all paid coverage",
+    "passed": true,
+    "time": "2026-10-31T21:28:43+0800",
+    "status": "revoked"
+  },
+  {
+    "name": "fully refunded customer denied by real SDK",
+    "passed": true,
+    "time": "2026-10-31T21:28:45+0800",
+    "exit_code": 1,
+    "result": {},
+    "error": {
+      "error": "LAUNCH_ENTITLEMENT_REVOKED",
+      "request_id": "ae99c3be-15fa-4d33-9c1d-a5785b6ef055"
+    },
+    "seconds": 0.969
+  },
+  {
+    "name": "other product remains usable after scoped refund",
+    "passed": true,
+    "time": "2026-10-31T21:28:47+0800",
+    "exit_code": 0,
+    "result": {
+      "action": "restore",
+      "state": "active",
+      "allowed": true,
+      "code": "",
+      "device": {
+        "name": "spf86",
+        "code": "DD76-F06E",
+        "platform": "linux",
+        "os_version": "Ubuntu 26.04.1 LTS",
+        "cpu": "AMD Ryzen 7 5800H with Radeon Graphics",
+        "memory_mb": 3350,
+        "gpu": "",
+        "system_type": "x86_64",
+        "storage_gb": 43
+      },
+      "lease_valid_until": 1793454017
+    },
+    "error": {},
+    "seconds": 2.12
+  },
+  {
+    "name": "repurchase creates fresh synchronized purchase",
+    "passed": true,
+    "time": "2026-10-31T21:28:59+0800",
+    "order_id": "2142f988-478f-4327-9f40-3d60d689a712"
+  },
+  {
+    "name": "repurchase restores real online application access",
+    "passed": true,
+    "time": "2026-10-31T21:29:18+0800",
+    "exit_code": 0,
+    "result": {
+      "action": "login",
+      "state": "active",
+      "allowed": true,
+      "code": "",
+      "device": {
+        "name": "spf86",
+        "code": "FC38-8734",
+        "platform": "linux",
+        "os_version": "Ubuntu 26.04.1 LTS",
+        "cpu": "AMD Ryzen 7 5800H with Radeon Graphics",
+        "memory_mb": 3350,
+        "gpu": "",
+        "system_type": "x86_64",
+        "storage_gb": 43
+      },
+      "lease_valid_until": 1793454048
+    },
+    "error": {},
+    "seconds": 18.437
+  }
+]

@@ -1,0 +1,12 @@
+{
+  "time_utc": "2026-10-31T19:25:40Z",
+  "customer_count_before": 6,
+  "fixture_customers": 120,
+  "database_customer_count": 126,
+  "default_api_customer_count": 100,
+  "old_customer_in_default_list": false,
+  "old_customer_found_with_explicit_api_query": true,
+  "fixture_kind": "disabled non-login database rows; no sessions, purchases or entitlements created",
+  "fixtures_removed": 120,
+  "remaining_customer_count": 6
+}

@@ -1,0 +1,8 @@
+{
+  "managed_sdk_files_verified": 132,
+  "long_csv_sha256_verified": true,
+  "all_report_links_exist": true,
+  "credential_pattern_scan_passed": true,
+  "python_wheel_sha256": "a5312a27ed5c8a95b5914f5750d37b72b267069786b3cb2f6950488dbf07f06f",
+  "public_packages_published": false
+}

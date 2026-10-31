@@ -19,7 +19,12 @@ if len(HTTP_DOCUMENTS) != 14 or len({item['code'] for item in HTTP_DOCUMENTS}) !
 if any(not re.fullmatch(r'http-testing(?:\.[A-Za-z-]+)?\.md', item['file']) for item in HTTP_DOCUMENTS):
     raise ValueError('Invalid localized HTTP documentation path.')
 DOCS = ('manual-integration.md', 'application-quickstart.zh-CN.md', 'software-sdk-integration.md',
-        'integration-packages.md', 'ai-integration.md', 'acceptance.md', 'openapi.json',
+        'integration-packages.md', 'ai-integration.md', 'one-day-integration.md', 'acceptance.md', 'openapi.json',
+        'sdk-compatibility.md', 'account-purchase-boundary.md', 'licentivo-contract.md',
+        'sdk-validation-20261030.md', 'external-licensing.md', 'external-licensing-openapi.json',
+        'account-store-fix-2026-10-24.md', 'account-store-fix-evidence-2026-10-24.json',
+        'logout-retry-fix-2026-10-24.md', 'logout-retry-fix-evidence-2026-10-24.json',
+        'product-mapping-fix-2026-10-24.md', 'product-mapping-fix-evidence-2026-10-24.json',
         *(item['file'] for item in HTTP_DOCUMENTS), 'http-testing/README.md',
         'http-testing/locales.json', 'http-testing/translations.json')
 SCRIPTS = ('test-integration-packages.ps1', 'test-managed-installations.ps1',
@@ -55,6 +60,11 @@ def export(destination):
                 data = data.replace(b'licentivo-launch v0.0.0', (MODULE + ' v0.0.0').encode())
         if re.search(rb'-----BEGIN (?:RSA |EC |OPENSSH |ENCRYPTED |PGP )?PRIVATE KEY', data):
             raise ValueError('Private key material in public source: ' + target)
+        if target.startswith('docs/') and source.suffix == '.md':
+            # Historical protocol notes link to server implementation files.
+            # Keep those links usable without exporting merchant server code.
+            data = data.replace(b'](../internal/',
+                                b'](https://github.com/spf86/licentivo-launch/blob/main/internal/')
         write(target, data)
 
     def tree(relative):

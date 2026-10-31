@@ -1,0 +1,164 @@
+[
+  {
+    "time": "2026-10-31T17:05:58Z",
+    "name": "Python fixed suspended license blocks actual business",
+    "passed": true,
+    "exit_code": 1,
+    "business_file_unchanged": true,
+    "reported_diagnostic": "LICENSE_SUSPENDED",
+    "callback_count": null
+  },
+  {
+    "time": "2026-10-31T17:06:09Z",
+    "name": "Python floating suspended license blocks actual business",
+    "passed": true,
+    "exit_code": 1,
+    "business_file_unchanged": true,
+    "reported_diagnostic": "LICENSE_SUSPENDED",
+    "callback_count": null
+  },
+  {
+    "time": "2026-10-31T17:06:19Z",
+    "name": "Go fixed suspended license blocks actual business",
+    "passed": true,
+    "exit_code": 1,
+    "business_file_unchanged": true,
+    "reported_diagnostic": "CLIENT_FAILED",
+    "callback_count": null
+  },
+  {
+    "time": "2026-10-31T17:06:29Z",
+    "name": "Go floating suspended license blocks actual business",
+    "passed": true,
+    "exit_code": 1,
+    "business_file_unchanged": true,
+    "reported_diagnostic": "CLIENT_FAILED",
+    "callback_count": null
+  },
+  {
+    "time": "2026-10-31T17:06:41Z",
+    "name": "JavaScript fixed suspended license blocks actual business",
+    "passed": true,
+    "exit_code": 1,
+    "business_file_unchanged": true,
+    "reported_diagnostic": "LICENSE_SUSPENDED",
+    "callback_count": null
+  },
+  {
+    "time": "2026-10-31T17:06:52Z",
+    "name": "JavaScript floating suspended license blocks actual business",
+    "passed": true,
+    "exit_code": 1,
+    "business_file_unchanged": true,
+    "reported_diagnostic": "LICENSE_SUSPENDED",
+    "callback_count": null
+  },
+  {
+    "time": "2026-10-31T17:07:05Z",
+    "name": "Java fixed suspended license blocks actual business",
+    "passed": true,
+    "exit_code": 1,
+    "business_file_unchanged": true,
+    "reported_diagnostic": "APIException",
+    "callback_count": null
+  },
+  {
+    "time": "2026-10-31T17:07:17Z",
+    "name": "Java floating suspended license blocks actual business",
+    "passed": true,
+    "exit_code": 1,
+    "business_file_unchanged": true,
+    "reported_diagnostic": "APIException",
+    "callback_count": null
+  },
+  {
+    "time": "2026-10-31T17:07:28Z",
+    "name": "Ruby fixed suspended license blocks actual business",
+    "passed": true,
+    "exit_code": 1,
+    "business_file_unchanged": true,
+    "reported_diagnostic": "LICENSE_SUSPENDED",
+    "callback_count": null
+  },
+  {
+    "time": "2026-10-31T17:07:38Z",
+    "name": "Ruby floating suspended license blocks actual business",
+    "passed": true,
+    "exit_code": 1,
+    "business_file_unchanged": true,
+    "reported_diagnostic": "LICENSE_SUSPENDED",
+    "callback_count": null
+  },
+  {
+    "time": "2026-10-31T17:07:49Z",
+    "name": "C fixed suspended license blocks actual business",
+    "passed": true,
+    "exit_code": 1,
+    "business_file_unchanged": true,
+    "reported_diagnostic": "LAUNCH_ENTITLEMENT_REQUIRED",
+    "callback_count": 0
+  },
+  {
+    "time": "2026-10-31T17:08:00Z",
+    "name": "C floating suspended license blocks actual business",
+    "passed": true,
+    "exit_code": 1,
+    "business_file_unchanged": true,
+    "reported_diagnostic": "LAUNCH_ENTITLEMENT_REQUIRED",
+    "callback_count": 0
+  },
+  {
+    "time": "2026-10-31T17:08:10Z",
+    "name": "C++ fixed suspended license blocks actual business",
+    "passed": true,
+    "exit_code": 1,
+    "business_file_unchanged": true,
+    "reported_diagnostic": "LICENSE_SUSPENDED",
+    "callback_count": 0
+  },
+  {
+    "time": "2026-10-31T17:08:20Z",
+    "name": "C++ floating suspended license blocks actual business",
+    "passed": true,
+    "exit_code": 1,
+    "business_file_unchanged": true,
+    "reported_diagnostic": "LICENSE_SUSPENDED",
+    "callback_count": 0
+  },
+  {
+    "time": "2026-10-31T17:08:32Z",
+    "name": "C# fixed suspended license blocks actual business",
+    "passed": true,
+    "exit_code": 1,
+    "business_file_unchanged": true,
+    "reported_diagnostic": "ApiException",
+    "callback_count": null
+  },
+  {
+    "time": "2026-10-31T17:08:43Z",
+    "name": "C# floating suspended license blocks actual business",
+    "passed": true,
+    "exit_code": 1,
+    "business_file_unchanged": true,
+    "reported_diagnostic": "ApiException",
+    "callback_count": null
+  },
+  {
+    "time": "2026-10-31T17:08:53Z",
+    "name": "Rust fixed suspended license blocks actual business",
+    "passed": true,
+    "exit_code": 1,
+    "business_file_unchanged": true,
+    "reported_diagnostic": "LICENSE_SUSPENDED",
+    "callback_count": null
+  },
+  {
+    "time": "2026-10-31T17:09:04Z",
+    "name": "Rust floating suspended license blocks actual business",
+    "passed": true,
+    "exit_code": 1,
+    "business_file_unchanged": true,
+    "reported_diagnostic": "LICENSE_SUSPENDED",
+    "callback_count": null
+  }
+]

@@ -1,0 +1,43 @@
+{
+  "environment": "loopback browser proxy to isolated Launch 18092",
+  "checks": [
+    {
+      "issue": "N01",
+      "passed": true,
+      "observation": "Account card shows current authorization connections; active connection count and single-instance release independently verified by real APIs."
+    },
+    {
+      "issue": "N02",
+      "passed": true,
+      "observation": "English missing-content notice says the original is shown, without claiming generation is running.",
+      "screenshot": "n02-neutral-translation.png"
+    },
+    {
+      "issue": "N03-admin",
+      "passed": true,
+      "observation": "Direct unauthenticated #/admin login reaches overview without reloading; original hash stays #/admin and login form count is zero.",
+      "evidence_kind": "Verified live DOM observations; pending-render screenshots excluded after visual review."
+    },
+    {
+      "issue": "N03-customer",
+      "passed": true,
+      "observation": "Direct unauthenticated #/account login reaches account without reloading; stale login form count is zero."
+    },
+    {
+      "issue": "N07",
+      "passed": true,
+      "observation": "120 orders total; 25 rows/page, page 5 has 20 rows and disables Next. An order read from page 5 is found by ID with one result.",
+      "evidence_kind": "Verified live DOM observations; pending-render screenshots excluded after visual review."
+    },
+    {
+      "issue": "N08",
+      "passed": true,
+      "observation": "126 customers total; page 6 finds Alice, Next disabled; email search returns one result.",
+      "screenshot": "n08-last-page.png"
+    }
+  ],
+  "browser_tool_limitations": [
+    "Some mouse interactions required fresh locators after CDP timeouts. The temporary IAB session later disappeared; no unverified device-page screenshot is claimed."
+  ],
+  "temporary_fixtures": "120 disabled users and 120 non-payment orders were removed by recorded UUID manifests."
+}

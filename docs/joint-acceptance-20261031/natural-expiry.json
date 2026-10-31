@@ -1,0 +1,258 @@
+[
+  {
+    "time": "2026-10-31T15:50:38Z",
+    "name": "natural expiry starts with actual signed online grant",
+    "passed": true,
+    "lease_valid_until": 1793463638,
+    "actual_wait_seconds": 1799.67
+  },
+  {
+    "time": "2026-10-31T15:50:38Z",
+    "name": "natural finite offline grant before expiry",
+    "passed": true,
+    "state": "offline_valid",
+    "seconds_remaining": 1799.45,
+    "callbacks": 1
+  },
+  {
+    "time": "2026-10-31T15:51:38Z",
+    "name": "natural finite offline grant before expiry",
+    "passed": true,
+    "state": "offline_valid",
+    "seconds_remaining": 1739.44,
+    "callbacks": 2
+  },
+  {
+    "time": "2026-10-31T15:52:38Z",
+    "name": "natural finite offline grant before expiry",
+    "passed": true,
+    "state": "offline_valid",
+    "seconds_remaining": 1679.44,
+    "callbacks": 3
+  },
+  {
+    "time": "2026-10-31T15:53:38Z",
+    "name": "natural finite offline grant before expiry",
+    "passed": true,
+    "state": "offline_valid",
+    "seconds_remaining": 1619.43,
+    "callbacks": 4
+  },
+  {
+    "time": "2026-10-31T15:54:38Z",
+    "name": "natural finite offline grant before expiry",
+    "passed": true,
+    "state": "offline_valid",
+    "seconds_remaining": 1559.43,
+    "callbacks": 5
+  },
+  {
+    "time": "2026-10-31T15:55:38Z",
+    "name": "natural finite offline grant before expiry",
+    "passed": true,
+    "state": "offline_valid",
+    "seconds_remaining": 1499.42,
+    "callbacks": 6
+  },
+  {
+    "time": "2026-10-31T15:56:38Z",
+    "name": "natural finite offline grant before expiry",
+    "passed": true,
+    "state": "offline_valid",
+    "seconds_remaining": 1439.42,
+    "callbacks": 7
+  },
+  {
+    "time": "2026-10-31T15:57:38Z",
+    "name": "natural finite offline grant before expiry",
+    "passed": true,
+    "state": "offline_valid",
+    "seconds_remaining": 1379.41,
+    "callbacks": 8
+  },
+  {
+    "time": "2026-10-31T15:58:38Z",
+    "name": "natural finite offline grant before expiry",
+    "passed": true,
+    "state": "offline_valid",
+    "seconds_remaining": 1319.41,
+    "callbacks": 9
+  },
+  {
+    "time": "2026-10-31T15:59:38Z",
+    "name": "natural finite offline grant before expiry",
+    "passed": true,
+    "state": "offline_valid",
+    "seconds_remaining": 1259.4,
+    "callbacks": 10
+  },
+  {
+    "time": "2026-10-31T16:00:38Z",
+    "name": "natural finite offline grant before expiry",
+    "passed": true,
+    "state": "offline_valid",
+    "seconds_remaining": 1199.4,
+    "callbacks": 11
+  },
+  {
+    "time": "2026-10-31T16:01:38Z",
+    "name": "natural finite offline grant before expiry",
+    "passed": true,
+    "state": "offline_valid",
+    "seconds_remaining": 1139.39,
+    "callbacks": 12
+  },
+  {
+    "time": "2026-10-31T16:02:38Z",
+    "name": "natural finite offline grant before expiry",
+    "passed": true,
+    "state": "offline_valid",
+    "seconds_remaining": 1079.37,
+    "callbacks": 13
+  },
+  {
+    "time": "2026-10-31T16:03:38Z",
+    "name": "natural finite offline grant before expiry",
+    "passed": true,
+    "state": "offline_valid",
+    "seconds_remaining": 1019.36,
+    "callbacks": 14
+  },
+  {
+    "time": "2026-10-31T16:04:38Z",
+    "name": "natural finite offline grant before expiry",
+    "passed": true,
+    "state": "offline_valid",
+    "seconds_remaining": 959.36,
+    "callbacks": 15
+  },
+  {
+    "time": "2026-10-31T16:05:38Z",
+    "name": "natural finite offline grant before expiry",
+    "passed": true,
+    "state": "offline_valid",
+    "seconds_remaining": 899.35,
+    "callbacks": 16
+  },
+  {
+    "time": "2026-10-31T16:06:38Z",
+    "name": "natural finite offline grant before expiry",
+    "passed": true,
+    "state": "offline_valid",
+    "seconds_remaining": 839.35,
+    "callbacks": 17
+  },
+  {
+    "time": "2026-10-31T16:07:38Z",
+    "name": "natural finite offline grant before expiry",
+    "passed": true,
+    "state": "offline_valid",
+    "seconds_remaining": 779.35,
+    "callbacks": 18
+  },
+  {
+    "time": "2026-10-31T16:08:38Z",
+    "name": "natural finite offline grant before expiry",
+    "passed": true,
+    "state": "offline_valid",
+    "seconds_remaining": 719.34,
+    "callbacks": 19
+  },
+  {
+    "time": "2026-10-31T16:09:38Z",
+    "name": "natural finite offline grant before expiry",
+    "passed": true,
+    "state": "offline_valid",
+    "seconds_remaining": 659.34,
+    "callbacks": 20
+  },
+  {
+    "time": "2026-10-31T16:10:38Z",
+    "name": "natural finite offline grant before expiry",
+    "passed": true,
+    "state": "offline_valid",
+    "seconds_remaining": 599.33,
+    "callbacks": 21
+  },
+  {
+    "time": "2026-10-31T16:11:38Z",
+    "name": "natural finite offline grant before expiry",
+    "passed": true,
+    "state": "offline_valid",
+    "seconds_remaining": 539.33,
+    "callbacks": 22
+  },
+  {
+    "time": "2026-10-31T16:12:38Z",
+    "name": "natural finite offline grant before expiry",
+    "passed": true,
+    "state": "offline_valid",
+    "seconds_remaining": 479.32,
+    "callbacks": 23
+  },
+  {
+    "time": "2026-10-31T16:13:38Z",
+    "name": "natural finite offline grant before expiry",
+    "passed": true,
+    "state": "offline_valid",
+    "seconds_remaining": 419.32,
+    "callbacks": 24
+  },
+  {
+    "time": "2026-10-31T16:14:38Z",
+    "name": "natural finite offline grant before expiry",
+    "passed": true,
+    "state": "offline_valid",
+    "seconds_remaining": 359.32,
+    "callbacks": 25
+  },
+  {
+    "time": "2026-10-31T16:15:38Z",
+    "name": "natural finite offline grant before expiry",
+    "passed": true,
+    "state": "offline_valid",
+    "seconds_remaining": 299.31,
+    "callbacks": 26
+  },
+  {
+    "time": "2026-10-31T16:16:38Z",
+    "name": "natural finite offline grant before expiry",
+    "passed": true,
+    "state": "offline_valid",
+    "seconds_remaining": 239.3,
+    "callbacks": 27
+  },
+  {
+    "time": "2026-10-31T16:17:38Z",
+    "name": "natural finite offline grant before expiry",
+    "passed": true,
+    "state": "offline_valid",
+    "seconds_remaining": 179.3,
+    "callbacks": 28
+  },
+  {
+    "time": "2026-10-31T16:18:38Z",
+    "name": "natural finite offline grant before expiry",
+    "passed": true,
+    "state": "offline_valid",
+    "seconds_remaining": 119.28,
+    "callbacks": 29
+  },
+  {
+    "time": "2026-10-31T16:19:38Z",
+    "name": "natural finite offline grant before expiry",
+    "passed": true,
+    "state": "offline_valid",
+    "seconds_remaining": 59.28,
+    "callbacks": 30
+  },
+  {
+    "time": "2026-10-31T16:20:41Z",
+    "name": "natural finite offline expiry blocks protected callback",
+    "passed": true,
+    "state": "verification_required",
+    "actual_wait_completed": true,
+    "callback_executed": false,
+    "lease_valid_until": 1793463638
+  }
+]

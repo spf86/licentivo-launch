@@ -1,0 +1,36 @@
+{
+  "complete": true,
+  "started_at_utc": "2026-10-31T19:37:05Z",
+  "operation_id": "47cfda4d-ceb3-412a-a110-90ee142116eb",
+  "reservation_request_overrides": false,
+  "server_clock_changed": false,
+  "business_scope": "SDK callback writes a CSV over the real reservation interval; no external system",
+  "reservation_id": "9d4c8b91-4b0a-490e-8994-9241fd184efb",
+  "reservation_expires_at": "2026-10-31T19:52:05.479316789Z",
+  "observed_remaining_seconds": 899.95,
+  "callback_started_at_utc": "2026-10-31T19:37:05Z",
+  "callback_rows": 900,
+  "callback_last_update_utc": "2026-10-31T19:52:06Z",
+  "artifact_sha256": "3aac0e957048ddddc112f692edc1750ce9478e8d69eefb7e7ccf75e05e50af0d",
+  "callback_finished_at_utc": "2026-10-31T19:52:07Z",
+  "first_result_codes": [
+    "RuntimeError",
+    "RESERVATION_EXPIRED"
+  ],
+  "business_callbacks": 1,
+  "initial_used": 0,
+  "fresh_runtime_retry_codes": [
+    "RuntimeError",
+    "RESERVATION_EXPIRED"
+  ],
+  "explicit_success_resolve_codes": [
+    "RuntimeError",
+    "RESERVATION_EXPIRED"
+  ],
+  "retry_new_callbacks": 0,
+  "final_journal_state": "commit_pending",
+  "subsequent_new_operation_id": "ff710f72-3e95-4ce9-b93c-a7228b57fe3a",
+  "subsequent_new_callbacks": 1,
+  "final_server_used": 1,
+  "finished_at_utc": "2026-10-31T19:52:08Z"
+}

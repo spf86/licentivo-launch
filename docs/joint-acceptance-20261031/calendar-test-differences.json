@@ -1,0 +1,8 @@
+{
+  "file": "D:\\GoProject\\Licenova\\internal\\httpapi\\management_documentation_test.go",
+  "original_sha256": "15c824d4924c254408d974017ac10f928395494914e294efd3b121af72e39247",
+  "fixture_sha256": "c5bbdd834514f684234a9ac3f7ca4f6ba9efe8e745aa38e8cb29697d064ab5f8",
+  "before": "month := time.Now().UTC().AddDate(0, -1, 0).Format(\"2006-01\")",
+  "after": "documentationNow := time.Now().UTC()\n\tmonth := time.Date(documentationNow.Year(), documentationNow.Month(), 1, 0, 0, 0, 0, time.UTC).AddDate(0, -1, 0).Format(\"2006-01\")",
+  "production_source_unchanged": true
+}

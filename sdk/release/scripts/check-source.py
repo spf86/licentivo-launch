@@ -7,6 +7,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import sys
+import shlex
 
 ROOT = Path(__file__).resolve().parents[1]
 WORK = ROOT / '.cache/source-check'
@@ -24,6 +25,7 @@ def main():
         if ROOT not in source.parents or hashlib.sha256(source.read_bytes()).hexdigest() != item['sha256']:
             raise ValueError('Embedded SDK source checksum mismatch: ' + item['destination'])
     windows = os.name == 'nt'
+    mac = sys.platform == 'darwin'
     java_home = os.environ.get('JAVA_HOME')
     def java(name):
         return Path(java_home) / 'bin' / (name + ('.exe' if windows else '')) if java_home else name
@@ -60,8 +62,11 @@ def main():
         for path in (curl / 'bin').glob('*.dll'):
             shutil.copyfile(path, ruby_native / path.name)
     else:
-        run('cc', '-std=c11', '-O2', '-fPIC', '-shared', '-I' + str(core), *files,
-            '-lcurl', '-lcrypto', '-lpthread', '-lm', '-o', ruby_native / 'licentivo_native.so')
+        flags = shlex.split(subprocess.check_output(['pkg-config', '--cflags', '--libs', 'libcurl', 'openssl'], text=True)) if shutil.which('pkg-config') else ['-lcurl', '-lcrypto']
+        includes = [flag for flag in flags if flag.startswith(('-I', '-D'))]
+        libraries = [flag for flag in flags if flag not in includes]
+        run('cc', '-std=c11', '-O2', '-fPIC', '-dynamiclib' if mac else '-shared', '-I' + str(core), *includes, *files,
+            *libraries, '-lpthread', '-lm', '-o', ruby_native / ('licentivo_native.dylib' if mac else 'licentivo_native.so'))
     run('ruby', 'sdk/ruby/test/test_client.rb')
     run('ruby', 'sdk/ruby/test/test_runtime.rb')
     native = WORK / 'native'

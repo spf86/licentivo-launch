@@ -1,0 +1,84 @@
+{
+  "audit_complete": true,
+  "observed_at_utc": "2026-10-31T19:48:52Z",
+  "verified_live_pid_at_start": 55544,
+  "observed_live_at_utc": "2026-10-31T19:17:12Z",
+  "initial_unit": {
+    "ActiveState": "activating",
+    "SubState": "start",
+    "MainPID": "55544",
+    "Result": "success",
+    "NRestarts": "0",
+    "ExecMainStartTimestamp": "Sat 2026-10-31 15:47:41 UTC",
+    "ExecMainExitTimestamp": "",
+    "ExecMainStatus": "0"
+  },
+  "terminal_unit": {
+    "ActiveState": "failed",
+    "SubState": "failed",
+    "MainPID": "0",
+    "Result": "exit-code",
+    "NRestarts": "0",
+    "ExecMainStartTimestamp": "Sat 2026-10-31 15:47:41 UTC",
+    "ExecMainExitTimestamp": "Sat 2026-10-31 19:48:43 UTC",
+    "ExecMainStatus": "1"
+  },
+  "summary": {
+    "started_at_utc": "2026-10-31T15:47:42Z",
+    "last_update_utc": "2026-10-31T19:48:42Z",
+    "done": true,
+    "cycles": 320,
+    "active_seconds": 14400.21,
+    "wall_seconds": 14460.66,
+    "target_active_seconds": 14400,
+    "checks": {
+      "checks": 2636,
+      "passed": 2627,
+      "failed": 9
+    },
+    "replay_enabled": true,
+    "floating_enabled": true
+  },
+  "duration_verified": true,
+  "raw_failures_expected_only": true,
+  "raw_failure_count": 9,
+  "unexpected_failures_after_harness_correction": [],
+  "successful_unique_business_operations": 947,
+  "business_counts_not_one": {},
+  "business_counts_for_failed_operations": {
+    "8e833c87-274d-40cd-969d-66c72147e99f": 0,
+    "f94907c6-d00b-4a84-bce2-af90b910b252": 0,
+    "49413a55-8893-432e-825b-a66d9f308980": 0,
+    "dd2ecd90-ab95-49f6-83dd-b04772888a42": 0,
+    "617f4609-6bc2-4c3b-bd42-99482005143a": 0,
+    "c78713f2-6d02-4e5e-a5b3-1a9d1c3944a3": 0,
+    "ec0983b6-14c0-4141-a27b-c223fa271d19": 0,
+    "41a6c235-0def-48bd-bee8-98a226e34639": 0,
+    "11a4d49e-2b2b-43e7-8d9c-9c6c32e5a82e": 0
+  },
+  "soak_ledger_verified": true,
+  "readiness": {
+    "18080": true,
+    "18091": true,
+    "18092": true
+  },
+  "queue_counts": [
+    {
+      "count": 14,
+      "queue": "purchase_sync",
+      "status": "succeeded"
+    },
+    {
+      "count": 1,
+      "queue": "identity_notification",
+      "status": "not_required"
+    },
+    {
+      "count": 168,
+      "queue": "identity_notification",
+      "status": "succeeded"
+    }
+  ],
+  "scope": "four-hour soak and final service/ledger audit; separately reported product defects remain unresolved",
+  "soak_audit_passed": true
+}

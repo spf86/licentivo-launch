@@ -1,0 +1,39 @@
+{
+  "devices": [
+    {
+      "id": "0baef7cd-8523-4e90-80f4-e250b700b2b6",
+      "license_id": "",
+      "device_name": "spf86",
+      "device_code": "98A3-679A",
+      "platform": "linux",
+      "os_version": "Ubuntu 26.04.1 LTS",
+      "cpu": "AMD Ryzen 7 5800H with Radeon Graphics",
+      "memory_mb": 3350,
+      "system_type": "x86_64",
+      "storage_gb": 43,
+      "status": "active",
+      "generation": 1,
+      "last_seen_at": "2026-10-31T16:20:30.457696Z",
+      "lease_expires_at": null
+    },
+    {
+      "id": "8de6efdd-4b44-4d59-9fda-70387864a2ec",
+      "license_id": "",
+      "device_name": "spf86",
+      "device_code": "98A3-679A",
+      "platform": "linux",
+      "os_version": "Ubuntu 26.04.1 LTS",
+      "cpu": "AMD Ryzen 7 5800H with Radeon Graphics",
+      "memory_mb": 3350,
+      "system_type": "x86_64",
+      "storage_gb": 43,
+      "status": "active",
+      "generation": 1,
+      "last_seen_at": "2026-10-31T16:20:30.641297Z",
+      "lease_expires_at": null
+    }
+  ],
+  "remaining": 20,
+  "can_release": true,
+  "operations": []
+}

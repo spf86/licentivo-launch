@@ -1,0 +1,4770 @@
+[
+  {
+    "time": "2026-10-31T17:54:02Z",
+    "name": "create isolated full-policy acceptance product",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "6424f193-bac2-444f-845e-1e77e8e94131",
+    "seconds": 0.0321
+  },
+  {
+    "time": "2026-10-31T17:54:02Z",
+    "name": "read actual advanced product verification pins",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "e08deeb3-3d05-40d0-a61e-d4df2f9d2553",
+    "seconds": 0.0087
+  },
+  {
+    "time": "2026-10-31T17:54:02Z",
+    "name": "create real policy issued-term-perpetual",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "8aec6b0d-7a32-4756-a416-2a9061a2e975",
+    "seconds": 0.0266
+  },
+  {
+    "time": "2026-10-31T17:54:02Z",
+    "name": "issue real license issued-term-perpetual",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "3c7d7e0e-1843-4f03-a398-5e590eedbe01",
+    "seconds": 0.0433
+  },
+  {
+    "time": "2026-10-31T17:54:02Z",
+    "name": "read actual license state",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "6cdcad0a-8a47-474c-887c-b84031fae80e",
+    "seconds": 0.0065
+  },
+  {
+    "time": "2026-10-31T17:54:02Z",
+    "name": "perpetual term has not started before actual activation",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T17:54:03Z",
+    "name": "read actual license state",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "5e4495e6-2c47-453a-bdfc-4d1060503ccb",
+    "seconds": 0.009
+  },
+  {
+    "time": "2026-10-31T17:54:03Z",
+    "name": "perpetual license retains no expiry after activation",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T17:54:03Z",
+    "name": "perpetual actual protected operation",
+    "passed": true,
+    "operation_id": "d4806d64-142e-485c-874c-398376f15169"
+  },
+  {
+    "time": "2026-10-31T17:54:03Z",
+    "name": "create real policy issued-term-timed",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "2a7b7d60-4306-48bb-9d38-61312c1408f7",
+    "seconds": 0.0331
+  },
+  {
+    "time": "2026-10-31T17:54:03Z",
+    "name": "issue real license issued-term-timed",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "7f69e784-1ff6-4180-b0c2-3fd4c4af73ec",
+    "seconds": 0.0392
+  },
+  {
+    "time": "2026-10-31T17:54:03Z",
+    "name": "read actual license state",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "1fbbaf9e-848b-4f4d-9331-1bb5cbb7303a",
+    "seconds": 0.0107
+  },
+  {
+    "time": "2026-10-31T17:54:03Z",
+    "name": "timed term has not started before actual activation",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T17:54:03Z",
+    "name": "read actual license state",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "e46a866d-dd6f-482f-8a8c-ef173e2dcd94",
+    "seconds": 0.0107
+  },
+  {
+    "time": "2026-10-31T17:54:03Z",
+    "name": "timed first real activation starts the issued one-day duration",
+    "passed": true,
+    "seconds": 86400.0
+  },
+  {
+    "time": "2026-10-31T17:54:03Z",
+    "name": "timed administrative duration extension without payment",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "5efb660b-fed0-4c78-a525-c57c4856d5c5",
+    "seconds": 0.0311
+  },
+  {
+    "time": "2026-10-31T17:54:03Z",
+    "name": "read actual license state",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "29a3a06b-9fd7-4f83-afe0-27fc97a25029",
+    "seconds": 0.008
+  },
+  {
+    "time": "2026-10-31T17:54:03Z",
+    "name": "timed administrative extension preserves original activation anchor",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T17:54:03Z",
+    "name": "timed actual protected operation",
+    "passed": true,
+    "operation_id": "68eb84df-280c-45ca-8c11-5a5ac9ac4d85"
+  },
+  {
+    "time": "2026-10-31T17:54:03Z",
+    "name": "create real policy issued-term-trial",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "5c305e8d-eb5b-4f83-8525-57e121d590d9",
+    "seconds": 0.0225
+  },
+  {
+    "time": "2026-10-31T17:54:03Z",
+    "name": "issue real license issued-term-trial",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "f102b063-68d9-41f3-a471-dbbb0290fd40",
+    "seconds": 0.035
+  },
+  {
+    "time": "2026-10-31T17:54:03Z",
+    "name": "read actual license state",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "df194d22-0499-4f57-8ba7-e06e58cf3b40",
+    "seconds": 0.0097
+  },
+  {
+    "time": "2026-10-31T17:54:03Z",
+    "name": "trial term has not started before actual activation",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T17:54:03Z",
+    "name": "read actual license state",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "71143919-4852-4a99-bade-51114b71494c",
+    "seconds": 0.0086
+  },
+  {
+    "time": "2026-10-31T17:54:03Z",
+    "name": "trial first real activation starts the issued one-day duration",
+    "passed": true,
+    "seconds": 86400.0
+  },
+  {
+    "time": "2026-10-31T17:54:03Z",
+    "name": "trial administrative duration extension without payment",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "d71ac6ef-642b-49a6-838d-0062b17fdb8e",
+    "seconds": 0.0474
+  },
+  {
+    "time": "2026-10-31T17:54:03Z",
+    "name": "read actual license state",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "6e98feed-6786-411f-8fa1-ac1643b5d2a3",
+    "seconds": 0.0158
+  },
+  {
+    "time": "2026-10-31T17:54:03Z",
+    "name": "trial administrative extension preserves original activation anchor",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T17:54:03Z",
+    "name": "trial actual protected operation",
+    "passed": true,
+    "operation_id": "7ae98767-4b58-4ff5-898f-d8e8dcdb0081"
+  },
+  {
+    "time": "2026-10-31T17:54:03Z",
+    "name": "advanced scenario completed: license modes and duration",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T17:54:03Z",
+    "name": "create real policy online-no-heartbeat",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "e9c46f4e-d5fb-47a2-8d61-f40ee1dea45d",
+    "seconds": 0.0254
+  },
+  {
+    "time": "2026-10-31T17:54:03Z",
+    "name": "issue real license online-no-heartbeat",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "972c43dc-35a6-43e1-8faf-0418ddd45a15",
+    "seconds": 0.0404
+  },
+  {
+    "time": "2026-10-31T17:54:03Z",
+    "name": "online-only zero-heartbeat grant initially allows valid work",
+    "passed": true,
+    "remaining_seconds": 9.02
+  },
+  {
+    "time": "2026-10-31T17:54:15Z",
+    "name": "online-only grant naturally expires without a heartbeat or clock change",
+    "passed": true,
+    "callback_executed": false
+  },
+  {
+    "time": "2026-10-31T17:54:15Z",
+    "name": "online-only grant refresh recovers permission",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T17:54:15Z",
+    "name": "advanced scenario completed: online lease expiry",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T17:54:15Z",
+    "name": "create real policy overage",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "1cbaa712-b466-4c61-aaf9-eb452cbc87d1",
+    "seconds": 0.0383
+  },
+  {
+    "time": "2026-10-31T17:54:15Z",
+    "name": "issue real license overage",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "33c2f1c1-a74e-40e0-9871-0ffa3e3e7db3",
+    "seconds": 0.0399
+  },
+  {
+    "time": "2026-10-31T17:54:15Z",
+    "name": "actual included or overage execution 1",
+    "passed": true,
+    "operation_id": "65f79aa3-8e66-4109-8c6a-8f0f560bfd7a"
+  },
+  {
+    "time": "2026-10-31T17:54:15Z",
+    "name": "actual included or overage execution 2",
+    "passed": true,
+    "operation_id": "c9986d5e-8b5b-4f31-9abd-f6f510345518"
+  },
+  {
+    "time": "2026-10-31T17:54:15Z",
+    "name": "actual included or overage execution 3",
+    "passed": true,
+    "operation_id": "87ec6565-08f9-463f-897a-681d9a33f2f2"
+  },
+  {
+    "time": "2026-10-31T17:54:15Z",
+    "name": "maximum overage rejects the fourth real action",
+    "passed": true,
+    "code": "FEATURE_QUOTA_EXCEEDED"
+  },
+  {
+    "time": "2026-10-31T17:54:15Z",
+    "name": "read actual overage usage",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "96478d57-a191-4bb9-a649-099342610f18",
+    "seconds": 0.0253
+  },
+  {
+    "time": "2026-10-31T17:54:15Z",
+    "name": "overage cumulative ledger equals three executed units",
+    "passed": true,
+    "used": 3
+  },
+  {
+    "time": "2026-10-31T17:54:16Z",
+    "name": "advanced scenario completed: overage",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T17:54:16Z",
+    "name": "create real policy reservation-expiry",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "c0f6ce32-db03-4740-9fda-4c022df9df8c",
+    "seconds": 0.0364
+  },
+  {
+    "time": "2026-10-31T17:54:16Z",
+    "name": "issue real license reservation-expiry",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "33acf07a-1e20-4bb9-aa2d-99035a64d067",
+    "seconds": 0.0523
+  },
+  {
+    "time": "2026-10-31T17:54:16Z",
+    "name": "server creates a genuine thirty-second reservation",
+    "passed": true,
+    "seconds_remaining": 29.94,
+    "operation_id": "0ce39395-2882-4191-9c18-a2d8d4c37bf5"
+  },
+  {
+    "time": "2026-10-31T17:54:48Z",
+    "name": "naturally expired reservation cannot commit",
+    "passed": true,
+    "code": "RESERVATION_EXPIRED"
+  },
+  {
+    "time": "2026-10-31T17:54:48Z",
+    "name": "cancel after actual expiry reports closed expired state",
+    "passed": true,
+    "status": "expired"
+  },
+  {
+    "time": "2026-10-31T17:54:48Z",
+    "name": "expired hold returns quota for a new real operation",
+    "passed": true,
+    "operation_id": "49ab11de-fdc7-468f-84af-cd25c550810b"
+  },
+  {
+    "time": "2026-10-31T17:54:48Z",
+    "name": "advanced scenario completed: reservation natural expiry",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T17:54:48Z",
+    "name": "create real policy offline-file-roundtrip",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "befec709-5df4-4dc0-a564-ee9ccc8125ea",
+    "seconds": 0.0277
+  },
+  {
+    "time": "2026-10-31T17:54:48Z",
+    "name": "issue real license offline-file-roundtrip",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "8d6b0a2d-f909-40ab-a753-5fc501ff2b9e",
+    "seconds": 0.0414
+  },
+  {
+    "time": "2026-10-31T17:54:48Z",
+    "name": "operator signs a real offline activation file",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "f729b4e0-3e0b-4f0f-97f6-dd0f89400db3",
+    "seconds": 0.1059
+  },
+  {
+    "time": "2026-10-31T17:54:48Z",
+    "name": "offline approval signature tampering is rejected",
+    "passed": true,
+    "code": "InvalidSignature"
+  },
+  {
+    "time": "2026-10-31T17:54:48Z",
+    "name": "real offline request approval import executes protected work with network blocked",
+    "passed": true,
+    "operation_id": "9b106655-008c-4283-ae8f-1a792a8405cf"
+  },
+  {
+    "time": "2026-10-31T17:54:48Z",
+    "name": "same genuine offline approval imports idempotently",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T17:54:48Z",
+    "name": "exporting offline deactivation immediately stops local work",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T17:54:48Z",
+    "name": "operator processes genuine offline deactivation file",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "5bbf7388-7d5f-4b52-9142-a74f0ff053b1",
+    "seconds": 0.0742
+  },
+  {
+    "time": "2026-10-31T17:54:48Z",
+    "name": "old approval cannot resurrect an offline-deactivated instance",
+    "passed": true,
+    "code": "LAUNCH_LOGIN_REQUIRED"
+  },
+  {
+    "time": "2026-10-31T17:54:48Z",
+    "name": "advanced scenario completed: offline file lifecycle",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T17:54:48Z",
+    "name": "create real policy permanent-offline",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "979fe5e2-1bf0-4b35-b043-d64f0cf1982a",
+    "seconds": 0.0256
+  },
+  {
+    "time": "2026-10-31T17:54:48Z",
+    "name": "issue real license permanent-offline",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "e587612b-3455-4166-882a-f0aac8b8adb8",
+    "seconds": 0.0379
+  },
+  {
+    "time": "2026-10-31T17:54:49Z",
+    "name": "permanent offline policy signs an unrestricted offline lifetime",
+    "passed": false
+  },
+  {
+    "time": "2026-10-31T17:54:49Z",
+    "name": "edited signed cache cannot grant an extra feature while offline",
+    "passed": true,
+    "code": "URLError"
+  },
+  {
+    "time": "2026-10-31T17:54:49Z",
+    "name": "untouched permanent signed cache starts and executes offline",
+    "passed": true,
+    "operation_id": "a9f1aaaf-388e-4b8a-9987-4feafeab0e57"
+  },
+  {
+    "time": "2026-10-31T17:54:49Z",
+    "name": "advanced scenario completed: permanent offline cache integrity",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T17:57:37Z",
+    "name": "permanent offline policy representation verified",
+    "passed": true,
+    "signed_expiry": 253402300799,
+    "runtime_policy": {
+      "offline_mode": "permanent",
+      "heartbeat_seconds": 0,
+      "offline_seconds": 0
+    },
+    "allowed": true
+  },
+  {
+    "time": "2026-10-31T18:01:06Z",
+    "name": "read actual advanced product verification pins",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "f8a34476-7043-4956-82ef-cd896b3ac61b",
+    "seconds": 0.0097
+  },
+  {
+    "time": "2026-10-31T18:01:06Z",
+    "name": "create real policy historical-day",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "b2cc102e-7151-42cd-9978-54af3eec0c30",
+    "seconds": 0.0238
+  },
+  {
+    "time": "2026-10-31T18:01:06Z",
+    "name": "issue real license historical-day",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "bff48f45-aa45-4934-ba7d-12c7713d419d",
+    "seconds": 0.0404
+  },
+  {
+    "time": "2026-10-31T18:01:06Z",
+    "name": "day historical usage fixture seeded separately from current period",
+    "passed": true,
+    "fixture_seeded_historical_period": true,
+    "previous_period": "2026-10-30",
+    "current_period": "2026-10-31"
+  },
+  {
+    "time": "2026-10-31T18:01:06Z",
+    "name": "read actual day usage periods",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "04a6742b-097f-4a0d-9162-87fe444997c4",
+    "seconds": 0.0168
+  },
+  {
+    "time": "2026-10-31T18:01:06Z",
+    "name": "day current allowance is independent of exhausted historical usage",
+    "passed": true,
+    "code": "FEATURE_QUOTA_EXCEEDED",
+    "period_quantities": {
+      "2026-10-31": 1,
+      "2026-10-30": 100
+    },
+    "natural_calendar_rollover": false
+  },
+  {
+    "time": "2026-10-31T18:01:06Z",
+    "name": "create real policy historical-month",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "37636f80-115b-4a96-9dd9-23b351bec00e",
+    "seconds": 0.0385
+  },
+  {
+    "time": "2026-10-31T18:01:07Z",
+    "name": "issue real license historical-month",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "33306a95-f702-452e-a122-e9dea4d4ab57",
+    "seconds": 0.0665
+  },
+  {
+    "time": "2026-10-31T18:01:07Z",
+    "name": "month historical usage fixture seeded separately from current period",
+    "passed": true,
+    "fixture_seeded_historical_period": true,
+    "previous_period": "2026-09",
+    "current_period": "2026-10"
+  },
+  {
+    "time": "2026-10-31T18:01:07Z",
+    "name": "read actual month usage periods",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "7892fd2d-82a7-4717-8798-87131f145d1e",
+    "seconds": 0.0121
+  },
+  {
+    "time": "2026-10-31T18:01:07Z",
+    "name": "month current allowance is independent of exhausted historical usage",
+    "passed": true,
+    "code": "FEATURE_QUOTA_EXCEEDED",
+    "period_quantities": {
+      "2026-10": 1,
+      "2026-09": 100
+    },
+    "natural_calendar_rollover": false
+  },
+  {
+    "time": "2026-10-31T18:01:07Z",
+    "name": "advanced scenario completed: day and month historical periods",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T18:01:07Z",
+    "name": "create real policy feature-case",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "b12aced2-63c6-4013-b27f-4093bf307e8a",
+    "seconds": 0.027
+  },
+  {
+    "time": "2026-10-31T18:01:07Z",
+    "name": "issue real license feature-case",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "57bf7b93-4aec-4614-8c61-55cbefb55361",
+    "seconds": 0.0382
+  },
+  {
+    "time": "2026-10-31T18:01:07Z",
+    "name": "case-sensitive feature export has its own actual allowance",
+    "passed": true,
+    "operation_id": "a5d4b473-92bc-471e-9168-1b6c189f8e4a"
+  },
+  {
+    "time": "2026-10-31T18:01:08Z",
+    "name": "case-sensitive feature Export has its own actual allowance",
+    "passed": true,
+    "operation_id": "91e15d19-7dac-45f0-a388-3e61726c96ea"
+  },
+  {
+    "time": "2026-10-31T18:01:08Z",
+    "name": "an ungranted uppercase feature is denied",
+    "passed": true,
+    "code": "RuntimeError"
+  },
+  {
+    "time": "2026-10-31T18:01:08Z",
+    "name": "read separate case-sensitive usage counters",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "7aa081c7-442b-47df-8f9c-de2edd25ed56",
+    "seconds": 0.016
+  },
+  {
+    "time": "2026-10-31T18:01:08Z",
+    "name": "feature names preserve separate real counters",
+    "passed": true,
+    "quantities": {
+      "Export": 1,
+      "export": 1
+    }
+  },
+  {
+    "time": "2026-10-31T18:01:08Z",
+    "name": "advanced scenario completed: case sensitive feature counters",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T18:01:08Z",
+    "name": "publish real release 10.0.0",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "be0e284f-2d5e-4d40-a380-84e86aa65e6f",
+    "seconds": 0.0239
+  },
+  {
+    "time": "2026-10-31T18:01:08Z",
+    "name": "publish real release 10.1.0",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "1d98dc10-bae6-4b54-a1e8-6ec6bcf686e9",
+    "seconds": 0.0245
+  },
+  {
+    "time": "2026-10-31T18:01:08Z",
+    "name": "create real policy maintenance",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "0eb0a951-4c72-457d-b413-44cd45ebabda",
+    "seconds": 0.0283
+  },
+  {
+    "time": "2026-10-31T18:01:08Z",
+    "name": "issue real license maintenance",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "c3d0c540-909f-47a2-82f0-d66243c510ad",
+    "seconds": 0.0398
+  },
+  {
+    "time": "2026-10-31T18:01:08Z",
+    "name": "read first-activation maintenance deadline",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "30eac0b2-e230-45e9-ad17-c560cfda936d",
+    "seconds": 0.0153
+  },
+  {
+    "time": "2026-10-31T18:01:08Z",
+    "name": "read actual license state",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "7bd30650-3e07-4ed9-b282-f5bbff021cb2",
+    "seconds": 0.0127
+  },
+  {
+    "time": "2026-10-31T18:01:08Z",
+    "name": "first real activation initializes purchased maintenance duration",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T18:01:08Z",
+    "name": "maintenance expiry uses a labeled historical deadline fixture",
+    "passed": true,
+    "fixture_seeded_historical_deadline": true,
+    "host_clock_changed": false
+  },
+  {
+    "time": "2026-10-31T18:01:08Z",
+    "name": "release published before maintenance end remains usable",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T18:01:08Z",
+    "name": "release published after maintenance end is denied",
+    "passed": true,
+    "code": "MAINTENANCE_EXPIRED"
+  },
+  {
+    "time": "2026-10-31T18:01:08Z",
+    "name": "extend actual license maintenance without payment integration",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "9aac1681-d3c0-4b2e-9d95-e321a036c647",
+    "seconds": 0.0287
+  },
+  {
+    "time": "2026-10-31T18:01:08Z",
+    "name": "administrative maintenance extension restores newer release access",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T18:01:08Z",
+    "name": "advanced scenario completed: maintenance and published releases",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T18:01:08Z",
+    "name": "create real policy batch-source",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "9cb9218b-3d6c-45f7-acdd-00ca49db5bdb",
+    "seconds": 0.0264
+  },
+  {
+    "time": "2026-10-31T18:01:08Z",
+    "name": "create a real two-license batch",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "3dd6d633-9925-435a-84e6-5153c225eb09",
+    "seconds": 0.0571
+  },
+  {
+    "time": "2026-10-31T18:01:08Z",
+    "name": "repeat exact batch request",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "f58e463e-7bba-4697-9ca1-b456276c3d77",
+    "seconds": 0.0161
+  },
+  {
+    "time": "2026-10-31T18:01:08Z",
+    "name": "batch retry returns identical license secrets without issuing again",
+    "passed": true,
+    "license_count": 2
+  },
+  {
+    "time": "2026-10-31T18:01:08Z",
+    "name": "read license count before invalid atomic batch",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "428b04cb-bcee-4ff9-bedf-bdd837ad263d",
+    "seconds": 0.012
+  },
+  {
+    "time": "2026-10-31T18:01:08Z",
+    "name": "read count after rejected atomic batch",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "85d3f411-3dcd-444e-a4a8-4a297302a07e",
+    "seconds": 0.0139
+  },
+  {
+    "time": "2026-10-31T18:01:08Z",
+    "name": "one invalid entry rolls back the entire batch",
+    "passed": true,
+    "status": 400,
+    "before": 14,
+    "after": 14
+  },
+  {
+    "time": "2026-10-31T18:01:09Z",
+    "name": "create real policy batch-target",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "86fd3423-b8b0-4616-a402-133bbd341c41",
+    "seconds": 0.0389
+  },
+  {
+    "time": "2026-10-31T18:01:09Z",
+    "name": "preview real policy change for both batch licenses",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "5f6cda52-fa7d-41b0-9bb6-452f41e8310d",
+    "seconds": 0.0368
+  },
+  {
+    "time": "2026-10-31T18:01:09Z",
+    "name": "edit one fixture after preview",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "e753cf2d-0ad1-40d6-be70-099a99bfa835",
+    "seconds": 0.0302
+  },
+  {
+    "time": "2026-10-31T18:01:09Z",
+    "name": "stale batch preview cannot modify licenses",
+    "passed": true,
+    "status": 409,
+    "code": "PREVIEW_STALE"
+  },
+  {
+    "time": "2026-10-31T18:01:09Z",
+    "name": "refresh actual batch preview",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "8022f27e-d7a5-440e-ac9a-db6316c5951e",
+    "seconds": 0.0276
+  },
+  {
+    "time": "2026-10-31T18:01:09Z",
+    "name": "apply refreshed real policy batch",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "63803153-47be-4049-9573-400f0eefeb5b",
+    "seconds": 0.0662
+  },
+  {
+    "time": "2026-10-31T18:01:09Z",
+    "name": "retry applied batch without new mutations",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "68e4a7ba-bfa2-417c-a9d9-78def55a8c52",
+    "seconds": 0.0198
+  },
+  {
+    "time": "2026-10-31T18:01:09Z",
+    "name": "successful batch apply is idempotent",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T18:01:09Z",
+    "name": "read changed batch license",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "d532e9e1-a3ec-4cc1-a3f5-412764328eba",
+    "seconds": 0.0095
+  },
+  {
+    "time": "2026-10-31T18:01:09Z",
+    "name": "batch applies feature and device rights while preserving perpetual term",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T18:01:09Z",
+    "name": "read changed batch license",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "7c9624e4-edcf-41ae-bc51-6b29037a186a",
+    "seconds": 0.0073
+  },
+  {
+    "time": "2026-10-31T18:01:09Z",
+    "name": "batch applies feature and device rights while preserving perpetual term",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T18:01:09Z",
+    "name": "advanced scenario completed: batch issue preview and atomicity",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T18:01:09Z",
+    "name": "create real policy no-vm",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "6e25efb1-cade-4d3e-90bc-11b7818fc47f",
+    "seconds": 0.0283
+  },
+  {
+    "time": "2026-10-31T18:01:09Z",
+    "name": "issue real license no-vm",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "93fb8c02-0969-4f2b-bd82-80e1404fc720",
+    "seconds": 0.0315
+  },
+  {
+    "time": "2026-10-31T18:01:09Z",
+    "name": "real Linux SDK policy no-vm",
+    "passed": true,
+    "platform": "linux",
+    "sdk_reports_virtual_machine": true,
+    "hardware_available": false,
+    "code": "VIRTUAL_MACHINE_NOT_ALLOWED",
+    "expected_code": "VIRTUAL_MACHINE_NOT_ALLOWED",
+    "callback_count": 0,
+    "profile_fabricated": false
+  },
+  {
+    "time": "2026-10-31T18:01:09Z",
+    "name": "create real policy hardware-required",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "0802e1d9-03cf-4080-978f-e80ac1f07ace",
+    "seconds": 0.026
+  },
+  {
+    "time": "2026-10-31T18:01:09Z",
+    "name": "issue real license hardware-required",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "e35c4f4b-f212-4724-a20a-81f857d3ae60",
+    "seconds": 0.0364
+  },
+  {
+    "time": "2026-10-31T18:01:09Z",
+    "name": "real Linux SDK policy hardware-required",
+    "passed": true,
+    "platform": "linux",
+    "sdk_reports_virtual_machine": true,
+    "hardware_available": false,
+    "code": "HARDWARE_ID_REQUIRED",
+    "expected_code": "HARDWARE_ID_REQUIRED",
+    "callback_count": 0,
+    "profile_fabricated": false
+  },
+  {
+    "time": "2026-10-31T18:01:09Z",
+    "name": "create real policy hardware-match-required",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "666b123a-607c-4be9-aebe-1fd633795611",
+    "seconds": 0.0245
+  },
+  {
+    "time": "2026-10-31T18:01:09Z",
+    "name": "issue real license hardware-match-required",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "49d25db5-90b7-4412-b593-0c85037e204f",
+    "seconds": 0.0375
+  },
+  {
+    "time": "2026-10-31T18:01:09Z",
+    "name": "real Linux SDK policy hardware-match-required",
+    "passed": true,
+    "platform": "linux",
+    "sdk_reports_virtual_machine": true,
+    "hardware_available": false,
+    "code": "HARDWARE_ID_REQUIRED",
+    "expected_code": "HARDWARE_ID_REQUIRED",
+    "callback_count": 0,
+    "profile_fabricated": false
+  },
+  {
+    "time": "2026-10-31T18:01:09Z",
+    "name": "advanced scenario completed: actual VM and hardware policies",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T18:03:45Z",
+    "name": "read actual advanced product verification pins",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "cdcf5ee0-2ace-403d-af7f-1d8c55407e74",
+    "seconds": 0.0093
+  },
+  {
+    "time": "2026-10-31T18:03:45Z",
+    "name": "create real policy cross-system-cache",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "e0a5464d-c618-42bc-b77f-160a212be338",
+    "seconds": 0.0423
+  },
+  {
+    "time": "2026-10-31T18:03:45Z",
+    "name": "issue real license cross-system-cache",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "323ca1ca-a513-45f5-95b9-3d85ace3410e",
+    "seconds": 0.0981
+  },
+  {
+    "time": "2026-10-31T18:03:46Z",
+    "name": "real Linux client prepares a signed cache for actual Windows copying",
+    "passed": true,
+    "operation_id": "50e4a248-5b5a-43d8-9f72-20a28628b297",
+    "hardware_available": false,
+    "sdk_reports_virtual_machine": true
+  },
+  {
+    "time": "2026-10-31T18:04:56Z",
+    "name": "real Linux source releases its binding after Windows transfer rejection",
+    "passed": true,
+    "revocation_pending": false
+  },
+  {
+    "time": "2026-10-31T18:27:12Z",
+    "name": "read actual advanced product verification pins",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "91b43b9e-9bab-4e95-a795-3ad9d77f31ad",
+    "seconds": 0.0088
+  },
+  {
+    "time": "2026-10-31T18:27:12Z",
+    "name": "Licentivo CSRF",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "9f2f24b4-6af8-4196-83c6-7a5919b9faea",
+    "seconds": 0.0024
+  },
+  {
+    "time": "2026-10-31T18:27:12Z",
+    "name": "Licentivo operator login",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "eddd0913-e04e-418f-9631-09d63f25a51c",
+    "seconds": 0.1462
+  },
+  {
+    "time": "2026-10-31T18:27:12Z",
+    "name": "create real policy single-edit-source",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "c046b27a-672d-4a3b-bd3c-64d11340e0a0",
+    "seconds": 0.0229
+  },
+  {
+    "time": "2026-10-31T18:27:12Z",
+    "name": "issue real license single-edit",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "e2ee4806-89d3-40ce-8b85-e7739e993d9a",
+    "seconds": 0.0369
+  },
+  {
+    "time": "2026-10-31T18:27:12Z",
+    "name": "read actual license state",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "483fb0f9-d950-440e-aec2-695ec3a819d1",
+    "seconds": 0.009
+  },
+  {
+    "time": "2026-10-31T18:27:12Z",
+    "name": "operator explicitly reveals original license key",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "3cc3b904-c780-459a-933f-7126a7e57098",
+    "seconds": 0.0289
+  },
+  {
+    "time": "2026-10-31T18:27:12Z",
+    "name": "explicit key reveal preserves original license identity",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T18:27:12Z",
+    "name": "ordinary license reads omit the complete key and encryption material",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T18:27:12Z",
+    "name": "management API keys cannot reveal complete license secrets",
+    "passed": true,
+    "status": 403,
+    "code": "FORBIDDEN",
+    "request_id": "251aaddb-a6b3-44e5-97b5-39a790ebacd2",
+    "seconds": 0.0107
+  },
+  {
+    "time": "2026-10-31T18:27:12Z",
+    "name": "create real policy single-edit-target",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "0a33c4c7-a8d5-4123-8e8e-abad8767be2a",
+    "seconds": 0.0321
+  },
+  {
+    "time": "2026-10-31T18:27:12Z",
+    "name": "single-license policy switch requires a preview",
+    "passed": true,
+    "status": 400,
+    "code": "INVALID_INPUT",
+    "request_id": "6cb86456-3bad-4b99-9e28-0cbdff7c2be2",
+    "seconds": 0.0228
+  },
+  {
+    "time": "2026-10-31T18:27:12Z",
+    "name": "preview actual single-license policy switch",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "0f96bd7d-deec-4dc4-8abe-f16127d4e8ab",
+    "seconds": 0.0288
+  },
+  {
+    "time": "2026-10-31T18:27:13Z",
+    "name": "apply preview and metadata in one normal edit",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "733fb212-cb74-43a0-aae6-dcdd3d2a8d2f",
+    "seconds": 0.0548
+  },
+  {
+    "time": "2026-10-31T18:27:13Z",
+    "name": "single edit suspends an already-running real SDK",
+    "passed": true,
+    "code": "LICENSE_SUSPENDED",
+    "callback_executed": false
+  },
+  {
+    "time": "2026-10-31T18:27:13Z",
+    "name": "resume real edited license",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "7404c7d0-2232-4f4a-823b-27cffc40bbaf",
+    "seconds": 0.0345
+  },
+  {
+    "time": "2026-10-31T18:27:13Z",
+    "name": "advanced scenario interrupted: license editing keys and export",
+    "passed": false,
+    "code": "LAUNCH_LOGIN_REQUIRED"
+  },
+  {
+    "time": "2026-10-31T18:27:13Z",
+    "name": "create real policy terminal",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "4ead7798-705d-4df7-be05-aa2e97fb60a6",
+    "seconds": 0.0812
+  },
+  {
+    "time": "2026-10-31T18:27:13Z",
+    "name": "issue real license terminal-revoke",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "f3ccccb9-2d98-4aa3-83e7-9620517764cc",
+    "seconds": 0.0462
+  },
+  {
+    "time": "2026-10-31T18:27:13Z",
+    "name": "perform actual terminal license revoke",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "2b44bbf1-1ea2-421d-a6a7-879dc338a4c0",
+    "seconds": 0.0894
+  },
+  {
+    "time": "2026-10-31T18:27:13Z",
+    "name": "revoke denies the already-running real SDK after online verification",
+    "passed": true,
+    "code": "LICENSE_REVOKED",
+    "callback_executed": false,
+    "cached_offline_grants_not_claimed_immediately_revoked": true
+  },
+  {
+    "time": "2026-10-31T18:27:13Z",
+    "name": "terminal revocation rejects reactivation edit",
+    "passed": true,
+    "status": 409,
+    "code": "LICENSE_REVOKED",
+    "request_id": "385b3fee-810c-4f59-bd91-21cef3a5948b",
+    "seconds": 0.0845
+  },
+  {
+    "time": "2026-10-31T18:27:13Z",
+    "name": "terminal revocation rejects administrative extension",
+    "passed": true,
+    "status": 409,
+    "code": "LICENSE_REVOKED",
+    "request_id": "4118b345-c71f-42c3-9521-d9b434693fad",
+    "seconds": 0.0293
+  },
+  {
+    "time": "2026-10-31T18:27:14Z",
+    "name": "issue real license terminal-delete",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "543f7658-5669-47d6-9473-493c09305e51",
+    "seconds": 0.099
+  },
+  {
+    "time": "2026-10-31T18:27:14Z",
+    "name": "perform actual terminal license delete",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "bfdf1a8e-3540-470d-a0b4-84e0f9d8014f",
+    "seconds": 0.0349
+  },
+  {
+    "time": "2026-10-31T18:27:14Z",
+    "name": "delete denies the already-running real SDK after online verification",
+    "passed": true,
+    "code": "LICENSE_REVOKED",
+    "callback_executed": false,
+    "cached_offline_grants_not_claimed_immediately_revoked": true
+  },
+  {
+    "time": "2026-10-31T18:27:14Z",
+    "name": "deleted license is no longer returned by normal management reads",
+    "passed": true,
+    "status": 404,
+    "code": "NOT_FOUND",
+    "request_id": "ec436a26-10ec-4e18-834b-67c3646920b9",
+    "seconds": 0.0107
+  },
+  {
+    "time": "2026-10-31T18:27:14Z",
+    "name": "advanced scenario completed: terminal revocation and deletion",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T18:27:14Z",
+    "name": "create real policy customer-self-release",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "33307ead-dd6e-4401-a389-ebc49f8475c2",
+    "seconds": 0.046
+  },
+  {
+    "time": "2026-10-31T18:27:14Z",
+    "name": "issue real license customer-self-release",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "bb431197-ee15-4c40-b107-2b3a36737781",
+    "seconds": 0.0598
+  },
+  {
+    "time": "2026-10-31T18:27:14Z",
+    "name": "link independent license to actual portal customer",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "bf555e21-ef6f-460d-b991-f753e50f5669",
+    "seconds": 0.0733
+  },
+  {
+    "time": "2026-10-31T18:27:14Z",
+    "name": "portal email token uses explicit isolated database fixture",
+    "passed": true,
+    "email_delivery_tested": false,
+    "magic_token_fixture_seeded": true
+  },
+  {
+    "time": "2026-10-31T18:27:14Z",
+    "name": "obtain normal portal CSRF",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "916d6641-1d7a-4880-ab26-b7bb576034e9",
+    "seconds": 0.0099
+  },
+  {
+    "time": "2026-10-31T18:27:14Z",
+    "name": "exchange actual one-use portal token for session",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "fe703033-31d9-4b12-aebd-dbd01054ab2d",
+    "seconds": 0.019
+  },
+  {
+    "time": "2026-10-31T18:27:14Z",
+    "name": "portal CSRF for replay check",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "0238d3f4-cb37-49ff-ab75-22fbac134e7b",
+    "seconds": 0.003
+  },
+  {
+    "time": "2026-10-31T18:27:14Z",
+    "name": "portal magic token cannot be exchanged twice",
+    "passed": true,
+    "status": 400,
+    "code": "TOKEN_INVALID",
+    "request_id": "ac0bbbc9-bbfc-4b80-8166-f79022785d1a",
+    "seconds": 0.0065
+  },
+  {
+    "time": "2026-10-31T18:27:15Z",
+    "name": "read actual linked customer license and activation",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "aa84f538-f123-4586-a7b4-b1deeb76f50d",
+    "seconds": 0.079
+  },
+  {
+    "time": "2026-10-31T18:27:15Z",
+    "name": "advanced scenario interrupted: customer portal release",
+    "passed": false,
+    "code": "KeyError"
+  },
+  {
+    "time": "2026-10-31T18:27:39Z",
+    "name": "read actual advanced product verification pins",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "b08cf940-45a2-4b71-a8ea-78b47e5aa6ef",
+    "seconds": 0.0124
+  },
+  {
+    "time": "2026-10-31T18:27:39Z",
+    "name": "Licentivo CSRF",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "9acfbc54-ab88-4341-b41c-2772b7943f3f",
+    "seconds": 0.0033
+  },
+  {
+    "time": "2026-10-31T18:27:39Z",
+    "name": "Licentivo operator login",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "2e5d4a86-0922-492f-b919-91489769b9f3",
+    "seconds": 0.0885
+  },
+  {
+    "time": "2026-10-31T18:27:39Z",
+    "name": "create real policy single-edit-source",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "184bd6a7-18b2-4fea-b873-227def534426",
+    "seconds": 0.027
+  },
+  {
+    "time": "2026-10-31T18:27:39Z",
+    "name": "issue real license single-edit",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "d887acb4-f6eb-4fa2-aba2-55813efab709",
+    "seconds": 0.0377
+  },
+  {
+    "time": "2026-10-31T18:27:40Z",
+    "name": "read actual license state",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "9c0c1408-a0d6-4ec8-8825-e7fc78499238",
+    "seconds": 0.0068
+  },
+  {
+    "time": "2026-10-31T18:27:40Z",
+    "name": "operator explicitly reveals original license key",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "ae870742-6b6d-4b1c-8acc-e5ad49045cb3",
+    "seconds": 0.0255
+  },
+  {
+    "time": "2026-10-31T18:27:40Z",
+    "name": "explicit key reveal preserves original license identity",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T18:27:40Z",
+    "name": "ordinary license reads omit the complete key and encryption material",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T18:27:40Z",
+    "name": "management API keys cannot reveal complete license secrets",
+    "passed": true,
+    "status": 403,
+    "code": "FORBIDDEN",
+    "request_id": "7aef9b6e-a059-40c5-82b1-6fb71f3bfae1",
+    "seconds": 0.0129
+  },
+  {
+    "time": "2026-10-31T18:27:40Z",
+    "name": "create real policy single-edit-target",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "4b3b8c3b-9025-43ac-8984-6e6a8363748b",
+    "seconds": 0.0318
+  },
+  {
+    "time": "2026-10-31T18:27:40Z",
+    "name": "single-license policy switch requires a preview",
+    "passed": true,
+    "status": 400,
+    "code": "INVALID_INPUT",
+    "request_id": "b303617a-9202-4e13-a5d7-7f824c36daf4",
+    "seconds": 0.0242
+  },
+  {
+    "time": "2026-10-31T18:27:40Z",
+    "name": "preview actual single-license policy switch",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "da3cf966-e227-43d8-b021-f482557e16ec",
+    "seconds": 0.0227
+  },
+  {
+    "time": "2026-10-31T18:27:40Z",
+    "name": "apply preview and metadata in one normal edit",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "ee64eee5-7e30-48e6-8243-56feff61fd32",
+    "seconds": 0.0415
+  },
+  {
+    "time": "2026-10-31T18:27:40Z",
+    "name": "single edit suspends an already-running real SDK",
+    "passed": true,
+    "code": "LICENSE_SUSPENDED",
+    "callback_executed": false
+  },
+  {
+    "time": "2026-10-31T18:27:40Z",
+    "name": "resume real edited license",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "0f4bb644-24dd-4efc-9198-4061345e636d",
+    "seconds": 0.0263
+  },
+  {
+    "time": "2026-10-31T18:27:40Z",
+    "name": "read actual license state",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "3024c28d-405a-4747-94e6-3990c9f5a068",
+    "seconds": 0.0087
+  },
+  {
+    "time": "2026-10-31T18:27:40Z",
+    "name": "reveal unchanged key after policy replacement",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "f3dbdc55-e957-44ef-b84e-a813ffdbee79",
+    "seconds": 0.0183
+  },
+  {
+    "time": "2026-10-31T18:27:40Z",
+    "name": "read actual preserved single-edit usage",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "120ba589-07e8-47fc-a525-6e274f7b31b7",
+    "seconds": 0.0143
+  },
+  {
+    "time": "2026-10-31T18:27:40Z",
+    "name": "single-policy replacement preserves key, term and previous usage",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T18:27:40Z",
+    "name": "real CSV export escapes spreadsheet formula and omits full license secrets",
+    "passed": true,
+    "rows": 22
+  },
+  {
+    "time": "2026-10-31T18:27:40Z",
+    "name": "remove feature through a normal license edit",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "30904099-252d-43db-a5ae-f26304910d0a",
+    "seconds": 0.0395
+  },
+  {
+    "time": "2026-10-31T18:27:40Z",
+    "name": "removing a feature denies that real business callback after online refresh",
+    "passed": true,
+    "code": "RuntimeError",
+    "callback_executed": false
+  },
+  {
+    "time": "2026-10-31T18:27:40Z",
+    "name": "advanced scenario completed: license editing keys and export",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T18:27:40Z",
+    "name": "create real policy terminal",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "e83af217-c1e5-4ddb-877a-947664d5b8a3",
+    "seconds": 0.0253
+  },
+  {
+    "time": "2026-10-31T18:27:40Z",
+    "name": "issue real license terminal-revoke",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "a0b350c2-3e5b-4515-8093-f4e760542b01",
+    "seconds": 0.0292
+  },
+  {
+    "time": "2026-10-31T18:27:41Z",
+    "name": "perform actual terminal license revoke",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "669ce7e5-b514-4184-bcd7-5b3fc0b9d3dd",
+    "seconds": 0.0278
+  },
+  {
+    "time": "2026-10-31T18:27:41Z",
+    "name": "revoke denies the already-running real SDK after online verification",
+    "passed": true,
+    "code": "LICENSE_REVOKED",
+    "callback_executed": false,
+    "cached_offline_grants_not_claimed_immediately_revoked": true
+  },
+  {
+    "time": "2026-10-31T18:27:41Z",
+    "name": "terminal revocation rejects reactivation edit",
+    "passed": true,
+    "status": 409,
+    "code": "LICENSE_REVOKED",
+    "request_id": "48a225ea-7c5c-49ea-9a12-a5d0963f49ae",
+    "seconds": 0.0146
+  },
+  {
+    "time": "2026-10-31T18:27:41Z",
+    "name": "terminal revocation rejects administrative extension",
+    "passed": true,
+    "status": 409,
+    "code": "LICENSE_REVOKED",
+    "request_id": "226e73be-c296-4fb2-b1b4-005ee6c0b305",
+    "seconds": 0.0128
+  },
+  {
+    "time": "2026-10-31T18:27:41Z",
+    "name": "issue real license terminal-delete",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "2007d9b4-2ba9-4d00-bf77-d4d62b42756f",
+    "seconds": 0.0375
+  },
+  {
+    "time": "2026-10-31T18:27:41Z",
+    "name": "perform actual terminal license delete",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "7a7d8e08-6c61-4525-b660-e9f4846c475f",
+    "seconds": 0.0238
+  },
+  {
+    "time": "2026-10-31T18:27:41Z",
+    "name": "delete denies the already-running real SDK after online verification",
+    "passed": true,
+    "code": "LICENSE_REVOKED",
+    "callback_executed": false,
+    "cached_offline_grants_not_claimed_immediately_revoked": true
+  },
+  {
+    "time": "2026-10-31T18:27:41Z",
+    "name": "deleted license is no longer returned by normal management reads",
+    "passed": true,
+    "status": 404,
+    "code": "NOT_FOUND",
+    "request_id": "88e169ac-a81d-42d8-b6fa-55dba84ba887",
+    "seconds": 0.0089
+  },
+  {
+    "time": "2026-10-31T18:27:41Z",
+    "name": "advanced scenario completed: terminal revocation and deletion",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T18:27:41Z",
+    "name": "create real policy customer-self-release",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "0490dc33-f87c-4e5d-949a-bbb4ec3d2797",
+    "seconds": 0.0409
+  },
+  {
+    "time": "2026-10-31T18:27:41Z",
+    "name": "issue real license customer-self-release",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "8b2544b6-668c-4b7e-b5c8-3fa322b0f8ff",
+    "seconds": 0.1034
+  },
+  {
+    "time": "2026-10-31T18:27:41Z",
+    "name": "link independent license to actual portal customer",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "d83390b6-22dc-4a72-8867-30e4b1095e83",
+    "seconds": 0.0638
+  },
+  {
+    "time": "2026-10-31T18:27:41Z",
+    "name": "portal email token uses explicit isolated database fixture",
+    "passed": true,
+    "email_delivery_tested": false,
+    "magic_token_fixture_seeded": true
+  },
+  {
+    "time": "2026-10-31T18:27:41Z",
+    "name": "obtain normal portal CSRF",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "58ef06e9-fffa-4aa0-9e56-3c3adcbb9ab2",
+    "seconds": 0.005
+  },
+  {
+    "time": "2026-10-31T18:27:41Z",
+    "name": "exchange actual one-use portal token for session",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "8f05e0b2-4221-4460-a91c-f1f98eeb1760",
+    "seconds": 0.0217
+  },
+  {
+    "time": "2026-10-31T18:27:41Z",
+    "name": "portal CSRF for replay check",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "e20a0f3d-e642-4905-bac1-32ad623e6eed",
+    "seconds": 0.0033
+  },
+  {
+    "time": "2026-10-31T18:27:41Z",
+    "name": "portal magic token cannot be exchanged twice",
+    "passed": true,
+    "status": 400,
+    "code": "TOKEN_INVALID",
+    "request_id": "4ed0d59a-1631-4d5d-a647-98050666d7e4",
+    "seconds": 0.009
+  },
+  {
+    "time": "2026-10-31T18:27:42Z",
+    "name": "read actual linked customer license and activation",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "0e3a60b1-4fa0-429e-a659-19be9f431a3f",
+    "seconds": 0.0328
+  },
+  {
+    "time": "2026-10-31T18:27:42Z",
+    "name": "customer labels their actual device",
+    "passed": false,
+    "status": 400,
+    "code": "INVALID_INPUT",
+    "request_id": "ffdeabfe-00e0-463d-afb0-90d5fb0cf718",
+    "seconds": 0.0043
+  },
+  {
+    "time": "2026-10-31T18:27:42Z",
+    "name": "advanced scenario interrupted: customer portal release",
+    "passed": false,
+    "code": "RuntimeError"
+  },
+  {
+    "time": "2026-10-31T18:29:03Z",
+    "name": "read actual advanced product verification pins",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "fc56df74-e0bc-4edc-8477-84bbe03ba52b",
+    "seconds": 0.0108
+  },
+  {
+    "time": "2026-10-31T18:29:03Z",
+    "name": "create real policy customer-self-release",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "b55bae14-63e7-4d5c-b48b-eb71ea9e18c1",
+    "seconds": 0.0305
+  },
+  {
+    "time": "2026-10-31T18:29:03Z",
+    "name": "issue real license customer-self-release",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "4e2a455d-b32c-4ad7-8c06-8817bbcfab09",
+    "seconds": 0.0392
+  },
+  {
+    "time": "2026-10-31T18:29:03Z",
+    "name": "link independent license to actual portal customer",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "be6dd8c4-d1d2-4f4c-811e-8912e5f71261",
+    "seconds": 0.0384
+  },
+  {
+    "time": "2026-10-31T18:29:03Z",
+    "name": "portal email token uses explicit isolated database fixture",
+    "passed": true,
+    "email_delivery_tested": false,
+    "magic_token_fixture_seeded": true
+  },
+  {
+    "time": "2026-10-31T18:29:03Z",
+    "name": "obtain normal portal CSRF",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "1fff547b-986b-438b-b173-8116811f2136",
+    "seconds": 0.0022
+  },
+  {
+    "time": "2026-10-31T18:29:03Z",
+    "name": "exchange actual one-use portal token for session",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "2b4bbe86-0269-47ff-842f-1f459f9959b5",
+    "seconds": 0.0172
+  },
+  {
+    "time": "2026-10-31T18:29:03Z",
+    "name": "portal CSRF for replay check",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "e28fc796-d971-45e0-a1c2-2c4ba7d52c67",
+    "seconds": 0.0018
+  },
+  {
+    "time": "2026-10-31T18:29:03Z",
+    "name": "portal magic token cannot be exchanged twice",
+    "passed": true,
+    "status": 400,
+    "code": "TOKEN_INVALID",
+    "request_id": "6aab5bbe-9ac6-4c02-bda7-a28410462929",
+    "seconds": 0.007
+  },
+  {
+    "time": "2026-10-31T18:29:03Z",
+    "name": "read actual linked customer license and activation",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "6488b961-655c-4cb9-bf50-43c4ed8cb432",
+    "seconds": 0.0322
+  },
+  {
+    "time": "2026-10-31T18:29:03Z",
+    "name": "customer labels their actual device",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "56756b2c-5aad-4cd7-8e76-2664637532b2",
+    "seconds": 0.0219
+  },
+  {
+    "time": "2026-10-31T18:29:03Z",
+    "name": "customer releases actual SDK activation",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "ecb52847-a8ba-4d7d-8f19-ff44d6ee2896",
+    "seconds": 0.0481
+  },
+  {
+    "time": "2026-10-31T18:29:03Z",
+    "name": "repeat same generation release without a second allowance",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "b15ceb3b-164e-47ee-9d1b-8b88078be7a8",
+    "seconds": 0.0307
+  },
+  {
+    "time": "2026-10-31T18:29:03Z",
+    "name": "repeated customer release returns the original temporary transfer code",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T18:29:03Z",
+    "name": "customer release blocks original SDK after online refresh",
+    "passed": true,
+    "code": "DEVICE_CREDENTIAL_REVOKED"
+  },
+  {
+    "time": "2026-10-31T18:29:03Z",
+    "name": "actual portal transfer prepared for a second real operating system",
+    "passed": true,
+    "send_email": false
+  },
+  {
+    "time": "2026-10-31T18:29:03Z",
+    "name": "advanced scenario completed: customer portal release corrected schema",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T18:30:48Z",
+    "name": "portal sees real transferred Windows device",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "ff0b3813-fdc9-4a08-b181-e1755ed9bcd8",
+    "seconds": 0.0291
+  },
+  {
+    "time": "2026-10-31T18:30:48Z",
+    "name": "portal retains one active device and one spent monthly release after real transfer",
+    "passed": true,
+    "remaining": 0,
+    "calendar_month_allowance": true
+  },
+  {
+    "time": "2026-10-31T18:30:48Z",
+    "name": "stale binding generation cannot release successor Windows device",
+    "passed": true,
+    "status": 409,
+    "code": "DEVICE_BINDING_CHANGED",
+    "request_id": "36f4d7e7-4a7b-4c20-af7a-d24567000040",
+    "seconds": 0.0175
+  },
+  {
+    "time": "2026-10-31T18:30:48Z",
+    "name": "actual transferred device respects exhausted customer self-release allowance",
+    "passed": true,
+    "status": 409,
+    "code": "SELF_RELEASE_LIMIT",
+    "request_id": "c12ca29a-eacf-4f70-b8a0-3ff74c4c654f",
+    "seconds": 0.0199
+  },
+  {
+    "time": "2026-10-31T18:30:48Z",
+    "name": "stale device label cannot overwrite a later label",
+    "passed": true,
+    "status": 409,
+    "code": "DEVICE_LABEL_CHANGED",
+    "request_id": "25f382c3-ac82-4363-bad6-641916095a9e",
+    "seconds": 0.0158
+  },
+  {
+    "time": "2026-10-31T18:30:48Z",
+    "name": "a used temporary code cannot activate actual Linux again",
+    "passed": false,
+    "code": "ACTIVATION_CODE_USED",
+    "callback_executed": false
+  },
+  {
+    "time": "2026-10-31T18:30:48Z",
+    "name": "actual customer portal logout revokes its session",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "089594f7-f8a8-4f4d-8ad1-e874bdebdb84",
+    "seconds": 0.0094
+  },
+  {
+    "time": "2026-10-31T18:30:48Z",
+    "name": "logged-out portal session cannot read licenses",
+    "passed": true,
+    "status": 401,
+    "code": "UNAUTHENTICATED",
+    "request_id": "53af1261-a334-477b-afe8-243f0f0034fa",
+    "seconds": 0.0028
+  },
+  {
+    "time": "2026-10-31T18:33:31Z",
+    "name": "used temporary code is rejected with its documented activation error",
+    "passed": true,
+    "code": "ACTIVATION_CODE_USED",
+    "callback_executed": false
+  },
+  {
+    "time": "2026-10-31T18:33:47Z",
+    "name": "read actual advanced product verification pins",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "82e4d1e9-b527-4884-a677-c53e9612339b",
+    "seconds": 0.0131
+  },
+  {
+    "time": "2026-10-31T18:33:48Z",
+    "name": "Launch operator login",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "0b86fcda1797040131b2def208a76700",
+    "seconds": 0.8605
+  },
+  {
+    "time": "2026-10-31T18:33:48Z",
+    "name": "create real policy launch-compatibility",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "74599c0e-27e4-4a7a-a409-165c3d758eed",
+    "seconds": 0.0348
+  },
+  {
+    "time": "2026-10-31T18:33:48Z",
+    "name": "create independent account policy compatibility product",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "88aee66d54ce1a32901eb2815ac2864b",
+    "seconds": 0.03
+  },
+  {
+    "time": "2026-10-31T18:33:48Z",
+    "name": "refresh current policy catalog before compatibility mapping",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "865f6cffd0a3899c11a4d8a829cc2640",
+    "seconds": 0.1461
+  },
+  {
+    "time": "2026-10-31T18:33:49Z",
+    "name": "create account compatibility preview plan",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "a72edd683dffb82c1dc9e5ffbf6c44c7",
+    "seconds": 0.04
+  },
+  {
+    "time": "2026-10-31T18:33:49Z",
+    "name": "map a zero-heartbeat permanent-offline source policy to Launch",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "d2cdb89dcbb7096610b1933267fc0599",
+    "seconds": 0.2198
+  },
+  {
+    "time": "2026-10-31T18:33:49Z",
+    "name": "publish account compatibility sandbox preview",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "17ff2efaebfa6db8fd6a943cec1d01b2",
+    "seconds": 0.1313
+  },
+  {
+    "time": "2026-10-31T18:33:49Z",
+    "name": "read actual account compatibility SDK parameters",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "747d57745367dfbabf42171b6c04a5eb",
+    "seconds": 0.1268
+  },
+  {
+    "time": "2026-10-31T18:33:49Z",
+    "name": "compatibility entitlement fixture uses normal durable synchronization without an order",
+    "passed": true,
+    "orders_created": 0,
+    "payments_created": 0
+  },
+  {
+    "time": "2026-10-31T18:35:26Z",
+    "name": "Launch operator login",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "ffb2d15497ab4ed4f2019e88a801b153",
+    "seconds": 0.1482
+  },
+  {
+    "time": "2026-10-31T18:35:27Z",
+    "name": "Launch account normalizes zero-heartbeat permanent-offline source into a finite signed session",
+    "passed": true,
+    "source_policy": {
+      "heartbeat_seconds": 0,
+      "offline_mode": "permanent"
+    },
+    "signed_runtime_policy": {
+      "offline_mode": "limited",
+      "heartbeat_seconds": 600,
+      "offline_seconds": 1800
+    },
+    "signed_lifetime_seconds": 1800
+  },
+  {
+    "time": "2026-10-31T18:35:27Z",
+    "name": "normalized account policy executes actual protected metered business",
+    "passed": true,
+    "operation_id": "51ccddbf-889d-4f23-84d7-096400e4d391"
+  },
+  {
+    "time": "2026-10-31T18:35:27Z",
+    "name": "prepare valid finite runtime bounds for model transition",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "32df46ea-7dde-4d3d-8c70-5237c2f0eeb3",
+    "seconds": 0.056
+  },
+  {
+    "time": "2026-10-31T18:35:27Z",
+    "name": "read compatibility source policy revision",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "94da0a5e-dff6-4d23-b845-e95d5cc3b008",
+    "seconds": 0.0149
+  },
+  {
+    "time": "2026-10-31T18:35:27Z",
+    "name": "active fixed device prevents changing policy to floating",
+    "passed": true,
+    "status": 409,
+    "code": "ACTIVE_DEVICES_CONFLICT",
+    "request_id": "086faea4-9e2f-4528-80ef-54dd9311653a",
+    "seconds": 0.0403
+  },
+  {
+    "time": "2026-10-31T18:35:27Z",
+    "name": "read compatibility source policy revision",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "36da71ad-b359-4bba-9ab2-c96b8d05eb80",
+    "seconds": 0.0129
+  },
+  {
+    "time": "2026-10-31T18:35:27Z",
+    "name": "rejected active model switch leaves both policy model and revision unchanged",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T18:35:28Z",
+    "name": "fixed compatibility application releases its actual binding before transition",
+    "passed": true,
+    "active_devices": 0
+  },
+  {
+    "time": "2026-10-31T18:35:28Z",
+    "name": "read compatibility source policy revision",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "7eea8863-9bfb-4102-bad3-4d17c3064d81",
+    "seconds": 0.0178
+  },
+  {
+    "time": "2026-10-31T18:35:28Z",
+    "name": "switch inactive compatibility policy to floating",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "dbdaa089-9235-4077-b035-24648af53404",
+    "seconds": 0.0723
+  },
+  {
+    "time": "2026-10-31T18:35:28Z",
+    "name": "refresh model-edited compatibility policy catalog",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "64015b4d553bbdca4e4be9ebcb4533ac",
+    "seconds": 0.5127
+  },
+  {
+    "time": "2026-10-31T18:35:29Z",
+    "name": "refresh compatibility plan mapping to actual latest revision",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "c83b8cada033fbf45c97f7bd89f8388c",
+    "seconds": 0.2831
+  },
+  {
+    "time": "2026-10-31T18:35:29Z",
+    "name": "real fixed-to-floating switch retains original account license and signs floating rules",
+    "passed": true,
+    "license_unchanged": true
+  },
+  {
+    "time": "2026-10-31T18:35:29Z",
+    "name": "read account usage after actual model switch",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "89470810-f0f7-4cca-ad97-23c965678104",
+    "seconds": 0.0139
+  },
+  {
+    "time": "2026-10-31T18:35:29Z",
+    "name": "model switch preserves prior usage and adds one actual floating export",
+    "passed": true,
+    "operation_id": "366a5cf7-e896-4f3f-9933-835e8a1556d8"
+  },
+  {
+    "time": "2026-10-31T18:35:29Z",
+    "name": "read compatibility source policy revision",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "a34fa00f-8358-4d97-ad3d-a9a211e6bedb",
+    "seconds": 0.0171
+  },
+  {
+    "time": "2026-10-31T18:35:29Z",
+    "name": "active floating session prevents switching policy back to fixed",
+    "passed": true,
+    "status": 409,
+    "code": "ACTIVE_DEVICES_CONFLICT",
+    "request_id": "9c31f218-3bff-4778-aeab-ac106b9d066f",
+    "seconds": 0.05
+  },
+  {
+    "time": "2026-10-31T18:35:30Z",
+    "name": "floating application confirms real logout before switching back",
+    "passed": true,
+    "active_devices": 0
+  },
+  {
+    "time": "2026-10-31T18:35:30Z",
+    "name": "read compatibility source policy revision",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "8df9f081-171f-45a4-b3d6-44aa58198a27",
+    "seconds": 0.0116
+  },
+  {
+    "time": "2026-10-31T18:35:30Z",
+    "name": "switch inactive compatibility policy to node_locked",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "e7e9da93-7964-4f49-9e71-3df535637dcf",
+    "seconds": 0.0739
+  },
+  {
+    "time": "2026-10-31T18:35:30Z",
+    "name": "restore compatibility source zero-heartbeat permanent runtime settings",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "79ef3e4c-0e62-43a4-8340-a600bfa8d231",
+    "seconds": 0.0533
+  },
+  {
+    "time": "2026-10-31T18:35:30Z",
+    "name": "refresh model-edited compatibility policy catalog",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "19eb99eed4f9984ca076db6dffc1d31e",
+    "seconds": 0.3893
+  },
+  {
+    "time": "2026-10-31T18:35:31Z",
+    "name": "refresh compatibility plan mapping to actual latest revision",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "4c441d5efb4ec59a5c849e13cc490bf3",
+    "seconds": 0.4728
+  },
+  {
+    "time": "2026-10-31T18:35:32Z",
+    "name": "real floating-to-fixed switch accepts fresh account login and protected work",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T18:35:32Z",
+    "name": "final compatibility application logout is confirmed",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T18:36:52Z",
+    "name": "read actual advanced product verification pins",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "e3cc29c2-2742-4988-a1ea-f2862db33af3",
+    "seconds": 0.0105
+  },
+  {
+    "time": "2026-10-31T18:36:52Z",
+    "name": "create real policy expiry-timed",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "42bc4532-82d7-4e51-a063-d2fdf0a11549",
+    "seconds": 0.0279
+  },
+  {
+    "time": "2026-10-31T18:36:52Z",
+    "name": "issue real license expiry-timed",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "172cff2e-6903-4927-9668-e6ec3b525c50",
+    "seconds": 0.0558
+  },
+  {
+    "time": "2026-10-31T18:36:52Z",
+    "name": "read actual license state",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "6dd7df66-4457-4e31-a6cd-a20d79c4717e",
+    "seconds": 0.0094
+  },
+  {
+    "time": "2026-10-31T18:36:52Z",
+    "name": "timed expiry uses explicitly shortened test data, not a changed host clock",
+    "passed": true,
+    "expiry_fixture_shortened": true,
+    "host_clock_changed": false,
+    "original_duration_days": 1
+  },
+  {
+    "time": "2026-10-31T18:36:53Z",
+    "name": "timed shortened valid license permits actual business before deadline",
+    "passed": true,
+    "signed_seconds_remaining": 43.9
+  },
+  {
+    "time": "2026-10-31T18:36:53Z",
+    "name": "create real policy expiry-trial",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "8eb4ad5e-6b54-439d-8633-38efb9b582e2",
+    "seconds": 0.0253
+  },
+  {
+    "time": "2026-10-31T18:36:53Z",
+    "name": "issue real license expiry-trial",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "3553bd82-e57e-41be-bf1d-6be6a483f14a",
+    "seconds": 0.0423
+  },
+  {
+    "time": "2026-10-31T18:36:53Z",
+    "name": "read actual license state",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "b74cc8f1-9fd0-4561-949d-fabba8b9ad14",
+    "seconds": 0.0097
+  },
+  {
+    "time": "2026-10-31T18:36:53Z",
+    "name": "trial expiry uses explicitly shortened test data, not a changed host clock",
+    "passed": true,
+    "expiry_fixture_shortened": true,
+    "host_clock_changed": false,
+    "original_duration_days": 1
+  },
+  {
+    "time": "2026-10-31T18:36:53Z",
+    "name": "trial shortened valid license permits actual business before deadline",
+    "passed": true,
+    "signed_seconds_remaining": 44.5
+  },
+  {
+    "time": "2026-10-31T18:36:53Z",
+    "name": "waiting real clock to cross both shortened license deadlines",
+    "passed": true,
+    "seconds": 46.4,
+    "natural_one_day_duration_tested": false
+  },
+  {
+    "time": "2026-10-31T18:37:40Z",
+    "name": "timed cached grant denies business after actual shortened deadline",
+    "passed": true,
+    "code": "RuntimeError",
+    "callback_executed": false,
+    "fixture_deadline": true
+  },
+  {
+    "time": "2026-10-31T18:37:40Z",
+    "name": "timed real server denies expired license on a new SDK",
+    "passed": true,
+    "code": "LICENSE_EXPIRED",
+    "fixture_deadline": true
+  },
+  {
+    "time": "2026-10-31T18:37:40Z",
+    "name": "timed extend an actually expired test license through normal management API",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "4b41e62e-d211-4740-b12b-ae3446c5c2ce",
+    "seconds": 0.0273
+  },
+  {
+    "time": "2026-10-31T18:37:40Z",
+    "name": "read actual license state",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "56babb38-fcec-4768-8517-bc7da41ff013",
+    "seconds": 0.011
+  },
+  {
+    "time": "2026-10-31T18:37:40Z",
+    "name": "timed extension resumes original key and preserves first activation",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T18:37:40Z",
+    "name": "trial cached grant denies business after actual shortened deadline",
+    "passed": true,
+    "code": "RuntimeError",
+    "callback_executed": false,
+    "fixture_deadline": true
+  },
+  {
+    "time": "2026-10-31T18:37:40Z",
+    "name": "trial real server denies expired license on a new SDK",
+    "passed": true,
+    "code": "LICENSE_EXPIRED",
+    "fixture_deadline": true
+  },
+  {
+    "time": "2026-10-31T18:37:40Z",
+    "name": "trial extend an actually expired test license through normal management API",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "bedf9905-dee4-43ca-be7b-6dce45a74b2e",
+    "seconds": 0.0319
+  },
+  {
+    "time": "2026-10-31T18:37:40Z",
+    "name": "read actual license state",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "06d87ec1-b918-47b6-aefc-27092744abb9",
+    "seconds": 0.0115
+  },
+  {
+    "time": "2026-10-31T18:37:40Z",
+    "name": "trial extension resumes original key and preserves first activation",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T18:40:35Z",
+    "name": "read dedicated quota license before standard SDK metering probe",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "ce875db5-8e0c-4023-baab-c88a9a2eb19f",
+    "seconds": 0.0149
+  },
+  {
+    "time": "2026-10-31T18:40:35Z",
+    "name": "read actual usage for standard high-level SDK probe",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "4c90c34a-1083-45be-94e4-a8d8169bf0e2",
+    "seconds": 0.0167
+  },
+  {
+    "time": "2026-10-31T18:40:35Z",
+    "name": "read dedicated source quota rule",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "0f884fc5-1028-4f24-919e-21380c0f824c",
+    "seconds": 0.0116
+  },
+  {
+    "time": "2026-10-31T18:40:37Z",
+    "name": "read actual usage for standard high-level SDK probe",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "ae434ed9-62a6-4670-b3de-156133408d30",
+    "seconds": 0.0185
+  },
+  {
+    "time": "2026-10-31T18:40:37Z",
+    "name": "standard Go feature guard has no metering charge despite an exhausted metered feature",
+    "passed": true,
+    "used_before": 3,
+    "used_after": 3,
+    "configured_limit": 2,
+    "actual_callbacks": 2,
+    "run_feature_is_unmetered_by_contract": true,
+    "missing_high_level_metered_entry_point": true,
+    "scope": "Launch Go Application; not a reservation API quota bypass"
+  },
+  {
+    "time": "2026-10-31T18:43:16Z",
+    "name": "temporary 120-row UI order fixture created without payments or coverage",
+    "passed": true,
+    "fixture_orders": 120,
+    "payments_created": 0,
+    "entitlement_coverage_created": 0
+  },
+  {
+    "time": "2026-10-31T18:51:45Z",
+    "name": "read actual advanced product verification pins",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "d599e070-97c8-49c2-84e6-cd58c4406a1b",
+    "seconds": 0.0091
+  },
+  {
+    "time": "2026-10-31T18:51:45Z",
+    "name": "create real policy concurrent-quota-node_locked",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "1a49a3ce-98db-428b-8d9d-9d905310f3e5",
+    "seconds": 0.0257
+  },
+  {
+    "time": "2026-10-31T18:51:45Z",
+    "name": "issue real license concurrent-quota-node_locked",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "b903a585-4018-4afa-b0df-e4d5a8abe962",
+    "seconds": 0.0433
+  },
+  {
+    "time": "2026-10-31T18:51:47Z",
+    "name": "read actual concurrent node_locked usage",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "0166f56e-a498-4722-80a6-4cb9aab528b2",
+    "seconds": 0.0149
+  },
+  {
+    "time": "2026-10-31T18:51:47Z",
+    "name": "ten real node_locked SDK tasks cannot exceed a five-unit quota",
+    "passed": true,
+    "workers": 10,
+    "successful_tasks": 5,
+    "quota_denials": 5,
+    "server_used": 5,
+    "results": [
+      {
+        "index": 0,
+        "operation_id": "bff29092-9757-4564-a48b-88790aae6642",
+        "code": "",
+        "callback_count": 1
+      },
+      {
+        "index": 1,
+        "operation_id": "f053825e-a57f-4c56-a421-4945002d867e",
+        "code": "",
+        "callback_count": 1
+      },
+      {
+        "index": 2,
+        "operation_id": "2d8446b2-1fd8-49b2-9696-31100607bd59",
+        "code": "FEATURE_QUOTA_EXCEEDED",
+        "callback_count": 0
+      },
+      {
+        "index": 3,
+        "operation_id": "242d359f-d013-427c-b723-78c62087bf43",
+        "code": "",
+        "callback_count": 1
+      },
+      {
+        "index": 4,
+        "operation_id": "981f1252-8429-4cb5-a2aa-b6bd5809e019",
+        "code": "FEATURE_QUOTA_EXCEEDED",
+        "callback_count": 0
+      },
+      {
+        "index": 5,
+        "operation_id": "580695ed-2658-45dd-abfb-bcc635e03e5b",
+        "code": "FEATURE_QUOTA_EXCEEDED",
+        "callback_count": 0
+      },
+      {
+        "index": 6,
+        "operation_id": "658b6412-ba40-4ece-84ca-8b3f1441bcfc",
+        "code": "FEATURE_QUOTA_EXCEEDED",
+        "callback_count": 0
+      },
+      {
+        "index": 7,
+        "operation_id": "8d645f7e-9d59-42cb-a8ec-f54c132723dc",
+        "code": "FEATURE_QUOTA_EXCEEDED",
+        "callback_count": 0
+      },
+      {
+        "index": 8,
+        "operation_id": "88c70352-a252-486a-ac24-f26c0328c777",
+        "code": "",
+        "callback_count": 1
+      },
+      {
+        "index": 9,
+        "operation_id": "dcd031b0-c838-45a2-a3ed-c570516fdbc1",
+        "code": "",
+        "callback_count": 1
+      }
+    ]
+  },
+  {
+    "time": "2026-10-31T18:51:47Z",
+    "name": "node_locked completed parallel task replays under a new SDK instance after quota exhaustion",
+    "passed": true,
+    "new_callbacks": 0
+  },
+  {
+    "time": "2026-10-31T18:51:47Z",
+    "name": "node_locked parallel reservation ledger has five commits and no stranded holds",
+    "passed": true,
+    "ledger": {
+      "count": 5,
+      "pending": 0,
+      "quantity": 5,
+      "committed": 5
+    }
+  },
+  {
+    "time": "2026-10-31T18:51:47Z",
+    "name": "release completed parallel test activation",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "abf82989-2e84-49b1-a494-face477c94c8",
+    "seconds": 0.0332
+  },
+  {
+    "time": "2026-10-31T18:51:47Z",
+    "name": "create real policy concurrent-quota-floating",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "85c25565-d6d7-41c0-a970-13a2df97b28e",
+    "seconds": 0.0294
+  },
+  {
+    "time": "2026-10-31T18:51:47Z",
+    "name": "issue real license concurrent-quota-floating",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "87a310f4-3155-40a9-9ec4-d599b4dce85d",
+    "seconds": 0.0415
+  },
+  {
+    "time": "2026-10-31T18:51:49Z",
+    "name": "read actual concurrent floating usage",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "3c3a5314-7bca-4c9c-a9fd-d316635a3696",
+    "seconds": 0.0217
+  },
+  {
+    "time": "2026-10-31T18:51:49Z",
+    "name": "ten real floating SDK tasks cannot exceed a five-unit quota",
+    "passed": true,
+    "workers": 10,
+    "successful_tasks": 5,
+    "quota_denials": 5,
+    "server_used": 5,
+    "results": [
+      {
+        "index": 0,
+        "operation_id": "af7dfd64-e7f6-4711-a973-30a514e3979d",
+        "code": "FEATURE_QUOTA_EXCEEDED",
+        "callback_count": 0
+      },
+      {
+        "index": 1,
+        "operation_id": "b6f859ec-8338-4e50-bba1-9f7da1599a03",
+        "code": "FEATURE_QUOTA_EXCEEDED",
+        "callback_count": 0
+      },
+      {
+        "index": 2,
+        "operation_id": "01b31796-4677-4d03-b133-8f9c1df338ba",
+        "code": "",
+        "callback_count": 1
+      },
+      {
+        "index": 3,
+        "operation_id": "24057d33-6d5a-4506-8887-ee4550b8b8ff",
+        "code": "FEATURE_QUOTA_EXCEEDED",
+        "callback_count": 0
+      },
+      {
+        "index": 4,
+        "operation_id": "f3bd542e-15ac-4925-9f8a-dcb374444a27",
+        "code": "FEATURE_QUOTA_EXCEEDED",
+        "callback_count": 0
+      },
+      {
+        "index": 5,
+        "operation_id": "589b1918-6685-4ce8-8d07-3d07716de722",
+        "code": "",
+        "callback_count": 1
+      },
+      {
+        "index": 6,
+        "operation_id": "79fe5ca1-80f9-4cb4-8281-b6f5ed7a6cdc",
+        "code": "",
+        "callback_count": 1
+      },
+      {
+        "index": 7,
+        "operation_id": "37d4fa9b-6625-4de6-bf13-9507326a0092",
+        "code": "",
+        "callback_count": 1
+      },
+      {
+        "index": 8,
+        "operation_id": "a04b1340-78dd-4a59-815e-18f76904adfa",
+        "code": "FEATURE_QUOTA_EXCEEDED",
+        "callback_count": 0
+      },
+      {
+        "index": 9,
+        "operation_id": "183a2396-9693-4d99-b115-3e08eef67eca",
+        "code": "",
+        "callback_count": 1
+      }
+    ]
+  },
+  {
+    "time": "2026-10-31T18:51:50Z",
+    "name": "floating completed parallel task replays under a new SDK instance after quota exhaustion",
+    "passed": true,
+    "new_callbacks": 0
+  },
+  {
+    "time": "2026-10-31T18:51:50Z",
+    "name": "floating parallel reservation ledger has five commits and no stranded holds",
+    "passed": true,
+    "ledger": {
+      "count": 5,
+      "pending": 0,
+      "quantity": 5,
+      "committed": 5
+    }
+  },
+  {
+    "time": "2026-10-31T18:55:01Z",
+    "name": "all temporary UI order fixtures removed without touching real orders",
+    "passed": true,
+    "fixture_orders_removed": 120,
+    "remaining_orders": 0,
+    "remaining_payments": 0
+  },
+  {
+    "time": "2026-10-31T18:57:40Z",
+    "name": "customer order history includes all 120 temporary orders",
+    "passed": false,
+    "fixture_orders": 120,
+    "visible_rows": 100,
+    "next_page_buttons": 0,
+    "finding": "N07"
+  },
+  {
+    "time": "2026-10-31T18:57:40Z",
+    "name": "customer invoice column and request controls are removed",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T18:57:40Z",
+    "name": "real browser admin pages and searches beyond the first hundred orders",
+    "passed": true,
+    "fixture_orders": 120
+  },
+  {
+    "time": "2026-10-31T18:57:40Z",
+    "name": "real browser retains cross-page selections and previews both orders",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T18:57:40Z",
+    "name": "real browser reports missing-payment fixtures as individual failures",
+    "passed": true,
+    "payment_gateway_called": false
+  },
+  {
+    "time": "2026-10-31T18:57:40Z",
+    "name": "real browser applies combined order filters and enforces selection bounds",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T18:59:47Z",
+    "name": "read actual advanced product verification pins",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "54138dff-7825-45ac-8867-b75f8ef2c9c5",
+    "seconds": 0.0103
+  },
+  {
+    "time": "2026-10-31T18:59:47Z",
+    "name": "create real policy offline-disk-process",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "6294e58b-a204-4634-94a4-e7da893f7d92",
+    "seconds": 0.0261
+  },
+  {
+    "time": "2026-10-31T18:59:47Z",
+    "name": "issue real license offline-disk-process",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "2c2a0e70-a7a0-4b15-9e3b-c9c7b034ccab",
+    "seconds": 0.0354
+  },
+  {
+    "time": "2026-10-31T18:59:47Z",
+    "name": "a real disconnected client process writes its offline request file",
+    "passed": true,
+    "client_pid": 108958
+  },
+  {
+    "time": "2026-10-31T18:59:47Z",
+    "name": "operator signs the actual request file from a separate process",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "fc11b23c-a408-4563-bb2c-dd323949dd98",
+    "seconds": 0.1483
+  },
+  {
+    "time": "2026-10-31T18:59:47Z",
+    "name": "operator approval is delivered as a persisted file",
+    "passed": true,
+    "request_file_sha256": "490dda2e4081eb5e0b4e62a72df8a7c181ea36a9da8f1bffc00c0ccc826757d4",
+    "approval_file_sha256": "793591443c053d54799b6730fb38016fca17d6039be6feafed3cd1f0d1755900"
+  },
+  {
+    "time": "2026-10-31T18:59:48Z",
+    "name": "another disconnected process imports actual files and executes signed business",
+    "passed": true,
+    "client_pid": 108960,
+    "operation_id": "1374b9d8-01ce-40d1-a911-c4916daf8be9"
+  },
+  {
+    "time": "2026-10-31T18:59:48Z",
+    "name": "valid offline permission alone cannot run a metered action without a server reservation",
+    "passed": true,
+    "code": "URLError",
+    "operation_id": "562d2de2-6cc7-46a8-acbd-87196ea54d79"
+  },
+  {
+    "time": "2026-10-31T18:59:48Z",
+    "name": "read usage after offline file import and blocked meter attempt",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "ee3521ce-99ae-4c46-8ed3-4821fad8394c",
+    "seconds": 0.0266
+  },
+  {
+    "time": "2026-10-31T18:59:48Z",
+    "name": "offline non-metered work and rejected reservation leave quota uncharged",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T18:59:49Z",
+    "name": "a fresh online process recovers the failed offline reservation and runs once",
+    "passed": true,
+    "client_pid": 108962,
+    "operation_id": "562d2de2-6cc7-46a8-acbd-87196ea54d79"
+  },
+  {
+    "time": "2026-10-31T18:59:49Z",
+    "name": "file-roundtrip successor confirms actual logout",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T18:59:49Z",
+    "name": "read settled usage after actual offline-to-online recovery",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "69d05280-92df-4846-b076-0b45f6e15391",
+    "seconds": 0.0223
+  },
+  {
+    "time": "2026-10-31T18:59:49Z",
+    "name": "cross-process file roundtrip commits exactly one recovered metered unit",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T19:10:26Z",
+    "name": "read actual advanced product verification pins",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "f0805fe2-64c3-4458-9805-8af808ac3d3c",
+    "seconds": 0.0085
+  },
+  {
+    "time": "2026-10-31T19:10:26Z",
+    "name": "Licentivo CSRF",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "821b12ea-2b0d-4d5d-b4f1-c2794a087b38",
+    "seconds": 0.0021
+  },
+  {
+    "time": "2026-10-31T19:10:26Z",
+    "name": "Licentivo operator login",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "8a8812eb-8dd5-42c2-9c42-d804c008e09b",
+    "seconds": 0.2094
+  },
+  {
+    "time": "2026-10-31T19:10:26Z",
+    "name": "create real policy key-scope-probe",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "53883e7d-164a-4d99-b8c9-658a73eb7a98",
+    "seconds": 0.0413
+  },
+  {
+    "time": "2026-10-31T19:10:26Z",
+    "name": "issue real license key-scope-probe",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "705d1ab3-ee5c-48e8-8a07-1bedf3aeefd0",
+    "seconds": 0.1024
+  },
+  {
+    "time": "2026-10-31T19:10:26Z",
+    "name": "create a separate one-day read-only test API key",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "9c28f37f-4f75-4610-b624-6cc74c537d73",
+    "seconds": 0.063
+  },
+  {
+    "time": "2026-10-31T19:10:26Z",
+    "name": "real read-only API key can read its tenant license",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "6d544e75-dc1c-4d42-b186-d43082cc6938",
+    "seconds": 0.0213
+  },
+  {
+    "time": "2026-10-31T19:10:26Z",
+    "name": "read count before read-key create attempt",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "663d32be-279f-45c9-b91d-f59b432c6f0c",
+    "seconds": 0.0387
+  },
+  {
+    "time": "2026-10-31T19:10:26Z",
+    "name": "read key cannot issue a license",
+    "passed": true,
+    "status": 403,
+    "code": "FORBIDDEN",
+    "request_id": "50aa4a44-7cba-495a-95f9-32ac93a26940",
+    "seconds": 0.0182
+  },
+  {
+    "time": "2026-10-31T19:10:26Z",
+    "name": "read key cannot edit a license",
+    "passed": true,
+    "status": 403,
+    "code": "FORBIDDEN",
+    "request_id": "4789b3ad-0168-45c0-849b-63967c61eb02",
+    "seconds": 0.0148
+  },
+  {
+    "time": "2026-10-31T19:10:26Z",
+    "name": "read key cannot revoke a license",
+    "passed": true,
+    "status": 403,
+    "code": "FORBIDDEN",
+    "request_id": "832d79dc-9163-46da-976c-c09db66175cd",
+    "seconds": 0.0157
+  },
+  {
+    "time": "2026-10-31T19:10:26Z",
+    "name": "read key cannot delete a license",
+    "passed": true,
+    "status": 403,
+    "code": "FORBIDDEN",
+    "request_id": "cfbcc811-a946-404c-b547-78923c52e053",
+    "seconds": 0.0303
+  },
+  {
+    "time": "2026-10-31T19:10:26Z",
+    "name": "read key cannot reveal a complete license secret",
+    "passed": true,
+    "status": 403,
+    "code": "FORBIDDEN",
+    "request_id": "99010e8f-e06c-47a9-9127-ced6e7905e00",
+    "seconds": 0.0131
+  },
+  {
+    "time": "2026-10-31T19:10:26Z",
+    "name": "API key cannot list owner session credentials",
+    "passed": true,
+    "status": 403,
+    "code": "FORBIDDEN",
+    "request_id": "90fdb8f5-6db8-4e31-8db6-cf530bb6d19f",
+    "seconds": 0.0096
+  },
+  {
+    "time": "2026-10-31T19:10:27Z",
+    "name": "API key cannot enable its own HTTP site setting",
+    "passed": true,
+    "status": 403,
+    "code": "FORBIDDEN",
+    "request_id": "477954b3-3845-4b30-b062-efde57be4717",
+    "seconds": 0.0092
+  },
+  {
+    "time": "2026-10-31T19:10:27Z",
+    "name": "read actual license state",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "f8b14f38-35fe-45f4-a93f-c12d4b6d4a28",
+    "seconds": 0.0169
+  },
+  {
+    "time": "2026-10-31T19:10:27Z",
+    "name": "read count after read-key permission denials",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "60821362-6e76-4a4f-a9a5-5eb77c0de928",
+    "seconds": 0.0497
+  },
+  {
+    "time": "2026-10-31T19:10:27Z",
+    "name": "read-only permission denials leave the real license and issuance count unchanged",
+    "passed": true,
+    "licenses_before": 32,
+    "licenses_after": 32
+  },
+  {
+    "time": "2026-10-31T19:10:27Z",
+    "name": "create separate write key with HTTP sites disabled",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "3431a13e-752b-4149-8ddb-ff13091b2672",
+    "seconds": 0.0766
+  },
+  {
+    "time": "2026-10-31T19:10:27Z",
+    "name": "read trust count before disabled HTTP-site attempt",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "81d92b7b-dc99-495a-ad50-01d1a77d1db1",
+    "seconds": 0.0348
+  },
+  {
+    "time": "2026-10-31T19:10:27Z",
+    "name": "API key without HTTP permission rejects a new HTTP Launch trust",
+    "passed": true,
+    "status": 400,
+    "code": "LAUNCH_HTTPS_REQUIRED",
+    "request_id": "78106e5f-3a97-4fb9-9830-5836b9da837c",
+    "seconds": 0.0246
+  },
+  {
+    "time": "2026-10-31T19:10:27Z",
+    "name": "read trust count after rejected HTTP-site registration",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "677e02f4-c267-4e40-8dc4-9a76d7c8f20a",
+    "seconds": 0.0151
+  },
+  {
+    "time": "2026-10-31T19:10:27Z",
+    "name": "rejected HTTP-site registration does not create or replace trust connections",
+    "passed": true,
+    "connections": 2
+  },
+  {
+    "time": "2026-10-31T19:10:27Z",
+    "name": "revoke the dedicated permission test key",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "cbe4da6a-8101-41ef-ae11-e2ac2630cb44",
+    "seconds": 0.0387
+  },
+  {
+    "time": "2026-10-31T19:10:27Z",
+    "name": "a revoked test key cannot read license data",
+    "passed": true,
+    "status": 401,
+    "code": "UNAUTHENTICATED",
+    "request_id": "f5f9fc86-e623-4b04-beee-256bbd5ea48a",
+    "seconds": 0.0058
+  },
+  {
+    "time": "2026-10-31T19:10:27Z",
+    "name": "revoke the dedicated permission test key",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "10f448ec-10b4-4f31-a820-408f861f8e58",
+    "seconds": 0.0383
+  },
+  {
+    "time": "2026-10-31T19:10:27Z",
+    "name": "a revoked test key cannot read license data",
+    "passed": true,
+    "status": 401,
+    "code": "UNAUTHENTICATED",
+    "request_id": "62160f1e-896d-44ba-8e0a-f181271ebc2b",
+    "seconds": 0.0057
+  },
+  {
+    "time": "2026-10-31T19:24:22Z",
+    "name": "Launch operator login",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "6863728a9288285f1ff4a9b3480edc5f",
+    "seconds": 1.0026
+  },
+  {
+    "time": "2026-10-31T19:24:22Z",
+    "name": "staff matrix identifies the isolated owner",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "4ded9adfb2e21bc542069a1285e7fb18",
+    "seconds": 0.0162
+  },
+  {
+    "time": "2026-10-31T19:24:22Z",
+    "name": "staff matrix reads original staff set",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "6ce01dcf643a68b99ddfee930c3b273e",
+    "seconds": 0.0196
+  },
+  {
+    "time": "2026-10-31T19:24:22Z",
+    "name": "sole active administrator cannot disable itself",
+    "passed": true,
+    "status": 409,
+    "code": "LAST_ADMIN_PROTECTED",
+    "request_id": "3abfd98d52e7842defd01bad460c9128",
+    "seconds": 0.0322
+  },
+  {
+    "time": "2026-10-31T19:24:22Z",
+    "name": "sole active administrator cannot downgrade itself",
+    "passed": true,
+    "status": 409,
+    "code": "LAST_ADMIN_PROTECTED",
+    "request_id": "a6acb9196a2684e5fdfc741ccda63540",
+    "seconds": 0.0248
+  },
+  {
+    "time": "2026-10-31T19:24:22Z",
+    "name": "create dedicated operations account normally",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "2426eb7b3e0c828b8873dbd964fc6f0d",
+    "seconds": 0.5228
+  },
+  {
+    "time": "2026-10-31T19:24:22Z",
+    "name": "read newly created operations account",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "c68163178d84ca7a83ed7826fdc02280",
+    "seconds": 0.0264
+  },
+  {
+    "time": "2026-10-31T19:24:23Z",
+    "name": "operations website login",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "dbd6e7dcc53553037f050bba63f2f34a",
+    "seconds": 0.1892
+  },
+  {
+    "time": "2026-10-31T19:24:23Z",
+    "name": "operations login has its assigned role",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T19:24:23Z",
+    "name": "operations permission /admin/dashboard",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "3edc5d97f54b7a191a3fbb4683e537f8",
+    "seconds": 0.0324
+  },
+  {
+    "time": "2026-10-31T19:24:23Z",
+    "name": "operations permission /admin/orders/search",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "3215138f6e523903c82296efaff88deb",
+    "seconds": 0.0126
+  },
+  {
+    "time": "2026-10-31T19:24:23Z",
+    "name": "operations permission /admin/users",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "dd553afaef6e85985c4c3d3b18b30b8d",
+    "seconds": 0.0107
+  },
+  {
+    "time": "2026-10-31T19:24:23Z",
+    "name": "operations permission /admin/operations",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "7bb2e0901d248c1338748a32549f339d",
+    "seconds": 0.027
+  },
+  {
+    "time": "2026-10-31T19:24:23Z",
+    "name": "operations permission /admin/catalog",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "f256c77eb1a9542a458d5597fca8a0d7",
+    "seconds": 0.0499
+  },
+  {
+    "time": "2026-10-31T19:24:23Z",
+    "name": "operations permission /admin/translations",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "db34d5ddb2d30c82d00a57d76f7e0e47",
+    "seconds": 0.0137
+  },
+  {
+    "time": "2026-10-31T19:24:23Z",
+    "name": "operations permission /admin/connections",
+    "passed": true,
+    "status": 403,
+    "code": "FORBIDDEN",
+    "request_id": "0d2327e74b63ba6b90984efadf415249",
+    "seconds": 0.0089
+  },
+  {
+    "time": "2026-10-31T19:24:23Z",
+    "name": "operations permission /admin/staff",
+    "passed": true,
+    "status": 403,
+    "code": "FORBIDDEN",
+    "request_id": "eb91e796a67e9a33804f7e66e295a7fb",
+    "seconds": 0.0086
+  },
+  {
+    "time": "2026-10-31T19:24:23Z",
+    "name": "operations permission /admin/audit",
+    "passed": true,
+    "status": 403,
+    "code": "FORBIDDEN",
+    "request_id": "fc66ac6b95409b747e9e3f43b03febbd",
+    "seconds": 0.0072
+  },
+  {
+    "time": "2026-10-31T19:24:23Z",
+    "name": "operations cannot create an administrator",
+    "passed": true,
+    "status": 403,
+    "code": "FORBIDDEN",
+    "request_id": "2076c53f01183b9995f138979ad228c8",
+    "seconds": 0.0081
+  },
+  {
+    "time": "2026-10-31T19:24:23Z",
+    "name": "operations cannot export customer records",
+    "passed": true,
+    "status": 403,
+    "code": "FORBIDDEN",
+    "request_id": "6e5f46ee97b0ca9adc5ff328b8ecd123",
+    "seconds": 0.0094
+  },
+  {
+    "time": "2026-10-31T19:24:23Z",
+    "name": "operations cannot change merchant credentials",
+    "passed": true,
+    "status": 403,
+    "code": "FORBIDDEN",
+    "request_id": "bec8a57a9ba27e6c2d3ee3162e35628b",
+    "seconds": 0.0109
+  },
+  {
+    "time": "2026-10-31T19:24:23Z",
+    "name": "create dedicated support account normally",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "e1c992412f2c8010a6a81c2e26450f52",
+    "seconds": 0.1536
+  },
+  {
+    "time": "2026-10-31T19:24:23Z",
+    "name": "read newly created support account",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "63ebaa3778e000aa115fc210c2d9b4e0",
+    "seconds": 0.0164
+  },
+  {
+    "time": "2026-10-31T19:24:23Z",
+    "name": "support website login",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "5cdf008749297f2b786129480eeb383e",
+    "seconds": 0.1901
+  },
+  {
+    "time": "2026-10-31T19:24:23Z",
+    "name": "support login has its assigned role",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T19:24:23Z",
+    "name": "support permission /admin/dashboard",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "7c8aecbfc407d02972ed374b9cb5a5e7",
+    "seconds": 0.0408
+  },
+  {
+    "time": "2026-10-31T19:24:23Z",
+    "name": "support permission /admin/orders/search",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "a081fd068f160daabde2b1bcb874c11a",
+    "seconds": 0.0174
+  },
+  {
+    "time": "2026-10-31T19:24:23Z",
+    "name": "support permission /admin/users",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "0d72248c0fa831566d7098e1a8febe7c",
+    "seconds": 0.015
+  },
+  {
+    "time": "2026-10-31T19:24:23Z",
+    "name": "support permission /admin/operations",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "92c3548731962cf30feaae62392ff7e9",
+    "seconds": 0.0265
+  },
+  {
+    "time": "2026-10-31T19:24:23Z",
+    "name": "support permission /admin/catalog",
+    "passed": true,
+    "status": 403,
+    "code": "FORBIDDEN",
+    "request_id": "b5d40e624f189243adbc3a182b7672fa",
+    "seconds": 0.0126
+  },
+  {
+    "time": "2026-10-31T19:24:23Z",
+    "name": "support permission /admin/translations",
+    "passed": true,
+    "status": 403,
+    "code": "FORBIDDEN",
+    "request_id": "386eff7237423a0eefed7e356b1d4ae1",
+    "seconds": 0.0126
+  },
+  {
+    "time": "2026-10-31T19:24:23Z",
+    "name": "support permission /admin/connections",
+    "passed": true,
+    "status": 403,
+    "code": "FORBIDDEN",
+    "request_id": "0a02373f26e9bf0aab2aaceeb25298d1",
+    "seconds": 0.0106
+  },
+  {
+    "time": "2026-10-31T19:24:23Z",
+    "name": "support permission /admin/staff",
+    "passed": true,
+    "status": 403,
+    "code": "FORBIDDEN",
+    "request_id": "0d161efe98938d603ae852592305f6b5",
+    "seconds": 0.0118
+  },
+  {
+    "time": "2026-10-31T19:24:23Z",
+    "name": "support permission /admin/audit",
+    "passed": true,
+    "status": 403,
+    "code": "FORBIDDEN",
+    "request_id": "9ce3f34b3a2b8f7db0d2e2b5b8c20da7",
+    "seconds": 0.0098
+  },
+  {
+    "time": "2026-10-31T19:24:23Z",
+    "name": "support cannot create an administrator",
+    "passed": true,
+    "status": 403,
+    "code": "FORBIDDEN",
+    "request_id": "2acf9481bd9be709adacc601f9999215",
+    "seconds": 0.0097
+  },
+  {
+    "time": "2026-10-31T19:24:23Z",
+    "name": "support cannot export customer records",
+    "passed": true,
+    "status": 403,
+    "code": "FORBIDDEN",
+    "request_id": "9a223d30f2a24ac68e702d4dbcfdbd25",
+    "seconds": 0.0122
+  },
+  {
+    "time": "2026-10-31T19:24:23Z",
+    "name": "support cannot change merchant credentials",
+    "passed": true,
+    "status": 403,
+    "code": "FORBIDDEN",
+    "request_id": "c931001ba00e32d412247e00af79f3aa",
+    "seconds": 0.0138
+  },
+  {
+    "time": "2026-10-31T19:24:23Z",
+    "name": "support cannot edit a product",
+    "passed": true,
+    "status": 403,
+    "code": "FORBIDDEN",
+    "request_id": "8a92a4e941fac936e1d9750121686aa7",
+    "seconds": 0.0102
+  },
+  {
+    "time": "2026-10-31T19:24:23Z",
+    "name": "support cannot perform bulk payment reconciliation",
+    "passed": true,
+    "status": 403,
+    "code": "FORBIDDEN",
+    "request_id": "253219e8431cb300fb3bf4b5f674d18e",
+    "seconds": 0.0107
+  },
+  {
+    "time": "2026-10-31T19:24:24Z",
+    "name": "operations desktop login before downgrade",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "1cda077bc49f84219cd374e1715c8507",
+    "seconds": 0.1873
+  },
+  {
+    "time": "2026-10-31T19:24:24Z",
+    "name": "downgrade real operations account to support",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "f57b558968c344fde28c61f1f3910d14",
+    "seconds": 0.0928
+  },
+  {
+    "time": "2026-10-31T19:24:24Z",
+    "name": "role downgrade revokes old website cookie",
+    "passed": true,
+    "status": 401,
+    "code": "AUTH_REQUIRED",
+    "request_id": "abb6153e64660f011dfaf4e23f63e440",
+    "seconds": 0.0084
+  },
+  {
+    "time": "2026-10-31T19:24:24Z",
+    "name": "role downgrade revokes old desktop bearer",
+    "passed": true,
+    "status": 401,
+    "code": "AUTH_REQUIRED",
+    "request_id": "28279e354729de4d9679bfec04d20733",
+    "seconds": 0.0107
+  },
+  {
+    "time": "2026-10-31T19:24:24Z",
+    "name": "downgraded account logs in afresh",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "482ca56cb190a29a18b4d2d2d0dae884",
+    "seconds": 0.1967
+  },
+  {
+    "time": "2026-10-31T19:24:24Z",
+    "name": "fresh session after downgrade has support rights",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T19:24:24Z",
+    "name": "downgraded fresh session cannot edit products",
+    "passed": true,
+    "status": 403,
+    "code": "FORBIDDEN",
+    "request_id": "3f3501ca2cad0b70281bc6d5c3f0db11",
+    "seconds": 0.0094
+  },
+  {
+    "time": "2026-10-31T19:24:24Z",
+    "name": "restore test account operations role",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "fe9382a981c7c4268df693a24089745e",
+    "seconds": 0.0391
+  },
+  {
+    "time": "2026-10-31T19:24:24Z",
+    "name": "role promotion also invalidates old cookie",
+    "passed": true,
+    "status": 401,
+    "code": "AUTH_REQUIRED",
+    "request_id": "be42b8d8be4801087a0e0d3925ab28a5",
+    "seconds": 0.0057
+  },
+  {
+    "time": "2026-10-31T19:24:24Z",
+    "name": "operations login before disable",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "32314d7d2c2afb55585a1afcef68359a",
+    "seconds": 0.1334
+  },
+  {
+    "time": "2026-10-31T19:24:24Z",
+    "name": "disable the real dedicated operations account",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "2a37cebc29aacb4c1172e5ce7c90cbb6",
+    "seconds": 0.0453
+  },
+  {
+    "time": "2026-10-31T19:24:24Z",
+    "name": "disabled staff old website cookie is rejected",
+    "passed": true,
+    "status": 401,
+    "code": "AUTH_REQUIRED",
+    "request_id": "889e5f0aae00dcd0fb97e474456e0ca7",
+    "seconds": 0.0152
+  },
+  {
+    "time": "2026-10-31T19:24:24Z",
+    "name": "disabled staff cannot create a new login",
+    "passed": true,
+    "status": 401,
+    "code": "LOGIN_FAILED",
+    "request_id": "140be90d9d381b7a551d582ac3f08a78",
+    "seconds": 0.1337
+  },
+  {
+    "time": "2026-10-31T19:24:24Z",
+    "name": "re-enable the dedicated operations account",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "424927c13e3dea08ad972007dda41be2",
+    "seconds": 0.0296
+  },
+  {
+    "time": "2026-10-31T19:24:24Z",
+    "name": "re-enabling does not revive an old staff cookie",
+    "passed": true,
+    "status": 401,
+    "code": "AUTH_REQUIRED",
+    "request_id": "a5798bb5c9b1a37c20facd43c5ef6252",
+    "seconds": 0.0101
+  },
+  {
+    "time": "2026-10-31T19:24:25Z",
+    "name": "re-enabled staff can log in afresh",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "690db80b3e82bafc455f0cb1f3182938",
+    "seconds": 0.2432
+  },
+  {
+    "time": "2026-10-31T19:24:25Z",
+    "name": "re-enabled staff still has operations role",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T19:24:25Z",
+    "name": "missing website CSRF cannot edit a product",
+    "passed": true,
+    "status": 403,
+    "code": "CSRF_INVALID",
+    "request_id": "65fe6bb57f29af3b5d1f818fe543b07c",
+    "seconds": 0.0183
+  },
+  {
+    "time": "2026-10-31T19:24:25Z",
+    "name": "wrong website CSRF cannot edit a product",
+    "passed": true,
+    "status": 403,
+    "code": "CSRF_INVALID",
+    "request_id": "bbb10ac7f73ddc2dc38be86f61ef6b86",
+    "seconds": 0.0172
+  },
+  {
+    "time": "2026-10-31T19:24:25Z",
+    "name": "cross-site origin cannot edit a product",
+    "passed": true,
+    "status": 403,
+    "code": "FORBIDDEN",
+    "request_id": "1fabf1b3ff563a618ef7e9139d3f17c5",
+    "seconds": 0.003
+  },
+  {
+    "time": "2026-10-31T19:24:25Z",
+    "name": "cross-site fetch metadata cannot edit a product",
+    "passed": true,
+    "status": 403,
+    "code": "FORBIDDEN",
+    "request_id": "c8a9128f716d02b357e2d7af410c5c07",
+    "seconds": 0.0021
+  },
+  {
+    "time": "2026-10-31T19:24:25Z",
+    "name": "identify separate support session for ownership probe",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "1cc586a9bef55af62d7273c29a513ef1",
+    "seconds": 0.0113
+  },
+  {
+    "time": "2026-10-31T19:24:25Z",
+    "name": "operations cannot revoke another user session by UUID",
+    "passed": true,
+    "status": 404,
+    "code": "NOT_FOUND",
+    "request_id": "4b0f2235b953de7698d4ba1882e69c80",
+    "seconds": 0.027
+  },
+  {
+    "time": "2026-10-31T19:24:25Z",
+    "name": "support session remains usable after foreign revoke attempt",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "3b9f7521a132a8692cc20a007f8ef71b",
+    "seconds": 0.0141
+  },
+  {
+    "time": "2026-10-31T19:24:25Z",
+    "name": "close re-enabled operations probe session",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "765897ec62b85cce5cc8bfd12ef24fb5",
+    "seconds": 0.0264
+  },
+  {
+    "time": "2026-10-31T19:24:25Z",
+    "name": "disable dedicated operations fixture after tests",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "f3cd14d97ecdc1e38797a9584f5f2c6c",
+    "seconds": 0.0626
+  },
+  {
+    "time": "2026-10-31T19:24:25Z",
+    "name": "disable dedicated support fixture after tests",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "d89e019767d60b3154f7822c0e9549de",
+    "seconds": 0.0417
+  },
+  {
+    "time": "2026-10-31T19:24:25Z",
+    "name": "original owner session remains active after staff testing",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "fe1132bff33190bd7a4d9b02f38cbcf6",
+    "seconds": 0.0081
+  },
+  {
+    "time": "2026-10-31T19:25:40Z",
+    "name": "Launch operator login",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "cb009cad106eab34413ffde49fbaa588",
+    "seconds": 0.1565
+  },
+  {
+    "time": "2026-10-31T19:25:40Z",
+    "name": "read real admin customer list with 120 temporary disabled customers",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "6b36564765b8bfc829fb443a54ed6e09",
+    "seconds": 0.0157
+  },
+  {
+    "time": "2026-10-31T19:25:40Z",
+    "name": "backend exact customer prefix search still finds old Alice",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "0d9f33a661d58429df10325d587b2bd0",
+    "seconds": 0.0128
+  },
+  {
+    "time": "2026-10-31T19:25:40Z",
+    "name": "admin customer default list includes all registered customers",
+    "passed": false,
+    "database_customers": 126,
+    "returned_customers": 100,
+    "old_customer_in_default_list": false
+  },
+  {
+    "time": "2026-10-31T19:26:22Z",
+    "name": "temporary customer-list fixtures fully removed",
+    "passed": true,
+    "customers_removed": 120,
+    "remaining_customers": 6
+  },
+  {
+    "time": "2026-10-31T19:28:48Z",
+    "name": "Launch operator login",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "09559ae160179ff5999987d3d60a5001",
+    "seconds": 1.0138
+  },
+  {
+    "time": "2026-10-31T19:28:48Z",
+    "name": "locate isolated capacity customer before status tests",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "dca4c3687c96176e1c5bb2425d60dfef",
+    "seconds": 0.0114
+  },
+  {
+    "time": "2026-10-31T19:28:49Z",
+    "name": "customer status website login",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "0391ff369d9930b44c805dbd36b5dbbc",
+    "seconds": 0.1757
+  },
+  {
+    "time": "2026-10-31T19:28:49Z",
+    "name": "inspect real account revocation delivery status",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "fe884068b74ad35ca68e67bb21cc6a69",
+    "seconds": 0.0443
+  },
+  {
+    "time": "2026-10-31T19:28:50Z",
+    "name": "disable dedicated customer through normal Launch admin API",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "45a11e659c52512f3bf34dad98c587a3",
+    "seconds": 0.0744
+  },
+  {
+    "time": "2026-10-31T19:28:50Z",
+    "name": "inspect real account revocation delivery status",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "a8b583029c940b9c49370672cac760e5",
+    "seconds": 0.0411
+  },
+  {
+    "time": "2026-10-31T19:28:50Z",
+    "name": "inspect real account revocation delivery status",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "5911ffb2adb5aea195a8291f84b99f43",
+    "seconds": 0.0307
+  },
+  {
+    "time": "2026-10-31T19:28:51Z",
+    "name": "inspect real account revocation delivery status",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "b1d292aba556bef49725f0479a9d75c4",
+    "seconds": 0.0612
+  },
+  {
+    "time": "2026-10-31T19:28:51Z",
+    "name": "inspect real account revocation delivery status",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "1f3912ebc900a52e252c1bb4028d487a",
+    "seconds": 0.0425
+  },
+  {
+    "time": "2026-10-31T19:28:51Z",
+    "name": "disabled customer revocation delivered through durable notification queue",
+    "passed": true,
+    "notifications": 1
+  },
+  {
+    "time": "2026-10-31T19:28:51Z",
+    "name": "disabled customer old website cookie cannot read account",
+    "passed": true,
+    "status": 401,
+    "code": "AUTH_REQUIRED",
+    "request_id": "ec5f41b60f4f5f7c5ca9fdc7ac074e2c",
+    "seconds": 0.0091
+  },
+  {
+    "time": "2026-10-31T19:28:51Z",
+    "name": "disabled customer cannot log in anew",
+    "passed": true,
+    "status": 401,
+    "code": "LOGIN_FAILED",
+    "request_id": "725a07938b3e9526d66d8f4a53029ded",
+    "seconds": 0.2533
+  },
+  {
+    "time": "2026-10-31T19:28:52Z",
+    "name": "fixed disabled customer old desktop bearer rejected",
+    "passed": true,
+    "status": 401,
+    "code": "AUTH_REQUIRED",
+    "request_id": "4949cfbaea70ea27685fe60ad65ab45a",
+    "seconds": 0.0079
+  },
+  {
+    "time": "2026-10-31T19:28:52Z",
+    "name": "fixed disabled customer live SDK cannot execute protected callback",
+    "passed": true,
+    "code": "DEVICE_CREDENTIAL_REVOKED",
+    "callback_count": 0
+  },
+  {
+    "time": "2026-10-31T19:28:52Z",
+    "name": "floating disabled customer old desktop bearer rejected",
+    "passed": true,
+    "status": 401,
+    "code": "AUTH_REQUIRED",
+    "request_id": "c783ece4de25b6146462dff9e77de31a",
+    "seconds": 0.007
+  },
+  {
+    "time": "2026-10-31T19:28:52Z",
+    "name": "floating disabled customer live SDK cannot execute protected callback",
+    "passed": true,
+    "code": "DEVICE_CREDENTIAL_REVOKED",
+    "callback_count": 0
+  },
+  {
+    "time": "2026-10-31T19:28:52Z",
+    "name": "re-enable dedicated customer through normal admin API",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "316e52a1206a77ba76c29c7b2e74a949",
+    "seconds": 0.0298
+  },
+  {
+    "time": "2026-10-31T19:28:52Z",
+    "name": "customer re-enable does not revive original website cookie",
+    "passed": true,
+    "status": 401,
+    "code": "AUTH_REQUIRED",
+    "request_id": "704cac1047feaf6f1908f398148a2113",
+    "seconds": 0.0057
+  },
+  {
+    "time": "2026-10-31T19:28:52Z",
+    "name": "fixed re-enabled customer old desktop bearer remains rejected",
+    "passed": true,
+    "status": 401,
+    "code": "AUTH_REQUIRED",
+    "request_id": "994566d33c2b6f3eea8459d13ef4cebc",
+    "seconds": 0.0082
+  },
+  {
+    "time": "2026-10-31T19:28:52Z",
+    "name": "floating re-enabled customer old desktop bearer remains rejected",
+    "passed": true,
+    "status": 401,
+    "code": "AUTH_REQUIRED",
+    "request_id": "9bdeeb9600e5f7a762b6d55952b677ba",
+    "seconds": 0.0082
+  },
+  {
+    "time": "2026-10-31T19:28:52Z",
+    "name": "fixed re-enabled customer fresh login recovers real business",
+    "passed": true,
+    "operation_id": "2ec46344-6326-41a2-9c2e-662c7e20ddf8",
+    "callback_count": 1
+  },
+  {
+    "time": "2026-10-31T19:28:53Z",
+    "name": "floating re-enabled customer fresh login recovers real business",
+    "passed": true,
+    "operation_id": "c4c042d7-5e96-48e4-9ab5-81671b6af7bc",
+    "callback_count": 1
+  },
+  {
+    "time": "2026-10-31T19:28:53Z",
+    "name": "confirm dedicated customer finishes active",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "e58aca15f8b796ebda600d32a2124e0e",
+    "seconds": 0.0136
+  },
+  {
+    "time": "2026-10-31T19:28:53Z",
+    "name": "customer status fixture restored without changing password or entitlements",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T19:30:40Z",
+    "name": "read actual advanced product verification pins",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "4c1c163b-49aa-4d47-b6a2-6d33d4d18697",
+    "seconds": 0.0176
+  },
+  {
+    "time": "2026-10-31T19:30:41Z",
+    "name": "second preverified tenant account uses an explicit isolated database fixture",
+    "passed": true,
+    "signup_tested": false,
+    "email_delivery_tested": false,
+    "platform_admin": false
+  },
+  {
+    "time": "2026-10-31T19:30:41Z",
+    "name": "second tenant obtains normal CSRF",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "2b9d187a-9ac9-4e13-b22d-a6765addcc0b",
+    "seconds": 0.0033
+  },
+  {
+    "time": "2026-10-31T19:30:41Z",
+    "name": "actual second tenant logs in normally",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "3975585e-8eee-40a7-aab4-3aa666f612d7",
+    "seconds": 0.1986
+  },
+  {
+    "time": "2026-10-31T19:30:41Z",
+    "name": "read real second tenant session context",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "e9a3f58a-ac86-4741-bbbf-ac1e1a85b690",
+    "seconds": 0.0071
+  },
+  {
+    "time": "2026-10-31T19:30:41Z",
+    "name": "create one-day second-tenant management key normally",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "235efd10-6c29-4816-9a66-d6b988d14c10",
+    "seconds": 0.0349
+  },
+  {
+    "time": "2026-10-31T19:30:41Z",
+    "name": "second tenant creates its real product",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "2c34f1e5-f371-435a-9851-ffce2e3417ea",
+    "seconds": 0.039
+  },
+  {
+    "time": "2026-10-31T19:30:41Z",
+    "name": "second tenant creates its real policy",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "b7706b03-9134-438e-a6fd-d22880383758",
+    "seconds": 0.032
+  },
+  {
+    "time": "2026-10-31T19:30:41Z",
+    "name": "second tenant issues its real license",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "bcdefdba-0048-49da-ae69-a43c2409d49d",
+    "seconds": 0.0693
+  },
+  {
+    "time": "2026-10-31T19:30:41Z",
+    "name": "create real policy cross-tenant-target",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "8bff68cc-6c7c-43c1-8a29-73157573d7c5",
+    "seconds": 0.0572
+  },
+  {
+    "time": "2026-10-31T19:30:41Z",
+    "name": "issue real license cross-tenant-target",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "968ddbb1-ea75-4da1-b48f-c3da119d3eda",
+    "seconds": 0.0901
+  },
+  {
+    "time": "2026-10-31T19:30:41Z",
+    "name": "read actual license state",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "3ba41932-d007-41ba-b4ed-7307ad8832a3",
+    "seconds": 0.0194
+  },
+  {
+    "time": "2026-10-31T19:30:41Z",
+    "name": "read own second-tenant license before denials",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "06e8334a-6cbe-4576-9441-d7c3a5696f49",
+    "seconds": 0.0238
+  },
+  {
+    "time": "2026-10-31T19:30:41Z",
+    "name": "second tenant to original tenant cannot read foreign products UUID",
+    "passed": true,
+    "status": 404,
+    "code": "NOT_FOUND",
+    "request_id": "c8f2b79b-f208-46d0-99c4-08dea74fb69f",
+    "seconds": 0.0222
+  },
+  {
+    "time": "2026-10-31T19:30:41Z",
+    "name": "second tenant to original tenant cannot read foreign policies UUID",
+    "passed": true,
+    "status": 404,
+    "code": "NOT_FOUND",
+    "request_id": "3dad8dbe-5cea-45ac-8cf2-ed9e97936eb1",
+    "seconds": 0.0136
+  },
+  {
+    "time": "2026-10-31T19:30:41Z",
+    "name": "second tenant to original tenant cannot read foreign licenses UUID",
+    "passed": true,
+    "status": 404,
+    "code": "NOT_FOUND",
+    "request_id": "85794a78-e45f-437d-9240-e8753c9c1d25",
+    "seconds": 0.0161
+  },
+  {
+    "time": "2026-10-31T19:30:41Z",
+    "name": "second tenant to original tenant cannot edit foreign license metadata",
+    "passed": true,
+    "status": 404,
+    "code": "NOT_FOUND",
+    "request_id": "2f7b7359-a317-421e-8821-d5f155d78534",
+    "seconds": 0.0295
+  },
+  {
+    "time": "2026-10-31T19:30:41Z",
+    "name": "second tenant to original tenant cannot revoke foreign license",
+    "passed": true,
+    "status": 404,
+    "code": "NOT_FOUND",
+    "request_id": "920bce2b-321b-46ee-8999-259123d022fa",
+    "seconds": 0.0366
+  },
+  {
+    "time": "2026-10-31T19:30:41Z",
+    "name": "second tenant to original tenant cannot delete foreign license",
+    "passed": true,
+    "status": 404,
+    "code": "NOT_FOUND",
+    "request_id": "aec0c4a2-2458-4207-81cb-4a4a70d1eb87",
+    "seconds": 0.0293
+  },
+  {
+    "time": "2026-10-31T19:30:41Z",
+    "name": "second tenant to original tenant can query only its own product scope",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "1ff61ca6-ca30-4727-9b84-1205de636e3b",
+    "seconds": 0.0208
+  },
+  {
+    "time": "2026-10-31T19:30:41Z",
+    "name": "second tenant to original tenant foreign product filter exposes no license records",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T19:30:41Z",
+    "name": "second tenant to original tenant spoofed tenant headers cannot change authentication scope",
+    "passed": true,
+    "status": 404,
+    "code": "NOT_FOUND",
+    "request_id": "98ed21df-88c6-48db-814f-c1b4bc418402",
+    "seconds": 0.0155
+  },
+  {
+    "time": "2026-10-31T19:30:42Z",
+    "name": "original tenant to second tenant cannot read foreign products UUID",
+    "passed": true,
+    "status": 404,
+    "code": "NOT_FOUND",
+    "request_id": "9d478a01-455b-4a96-918f-33494205dc3f",
+    "seconds": 0.0148
+  },
+  {
+    "time": "2026-10-31T19:30:42Z",
+    "name": "original tenant to second tenant cannot read foreign policies UUID",
+    "passed": true,
+    "status": 404,
+    "code": "NOT_FOUND",
+    "request_id": "0ed89338-38f1-477e-b50b-50091aefc300",
+    "seconds": 0.0156
+  },
+  {
+    "time": "2026-10-31T19:30:42Z",
+    "name": "original tenant to second tenant cannot read foreign licenses UUID",
+    "passed": true,
+    "status": 404,
+    "code": "NOT_FOUND",
+    "request_id": "f0abc225-4c98-4ee6-aa22-b5763fcbfb4a",
+    "seconds": 0.0168
+  },
+  {
+    "time": "2026-10-31T19:30:42Z",
+    "name": "original tenant to second tenant cannot edit foreign license metadata",
+    "passed": true,
+    "status": 404,
+    "code": "NOT_FOUND",
+    "request_id": "bb4a536c-ac13-46c5-b2f3-a11d18bd2939",
+    "seconds": 0.0305
+  },
+  {
+    "time": "2026-10-31T19:30:42Z",
+    "name": "original tenant to second tenant cannot revoke foreign license",
+    "passed": true,
+    "status": 404,
+    "code": "NOT_FOUND",
+    "request_id": "4feebeab-d1e1-467d-9a36-946dcd14b2f4",
+    "seconds": 0.0352
+  },
+  {
+    "time": "2026-10-31T19:30:42Z",
+    "name": "original tenant to second tenant cannot delete foreign license",
+    "passed": true,
+    "status": 404,
+    "code": "NOT_FOUND",
+    "request_id": "ee222c29-2f8f-47b3-9d37-39b9e1e46e2a",
+    "seconds": 0.0291
+  },
+  {
+    "time": "2026-10-31T19:30:42Z",
+    "name": "original tenant to second tenant can query only its own product scope",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "1c075d39-2253-4644-8d22-c3038cffa18c",
+    "seconds": 0.0209
+  },
+  {
+    "time": "2026-10-31T19:30:42Z",
+    "name": "original tenant to second tenant foreign product filter exposes no license records",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T19:30:42Z",
+    "name": "original tenant to second tenant spoofed tenant headers cannot change authentication scope",
+    "passed": true,
+    "status": 404,
+    "code": "NOT_FOUND",
+    "request_id": "84c5a40b-95d7-462e-a3ea-d38bb00dfe38",
+    "seconds": 0.0182
+  },
+  {
+    "time": "2026-10-31T19:30:42Z",
+    "name": "mixed-tenant policy preview rejects foreign member rather than applying subset",
+    "passed": true,
+    "status": 404,
+    "code": "NOT_FOUND",
+    "request_id": "bf6c2938-614f-4ce1-be4d-4b2d6e220b8d",
+    "seconds": 0.0437
+  },
+  {
+    "time": "2026-10-31T19:30:42Z",
+    "name": "other tenant cannot issue against original tenant product and policy",
+    "passed": true,
+    "status": 404,
+    "code": "NOT_FOUND",
+    "request_id": "7e37578b-987f-49f8-8f2f-81b7672c26b9",
+    "seconds": 0.0266
+  },
+  {
+    "time": "2026-10-31T19:30:42Z",
+    "name": "non-platform owner cannot read global workspace management",
+    "passed": true,
+    "status": 403,
+    "code": "FORBIDDEN",
+    "request_id": "f3e438a0-3fc5-494c-814b-b41a16f2c9fa",
+    "seconds": 0.009
+  },
+  {
+    "time": "2026-10-31T19:30:42Z",
+    "name": "read actual license state",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "0b5287b4-5dfd-4ff7-8f4a-beeaa4540588",
+    "seconds": 0.0204
+  },
+  {
+    "time": "2026-10-31T19:30:42Z",
+    "name": "read second-tenant license after cross-tenant denial probes",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "62472ee4-9d0c-410e-a6ea-b20dfe630e5d",
+    "seconds": 0.015
+  },
+  {
+    "time": "2026-10-31T19:30:42Z",
+    "name": "foreign read/edit/revoke/delete probes leave both tenant licenses unchanged",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T19:30:42Z",
+    "name": "revoke dedicated second tenant key normally",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "f91e6e5a-7838-414d-a8ef-7289d46a9fa2",
+    "seconds": 0.0421
+  },
+  {
+    "time": "2026-10-31T19:30:42Z",
+    "name": "retired second tenant key is rejected",
+    "passed": true,
+    "status": 401,
+    "code": "UNAUTHENTICATED",
+    "request_id": "ef4912b6-d06d-40f4-9c5f-2204d53aecec",
+    "seconds": 0.0079
+  },
+  {
+    "time": "2026-10-31T19:30:42Z",
+    "name": "log out second tenant website fixture",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "543f6e57-1bca-4321-9925-438a9b5dec61",
+    "seconds": 0.0538
+  },
+  {
+    "time": "2026-10-31T19:30:42Z",
+    "name": "second tenant fixture is left suspended with user disabled and test key revoked",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T19:32:19Z",
+    "name": "fixed assertion negative-matrix desktop login",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "a1917f4981fc172e19932e5fde3b84a8",
+    "seconds": 0.93
+  },
+  {
+    "time": "2026-10-31T19:32:19Z",
+    "name": "fixed assertion negative matrix obtains genuine identity",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "bf35e9495719f55f1923adcdd6b76533",
+    "seconds": 0.0471
+  },
+  {
+    "time": "2026-10-31T19:32:19Z",
+    "name": "fixed real server rejects unsigned alg none",
+    "passed": true,
+    "status": 401,
+    "code": "LAUNCH_IDENTITY_INVALID",
+    "request_id": "7da22372-afb5-4f85-93ec-e7176320bf1b"
+  },
+  {
+    "time": "2026-10-31T19:32:19Z",
+    "name": "fixed real server rejects HS256 algorithm replacement",
+    "passed": true,
+    "status": 401,
+    "code": "LAUNCH_IDENTITY_INVALID",
+    "request_id": "4ce121b0-b8c7-4d09-a88f-d83e3292380d"
+  },
+  {
+    "time": "2026-10-31T19:32:19Z",
+    "name": "fixed real server rejects untrusted signing key id",
+    "passed": true,
+    "status": 401,
+    "code": "LAUNCH_IDENTITY_INVALID",
+    "request_id": "b5604f4d-a0b8-4369-a0d9-cce40bb6b701"
+  },
+  {
+    "time": "2026-10-31T19:32:19Z",
+    "name": "fixed real server rejects altered account subject",
+    "passed": true,
+    "status": 401,
+    "code": "LAUNCH_IDENTITY_INVALID",
+    "request_id": "33559ee6-2df6-4a2f-ab04-4c80f1503bb0"
+  },
+  {
+    "time": "2026-10-31T19:32:19Z",
+    "name": "fixed real server rejects altered entitlement reference",
+    "passed": true,
+    "status": 401,
+    "code": "LAUNCH_IDENTITY_INVALID",
+    "request_id": "390eb009-eec6-44c7-b87c-84e39159ba81"
+  },
+  {
+    "time": "2026-10-31T19:32:19Z",
+    "name": "fixed real server rejects altered audience",
+    "passed": true,
+    "status": 401,
+    "code": "LAUNCH_IDENTITY_INVALID",
+    "request_id": "4bf7298d-13a9-4615-ada1-0fef88d56fd1"
+  },
+  {
+    "time": "2026-10-31T19:32:19Z",
+    "name": "fixed real server rejects empty signature",
+    "passed": true,
+    "status": 401,
+    "code": "LAUNCH_IDENTITY_INVALID",
+    "request_id": "8043625d-b163-409e-86df-77e30b18f3e4"
+  },
+  {
+    "time": "2026-10-31T19:32:19Z",
+    "name": "fixed real server rejects noncanonical base64 segment",
+    "passed": true,
+    "status": 401,
+    "code": "LAUNCH_IDENTITY_INVALID",
+    "request_id": "8cba86b2-9030-431a-956f-302de710d1d5"
+  },
+  {
+    "time": "2026-10-31T19:32:19Z",
+    "name": "fixed invalid assertions did not consume genuine identity or block valid business",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T19:32:19Z",
+    "name": "fixed exact real assertion exchange retry returns original activation",
+    "passed": true,
+    "status": 200,
+    "request_id": "59e3400a-32c2-46ba-8de8-bb83ad21a5d2"
+  },
+  {
+    "time": "2026-10-31T19:32:19Z",
+    "name": "fixed consumed genuine assertion cannot create a new exchange operation",
+    "passed": true,
+    "status": 409,
+    "code": "LAUNCH_IDENTITY_REPLAY",
+    "request_id": "9c86b487-b4a8-478c-96cc-00054c464603"
+  },
+  {
+    "time": "2026-10-31T19:32:19Z",
+    "name": "fixed same exchange key cannot accept a changed body",
+    "passed": true,
+    "status": 409,
+    "code": "LAUNCH_IDENTITY_REPLAY",
+    "request_id": "1935a298-5b43-4c87-8d18-78d0c573e4ab"
+  },
+  {
+    "time": "2026-10-31T19:32:19Z",
+    "name": "fixed logged-out authorization cannot be revived by exact old exchange replay",
+    "passed": true,
+    "status": 403,
+    "code": "LAUNCH_LOGIN_REQUIRED",
+    "request_id": "498f914d-5b2f-42a6-b8ce-8588fd78edeb"
+  },
+  {
+    "time": "2026-10-31T19:32:19Z",
+    "name": "fixed close assertion-matrix desktop session",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "5710b1c3979abe6896a983c02af8f417",
+    "seconds": 0.0433
+  },
+  {
+    "time": "2026-10-31T19:32:20Z",
+    "name": "floating assertion negative-matrix desktop login",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "380aac79bea496b113cd10d1eaca90fd",
+    "seconds": 0.2482
+  },
+  {
+    "time": "2026-10-31T19:32:20Z",
+    "name": "floating assertion negative matrix obtains genuine identity",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "54fd3e2626ca4f1511336752d1a25b24",
+    "seconds": 0.042
+  },
+  {
+    "time": "2026-10-31T19:32:20Z",
+    "name": "floating real server rejects unsigned alg none",
+    "passed": true,
+    "status": 401,
+    "code": "LAUNCH_IDENTITY_INVALID",
+    "request_id": "13eaa814-2ca6-444d-8259-a16e139f34c3"
+  },
+  {
+    "time": "2026-10-31T19:32:20Z",
+    "name": "floating real server rejects HS256 algorithm replacement",
+    "passed": true,
+    "status": 401,
+    "code": "LAUNCH_IDENTITY_INVALID",
+    "request_id": "377af6f3-e826-45bc-ae96-8638d03db4b5"
+  },
+  {
+    "time": "2026-10-31T19:32:20Z",
+    "name": "floating real server rejects untrusted signing key id",
+    "passed": true,
+    "status": 401,
+    "code": "LAUNCH_IDENTITY_INVALID",
+    "request_id": "cf9863a6-8990-4ea1-afbb-7422b21eb207"
+  },
+  {
+    "time": "2026-10-31T19:32:20Z",
+    "name": "floating real server rejects altered account subject",
+    "passed": true,
+    "status": 401,
+    "code": "LAUNCH_IDENTITY_INVALID",
+    "request_id": "ec93fc93-fd18-4a75-9210-50b3a9f0035a"
+  },
+  {
+    "time": "2026-10-31T19:32:20Z",
+    "name": "floating real server rejects altered entitlement reference",
+    "passed": true,
+    "status": 401,
+    "code": "LAUNCH_IDENTITY_INVALID",
+    "request_id": "5a928757-67f5-4c4f-b11b-62bd9343c591"
+  },
+  {
+    "time": "2026-10-31T19:32:20Z",
+    "name": "floating real server rejects altered audience",
+    "passed": true,
+    "status": 401,
+    "code": "LAUNCH_IDENTITY_INVALID",
+    "request_id": "e420e34b-56d1-4992-ad09-0eaebf82731f"
+  },
+  {
+    "time": "2026-10-31T19:32:20Z",
+    "name": "floating real server rejects empty signature",
+    "passed": true,
+    "status": 401,
+    "code": "LAUNCH_IDENTITY_INVALID",
+    "request_id": "15dd3c2f-9300-4a40-ae86-2becffaf734c"
+  },
+  {
+    "time": "2026-10-31T19:32:20Z",
+    "name": "floating real server rejects noncanonical base64 segment",
+    "passed": true,
+    "status": 401,
+    "code": "LAUNCH_IDENTITY_INVALID",
+    "request_id": "4b37d82d-1d31-4aab-a247-22f8000c3e29"
+  },
+  {
+    "time": "2026-10-31T19:32:20Z",
+    "name": "floating invalid assertions did not consume genuine identity or block valid business",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T19:32:20Z",
+    "name": "floating exact real assertion exchange retry returns original activation",
+    "passed": true,
+    "status": 200,
+    "request_id": "fd907a04-5d92-48d3-8f39-152770a6639d"
+  },
+  {
+    "time": "2026-10-31T19:32:20Z",
+    "name": "floating consumed genuine assertion cannot create a new exchange operation",
+    "passed": true,
+    "status": 409,
+    "code": "LAUNCH_IDENTITY_REPLAY",
+    "request_id": "009356fe-17c8-4361-9382-3616fc1d7f21"
+  },
+  {
+    "time": "2026-10-31T19:32:20Z",
+    "name": "floating same exchange key cannot accept a changed body",
+    "passed": true,
+    "status": 409,
+    "code": "LAUNCH_IDENTITY_REPLAY",
+    "request_id": "3968b707-ff38-45d6-9d6b-dff72f4eff45"
+  },
+  {
+    "time": "2026-10-31T19:32:20Z",
+    "name": "floating logged-out authorization cannot be revived by exact old exchange replay",
+    "passed": true,
+    "status": 403,
+    "code": "LAUNCH_LOGIN_REQUIRED",
+    "request_id": "67e22fb5-0dd0-42b2-9939-e90e5148fa3d"
+  },
+  {
+    "time": "2026-10-31T19:32:20Z",
+    "name": "floating close assertion-matrix desktop session",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "6dc6e38cd3090c7906953dc13b9585fe",
+    "seconds": 0.0786
+  },
+  {
+    "time": "2026-10-31T19:33:40Z",
+    "name": "create independent signing-rotation product",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "f61e14f7-1660-43ee-98bc-f817eecdb7b5",
+    "seconds": 0.0295
+  },
+  {
+    "time": "2026-10-31T19:33:40Z",
+    "name": "create signing-rotation metered policy",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "44e29685-2d4f-414c-abdf-9221c7ebfdd4",
+    "seconds": 0.0303
+  },
+  {
+    "time": "2026-10-31T19:33:40Z",
+    "name": "issue independent signing-rotation license",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "1abf8630-42fc-4502-9b89-254601256f37",
+    "seconds": 0.0393
+  },
+  {
+    "time": "2026-10-31T19:33:40Z",
+    "name": "read original signing verification key set",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "5b4ce8ef-eda4-4ade-a746-2a2bf45a56d2",
+    "seconds": 0.0078
+  },
+  {
+    "time": "2026-10-31T19:33:40Z",
+    "name": "rotate actual independent product signing key",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "07546d0a-ffbb-43a2-b85c-bea37aa78d8e",
+    "seconds": 0.0319
+  },
+  {
+    "time": "2026-10-31T19:33:40Z",
+    "name": "read old retired and new active signing keys",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "6df449c6-2ae4-446c-8464-74c684b9bd35",
+    "seconds": 0.0076
+  },
+  {
+    "time": "2026-10-31T19:33:40Z",
+    "name": "signing rotation retains old verification pin and has exactly one new active key",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T19:33:40Z",
+    "name": "already issued old signed grant remains verifiable within original offline lifetime",
+    "passed": true,
+    "offline_cache_immediate_revocation_not_claimed": true
+  },
+  {
+    "time": "2026-10-31T19:33:40Z",
+    "name": "client with only old pins refuses the newly signed online grant",
+    "passed": true,
+    "code": "KeyError",
+    "callback_count": 0
+  },
+  {
+    "time": "2026-10-31T19:33:40Z",
+    "name": "publishing updated public pins restores online verification without changing license or device credential",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T19:33:40Z",
+    "name": "completed metered job retains its journal across signing-key rotation",
+    "passed": true,
+    "operation_id": "bf1e01f7-6728-445d-a18f-eba8a09cb19a",
+    "callback_count": 1
+  },
+  {
+    "time": "2026-10-31T19:33:40Z",
+    "name": "read usage after signing rotation and runtime recreation",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "7d8c045b-6b93-4f18-83ef-0c02f016fe91",
+    "seconds": 0.017
+  },
+  {
+    "time": "2026-10-31T19:33:40Z",
+    "name": "new runtime with both public pins restores old credential and meters only new work",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T19:33:41Z",
+    "name": "signing rotation fixture logs out normally",
+    "passed": true
+  },
+  {
+    "time": "2026-10-31T19:37:05Z",
+    "name": "read actual advanced product verification pins",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "566fabe5-472a-42cf-989a-ead0e03efcf8",
+    "seconds": 0.0108
+  },
+  {
+    "time": "2026-10-31T19:37:05Z",
+    "name": "create real policy default-long-meter",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "ed89a7ef-bcdd-45e3-9d04-a56b4bd18845",
+    "seconds": 0.0294
+  },
+  {
+    "time": "2026-10-31T19:37:05Z",
+    "name": "issue real license default-long-meter",
+    "passed": true,
+    "status": 201,
+    "code": null,
+    "request_id": "27dc0cd1-14e9-4c2e-93c8-e10860311451",
+    "seconds": 0.047
+  },
+  {
+    "time": "2026-10-31T19:37:05Z",
+    "name": "long metered test observes unchanged default reservation deadline",
+    "passed": true,
+    "remaining_seconds": 899.95,
+    "operation_id": "47cfda4d-ceb3-412a-a110-90ee142116eb"
+  },
+  {
+    "time": "2026-10-31T19:40:40Z",
+    "name": "active long reservation still blocks a separate new job before its actual expiry",
+    "passed": true,
+    "code": "FEATURE_QUOTA_EXCEEDED",
+    "callback_count": 0,
+    "seconds_until_expiry": 684.92,
+    "long_task_live_pid": 119622
+  },
+  {
+    "time": "2026-10-31T19:52:07Z",
+    "name": "read actual usage after default long callback",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "3455a228-7fc3-44ff-955b-c40f7beb908c",
+    "seconds": 0.028
+  },
+  {
+    "time": "2026-10-31T19:52:07Z",
+    "name": "default long metered callback produced one real business result",
+    "passed": true,
+    "operation_id": "47cfda4d-ceb3-412a-a110-90ee142116eb",
+    "callback_count": 1,
+    "actual_rows": 900,
+    "codes": [
+      "RuntimeError",
+      "RESERVATION_EXPIRED"
+    ],
+    "server_used": 0
+  },
+  {
+    "time": "2026-10-31T19:52:07Z",
+    "name": "long completed metered business can settle its original operation",
+    "passed": false,
+    "operation_id": "47cfda4d-ceb3-412a-a110-90ee142116eb",
+    "callback_count": 1,
+    "retry_new_callbacks": 0,
+    "retry_codes": [
+      "RuntimeError",
+      "RESERVATION_EXPIRED"
+    ],
+    "resolve_codes": [
+      "RuntimeError",
+      "RESERVATION_EXPIRED"
+    ],
+    "journal_state": "commit_pending",
+    "server_used": 0
+  },
+  {
+    "time": "2026-10-31T19:52:08Z",
+    "name": "read quota after a new short job following expired long job",
+    "passed": true,
+    "status": 200,
+    "code": null,
+    "request_id": "a67750f2-0bb7-4ef3-85fb-a73a5d78ba22",
+    "seconds": 0.0579
+  },
+  {
+    "time": "2026-10-31T19:52:08Z",
+    "name": "new short job after long callback expiry has a separate server receipt",
+    "passed": true,
+    "first_operation_id": "47cfda4d-ceb3-412a-a110-90ee142116eb",
+    "new_operation_id": "ff710f72-3e95-4ce9-b93c-a7228b57fe3a",
+    "total_real_business_callbacks": 2,
+    "server_used": 1,
+    "initial_receipt_expired": true
+  }
+]

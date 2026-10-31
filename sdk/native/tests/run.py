@@ -16,6 +16,8 @@ from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
 parser = argparse.ArgumentParser()
 parser.add_argument('--c', required=True, type=Path)
 parser.add_argument('--cpp', required=True, type=Path)
+parser.add_argument('--timeout', type=float, default=120, help='Per-driver timeout; Windows hardware discovery can make the full lifecycle suite slower.')
+parser.add_argument('--trace', action='store_true', help='Log fixture request paths and statuses for diagnosing a slow driver.')
 args = parser.parse_args()
 private = Ed25519PrivateKey.generate()
 b64 = lambda value: base64.urlsafe_b64encode(value).decode().rstrip('=')
@@ -26,7 +28,8 @@ state = {'mode': 'online', 'user': 0, 'credential_calls': 0}
 
 
 class Handler(BaseHTTPRequestHandler):
-    def log_message(self, *_): pass
+    def log_message(self, format, *values):
+        if args.trace: super().log_message(format, *values)
     def reply(self, status, body, retry_after=None):
         payload = json.dumps(body).encode()
         self.send_response(status)
@@ -103,9 +106,9 @@ try:
         config = Path(directory) / 'product.json'
         config.write_text(json.dumps({'base_url': origin, 'product_id': product, 'trusted_keys': {'fixture': public}, 'allow_http': True}), encoding='utf-8')
         environment = os.environ | {'LOCALAPPDATA': directory, 'XDG_CACHE_HOME': directory}
-        subprocess.run([str(args.c.resolve()), origin, str(config)], check=True, timeout=120, env=environment)
+        subprocess.run([str(args.c.resolve()), origin, str(config)], check=True, timeout=args.timeout, env=environment)
         state['mode'] = 'online'
-        subprocess.run([str(args.cpp.resolve()), origin, str(config)], check=True, timeout=60, env=environment)
+        subprocess.run([str(args.cpp.resolve()), origin, str(config)], check=True, timeout=args.timeout, env=environment)
         print('C and C++ package lifecycle passed with the real official signed SDK.')
 finally:
     server.shutdown()

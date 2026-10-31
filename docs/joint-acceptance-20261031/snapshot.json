@@ -1,0 +1,89 @@
+{
+  "time_utc": "2026-10-31T19:54:27Z",
+  "binaries": {
+    "launch": "b5fb4d0d2696a488bb330b2bf150e6161fbe9362c1179456fdeb97d764e5be7d",
+    "licentivo": "80b724b1009e4567b08bf7385ce297e310386700b080659d738c202f254c0945"
+  },
+  "soak_failure_counts": {
+    "LAUNCH_LOGIN_REQUIRED": 9
+  },
+  "business_callbacks_for_failed_soak_operations": {
+    "8e833c87-274d-40cd-969d-66c72147e99f": 0,
+    "f94907c6-d00b-4a84-bce2-af90b910b252": 0,
+    "49413a55-8893-432e-825b-a66d9f308980": 0,
+    "dd2ecd90-ab95-49f6-83dd-b04772888a42": 0,
+    "617f4609-6bc2-4c3b-bd42-99482005143a": 0,
+    "c78713f2-6d02-4e5e-a5b3-1a9d1c3944a3": 0,
+    "ec0983b6-14c0-4141-a27b-c223fa271d19": 0,
+    "41a6c235-0def-48bd-bee8-98a226e34639": 0,
+    "11a4d49e-2b2b-43e7-8d9c-9c6c32e5a82e": 0
+  },
+  "new_confirmed_concurrency_duplicates": 2,
+  "isolated_database_counts": {
+    "orders": 0,
+    "payments": 0,
+    "entitlements": 14
+  },
+  "soak_business_invariants": {
+    "successful_unique_operations": 947,
+    "replay_checks": 939,
+    "callback_counts_not_one": {}
+  },
+  "soak_per_product": {
+    "fixed": {
+      "first_export_at_utc": "2026-10-31T15:47:44Z",
+      "last_export_at_utc": "2026-10-31T19:47:58Z",
+      "export_attempts": 320,
+      "successful_exports": 320,
+      "failed_exports": 0,
+      "replay_checks": 316,
+      "successful_replay_checks": 316
+    },
+    "floating": {
+      "first_export_at_utc": "2026-10-31T15:50:46Z",
+      "last_export_at_utc": "2026-10-31T19:48:03Z",
+      "export_attempts": 316,
+      "successful_exports": 307,
+      "failed_exports": 9,
+      "replay_checks": 307,
+      "successful_replay_checks": 307
+    },
+    "meter": {
+      "first_export_at_utc": "2026-10-31T15:47:45Z",
+      "last_export_at_utc": "2026-10-31T19:48:00Z",
+      "export_attempts": 320,
+      "successful_exports": 320,
+      "failed_exports": 0,
+      "replay_checks": 316,
+      "successful_replay_checks": 316
+    }
+  },
+  "service_resources": {
+    "launch-acceptance.service": {
+      "ActiveState": "active",
+      "NRestarts": "0",
+      "MemoryCurrent": "12722176",
+      "MemoryPeak": "97787904",
+      "TasksCurrent": "9"
+    },
+    "launch-joint-acceptance.service": {
+      "ActiveState": "active",
+      "NRestarts": "0",
+      "MemoryCurrent": "11788288",
+      "MemoryPeak": "166207488",
+      "TasksCurrent": "9"
+    },
+    "licentivo-joint-acceptance.service": {
+      "ActiveState": "active",
+      "NRestarts": "0",
+      "MemoryCurrent": "88936448",
+      "MemoryPeak": "155467776",
+      "TasksCurrent": "10"
+    }
+  },
+  "disk_kib": {
+    "total": 45093780,
+    "used": 16314844,
+    "available": 26455892
+  }
+}

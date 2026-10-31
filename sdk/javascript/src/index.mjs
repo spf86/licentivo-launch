@@ -147,7 +147,7 @@ export class Application {
   async #start(identity,signal) {
     cancelled(signal); const path=this.#cache(this.#record);await mkdir(dirname(path),{recursive:true,mode:0o700});
     const runtime=await this.#factory({...clone(this.#config.product),license_key:'',identity_token:identity.identity_token??'',launch_connection_id:identity.launch_connection_id,environment:this.#config.launch.environment,cache_path:path});
-    try{await runtime.start(()=>{},signal);cancelled(signal);this.#runtime=runtime;return {user:clone(this.#record.user),expiresAt:this.#record.expires_at};}catch(error){await runtime.close();throw error;}
+    try{await runtime.start(()=>{},signal);cancelled(signal);this.#runtime=runtime;return {user:clone(this.#record.user),expiresAt:this.#record.expires_at};}catch(error){try{await runtime.close();}catch{}throw error;}
   }
   async #stop() { const runtime=this.#runtime; this.#runtime=null; if(runtime) await runtime.close(); }
   async #clear(saved=this.#record) { try {await this.#stop();} finally {this.#record=null;this.#accountCleared=true;if(saved)await this.#deleteOwned(saved);} }
@@ -182,7 +182,7 @@ export class Application {
     try {
       if (!UUID.test(grant.user?.id) || !/^[A-Za-z0-9_-]{43}$/.test(grant.access_token) || typeof grant.expires_at !== 'string' || !/(?:Z|[+-]\d\d:\d\d)$/.test(grant.expires_at) || !Number.isFinite(Date.parse(grant.expires_at)) || Date.parse(grant.expires_at)<=Date.now()) throw new LaunchError('INVALID_SESSION');
       const identity=await this.#credential(signal);this.#record.identityContext=Object.fromEntries(['product_id','licentivo_product_id','launch_connection_id','environment','expires_at'].map(key=>[key,identity[key]]));const state=await this.#start(identity,signal);await this.#save();return state;
-    } catch(error) { await this.#logout(); throw error; }
+    } catch(error) { try{await this.#logout();}catch{}throw error; }
   }); }
   restore({signal}={}) {return this.#account(async()=>{
     this.#open();cancelled(signal);await this.#stop();this.#record=this.#record?.logout_pending?this.#record:await this.#saved();const pending=await this.#pending();const task=pending.find(value=>!this.#record||value.token===this.#record.token);if(task)this.#record=task;if(!this.#record)return null;
@@ -196,6 +196,8 @@ export class Application {
     try{const state=await this.#start(identity,signal);await this.#save();return state;}catch(error){await this.#clear();throw error;}
   });}
   runFeature(feature,action) { return this.#serial(async()=>{ this.#open(); if(!this.#runtime) throw new LaunchError('LOGIN_REQUIRED'); return this.#runtime.runFeature(feature,()=>this.#callbacks.run(true,action)); }); }
+  runMeteredFeature(feature,quantity,operationID,action) { return this.#serial(async()=>{this.#open();if(!this.#runtime)throw new LaunchError('LOGIN_REQUIRED');if(typeof this.#runtime.runMeteredFeature!=='function')throw new LaunchError('METERING_UNSUPPORTED');return this.#runtime.runMeteredFeature(feature,quantity,operationID,()=>this.#callbacks.run(true,action));}); }
+  resolveMeteredFeature(operationID,succeeded) { return this.#serial(async()=>{this.#open();if(!this.#runtime)throw new LaunchError('LOGIN_REQUIRED');if(typeof this.#runtime.resolveMeteredFeature!=='function')throw new LaunchError('METERING_UNSUPPORTED');return this.#runtime.resolveMeteredFeature(operationID,succeeded);}); }
   logout({signal}={}) { return this.#account(async()=>{this.#open();if(this.#accountCleared&&!this.#record){await this.#retryOthers(undefined,signal);return true;}return this.#logout(signal);},true); }
   releaseDevice(options={}) {return this.logout(options).then(confirmed=>{if(!confirmed)throw new LaunchError('DEVICE_REVOCATION_PENDING');});}
   close() { return this.#serial(async()=>{if(this.#closed)return;this.#closed=true;await this.#stop();this.#record=null;}); }

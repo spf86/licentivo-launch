@@ -45,6 +45,8 @@ export interface Runtime {
   status(): {allowed: boolean; state: string} | Promise<{allowed: boolean; state: string}>;
   start(onError?: (error: unknown) => void, signal?: AbortSignal): Promise<unknown>;
   runFeature<T>(name: string, action: () => T | Promise<T>): Promise<T>;
+  runMeteredFeature?<T>(name: string, quantity: number, operationID: string, action: () => T | Promise<T>): Promise<T | undefined>;
+  resolveMeteredFeature?(operationID: string, succeeded: boolean): Promise<void>;
   deactivate(signal?: AbortSignal): Promise<unknown>;
   logout?(signal?: AbortSignal): Promise<{local_complete: boolean; revocation_pending: boolean; storage_error?: string}>;
   close(): Promise<unknown>;
@@ -62,6 +64,8 @@ export class Application {
   login(email: string, password: string, options?: {signal?: AbortSignal}): Promise<SessionState>;
   restore(options?: {signal?: AbortSignal}): Promise<SessionState | null>;
   runFeature<T>(name: string, action: () => T | Promise<T>): Promise<T>;
+  runMeteredFeature<T>(name: string, quantity: number, operationID: string, action: () => T | Promise<T>): Promise<T | undefined>;
+  resolveMeteredFeature(operationID: string, succeeded: boolean): Promise<void>;
   /** Local state is always removed; false means remote logout was not confirmed. */
   logout(options?: {signal?: AbortSignal}): Promise<boolean>;
   releaseDevice(options?: {signal?: AbortSignal}): Promise<void>;

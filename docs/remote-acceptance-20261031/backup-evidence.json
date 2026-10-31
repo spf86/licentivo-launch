@@ -1,0 +1,38 @@
+[
+  {
+    "name": "encrypted backup",
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": "{\"time\":\"2026-10-31T13:12:01.320818491Z\",\"level\":\"INFO\",\"msg\":\"encrypted backup created\",\"tables\":40,\"created_at\":\"2026-10-31T13:12:00.311575449Z\"}\n"
+  },
+  {
+    "name": "reject wrong backup passphrase",
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "{\"time\":\"2026-10-31T13:12:02.276991151Z\",\"level\":\"ERROR\",\"msg\":\"launch stopped\",\"error\":\"backup is damaged, unsupported, too large, or the passphrase is incorrect\"}\n"
+  },
+  {
+    "name": "restore into empty database",
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": "{\"time\":\"2026-10-31T13:12:05.863407693Z\",\"level\":\"INFO\",\"msg\":\"backup restored; review transactions after the backup timestamp before resuming commerce\",\"backup_created_at\":\"2026-10-31T13:12:00.311575449Z\",\"configuration_file\":\"/home/spf86/launch-acceptance-20261031/acceptance-backup.enc.secrets.yaml\"}\n"
+  },
+  {
+    "name": "restored schema check",
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": "{\"time\":\"2026-10-31T13:12:06.196984487Z\",\"level\":\"INFO\",\"msg\":\"database command complete\",\"command\":\"check\"}\n"
+  },
+  {
+    "name": "reject restore into nonempty database",
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "{\"time\":\"2026-10-31T13:12:07.280677361Z\",\"level\":\"ERROR\",\"msg\":\"launch stopped\",\"error\":\"restore requires a new database with no tables; existing schema was preserved\"}\n"
+  },
+  {
+    "name": "backup ciphertext",
+    "bytes": 10850,
+    "sha256": "f0b4b94f50641f452a811dd2403646f59681af25f3c06291e3f87b31ff53e9ff",
+    "contains_plain_email": false
+  }
+]

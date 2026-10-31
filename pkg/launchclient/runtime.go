@@ -36,6 +36,12 @@ func (r *officialRuntime) Start(ctx context.Context, changed func(error)) error 
 func (r *officialRuntime) RunFeature(feature string, action func() error) error {
 	return r.client.RunFeature(feature, action)
 }
+func (r *officialRuntime) RunMeteredFeature(ctx context.Context, feature string, quantity int64, operationID string, action func() error) error {
+	return r.client.RunMeteredFeature(ctx, feature, quantity, operationID, action)
+}
+func (r *officialRuntime) ResolveMeteredFeature(ctx context.Context, operationID string, succeeded bool) error {
+	return r.client.ResolveMeteredFeature(ctx, operationID, succeeded)
+}
 func (r *officialRuntime) Deactivate(ctx context.Context) error {
 	result, err := r.client.Logout(ctx)
 	if err != nil {

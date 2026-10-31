@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 namespace Licentivo;
 
 public sealed partial class LicentivoClient {
-    private sealed record Credential(int Version,string SourceHash,string Origin,string ProductId,string DeviceId,string DeviceKey,string RequestId,string SessionId,JsonElement? LogoutTicket=null);
+    private sealed record Credential(int Version,string SourceHash,string Origin,string ProductId,string DeviceId,string DeviceKey,string RequestId,string SessionId,JsonElement? LogoutTicket=null,string OfflineRequestId="");
     private Credential? credential;
     private bool credentialDirty;
     private bool Temporary=>config.LicenseKey!=""||config.IdentityToken!=""||credential is not null;
@@ -32,7 +32,7 @@ public sealed partial class LicentivoClient {
             PrepareCredential();credential=credential! with{LogoutTicket=candidate.Clone()};Deny();throw new ApiException(403,"LAUNCH_LOGIN_REQUIRED");
         }
         if(logoutJournal.SignedOut){logoutJournal.SignedOut=false;SaveLogout();}
-        if(data.TryGetProperty("logout_ticket",out var ticket)){PrepareCredential();credential=credential! with{LogoutTicket=ticket.Clone()};credentialDirty=true;SaveCredential();}if(!Temporary||credential is {DeviceKey.Length: >0})return;
+        if(data.TryGetProperty("logout_ticket",out var ticket)){PrepareCredential();credential=credential! with{LogoutTicket=ticket.Clone()};credentialDirty=true;SaveCredential();}if(!Temporary||credential is {DeviceKey.Length: >0}&&OptionalText(data,"device_key")=="")return;
         string key=OptionalText(data,"device_key");
         if(!Regex.IsMatch(key,"^lv_dev_[A-Za-z0-9_-]{43}$")){if(!config.LicenseKey.StartsWith("lv_tmp_",StringComparison.Ordinal)&&config.IdentityToken=="")return;throw new ArgumentException("server omitted device credential");}
         PrepareCredential();credential=credential! with{DeviceKey=key};credentialDirty=true;SaveCredential();

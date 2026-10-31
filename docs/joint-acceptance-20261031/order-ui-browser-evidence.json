@@ -1,0 +1,90 @@
+{
+  "test_origin": "loopback proxy to isolated Launch 18092; separate browser cookies",
+  "customer": {
+    "fixture_orders": 120,
+    "visible_rows": 100,
+    "headers": [
+      "产品与套餐",
+      "订单时间",
+      "金额与期限",
+      "类型",
+      "状态"
+    ],
+    "invoice_buttons": 0,
+    "next_page_buttons": 0
+  },
+  "admin": {
+    "total_orders": 120,
+    "first_page_rows": 25,
+    "first_page_ids": [
+      "4a0a4fb9-1c55-4a8c-b130-6a7dc18426ec",
+      "06b951e6-ba04-4987-a49d-655d9b0fbf7a",
+      "02385bcb-ce49-4b9c-bf40-34fedf80413f",
+      "a3187dbf-9b9d-4550-990d-1161c8b806eb",
+      "441361cd-85de-4751-8c12-fd308b920d9f",
+      "f5ca2963-220f-4f10-abee-3040fcaaf63e",
+      "f83aa43c-92cc-407b-9745-21141030dec5",
+      "9d639f7c-9516-4def-95b3-d4fd916a9c6f",
+      "77f66588-7158-4bee-b470-eb79a91a2ede",
+      "46edab6f-ab27-46ed-aa30-ba75e93f2f98",
+      "7d8501d1-1deb-4c95-b59f-7c37c60f46d4",
+      "25fd7546-fcfa-4738-a8a0-460e6b974692",
+      "927e117e-2867-48a6-bf95-b321a6c978d4",
+      "63df8a40-b6cf-47d0-8ef3-b35cfd59f95d",
+      "ba07dff1-c7b5-4778-b83c-eed687dcfa4f",
+      "c339fb37-0ef1-4d62-9e26-a204a2d54867",
+      "54eb6eac-2174-4262-b34f-fd90e37849a4",
+      "2844dc04-552a-4648-be01-53e8848a1c8c",
+      "90462b13-5220-4afe-9a44-c679402a093f",
+      "60b0551c-0961-4fb2-a55f-4c6264a132c7",
+      "3a2686d6-8615-4a00-a039-4117d7da5de5",
+      "f9ef6b1d-eb3f-4357-b665-854f6e93187f",
+      "f8a5efdb-5b55-4f00-8ec8-aa6f4b2e6ec8",
+      "1d722da2-af96-4c79-9628-2c4b27003cf8",
+      "c7c627b8-5f61-4d15-be01-a9a826cba4d6"
+    ],
+    "last_page_ids": [
+      "efe3cd36-0f54-4115-b355-2200428b86ea",
+      "bbb4e149-e50b-43cd-8a1e-7b38978a2277",
+      "c5f1aed2-686f-4d5c-8a61-cc6f819d8c3e",
+      "799e58fd-5f54-4af5-8fb2-f135a25ef749",
+      "c9b12ee9-b1eb-4502-91b2-a6e917d89cd3",
+      "d6c75327-50b0-412b-8a6f-baa1e121cf8e",
+      "2ebaddd5-fa1c-4a66-bb18-0f8cfd66ac03",
+      "bb208848-959a-4689-bf6e-a6fd8d476dc1",
+      "6bf34c81-8367-41c9-acad-800f38d08379",
+      "bcd195b8-1ad8-4f83-a655-4483f14f45d0",
+      "30596355-a4ab-4487-992a-ca32950deedc",
+      "23f99ea7-6f01-4414-8e84-0b696420c320",
+      "11bd4d75-7b1d-44f2-aaf4-1b65a35183d7",
+      "71d02526-8987-48a9-b590-61f75abf2890",
+      "69559f91-e515-473e-8e39-4fcd440c7f24",
+      "c94246bb-6332-4667-b619-8a5b67a1cce0",
+      "ad838ec5-676f-4b3f-97e9-fd814acf38c4",
+      "33ce0d39-fbd6-4d0e-9ae8-5cc9c7a3ec58",
+      "97e9e647-ab6f-41c4-86eb-535be1c55185",
+      "7623ffe6-dd21-429c-a6f6-e0b9388efc33"
+    ],
+    "last_page_rows": 20,
+    "oldest_order_search": {
+      "rows": 1,
+      "ids": [
+        "7623ffe6-dd21-429c-a6f6-e0b9388efc33"
+      ],
+      "selected_across_pages": true
+    },
+    "bulk_preview_items": 2,
+    "missing_payment_negative": {
+      "progress": "已完成 2 / 2 笔，核对成功 0 笔",
+      "results": "4a0a4fb9-1c55-4a8c-b130-6a7dc18426ec 需继续核实 未找到该记录 NOT_FOUND\n\nefe3cd36-0f54-4115-b355-2200428b86ea 需继续核实 未找到该记录 NOT_FOUND"
+    },
+    "combined_filter": {
+      "rows": 2,
+      "text": "\t产品与套餐 / 订单编号\t客户\t创建时间\t金额\t类型\t环境\t状态\t操作\n\tJoint fixed\nRuntime fixture fixed · v1\nf8a5efdb-5b55-4f00-8ec8-aa6f4b2e6ec8\talice@launch-joint.example\t2026年11月1日 02:21\tUS$12.20\t购买\t测试\t已退款\n权益需核对\t核对付款\n\tJoint fixed\nRuntime fixture fixed · v1\ne22fb0dd-626f-4475-a126-d93fd77a84b7\talice@launch-joint.example\t2026年11月1日 01:15\tUS$18.80\t购买\t测试\t已退款\n权益需核对\t核对付款"
+    },
+    "selection_limit": {
+      "retained_25": true,
+      "limit_message": true
+    }
+  }
+}

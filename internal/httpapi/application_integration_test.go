@@ -477,21 +477,10 @@ func TestApplicationFlows(t *testing.T) {
 	if db.Create(&invoiceOrder).Error != nil {
 		t.Fatal("could not create paid invoice fixture")
 	}
-	a.expect(a.request("POST", "/api/v1/orders/"+invoiceOrderID+"/invoice", app.InvoiceInput{Type: "company", Title: "Test Company", Email: user.Email}, customer), 400)
-	w = a.request("POST", "/api/v1/orders/"+invoiceOrderID+"/invoice", app.InvoiceInput{Type: "personal", Title: "Test Customer", Email: user.Email}, customer)
-	a.expect(w, 200)
-	invoice := data[app.InvoiceView](t, w)
-	if invoice.Status != "requested" || invoice.OrderID != invoiceOrderID {
-		t.Fatalf("invoice request was not created: %+v", invoice)
-	}
-	adminInvoices := data[[]app.InvoiceView](t, a.request("GET", "/api/v1/admin/invoices", nil, admin))
-	if len(adminInvoices) != 1 || adminInvoices[0].CustomerEmail != user.Email {
-		t.Fatalf("administrator did not receive invoice request: %+v", adminInvoices)
-	}
-	a.expect(a.request("POST", "/api/v1/admin/invoices/"+invoice.ID, app.InvoiceDecision{Status: "issued", URL: "https://example.invalid/invoices/" + invoice.ID, Note: "issued"}, admin), 200)
-	customerInvoices := data[[]app.InvoiceView](t, a.request("GET", "/api/v1/me/invoices", nil, customer))
-	if len(customerInvoices) != 1 || customerInvoices[0].Status != "issued" || customerInvoices[0].InvoiceURL == "" {
-		t.Fatalf("issued invoice was not visible to customer: %+v", customerInvoices)
+	a.expect(a.request("POST", "/api/v1/orders/"+invoiceOrderID+"/invoice", app.InvoiceInput{Type: "personal", Title: "Test Customer", Email: user.Email}, customer), 410)
+	a.expect(a.request("POST", "/api/v1/admin/invoices/"+invoiceOrderID, app.InvoiceDecision{Status: "issued", URL: "https://example.invalid/invoices/test"}, admin), 410)
+	if invoices := data[[]app.InvoiceView](t, a.request("GET", "/api/v1/me/invoices", nil, customer)); len(invoices) != 0 {
+		t.Fatal("disabled invoice request created a new record")
 	}
 	var outbox []storage.EmailOutbox
 	_ = db.Find(&outbox).Error

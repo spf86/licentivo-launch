@@ -1,0 +1,12 @@
+{
+  "paused_at_utc": "2026-10-31T19:03:56Z",
+  "pause_confirmed_at_utc": "2026-10-31T19:04:18Z",
+  "soak_pid": 55544,
+  "active_seconds_before": 11745.17,
+  "resumed_at_utc": "2026-10-31T19:04:26Z",
+  "soak_pid_unchanged": true,
+  "binaries": {
+    "18080": "941c5c8cae9e5565a1791f82e80a13ab17119e70e3e0ef8bf82fd714919d6da7",
+    "18092": "b5fb4d0d2696a488bb330b2bf150e6161fbe9362c1179456fdeb97d764e5be7d"
+  }
+}

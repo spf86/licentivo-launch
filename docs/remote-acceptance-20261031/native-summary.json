@@ -1,0 +1,82 @@
+[
+  {
+    "package": "licentivo-launch/cmd/launch",
+    "exit_code": 0,
+    "seconds": 0.06
+  },
+  {
+    "package": "licentivo-launch/internal/adapters/deepl",
+    "exit_code": 0,
+    "seconds": 0.15
+  },
+  {
+    "package": "licentivo-launch/internal/adapters/externallicensing",
+    "exit_code": 0,
+    "seconds": 0.06
+  },
+  {
+    "package": "licentivo-launch/internal/adapters/licentivo",
+    "exit_code": 0,
+    "seconds": 0.24
+  },
+  {
+    "package": "licentivo-launch/internal/app",
+    "exit_code": 0,
+    "seconds": 42.13
+  },
+  {
+    "package": "licentivo-launch/internal/backup",
+    "exit_code": 0,
+    "seconds": 1.69
+  },
+  {
+    "package": "licentivo-launch/internal/config",
+    "exit_code": 0,
+    "seconds": 0.05
+  },
+  {
+    "package": "licentivo-launch/internal/domain",
+    "exit_code": 0,
+    "seconds": 0.02
+  },
+  {
+    "package": "licentivo-launch/internal/httpapi",
+    "exit_code": 0,
+    "seconds": 34.61
+  },
+  {
+    "package": "licentivo-launch/internal/mailer",
+    "exit_code": 0,
+    "seconds": 2.04
+  },
+  {
+    "package": "licentivo-launch/internal/origin",
+    "exit_code": 0,
+    "seconds": 0.05
+  },
+  {
+    "package": "licentivo-launch/internal/payments",
+    "exit_code": 0,
+    "seconds": 0.95
+  },
+  {
+    "package": "licentivo-launch/internal/ports",
+    "exit_code": 0,
+    "seconds": 0.03
+  },
+  {
+    "package": "licentivo-launch/internal/security",
+    "exit_code": 0,
+    "seconds": 2.11
+  },
+  {
+    "package": "licentivo-launch/internal/storage",
+    "exit_code": 0,
+    "seconds": 10.0
+  },
+  {
+    "package": "licentivo-launch/pkg/launchclient",
+    "exit_code": 0,
+    "seconds": 5.49
+  }
+]

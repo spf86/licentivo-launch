@@ -1,0 +1,72 @@
+{
+  "actual_business_callback_counts": {
+    "a26a62aa-bc22-4690-8750-352a679acb51": 2,
+    "67aa1755-43ca-449f-a9c3-0cb3996937aa": 2
+  },
+  "server_reservations": [
+    {
+      "operation_id": "67aa1755-43ca-449f-a9c3-0cb3996937aa",
+      "status": "committed",
+      "quantity": "1"
+    },
+    {
+      "operation_id": "a26a62aa-bc22-4690-8750-352a679acb51",
+      "status": "committed",
+      "quantity": "1"
+    }
+  ],
+  "client_journals": [
+    {
+      "version": 1,
+      "operation_id": "a26a62aa-bc22-4690-8750-352a679acb51",
+      "reservation_id": "5db5a123-7a17-4b64-be55-5f43e15a1e26",
+      "state": "committed",
+      "feature": "export",
+      "quantity": 1
+    },
+    {
+      "version": 1,
+      "operation_id": "67aa1755-43ca-449f-a9c3-0cb3996937aa",
+      "reservation_id": "caa86446-86dc-4db8-9bc4-98a71baf3972",
+      "state": "committed",
+      "feature": "export",
+      "quantity": 1
+    }
+  ],
+  "observations": [
+    {
+      "time": "2026-10-31T16:49:32Z",
+      "name": "pre-fork initialized SDK workers share one metered job 1",
+      "passed": false,
+      "operation_id": "a26a62aa-bc22-4690-8750-352a679acb51",
+      "callback_count": 2,
+      "process_results": [
+        {
+          "ok": true
+        },
+        {
+          "ok": true
+        }
+      ],
+      "real_server_responses": true,
+      "request_identifiers_unchanged": true
+    },
+    {
+      "time": "2026-10-31T16:49:33Z",
+      "name": "pre-fork initialized SDK workers share one metered job 2",
+      "passed": false,
+      "operation_id": "67aa1755-43ca-449f-a9c3-0cb3996937aa",
+      "callback_count": 2,
+      "process_results": [
+        {
+          "ok": true
+        },
+        {
+          "ok": true
+        }
+      ],
+      "real_server_responses": true,
+      "request_identifiers_unchanged": true
+    }
+  ]
+}

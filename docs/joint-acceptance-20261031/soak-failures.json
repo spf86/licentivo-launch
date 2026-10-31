@@ -1,0 +1,92 @@
+[
+  {
+    "time": "2026-10-31T16:20:46Z",
+    "cycle": 45,
+    "name": "floating real metered export",
+    "passed": false,
+    "operation_id": "8e833c87-274d-40cd-969d-66c72147e99f",
+    "seconds": 0.489,
+    "code": "LAUNCH_LOGIN_REQUIRED",
+    "callback_count": null
+  },
+  {
+    "time": "2026-10-31T16:21:32Z",
+    "cycle": 46,
+    "name": "floating real metered export",
+    "passed": false,
+    "operation_id": "f94907c6-d00b-4a84-bce2-af90b910b252",
+    "seconds": 0.578,
+    "code": "LAUNCH_LOGIN_REQUIRED",
+    "callback_count": null
+  },
+  {
+    "time": "2026-10-31T16:22:16Z",
+    "cycle": 47,
+    "name": "floating real metered export",
+    "passed": false,
+    "operation_id": "49413a55-8893-432e-825b-a66d9f308980",
+    "seconds": 0.5,
+    "code": "LAUNCH_LOGIN_REQUIRED",
+    "callback_count": null
+  },
+  {
+    "time": "2026-10-31T16:23:01Z",
+    "cycle": 48,
+    "name": "floating real metered export",
+    "passed": false,
+    "operation_id": "dd2ecd90-ab95-49f6-83dd-b04772888a42",
+    "seconds": 0.545,
+    "code": "LAUNCH_LOGIN_REQUIRED",
+    "callback_count": null
+  },
+  {
+    "time": "2026-10-31T16:23:46Z",
+    "cycle": 49,
+    "name": "floating real metered export",
+    "passed": false,
+    "operation_id": "617f4609-6bc2-4c3b-bd42-99482005143a",
+    "seconds": 0.611,
+    "code": "LAUNCH_LOGIN_REQUIRED",
+    "callback_count": null
+  },
+  {
+    "time": "2026-10-31T16:24:31Z",
+    "cycle": 50,
+    "name": "floating real metered export",
+    "passed": false,
+    "operation_id": "c78713f2-6d02-4e5e-a5b3-1a9d1c3944a3",
+    "seconds": 0.44,
+    "code": "LAUNCH_LOGIN_REQUIRED",
+    "callback_count": null
+  },
+  {
+    "time": "2026-10-31T16:25:16Z",
+    "cycle": 51,
+    "name": "floating real metered export",
+    "passed": false,
+    "operation_id": "ec0983b6-14c0-4141-a27b-c223fa271d19",
+    "seconds": 0.582,
+    "code": "LAUNCH_LOGIN_REQUIRED",
+    "callback_count": null
+  },
+  {
+    "time": "2026-10-31T16:26:03Z",
+    "cycle": 52,
+    "name": "floating real metered export",
+    "passed": false,
+    "operation_id": "41a6c235-0def-48bd-bee8-98a226e34639",
+    "seconds": 0.693,
+    "code": "LAUNCH_LOGIN_REQUIRED",
+    "callback_count": null
+  },
+  {
+    "time": "2026-10-31T16:26:47Z",
+    "cycle": 53,
+    "name": "floating real metered export",
+    "passed": false,
+    "operation_id": "11a4d49e-2b2b-43e7-8d9c-9c6c32e5a82e",
+    "seconds": 0.559,
+    "code": "LAUNCH_LOGIN_REQUIRED",
+    "callback_count": null
+  }
+]

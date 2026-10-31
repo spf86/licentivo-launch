@@ -89,7 +89,7 @@ def extended_claims(c):
     if 'capabilities' not in c: return
     x=c['capabilities'];allowed={'license_model','session_id','session_expires_at','app_version','version_released_at','maintenance_until','launch_connection_id','environment','binding_version'}
     if not isinstance(x,dict) or set(x)-allowed or x.get('license_model') not in ['node_locked','floating']: raise ValueError('invalid license capabilities')
-    if any(k in x for k in ['launch_connection_id','environment','binding_version']) and (not UUID.fullmatch(x.get('launch_connection_id','')) or x.get('environment') not in ['live','sandbox'] or type(x.get('binding_version')) is not int or x['binding_version']<1 or x['license_model']!='node_locked' or not UUID.fullmatch(x.get('session_id','')) or x.get('session_expires_at',0)<=c['issued_at'] or c['expires_at']>x['session_expires_at'] or c.get('runtime_policy',{}).get('heartbeat_seconds',0)<600 or policy_mode(c)=='permanent' or c['runtime_policy']['offline_seconds']>86400): raise ValueError('invalid Launch account session')
+    if any(k in x for k in ['launch_connection_id','environment','binding_version']) and (not UUID.fullmatch(x.get('launch_connection_id','')) or x.get('environment') not in ['live','sandbox'] or type(x.get('binding_version')) is not int or x['binding_version']<1 or not UUID.fullmatch(x.get('session_id','')) or x.get('session_expires_at',0)<=c['issued_at'] or c['expires_at']>x['session_expires_at'] or c.get('runtime_policy',{}).get('heartbeat_seconds',0)<600 or policy_mode(c)=='permanent' or c['runtime_policy']['offline_seconds']>86400): raise ValueError('invalid Launch account session')
     for field in ['session_expires_at','version_released_at','maintenance_until']:
         if field in x and (type(x[field]) is not int or not 0<=x[field]<=253402300799): raise ValueError('invalid entitlement date')
     if 'app_version' in x and (not isinstance(x['app_version'],str) or not re.fullmatch(r'(0|[1-9][0-9]{0,8})\.(0|[1-9][0-9]{0,8})\.(0|[1-9][0-9]{0,8})',x['app_version'])): raise ValueError('invalid application version')
@@ -136,14 +136,67 @@ class APIError(Exception):
 class _NoRedirect(urllib.request.HTTPRedirectHandler):
     def redirect_request(self,*args,**kwargs): return None
 
+def _machine_display_details():
+    info={'os_version':'','cpu':'','memory_mb':0,'gpu':'','system_type':platform.machine(),'storage_gb':0}
+    try:
+        import shutil
+        info['storage_gb']=shutil.disk_usage(Path.home().anchor or '/').total//1073741824
+    except Exception: pass
+    try:
+        if platform.system()=='Windows':
+            import winreg,ctypes
+            with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,r'SOFTWARE\Microsoft\Windows NT\CurrentVersion',access=winreg.KEY_READ|winreg.KEY_WOW64_64KEY) as key:
+                def value(name):
+                    try:return str(winreg.QueryValueEx(key,name)[0])
+                    except OSError:return ''
+                name=value('ProductName');build=value('CurrentBuildNumber')
+                if build.isdigit() and int(build)>=22000:name=name.replace('Windows 10','Windows 11')
+                info['os_version']=(name+' '+value('DisplayVersion')+' ('+build+')').strip()
+            with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,r'HARDWARE\DESCRIPTION\System\CentralProcessor\0') as key:info['cpu']=winreg.QueryValueEx(key,'ProcessorNameString')[0]
+            memory=ctypes.c_ulonglong()
+            if ctypes.windll.kernel32.GetPhysicallyInstalledSystemMemory(ctypes.byref(memory)):info['memory_mb']=memory.value//1024
+            cards=[]
+            with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,r'SYSTEM\CurrentControlSet\Control\Video') as key:
+                for i in range(min(winreg.QueryInfoKey(key)[0],32)):
+                    try:
+                        with winreg.OpenKey(key,winreg.EnumKey(key,i)+r'\0000') as card:
+                            name=winreg.QueryValueEx(card,'DriverDesc')[0]
+                            if name not in cards:cards.append(name)
+                    except OSError:pass
+            info['gpu']=' / '.join(cards)
+        elif platform.system()=='Darwin':
+            def run(*args):
+                try:return subprocess.check_output(args,timeout=2,text=True,stderr=subprocess.DEVNULL).strip()
+                except Exception:return ''
+            info['os_version']=run('/usr/bin/sw_vers','-productName')+' '+run('/usr/bin/sw_vers','-productVersion')
+            info['cpu']=run('/usr/sbin/sysctl','-n','machdep.cpu.brand_string');info['memory_mb']=int(run('/usr/sbin/sysctl','-n','hw.memsize') or '0')//1048576
+        else:
+            for line in Path('/etc/os-release').read_text().splitlines():
+                if line.startswith('PRETTY_NAME='):info['os_version']=line.split('=',1)[1].strip('"');break
+            values={}
+            for line in Path('/proc/cpuinfo').read_text().splitlines():
+                if ':' in line:
+                    key,value=line.split(':',1);values.setdefault(key.strip(),value.strip())
+            info['cpu']=next((values[key] for key in ['model name','Hardware','Processor'] if values.get(key)),'')
+            if not info['cpu'] and values.get('CPU part'):info['cpu']='ARM CPU (implementer '+values.get('CPU implementer','')+', part '+values['CPU part']+')'
+            info['memory_mb']=os.sysconf('SC_PHYS_PAGES')*os.sysconf('SC_PAGE_SIZE')//1048576
+    except Exception:pass
+    for key in ['os_version','cpu','gpu','system_type']:info[key]=''.join(c for c in str(info[key]) if ord(c)>=32 and not 127<=ord(c)<=159)[:240 if key=='gpu' else 40 if key=='system_type' else 160].strip()
+    return info
+
 class Client:
     def __init__(self, config):
         self.feature_task_lock = threading.Lock()
+        self.feature_task_pid = os.getpid()
         self.config=dict(config); self.config.setdefault('license_key',''); self.config['base_url']=(self.config.get('base_url') or 'https://www.licentivo.com').rstrip('/');
         if not self.config.get('cache_path'): self.config['cache_path']=str(Path(os.environ.get('LOCALAPPDATA') or os.environ.get('XDG_CACHE_HOME') or str(Path.home()/'.cache'))/'Licentivo'/hashlib.sha256((self.config['base_url']+'\n'+self.config['product_id']).encode()).hexdigest()/'lease.json')
         self.profile,self.config['device_id']=machine_profile(config['product_id']); self.session_id=str(uuid.uuid4()); config=self.config; u=urllib.parse.urlsplit(config['base_url'])
+        if not str(config.get('device_name') or '').strip():
+            name=''.join(c for c in platform.node().strip() if ord(c)>=32 and not 127<=ord(c)<=159)[:120]
+            config['device_name']=name or {'windows':'Windows','darwin':'macOS','linux':'Linux'}[self.profile['platform']]
         if u.username or not u.hostname or u.query or u.fragment or u.path not in ['','/']: raise ValueError('base_url must be an origin')
         if u.scheme!='https' and not (config.get('allow_http') is True and u.scheme=='http' and u.hostname in ['localhost','127.0.0.1','::1']): raise ValueError('HTTPS required')
+        self.display_details=_machine_display_details()
         if not re.fullmatch(r'[0-9a-f]{64}',config['device_id']) or config['license_key'] and not re.fullmatch(r'lv_(lic|tmp)_[A-Za-z0-9_-]{43}',config['license_key']): raise ValueError('invalid device/license')
         if not config['trusted_keys'] or any(len(decode(k))!=32 for k in config['trusted_keys'].values()): raise ValueError('pin a public key')
         self.lock=threading.RLock(); self.state=None; self.interval=3600; self.wall=0; self.tick=time.monotonic(); self.stop=threading.Event(); self.thread=None; self.refresh_thread=None; self.closed=False
@@ -156,12 +209,16 @@ class Client:
         if not config['license_key'] and not config.get('identity_token') and not self.auth and not self.signed_out: raise ValueError('enter a license key or temporary activation code')
         try:
             p=Path(config.get('cache_path','')); s=loads(p.read_bytes()) if p.is_file() and p.stat().st_size<=LIMIT else None
-            if not self.signed_out and s and s['version']==1 and s['license_hash']==self._hash() and time.time()+300>=s['observed_at']:
+            if not self.signed_out and not self.logout_journal['signed_out'] and s and s['version']==1 and s['license_hash']==self._hash() and time.time()+300>=s['observed_at']:
                 c=verify(s['lease'],config['trusted_keys'],config['product_id'],config['device_id'])
                 if policy_mode(c)!='none' and c.get('capabilities',{}).get('license_model')!='floating' and c.get('capabilities',{}).get('app_version','')==config.get('app_version',''):
                     self.state=s;self.wall=s['observed_at'];self.interval=c.get('runtime_policy',{}).get('heartbeat_seconds',3600)
         except Exception: pass  # A corrupt/expired cache never grants access.
         self._publish(False)
+
+    def device_info(self):
+        value=self.config['device_id']
+        return {'name':self.config.get('device_name',''),'code':(value[:4]+'-'+value[-4:]).upper(),'platform':self.profile['platform'],**self.display_details}
 
     def _hash(self): return hashlib.sha256(self.config['identity_token'].encode()).hexdigest() if self.config.get('identity_token') else self.auth['source_hash'] if not self.config['license_key'] and self.auth else hashlib.sha256(self.config['license_key'].encode()).hexdigest()
     def _temporary(self): return bool(self.config['license_key']) or bool(self.config.get('identity_token')) or self.auth is not None
@@ -197,7 +254,7 @@ class Client:
         licentivo_logout.accept_login(self, result.get('logout_ticket'), APIError)
         if result.get('logout_ticket'):
             self._prepare_credential();self.auth['logout_ticket']=result['logout_ticket'];self.auth_dirty=True;self._save_credential()
-        if not self._temporary() or self.auth and self.auth.get('device_key'): return
+        if not self._temporary() or self.auth and self.auth.get('device_key') and not result.get('device_key'): return
         if not re.fullmatch(r'lv_dev_[A-Za-z0-9_-]{43}',result.get('device_key','')):
             if not self.config['license_key'].startswith('lv_tmp_') and not self.config.get('identity_token'): return
             raise ValueError('server omitted device credential')
@@ -252,6 +309,7 @@ class Client:
                     retry=int(request_headers.get('Retry-After','0')) if request_headers.get('Retry-After','0').isdigit() else 0
                     error=APIError(status,env.get('error',{}).get('code','UNEXPECTED_RESPONSE'),env.get('request_id',''),min(86400,retry))
                     if status>=500: last=error;continue
+                    if licentivo_logout.authorization_rejected(error): self._invalidate()
                     raise error
                 return env['data']
             except (urllib.error.URLError,TimeoutError,OSError) as e: last=e
@@ -302,6 +360,13 @@ class Client:
         return licentivo_logout.logout(self)
     def retry_pending_logouts(self):
         return licentivo_logout.retry(self)
+    def _heartbeat_delay(self):
+        delay=max(600,self.interval)*random.uniform(1,1.1)
+        try:
+            remaining=self._check()['expires_at']-time.time()
+            if remaining>0: delay=min(delay,max(1,remaining*.8))
+        except Exception: pass
+        return max(delay,self.retry_at-time.time())
     def start_heartbeat(self,on_error=None):
         try:
             if self.interval==0: return
@@ -309,7 +374,7 @@ class Client:
         if self.thread and self.thread.is_alive(): return
         self.stop.clear()
         def run():
-            while self.interval and not self.stop.wait(max(max(600,self.interval)*random.uniform(1,1.1),self.retry_at-time.time())):
+            while self.interval and not self.stop.wait(self._heartbeat_delay()):
                 try: self.heartbeat()
                 except Exception as e:
                     if on_error: on_error(e)
@@ -332,7 +397,7 @@ class Client:
         if x and (x.get('app_version','')!=self.config.get('app_version','') or x['license_model']=='floating' and x.get('session_id')!=self.session_id): raise ValueError('lease belongs to another version/session')
     def _body(self,activation=''):
         identity={k:self.config.get(k,'') for k in ['identity_token','launch_connection_id','environment']} if not (self.auth or {}).get('device_key') and self.config.get('identity_token') else {}
-        return {k:self.config.get(k,'') for k in ['product_id','device_id','device_name','app_version']} | {'license_key':self._runtime_key(),'activation_id':activation,'session_id':self.session_id,'device_profile':self.profile} | ({'request_logout_ticket':True} if not (self.auth or {}).get('logout_ticket') else {}) | ({'launch_connection_id':self.config['launch_connection_id'],'environment':self.config.get('environment','')} if self.config.get('launch_connection_id') else {}) | identity
+        return {k:self.config.get(k,'') for k in ['product_id','device_id','device_name','app_version']} | {'license_key':self._runtime_key(),'activation_id':activation,'session_id':self.session_id,'device_profile':self.profile,'device_info':self.display_details} | ({'request_logout_ticket':True} if not (self.auth or {}).get('logout_ticket') else {}) | ({'launch_connection_id':self.config['launch_connection_id'],'environment':self.config.get('environment','')} if self.config.get('launch_connection_id') else {}) | identity
     def start(self,on_error=None):
         if self.closed: raise RuntimeError('client is closed')
         try:
@@ -383,19 +448,34 @@ class Client:
                 raise
     def offline_request(self,operation='activate'):
         with self.lock:
-            self._prepare_credential()
+            if self.signed_out: raise ValueError('enter a new activation input before exporting an offline request')
             if operation not in ['activate','deactivate']: raise ValueError('invalid offline operation')
-            activation=''
-            if operation=='deactivate': activation=self._check()['activation_id'];self._invalidate()
-            return self._body(activation) | {'version':1,'request_id':str(uuid.uuid4()),'created_at':int(time.time()),'operation':operation}
+            self._prepare_credential()
+            activation=self._check()['activation_id'] if operation=='deactivate' else ''
+            request=self._body(activation) | {'version':1,'request_id':str(uuid.uuid4()),'created_at':int(time.time()),'operation':operation}
+            if operation=='activate':
+                self.auth['offline_request_id']=request['request_id'];self.auth_dirty=True;self._save_credential();licentivo_logout.remember_offline_request(self,request['request_id'])
+            else:
+                failure=licentivo_logout.deny(self,False)
+                if failure: raise failure
+            return request
     def import_offline(self,request,response):
         with self.lock:
             if self.signed_out: raise APIError(403,'LAUNCH_LOGIN_REQUIRED')
-            if response.get('version')!=1 or request.get('operation')!='activate' or response.get('operation')!='activate' or response.get('request_id')!=request.get('request_id') or any(request.get(k)!=self._body().get(k) for k in ['product_id','device_id','license_key']): raise ValueError('offline context mismatch')
+            key=request.get('license_key')
+            token=request.get('identity_token','');source=token or key
+            same_input=key==self._runtime_key() and (not token or token==self.config.get('identity_token'))
+            same_source=isinstance(source,str) and bool(source) and (same_input or (self.auth or {}).get('device_key') and hashlib.sha256(source.encode()).hexdigest()==self.auth.get('source_hash'))
+            if response.get('version')!=1 or request.get('operation')!='activate' or response.get('operation')!='activate' or response.get('request_id')!=request.get('request_id') or any(request.get(k)!=self.config.get(k) for k in ['product_id','device_id']) or not same_source: raise ValueError('offline context mismatch')
+            current=self.logout_journal.get('offline_request_id','') if self.logout_journal['signed_out'] else (self.auth or {}).get('offline_request_id') or self.logout_journal.get('offline_request_id','')
+            if current and current!=request.get('request_id') or self.logout_journal['signed_out'] and not current: raise ValueError('offline approval is no longer current; generate a fresh request')
             result=response['result'];c=verify(result['lease'],self.config['trusted_keys'],self.config['product_id'],self.config['device_id']);self._context(c)
             if policy_mode(c)=='none' or c.get('offline_request_id')!=request['request_id'] or c['activation_id']!=result['activation_id']: raise ValueError('offline signature context mismatch')
-            self._accept_credential(result)
-            self.wall=time.time();self.tick=time.monotonic();self.state={'version':1,'license_hash':self._hash(),'lease':result['lease'],'observed_at':int(self.wall)};self.interval=c['runtime_policy']['heartbeat_seconds'];self._save();self._publish(False);return c
+            self._accept_credential(result);self._prepare_credential();self.auth['offline_request_id']=request['request_id'];self.auth_dirty=True;self._save_credential()
+            self.wall=time.time();self.tick=time.monotonic();self.state={'version':1,'license_hash':self._hash(),'lease':result['lease'],'observed_at':int(self.wall)};self.interval=c.get('runtime_policy',{}).get('heartbeat_seconds',3600)
+            try: self._save()
+            except Exception: self._invalidate();raise
+            self._publish(False);return c
     def _publish(self,online,error=None):
         before=self.status();self.snapshot=(self.state,self.wall,self.tick);self.online=online;self.last_error=error
         if isinstance(error,APIError) and error.retry_after_seconds: self.retry_at=time.time()+error.retry_after_seconds
@@ -404,9 +484,9 @@ class Client:
             callback=self.on_status_changed
             threading.Thread(target=lambda:callback(after),daemon=True).start()
     def status(self):
-        if self.signed_out: return dict(state='released',allowed=False,code='LAUNCH_LOGIN_REQUIRED',request_id='',retryable=False,lease_valid_until=0)
+        if self.signed_out: return dict(state='released',allowed=False,code='LAUNCH_LOGIN_REQUIRED',request_id='',retryable=False,lease_valid_until=0,device=self.device_info())
         state,wall,tick=self.snapshot
-        result={'state':'verification_required','allowed':False,'code':'','request_id':'','retryable':False,'lease_valid_until':0}
+        result={'device':self.device_info(),'state':'verification_required','allowed':False,'code':'','request_id':'','retryable':False,'lease_valid_until':0}
         if self.last_error:
             result.update(code=getattr(self.last_error,'code','NETWORK_UNAVAILABLE'),request_id=getattr(self.last_error,'request_id',''),retryable=getattr(self.last_error,'retryable',True))
         try:

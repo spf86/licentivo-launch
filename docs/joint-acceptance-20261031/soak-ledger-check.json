@@ -1,0 +1,47 @@
+{
+  "time_utc": "2026-10-31T19:54:27Z",
+  "passed": true,
+  "consistent_read_only_database_snapshot": true,
+  "completed_soak_operations_in_log_snapshot": 947,
+  "per_product": [
+    {
+      "product": "fixed",
+      "feature": "export",
+      "period": "lifetime",
+      "reservation_count": 320,
+      "committed_quantity": 320,
+      "cumulative_used": 320,
+      "consistent_used_value": true,
+      "usage_matches_committed_quantity": true,
+      "pending_operations": []
+    },
+    {
+      "product": "floating",
+      "feature": "export",
+      "period": "lifetime",
+      "reservation_count": 308,
+      "committed_quantity": 308,
+      "cumulative_used": 308,
+      "consistent_used_value": true,
+      "usage_matches_committed_quantity": true,
+      "pending_operations": []
+    },
+    {
+      "product": "meter",
+      "feature": "export",
+      "period": "lifetime",
+      "reservation_count": 320,
+      "committed_quantity": 320,
+      "cumulative_used": 320,
+      "consistent_used_value": true,
+      "usage_matches_committed_quantity": true,
+      "pending_operations": []
+    }
+  ],
+  "completed_operation_mismatches": {},
+  "additional_database_operations_outside_log_snapshot": [
+    "22669c2b-29fd-4c4b-bc39-e4b0b6fa5653"
+  ],
+  "known_manual_reauthentication_probe_operation": "22669c2b-29fd-4c4b-bc39-e4b0b6fa5653",
+  "unknown_reservation_states": []
+}

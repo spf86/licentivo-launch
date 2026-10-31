@@ -1,0 +1,32 @@
+{
+  "generated_at_utc": "2026-10-31T20:42:49.374801+00:00",
+  "owned_issues": [
+    "N01",
+    "N02",
+    "N03",
+    "N05",
+    "N06",
+    "N07",
+    "N08"
+  ],
+  "integrated_upstream_issues": [
+    "N04",
+    "N09 (Python)"
+  ],
+  "http_mysql_tests_passed": 10,
+  "browser_logic_tests_passed": 65,
+  "language_lifecycle_scenarios_passed": 18,
+  "language_metered_receipts_committed": 9,
+  "sdk_build_and_test_steps_passed": 18,
+  "official_python_tasks_linux_passed": 10,
+  "official_python_tasks_windows_passed": 8,
+  "official_python_tasks_windows_fork_skipped": 2,
+  "windows_dpapi_passed": 1,
+  "long_task_seconds_last_progress": 904.15,
+  "long_task_csv_rows": 903,
+  "long_task_renewals": 15,
+  "long_task_usage_delta": 1,
+  "long_task_repeated_callbacks": 0,
+  "public_package_published": false,
+  "remaining_upstream_boundary": "Non-Python paths have no automatic reservation renewal in the reviewed source; >15-minute work was not certified for those languages."
+}

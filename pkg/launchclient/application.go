@@ -28,6 +28,16 @@ type Runtime interface {
 	Deactivate(context.Context) error
 	Close()
 }
+
+// MeteredRuntime is an optional extension for custom adapters. Metered work
+// must never fall back to RunFeature, which does not reserve or settle quota.
+type MeteredRuntime interface {
+	RunMeteredFeature(context.Context, string, int64, string, func() error) error
+	ResolveMeteredFeature(context.Context, string, bool) error
+}
+
+var ErrMeteringUnsupported = errors.New("runtime does not support metered feature tasks")
+
 type RuntimeConfig struct {
 	Identity    Identity
 	CachePath   string
@@ -300,6 +310,38 @@ func (a *Application) RunFeature(feature string, action func() error) error {
 	// Business actions may call back into the account lifecycle, including Logout
 	// or Close. The runtime owns authorization and synchronization of its state.
 	return runtime.RunFeature(feature, action)
+}
+
+// RunMeteredFeature reserves quota and delegates durable execution to the SDK.
+// Keep operationID unchanged when retrying the same business operation.
+func (a *Application) RunMeteredFeature(ctx context.Context, feature string, quantity int64, operationID string, action func() error) error {
+	a.mu.Lock()
+	runtime := a.runtime
+	a.mu.Unlock()
+	if runtime == nil {
+		return ErrNotStarted
+	}
+	metered, ok := runtime.(MeteredRuntime)
+	if !ok {
+		return ErrMeteringUnsupported
+	}
+	return metered.RunMeteredFeature(ctx, feature, quantity, operationID, action)
+}
+
+// ResolveMeteredFeature settles an interrupted task after the application has
+// established the actual business outcome. It never executes business work.
+func (a *Application) ResolveMeteredFeature(ctx context.Context, operationID string, succeeded bool) error {
+	a.mu.Lock()
+	runtime := a.runtime
+	a.mu.Unlock()
+	if runtime == nil {
+		return ErrNotStarted
+	}
+	metered, ok := runtime.(MeteredRuntime)
+	if !ok {
+		return ErrMeteringUnsupported
+	}
+	return metered.ResolveMeteredFeature(ctx, operationID, succeeded)
 }
 
 // Close is ordinary shutdown. Only the official SDK owns its persistent files.

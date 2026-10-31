@@ -1,0 +1,7 @@
+{"Time":"2026-10-31T13:14:47.921255575Z","Action":"start","Package":"internal_app"}
+{"Time":"2026-10-31T13:14:47.948066806Z","Action":"run","Package":"internal_app","Test":"TestProductUploadRoundTrip"}
+{"Time":"2026-10-31T13:14:47.948135203Z","Action":"output","Package":"internal_app","Test":"TestProductUploadRoundTrip","Output":"=== RUN   TestProductUploadRoundTrip\n"}
+{"Time":"2026-10-31T13:14:48.870331118Z","Action":"output","Package":"internal_app","Test":"TestProductUploadRoundTrip","Output":"--- PASS: TestProductUploadRoundTrip (0.92s)\n"}
+{"Time":"2026-10-31T13:14:48.870380316Z","Action":"pass","Package":"internal_app","Test":"TestProductUploadRoundTrip","Elapsed":0.92}
+{"Time":"2026-10-31T13:14:48.870424014Z","Action":"output","Package":"internal_app","Output":"PASS\n"}
+{"Time":"2026-10-31T13:14:48.885363118Z","Action":"pass","Package":"internal_app","Elapsed":0.964}

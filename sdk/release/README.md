@@ -1,6 +1,14 @@
 # Licentivo Launch SDKs
 
-Maven Central 0.1.4 is awaiting publication. Until then, use Maven version 0.1.3 or the Java JAR from the [GitHub Release](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.4). [Publication status](docs/publication-0.1.4.json).
+**Add merchant-account login and software licensing to your app in just one day.**
+
+With your existing application and Launch store configured, install one package,
+copy the generated connection function, and add login plus protected business
+actions. Follow the [one-day integration plan](docs/one-day-integration.md) and
+[manual integration guide](docs/manual-integration.md), then verify the sandbox
+purchase-to-use flow before production rollout.
+
+The public [v0.1.8 Release](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.8) describes Launch package 0.1.8 with embedded official SDK 0.11.8. Check the [application integration guide](docs/software-sdk-integration.md) for the account-exchange flow and backend requirements. Match artifact checksums and source revisions when checking whether a public package contains a local fix.
 
 [Website](https://www.licentivo.com/en/launch.html) · [Documentation](https://www.licentivo.com/en/launch-docs.html) · [Source code](https://github.com/spf86/licentivo-launch-sdk)
 
@@ -8,7 +16,7 @@ Account login and license-protected application operations in **Go, Python, C#,
 Java, JavaScript/TypeScript, Rust, Ruby, C and C++**. MIT licensed.
 
 Install only the Launch package for your language. Each package embeds the
-reviewed Licentivo SDK 0.11.2 and manages its adapter and SDK linking. Ordinary
+reviewed Licentivo SDK 0.11.8 and manages its adapter and SDK linking. Ordinary
 language dependencies still use their package manager.
 
 The Launch merchant address is required at initialization. Select your existing
@@ -19,19 +27,19 @@ configuration file or manual entry of two internal product IDs is required.
 
 ## Install into your application
 
-Version: **0.1.4**, with official SDK **0.11.2**. The commands below target this release. Publication and fresh-consumer results are recorded in [publication status](docs/registry-status.json) and [verification receipts](docs/registry-verification.json); the [0.1.4 release record](docs/publication-0.1.4.md) describes this update.
+Version: **0.1.8**, with official SDK **0.11.8**, paired with the Launch server **0.3.6-beta** account-exchange source baseline. The commands below target this release. Check the version, source revision and checksums inside [publication status](docs/registry-status.json) and [verification receipts](docs/registry-verification.json); historical reports do not certify a newer package. The [0.1.8 release notes](docs/releases/0.1.8.md) describe this update.
 
-This update strengthens account logout persistence, restore coordination and the matching official runtime protections across all nine languages. Install one Launch package; it includes its reviewed Licentivo runtime.
+This update includes device-name/system-information reporting and native portability changes while retaining account ownership, recovery and logout retry behavior. Install one Launch package; it includes its reviewed Licentivo runtime. Confirm the matching backend and database revision before deploying the reviewed device-information clients.
 
 | Language | Registry command / distribution | API reference |
 | --- | --- | --- |
-| Go | `go get github.com/spf86/licentivo-launch-sdk/pkg/launchclient@v0.1.4` | [Go](pkg/launchclient/README.md) |
-| Python | `python -m pip install "licentivo-launch==0.1.4"` | [Python](sdk/python/README.md) |
-| C# | `dotnet add package Licentivo.Launch --version 0.1.4` | [.NET](sdk/csharp/README.md) |
-| Java | Maven/Gradle: `com.licentivo.launch:launch-client:0.1.4` | [Java](sdk/java/README.md) |
-| Node.js / TypeScript | `npm install @licentivo/launch@0.1.4` | [Node.js](sdk/javascript/README.md) |
-| Rust | `cargo add licentivo-launch@=0.1.4` | [Rust](sdk/rust/README.md) |
-| Ruby | `gem install licentivo-launch --version 0.1.4` | [Ruby](sdk/ruby/README.md) |
+| Go | `go get github.com/spf86/licentivo-launch-sdk/pkg/launchclient@v0.1.8` | [Go](pkg/launchclient/README.md) |
+| Python | `python -m pip install "licentivo-launch==0.1.8"` | [Python](sdk/python/README.md) |
+| C# | `dotnet add package Licentivo.Launch --version 0.1.8` | [.NET](sdk/csharp/README.md) |
+| Java | Maven/Gradle: `com.licentivo.launch:launch-client:0.1.8` | [Java](sdk/java/README.md) |
+| Node.js / TypeScript | `npm install @licentivo/launch@0.1.8` | [Node.js](sdk/javascript/README.md) |
+| Rust | `cargo add licentivo-launch@=0.1.8` | [Rust](sdk/rust/README.md) |
+| Ruby | `gem install licentivo-launch --version 0.1.8` | [Ruby](sdk/ruby/README.md) |
 | C / C++ | Versioned CMake packages in [GitHub Releases](https://github.com/spf86/licentivo-launch-sdk/releases) | [C/C++](sdk/native/README.md) |
 
 Go requires 1.26+, Python 3.10+, .NET 8+, Java 17+, Node.js 20.3+, Rust 1.85+,
@@ -49,9 +57,13 @@ same APIs and automatically filled parameters.
 
 Initialization does not authorize a protected operation. Log in with the
 customer's merchant account, then execute protected business code through the
-package's feature guard. Preserve the SDK lifecycle for heartbeats and use only
-verified, policy-valid grants for offline operation. Explicit denial must not
-fall back to offline authorization.
+package's feature guard. The wrapper obtains a short-lived identity assertion
+from Launch's `/identity` endpoint and passes it in memory to the official SDK
+for `/api/v1/launch/exchange` on Licentivo. The removed `/credential` endpoint
+returns HTTP 410 (`LICENSE_CREDENTIAL_REMOVED`); it no longer supplies keys.
+Launch Restore confirms the account online and obtains a fresh assertion.
+Applications needing offline startup use the official SDK's recovery contract;
+explicit denial must not fall back to offline authorization.
 
 The [Launch server](https://github.com/spf86/licentivo-launch) manages merchant
 accounts, payments and entitlement delivery. This repository contains client

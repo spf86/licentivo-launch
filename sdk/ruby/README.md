@@ -1,16 +1,16 @@
-# Launch Ruby 0.1.4
+# Launch Ruby 0.1.8
 
 [Website](https://www.licentivo.com/en/launch.html) · [Documentation](https://www.licentivo.com/en/launch-docs.html) · [Source code](https://github.com/spf86/licentivo-launch-sdk)
 
-> Local account-exchange changes are unpublished. Login uses a short-lived identity assertion; Launch calculates purchased dates and Licentivo owns runtime permission. See the repository guide docs/account-purchase-boundary.md.
+> This README describes the current account-exchange source: Launch package 0.1.8 with embedded official SDK 0.11.8, paired with Launch server 0.3.6-beta. Login obtains a short-lived identity assertion; Licentivo owns runtime permission. Check [backend requirements, migration and release evidence](https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/sdk-compatibility.md) and the [account boundary](https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/account-purchase-boundary.md). A public version number alone does not certify uncommitted local changes.
 
 Ruby 3.1+. Install only the Launch gem matching the platform:
 
 ```sh
-gem install licentivo-launch --version 0.1.4
+gem install licentivo-launch --version 0.1.8
 ```
 
-SDK 0.11.2 Ruby code, its private native core and Windows curl DLL are included. RubyGems resolves the ordinary base64 dependency. The generic source gem builds its own embedded core automatically and needs normal C11/curl/OpenSSL tools for the platform. No official SDK gem or external native-library override is needed.
+SDK 0.11.8 Ruby code, its private native core and Windows curl DLL are included. RubyGems resolves the ordinary base64 dependency. The generic source gem builds its own embedded core automatically and needs normal C11/curl/OpenSSL tools for the platform. No official SDK gem or external native-library override is needed.
 
 ## Direct initialization and manual lifecycle
 
@@ -40,7 +40,7 @@ Manual development is supported without AI. The combined source bundle includes 
 
 
 <!-- account-store-ownership-2026-10-24 -->
-## Local account logout and session ownership (unpublished)
+## Local account logout and session ownership
 
 Account logout tasks use a separate key in the configured secure store. Custom stores must support multiple opaque keys, atomic value replacement and isolation to the current OS user and host. Account lifecycle operations are coordinated across local instances/processes, independently of the licensing cache directory.
 
@@ -53,3 +53,7 @@ An old instance only changes its own account record and logout task. Repeating a
 The merchant address selects HTTP or HTTPS; failed HTTPS requests never downgrade to HTTP. For an HTTP customer test server, the customer must enable HTTP on the specific Licentivo API key and enable **Allow SDK HTTP (test environment only)** in their own Launch website/security settings. Use `sandbox` and the explicit client option `Application.connect(..., environment: 'sandbox', allow_http: true)`. The generated test integration code includes it after successful checks. `live` requires HTTPS. Old SDK versions must be upgraded; server switches cannot update compiled client URLs. No access to Licentivo’s private network is needed.
 
 See the [setup, failure and HTTPS migration guide in 14 languages](../../docs/http-testing/README.md) ([简体中文](../../docs/http-testing.zh-CN.md)). HTTP does not encrypt credentials; use dedicated test data.
+
+## Metered business tasks
+
+The started Application exposes metered execution and interrupted-task settlement. Use a stable job ID, preserve SDK journals, and check the real business outcome before resolving. Ordinary feature calls do not settle quantity. See [the nine-language API and recovery contract](../../docs/metered-feature-tasks.md). Verify the exact installed artifact includes these APIs; this source does not imply that a public package was republished.

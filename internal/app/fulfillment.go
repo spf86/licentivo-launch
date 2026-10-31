@@ -22,6 +22,12 @@ func (s *Service) reconcilePayment(ctx context.Context, orderID string) error {
 	if payment.Status == "succeeded" {
 		return nil
 	}
+	// Back off before any early return or remote call. Otherwise old checkout
+	// failures can occupy every slot in the worker's bounded payment batch.
+	next := now().Add(2 * time.Minute)
+	if err := s.db.WithContext(ctx).Model(&storage.Payment{}).Where("id = ? AND status IN ('creating','pending','unknown')", payment.ID).Update("next_check_at", next).Error; err != nil {
+		return ErrStorage
+	}
 	if payment.ExternalCheckoutID == nil {
 		if s.RecoveryRequired(ctx) {
 			return problem(409, "RECOVERY_REVIEW_REQUIRED", "请先核对恢复后的交易")
@@ -39,8 +45,6 @@ func (s *Service) reconcilePayment(ctx context.Context, orderID string) error {
 	} else {
 		observed, err = client.QueryPayment(ctx, *payment.ExternalCheckoutID)
 	}
-	next := now().Add(2 * time.Minute)
-	_ = s.db.WithContext(ctx).Model(&payment).Update("next_check_at", next).Error
 	if err != nil {
 		return problem(503, "PAYMENT_QUERY_PENDING", "付款结果暂未明确，系统将继续核实，请勿重复付款")
 	}
@@ -99,6 +103,20 @@ func (s *Service) failAuthorization(ctx context.Context, task storage.SyncTask, 
 	return databaseError(s.db.WithContext(finish).Model(&storage.SyncTask{}).Where("operation_id = ? AND lease_token = ?", task.OperationID, lease).Updates(map[string]any{"status": state, "available_at": now().Add(time.Duration(1<<min(task.Attempts, 10)) * time.Second), "lease_token": nil, "lease_until": nil, "last_error_code": code}).Error)
 }
 
+func (s *Service) processOutstandingPayments(ctx context.Context) error {
+	var outstanding []storage.Payment
+	if err := s.db.WithContext(ctx).Where("status IN ('creating','pending','unknown') AND (next_check_at IS NULL OR next_check_at <= ?)", now()).Order("next_check_at,created_at,id").Limit(10).Find(&outstanding).Error; err != nil {
+		return ErrStorage
+	}
+	for _, payment := range outstanding {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+		_ = s.reconcilePayment(ctx, payment.OrderID)
+	}
+	return nil
+}
+
 func (s *Service) RunCommerce(ctx context.Context) {
 	timer := time.NewTicker(2 * time.Second)
 	defer timer.Stop()
@@ -145,15 +163,7 @@ func (s *Service) RunCommerce(ctx context.Context) {
 				break
 			}
 		}
-		var outstanding []storage.Payment
-		if s.db.WithContext(ctx).Where("status IN ('creating','pending','unknown') AND (next_check_at IS NULL OR next_check_at <= ?)", now()).Order("created_at").Limit(10).Find(&outstanding).Error == nil {
-			for _, p := range outstanding {
-				if ctx.Err() != nil {
-					return
-				}
-				_ = s.reconcilePayment(ctx, p.OrderID)
-			}
-		}
+		_ = s.processOutstandingPayments(ctx)
 		for i := 0; i < 20; i++ {
 			handled, err := s.ProcessAuthorization(ctx)
 			if err != nil || !handled {

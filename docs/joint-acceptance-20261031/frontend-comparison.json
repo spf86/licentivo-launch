@@ -1,0 +1,28 @@
+{
+  "18080": {
+    "brand": "Launch Real Acceptance Lab",
+    "theme": "ocean",
+    "locale": "en",
+    "source_locale": "zh-CN",
+    "translation_ready": false,
+    "assets": {
+      "app.js": "27a25eea66146adb479180c655ac05bd329ee3a00a8060a80b038e72704f1262",
+      "app.css": "1b00927c3f47f9d38cec983d4b29ec36730da406961fab4b1693fd4609164087",
+      "interface.css": "8bd6f0c690ff3fbe25b1e786eeda06fb5456b8bf431cb7e04d7a663703740a59",
+      "order-management.js": "ac81450409edf27ff29282e63af621ef19b49d5653efc0a21a2f58e5261b231d"
+    }
+  },
+  "18092": {
+    "brand": "Licentivo Launch",
+    "theme": "forest",
+    "locale": "en",
+    "source_locale": "zh-CN",
+    "translation_ready": false,
+    "assets": {
+      "app.js": "27a25eea66146adb479180c655ac05bd329ee3a00a8060a80b038e72704f1262",
+      "app.css": "1b00927c3f47f9d38cec983d4b29ec36730da406961fab4b1693fd4609164087",
+      "interface.css": "8bd6f0c690ff3fbe25b1e786eeda06fb5456b8bf431cb7e04d7a663703740a59",
+      "order-management.js": "ac81450409edf27ff29282e63af621ef19b49d5653efc0a21a2f58e5261b231d"
+    }
+  }
+}

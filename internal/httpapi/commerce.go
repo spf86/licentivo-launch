@@ -3,6 +3,7 @@ package httpapi
 import (
 	"io"
 	"net/http"
+	"strconv"
 
 	"licentivo-launch/internal/app"
 )
@@ -99,6 +100,34 @@ func (a *application) registerCommerce(mux *http.ServeMux) {
 	a.route(mux, "GET /api/v1/admin/orders", true, 0, func(w http.ResponseWriter, r *http.Request, p app.Principal) (any, error) {
 		return a.service.AdminOrders(r.Context(), p)
 	})
+	a.route(mux, "GET /api/v1/admin/orders/search", true, 0, func(w http.ResponseWriter, r *http.Request, p app.Principal) (any, error) {
+		q := r.URL.Query()
+		in := app.AdminOrderQuery{Query: q.Get("q"), Status: q.Get("status"), Environment: q.Get("environment")}
+		for name, target := range map[string]*int{"limit": &in.Limit, "offset": &in.Offset} {
+			if q.Has(name) {
+				value, err := strconv.Atoi(q.Get(name))
+				if err != nil || (name == "limit" && value == 0) {
+					return nil, app.ErrInvalid
+				}
+				*target = value
+			}
+		}
+		if q.Has("needs_review") {
+			value, err := strconv.ParseBool(q.Get("needs_review"))
+			if err != nil {
+				return nil, app.ErrInvalid
+			}
+			in.NeedsReview = value
+		}
+		return a.service.SearchAdminOrders(r.Context(), p, in)
+	})
+	a.route(mux, "POST /api/v1/admin/orders/reconcile", true, 10, func(w http.ResponseWriter, r *http.Request, p app.Principal) (any, error) {
+		var in app.ReconcileOrdersInput
+		if err := input(w, r, &in); err != nil {
+			return nil, err
+		}
+		return a.service.ReconcileOrders(r.Context(), p, in)
+	})
 	a.route(mux, "GET /api/v1/admin/operations", true, 0, func(w http.ResponseWriter, r *http.Request, p app.Principal) (any, error) {
 		return a.service.Operations(r.Context(), p)
 	})
@@ -144,21 +173,16 @@ func (a *application) registerCommerce(mux *http.ServeMux) {
 		return a.service.Invoices(r.Context(), p, false)
 	})
 	a.route(mux, "POST /api/v1/orders/{id}/invoice", true, 5, func(w http.ResponseWriter, r *http.Request, p app.Principal) (any, error) {
-		var in app.InvoiceInput
-		if err := input(w, r, &in); err != nil {
-			return nil, err
-		}
-		return a.service.RequestInvoice(r.Context(), p, r.PathValue("id"), in)
+		return nil, &app.Error{Status: http.StatusGone, Code: "INVOICE_REQUESTS_DISABLED", Message: "本站已关闭手工发票申请，请联系商家获取交易凭证"}
 	})
 	a.route(mux, "GET /api/v1/admin/invoices", true, 0, func(w http.ResponseWriter, r *http.Request, p app.Principal) (any, error) {
 		return a.service.Invoices(r.Context(), p, true)
 	})
 	a.route(mux, "POST /api/v1/admin/invoices/{id}", true, 5, func(w http.ResponseWriter, r *http.Request, p app.Principal) (any, error) {
-		var in app.InvoiceDecision
-		if err := input(w, r, &in); err != nil {
-			return nil, err
+		if !p.CanManage() {
+			return nil, app.ErrForbidden
 		}
-		return map[string]bool{"saved": true}, a.service.DecideInvoice(r.Context(), p, r.PathValue("id"), in)
+		return nil, &app.Error{Status: http.StatusGone, Code: "INVOICE_REQUESTS_DISABLED", Message: "本站已关闭手工发票处理"}
 	})
 	a.route(mux, "GET /api/v1/admin/refunds", true, 0, func(w http.ResponseWriter, r *http.Request, p app.Principal) (any, error) {
 		return a.service.Refunds(r.Context(), p, true)

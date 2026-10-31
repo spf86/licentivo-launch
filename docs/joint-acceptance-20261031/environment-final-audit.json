@@ -1,0 +1,49 @@
+{
+  "observed_at_utc": "2026-10-31T19:51:36Z",
+  "services": {
+    "launch-acceptance.service": {
+      "ActiveState": "active",
+      "SubState": "running",
+      "MainPID": "110102",
+      "NRestarts": "0",
+      "MemoryCurrent": "12271616",
+      "MemoryPeak": "97787904",
+      "running_executable_sha256": "941c5c8cae9e5565a1791f82e80a13ab17119e70e3e0ef8bf82fd714919d6da7",
+      "readiness_status": 200
+    },
+    "launch-joint-acceptance.service": {
+      "ActiveState": "active",
+      "SubState": "running",
+      "MainPID": "110120",
+      "NRestarts": "0",
+      "MemoryCurrent": "12017664",
+      "MemoryPeak": "166207488",
+      "running_executable_sha256": "b5fb4d0d2696a488bb330b2bf150e6161fbe9362c1179456fdeb97d764e5be7d",
+      "readiness_status": 200
+    },
+    "licentivo-joint-acceptance.service": {
+      "ActiveState": "active",
+      "SubState": "running",
+      "MainPID": "73900",
+      "NRestarts": "0",
+      "MemoryCurrent": "90112000",
+      "MemoryPeak": "155467776",
+      "running_executable_sha256": "80b724b1009e4567b08bf7385ce297e310386700b080659d738c202f254c0945",
+      "readiness_status": 200
+    }
+  },
+  "database_metrics": {
+    "mysql_version": "8.4.11-0ubuntu0.26.04.1",
+    "isolated_orders": 0,
+    "isolated_payments": 0,
+    "isolated_entitlements": 14,
+    "isolated_customers": 6,
+    "disabled_staff_test_fixtures": 2
+  },
+  "sha256_expected": {
+    "launch-acceptance.service": "941c5c8cae9e5565a1791f82e80a13ab17119e70e3e0ef8bf82fd714919d6da7",
+    "launch-joint-acceptance.service": "b5fb4d0d2696a488bb330b2bf150e6161fbe9362c1179456fdeb97d764e5be7d",
+    "licentivo-joint-acceptance.service": "80b724b1009e4567b08bf7385ce297e310386700b080659d738c202f254c0945"
+  },
+  "running_hashes_verified": true
+}

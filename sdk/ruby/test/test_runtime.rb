@@ -34,6 +34,8 @@ thread = Thread.new do
      { operation_id: operation, activation_id: activation, expected_generation: 1, status: 'succeeded' }
     else
      raise 'unexpected SDK route' unless %w[/api/v1/launch/exchange /api/v1/validate /api/v1/heartbeat].include?(path)
+     assert(body['device_name'].is_a?(String) && !body['device_name'].strip.empty?, 'SDK device name missing')
+     assert(body.dig('device_info', 'system_type').is_a?(String) && !body.dig('device_info', 'system_type').empty?, 'SDK display details missing')
      now = Time.now.to_i
      claims = { version: 1, key_id: 'test', tenant_id: connection, product_id: product_id, license_id: '44444444-4444-4444-8444-444444444444', device_id: body['device_id'], activation_id: activation, mode: 'timed', features: ['export'], max_devices: 1, issued_at: now, expires_at: now + 3600, runtime_policy: { offline_mode: 'limited', offline_seconds: 3600, heartbeat_seconds: 600 }, capabilities: { license_model: 'node_locked', launch_connection_id: connection, environment: 'sandbox', session_id: '77777777-7777-4777-8777-777777777777', session_expires_at: now + 3600, binding_version: 1 } }
      payload = JSON.generate(claims)
@@ -54,7 +56,7 @@ begin
   store = LicentivoLaunch::MemoryStore.new
   app = LicentivoLaunch::Application.new(launch, product, store: store, cache_dir: root)
   app.login('a@example.invalid', 'password'); assert(app.run_feature('export') { 42 } == 42); app.close
-  cache = Dir[File.join(root, '**', 'lease.json')].first; assert(cache)
+  cache = Dir.glob('**/lease.json', base: root).map { |name| File.join(root, name) }.first; assert(cache, 'SDK cache missing')
   state[:offline] = true
   app = LicentivoLaunch::Application.new(launch, product, store: store, cache_dir: root)
   begin; app.restore; raise 'Launch selected offline authorization'; rescue LicentivoLaunch::Error; end

@@ -1,0 +1,54 @@
+[
+  {
+    "name": "provided_floating online activation",
+    "passed": true,
+    "scope": "official_sdk_provided_license_separate_from_launch_account",
+    "state": "active",
+    "code": ""
+  },
+  {
+    "name": "provided_floating protected operation",
+    "passed": true,
+    "scope": "official_sdk_provided_license_separate_from_launch_account",
+    "sha256": "ae3767c62949a36c8b403c8a4820242d86f4984240aaa9f7580b9370f1aa9cae"
+  },
+  {
+    "name": "provided_floating isolated offline startup",
+    "passed": true,
+    "scope": "official_sdk_provided_license_separate_from_launch_account",
+    "allowed": false,
+    "code": "URLError"
+  },
+  {
+    "name": "provided_floating confirmed SDK logout",
+    "passed": true,
+    "scope": "official_sdk_provided_license_separate_from_launch_account",
+    "confirmed": true
+  },
+  {
+    "name": "provided_node_locked online activation",
+    "passed": true,
+    "scope": "official_sdk_provided_license_separate_from_launch_account",
+    "state": "active",
+    "code": ""
+  },
+  {
+    "name": "provided_node_locked protected operation",
+    "passed": true,
+    "scope": "official_sdk_provided_license_separate_from_launch_account",
+    "sha256": "ae3767c62949a36c8b403c8a4820242d86f4984240aaa9f7580b9370f1aa9cae"
+  },
+  {
+    "name": "provided_node_locked isolated offline startup",
+    "passed": true,
+    "scope": "official_sdk_provided_license_separate_from_launch_account",
+    "state": "offline_valid",
+    "allowed": true
+  },
+  {
+    "name": "provided_node_locked confirmed SDK logout",
+    "passed": true,
+    "scope": "official_sdk_provided_license_separate_from_launch_account",
+    "confirmed": true
+  }
+]

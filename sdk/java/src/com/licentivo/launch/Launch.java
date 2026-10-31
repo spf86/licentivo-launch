@@ -59,6 +59,8 @@ public final class Launch implements AutoCloseable {
         boolean canStartOffline();
         void start() throws Exception;
         void runFeature(String feature, Client.FeatureAction action) throws Exception;
+        default void runMeteredFeature(String feature, long quantity, String operationID, Client.FeatureAction action) throws Exception { throw new Failure("METERING_UNSUPPORTED"); }
+        default void resolveMeteredFeature(String operationID, boolean succeeded) throws Exception { throw new Failure("METERING_UNSUPPORTED"); }
         void releaseDevice() throws Exception;
         void close();
     }
@@ -139,6 +141,8 @@ public final class Launch implements AutoCloseable {
         public boolean canStartOffline() { var status = sdk.status(); return Boolean.TRUE.equals(status.get("allowed")) && "offline_valid".equals(status.get("state")); }
         public void start() throws Exception { sdk.start(error -> {}); }
         public void runFeature(String feature, Client.FeatureAction action) throws Exception { sdk.runFeature(feature, action); }
+        public void runMeteredFeature(String feature, long quantity, String operationID, Client.FeatureAction action) throws Exception { sdk.runMeteredFeature(feature, quantity, operationID, action); }
+        public void resolveMeteredFeature(String operationID, boolean succeeded) throws Exception { sdk.resolveMeteredFeature(operationID, succeeded); }
         public void releaseDevice() throws Exception { var result=sdk.logout();if(Boolean.TRUE.equals(result.get("revocation_pending")))throw new Failure("DEVICE_REVOCATION_PENDING");if(result.containsKey("storage_error"))throw new Failure("SDK_LOGOUT_STORAGE_FAILED"); }
         public void close() { sdk.close(); }
     }
@@ -254,9 +258,18 @@ public final class Launch implements AutoCloseable {
         try {
 
             candidate.start(); runtime = candidate;
-        } catch (Exception error) { candidate.close(); throw error; }
+        } catch (Exception error) {
+            try { candidate.close(); } catch (RuntimeException cleanup) { if (cleanup != error) error.addSuppressed(cleanup); }
+            throw error;
+        }
         var user = Json.object(grant().get("user"));
         return new State(userID(), text(user, "email"), Instant.parse(text(grant(), "expires_at")), offline);
+    }
+    public synchronized void runMeteredFeature(String feature, long quantity, String operationID, Client.FeatureAction action) throws Exception {
+        if (runtime == null) throw new Failure("NOT_STARTED"); runtime.runMeteredFeature(feature, quantity, operationID, action);
+    }
+    public synchronized void resolveMeteredFeature(String operationID, boolean succeeded) throws Exception {
+        if (runtime == null) throw new Failure("NOT_STARTED"); runtime.resolveMeteredFeature(operationID, succeeded);
     }
     public synchronized void runFeature(String feature, Client.FeatureAction action) throws Exception {
         if (runtime == null) throw new Failure("NOT_STARTED"); runtime.runFeature(feature, action);

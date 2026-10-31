@@ -124,6 +124,15 @@ func (s *Service) CreateOrder(ctx context.Context, p Principal, in CheckoutInput
 	if in.ProductID == "" || in.ProductID != version.ProductID {
 		return CheckoutView{}, problem(409, "PRODUCT_PLAN_MISMATCH", "产品与套餐不匹配，请从产品页面重新进入结账")
 	}
+	if in.Action != "renew" {
+		var product storage.Product
+		if err := s.db.WithContext(ctx).First(&product, "id = ?", version.ProductID).Error; err != nil {
+			return CheckoutView{}, databaseError(err)
+		}
+		if product.Status != "published" {
+			return CheckoutView{}, problem(409, "PRODUCT_NOT_PUBLISHED", "该产品已停止新购或升级")
+		}
+	}
 	checkoutAmount := version.AmountMinor
 	if in.Action == "purchase" {
 		var err error
@@ -255,6 +264,9 @@ func (s *Service) CreateOrder(ctx context.Context, p Principal, in CheckoutInput
 		var lockedProduct storage.Product
 		if err := tx.Clauses(clause.Locking{Strength: "SHARE"}).First(&lockedProduct, "id = ?", version.ProductID).Error; err != nil {
 			return err
+		}
+		if in.Action != "renew" && lockedProduct.Status != "published" {
+			return problem(409, "PRODUCT_NOT_PUBLISHED", "该产品已停止新购或升级")
 		}
 		currentMapping, currentRoute, routeErr := s.saleMapping(ctx, tx, version, in.Environment, false)
 		if routeErr != nil {

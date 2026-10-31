@@ -11,6 +11,8 @@ public interface IRuntime : IAsyncDisposable
     Task Start(CancellationToken ct);
     AuthorizationStatus Status();
     Task RunFeature(string feature, Func<Task> action);
+    Task RunMeteredFeature(string feature, long quantity, string operationID, Func<Task> action, CancellationToken ct = default) => Task.FromException(new LaunchException("METERING_UNSUPPORTED"));
+    Task ResolveMeteredFeature(string operationID, bool succeeded, CancellationToken ct = default) => Task.FromException(new LaunchException("METERING_UNSUPPORTED"));
     Task Deactivate(CancellationToken ct);
 }
 
@@ -20,6 +22,8 @@ internal sealed class OfficialRuntime(Config config) : IRuntime
     public async Task Start(CancellationToken ct) => await client.Start(ct: ct);
     public AuthorizationStatus Status() => client.Status();
     public Task RunFeature(string feature, Func<Task> action) => client.RunFeature(feature, action);
+    public Task RunMeteredFeature(string feature, long quantity, string operationID, Func<Task> action, CancellationToken ct = default) => client.RunMeteredFeature(feature, quantity, operationID, action, ct);
+    public Task ResolveMeteredFeature(string operationID, bool succeeded, CancellationToken ct = default) => client.ResolveMeteredFeature(operationID, succeeded, ct);
     public async Task Deactivate(CancellationToken ct){var result=await client.Logout(ct);if(result.StorageError!="")throw new LaunchException("SDK_LOGOUT_STORAGE_FAILED");if(result.RevocationPending)throw new LaunchException("DEVICE_REVOCATION_PENDING");}
     public ValueTask DisposeAsync() => client.DisposeAsync();
 }
@@ -119,7 +123,7 @@ public sealed class Application : IAsyncDisposable
     private async Task Start(Session next,CancellationToken ct,bool offline=false,string identity=""){
  ObjectDisposedException.ThrowIf(disposed,this);ct.ThrowIfCancellationRequested();if(runtime is not null){await runtime.DisposeAsync();runtime=null;}
  string directory=Path.GetDirectoryName(CacheFor(next))!;Directory.CreateDirectory(directory);if(!OperatingSystem.IsWindows())File.SetUnixFileMode(directory,UnixFileMode.UserRead|UnixFileMode.UserWrite|UnixFileMode.UserExecute);
- cachePath=CacheFor(next);var client=runtimeFactory(RuntimeConfig(next,identity));try{ct.ThrowIfCancellationRequested();await client.Start(ct);ct.ThrowIfCancellationRequested();}catch{await client.DisposeAsync();throw;}runtime=client;session=next;accountCleared=false;
+ cachePath=CacheFor(next);var client=runtimeFactory(RuntimeConfig(next,identity));try{ct.ThrowIfCancellationRequested();await client.Start(ct);ct.ThrowIfCancellationRequested();}catch{try{await client.DisposeAsync();}catch{}throw;}runtime=client;session=next;accountCleared=false;
  }
     public async Task Login(string email, string password, int pendingAttempts = 3, CancellationToken ct = default)
     {
@@ -170,6 +174,8 @@ public sealed class Application : IAsyncDisposable
  next=next with{IdentityJson=PublicIdentity(own)};await Start(next,ct,identity:own.GetProperty("identity_token").GetString()!);try{store.Save(scope,JsonSerializer.SerializeToUtf8Bytes(next));}catch{await Forget(next);throw;}return true;
  }
     public Task RunFeature(string feature, Func<Task> action) => (runtime ?? throw new LaunchException("LOGIN_REQUIRED")).RunFeature(feature, action);
+    public Task RunMeteredFeature(string feature, long quantity, string operationID, Func<Task> action, CancellationToken ct = default) => (runtime ?? throw new LaunchException("LOGIN_REQUIRED")).RunMeteredFeature(feature, quantity, operationID, action, ct);
+    public Task ResolveMeteredFeature(string operationID, bool succeeded, CancellationToken ct = default) => (runtime ?? throw new LaunchException("LOGIN_REQUIRED")).ResolveMeteredFeature(operationID, succeeded, ct);
     public AuthorizationStatus? Status() => runtime?.Status();
     public Task ReleaseDevice(CancellationToken ct=default)=>Logout(ct);
     private async Task Forget(Session? saved){saved??=session;try{if(runtime is not null)await runtime.DisposeAsync();}finally{runtime=null;session=null;accountCleared=true;if(saved is not null)DeleteOwned(saved);}}

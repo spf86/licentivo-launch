@@ -1,0 +1,110 @@
+[
+  {
+    "name": "go",
+    "passed": true,
+    "exit_code": 0,
+    "seconds": 5.54
+  },
+  {
+    "name": "python",
+    "passed": true,
+    "exit_code": 0,
+    "seconds": 1.44
+  },
+  {
+    "name": "official-python-tasks",
+    "passed": true,
+    "exit_code": 0,
+    "seconds": 3.33
+  },
+  {
+    "name": "javascript",
+    "passed": true,
+    "exit_code": 0,
+    "seconds": 5.33
+  },
+  {
+    "name": "java-build",
+    "passed": true,
+    "exit_code": 0,
+    "seconds": 7.24
+  },
+  {
+    "name": "java",
+    "passed": true,
+    "exit_code": 0,
+    "seconds": 1.83
+  },
+  {
+    "name": "java-runtime",
+    "passed": true,
+    "exit_code": 0,
+    "seconds": 4.64
+  },
+  {
+    "name": "csharp-build",
+    "passed": true,
+    "exit_code": 0,
+    "seconds": 19.93
+  },
+  {
+    "name": "csharp",
+    "passed": true,
+    "exit_code": 0,
+    "seconds": 0.63
+  },
+  {
+    "name": "csharp-runtime-build",
+    "passed": true,
+    "exit_code": 0,
+    "seconds": 9.0
+  },
+  {
+    "name": "csharp-runtime",
+    "passed": true,
+    "exit_code": 0,
+    "seconds": 1.44
+  },
+  {
+    "name": "ruby-build",
+    "passed": true,
+    "exit_code": 0,
+    "seconds": 6.89
+  },
+  {
+    "name": "ruby",
+    "passed": true,
+    "exit_code": 0,
+    "seconds": 0.58
+  },
+  {
+    "name": "ruby-runtime",
+    "passed": true,
+    "exit_code": 0,
+    "seconds": 0.73
+  },
+  {
+    "name": "rust",
+    "passed": true,
+    "exit_code": 0,
+    "seconds": 51.29
+  },
+  {
+    "name": "native-configure",
+    "passed": true,
+    "exit_code": 0,
+    "seconds": 2.46
+  },
+  {
+    "name": "native-build",
+    "passed": true,
+    "exit_code": 0,
+    "seconds": 10.17
+  },
+  {
+    "name": "native",
+    "passed": true,
+    "exit_code": 0,
+    "seconds": 4.68
+  }
+]

@@ -1,0 +1,587 @@
+{
+  "test": "real Launch staff permission and session security",
+  "completed_at_utc": "2026-10-31T19:24:25Z",
+  "total": 66,
+  "failed": 0,
+  "observations": [
+    {
+      "time": "2026-10-31T19:24:22Z",
+      "name": "staff matrix identifies the isolated owner",
+      "passed": true,
+      "status": 200,
+      "code": null,
+      "request_id": "4ded9adfb2e21bc542069a1285e7fb18",
+      "seconds": 0.0162
+    },
+    {
+      "time": "2026-10-31T19:24:22Z",
+      "name": "staff matrix reads original staff set",
+      "passed": true,
+      "status": 200,
+      "code": null,
+      "request_id": "6ce01dcf643a68b99ddfee930c3b273e",
+      "seconds": 0.0196
+    },
+    {
+      "time": "2026-10-31T19:24:22Z",
+      "name": "sole active administrator cannot disable itself",
+      "passed": true,
+      "status": 409,
+      "code": "LAST_ADMIN_PROTECTED",
+      "request_id": "3abfd98d52e7842defd01bad460c9128",
+      "seconds": 0.0322
+    },
+    {
+      "time": "2026-10-31T19:24:22Z",
+      "name": "sole active administrator cannot downgrade itself",
+      "passed": true,
+      "status": 409,
+      "code": "LAST_ADMIN_PROTECTED",
+      "request_id": "a6acb9196a2684e5fdfc741ccda63540",
+      "seconds": 0.0248
+    },
+    {
+      "time": "2026-10-31T19:24:22Z",
+      "name": "create dedicated operations account normally",
+      "passed": true,
+      "status": 200,
+      "code": null,
+      "request_id": "2426eb7b3e0c828b8873dbd964fc6f0d",
+      "seconds": 0.5228
+    },
+    {
+      "time": "2026-10-31T19:24:22Z",
+      "name": "read newly created operations account",
+      "passed": true,
+      "status": 200,
+      "code": null,
+      "request_id": "c68163178d84ca7a83ed7826fdc02280",
+      "seconds": 0.0264
+    },
+    {
+      "time": "2026-10-31T19:24:23Z",
+      "name": "operations website login",
+      "passed": true,
+      "status": 200,
+      "code": null,
+      "request_id": "dbd6e7dcc53553037f050bba63f2f34a",
+      "seconds": 0.1892
+    },
+    {
+      "time": "2026-10-31T19:24:23Z",
+      "name": "operations login has its assigned role",
+      "passed": true
+    },
+    {
+      "time": "2026-10-31T19:24:23Z",
+      "name": "operations permission /admin/dashboard",
+      "passed": true,
+      "status": 200,
+      "code": null,
+      "request_id": "3edc5d97f54b7a191a3fbb4683e537f8",
+      "seconds": 0.0324
+    },
+    {
+      "time": "2026-10-31T19:24:23Z",
+      "name": "operations permission /admin/orders/search",
+      "passed": true,
+      "status": 200,
+      "code": null,
+      "request_id": "3215138f6e523903c82296efaff88deb",
+      "seconds": 0.0126
+    },
+    {
+      "time": "2026-10-31T19:24:23Z",
+      "name": "operations permission /admin/users",
+      "passed": true,
+      "status": 200,
+      "code": null,
+      "request_id": "dd553afaef6e85985c4c3d3b18b30b8d",
+      "seconds": 0.0107
+    },
+    {
+      "time": "2026-10-31T19:24:23Z",
+      "name": "operations permission /admin/operations",
+      "passed": true,
+      "status": 200,
+      "code": null,
+      "request_id": "7bb2e0901d248c1338748a32549f339d",
+      "seconds": 0.027
+    },
+    {
+      "time": "2026-10-31T19:24:23Z",
+      "name": "operations permission /admin/catalog",
+      "passed": true,
+      "status": 200,
+      "code": null,
+      "request_id": "f256c77eb1a9542a458d5597fca8a0d7",
+      "seconds": 0.0499
+    },
+    {
+      "time": "2026-10-31T19:24:23Z",
+      "name": "operations permission /admin/translations",
+      "passed": true,
+      "status": 200,
+      "code": null,
+      "request_id": "db34d5ddb2d30c82d00a57d76f7e0e47",
+      "seconds": 0.0137
+    },
+    {
+      "time": "2026-10-31T19:24:23Z",
+      "name": "operations permission /admin/connections",
+      "passed": true,
+      "status": 403,
+      "code": "FORBIDDEN",
+      "request_id": "0d2327e74b63ba6b90984efadf415249",
+      "seconds": 0.0089
+    },
+    {
+      "time": "2026-10-31T19:24:23Z",
+      "name": "operations permission /admin/staff",
+      "passed": true,
+      "status": 403,
+      "code": "FORBIDDEN",
+      "request_id": "eb91e796a67e9a33804f7e66e295a7fb",
+      "seconds": 0.0086
+    },
+    {
+      "time": "2026-10-31T19:24:23Z",
+      "name": "operations permission /admin/audit",
+      "passed": true,
+      "status": 403,
+      "code": "FORBIDDEN",
+      "request_id": "fc66ac6b95409b747e9e3f43b03febbd",
+      "seconds": 0.0072
+    },
+    {
+      "time": "2026-10-31T19:24:23Z",
+      "name": "operations cannot create an administrator",
+      "passed": true,
+      "status": 403,
+      "code": "FORBIDDEN",
+      "request_id": "2076c53f01183b9995f138979ad228c8",
+      "seconds": 0.0081
+    },
+    {
+      "time": "2026-10-31T19:24:23Z",
+      "name": "operations cannot export customer records",
+      "passed": true,
+      "status": 403,
+      "code": "FORBIDDEN",
+      "request_id": "6e5f46ee97b0ca9adc5ff328b8ecd123",
+      "seconds": 0.0094
+    },
+    {
+      "time": "2026-10-31T19:24:23Z",
+      "name": "operations cannot change merchant credentials",
+      "passed": true,
+      "status": 403,
+      "code": "FORBIDDEN",
+      "request_id": "bec8a57a9ba27e6c2d3ee3162e35628b",
+      "seconds": 0.0109
+    },
+    {
+      "time": "2026-10-31T19:24:23Z",
+      "name": "create dedicated support account normally",
+      "passed": true,
+      "status": 200,
+      "code": null,
+      "request_id": "e1c992412f2c8010a6a81c2e26450f52",
+      "seconds": 0.1536
+    },
+    {
+      "time": "2026-10-31T19:24:23Z",
+      "name": "read newly created support account",
+      "passed": true,
+      "status": 200,
+      "code": null,
+      "request_id": "63ebaa3778e000aa115fc210c2d9b4e0",
+      "seconds": 0.0164
+    },
+    {
+      "time": "2026-10-31T19:24:23Z",
+      "name": "support website login",
+      "passed": true,
+      "status": 200,
+      "code": null,
+      "request_id": "5cdf008749297f2b786129480eeb383e",
+      "seconds": 0.1901
+    },
+    {
+      "time": "2026-10-31T19:24:23Z",
+      "name": "support login has its assigned role",
+      "passed": true
+    },
+    {
+      "time": "2026-10-31T19:24:23Z",
+      "name": "support permission /admin/dashboard",
+      "passed": true,
+      "status": 200,
+      "code": null,
+      "request_id": "7c8aecbfc407d02972ed374b9cb5a5e7",
+      "seconds": 0.0408
+    },
+    {
+      "time": "2026-10-31T19:24:23Z",
+      "name": "support permission /admin/orders/search",
+      "passed": true,
+      "status": 200,
+      "code": null,
+      "request_id": "a081fd068f160daabde2b1bcb874c11a",
+      "seconds": 0.0174
+    },
+    {
+      "time": "2026-10-31T19:24:23Z",
+      "name": "support permission /admin/users",
+      "passed": true,
+      "status": 200,
+      "code": null,
+      "request_id": "0d72248c0fa831566d7098e1a8febe7c",
+      "seconds": 0.015
+    },
+    {
+      "time": "2026-10-31T19:24:23Z",
+      "name": "support permission /admin/operations",
+      "passed": true,
+      "status": 200,
+      "code": null,
+      "request_id": "92c3548731962cf30feaae62392ff7e9",
+      "seconds": 0.0265
+    },
+    {
+      "time": "2026-10-31T19:24:23Z",
+      "name": "support permission /admin/catalog",
+      "passed": true,
+      "status": 403,
+      "code": "FORBIDDEN",
+      "request_id": "b5d40e624f189243adbc3a182b7672fa",
+      "seconds": 0.0126
+    },
+    {
+      "time": "2026-10-31T19:24:23Z",
+      "name": "support permission /admin/translations",
+      "passed": true,
+      "status": 403,
+      "code": "FORBIDDEN",
+      "request_id": "386eff7237423a0eefed7e356b1d4ae1",
+      "seconds": 0.0126
+    },
+    {
+      "time": "2026-10-31T19:24:23Z",
+      "name": "support permission /admin/connections",
+      "passed": true,
+      "status": 403,
+      "code": "FORBIDDEN",
+      "request_id": "0a02373f26e9bf0aab2aaceeb25298d1",
+      "seconds": 0.0106
+    },
+    {
+      "time": "2026-10-31T19:24:23Z",
+      "name": "support permission /admin/staff",
+      "passed": true,
+      "status": 403,
+      "code": "FORBIDDEN",
+      "request_id": "0d161efe98938d603ae852592305f6b5",
+      "seconds": 0.0118
+    },
+    {
+      "time": "2026-10-31T19:24:23Z",
+      "name": "support permission /admin/audit",
+      "passed": true,
+      "status": 403,
+      "code": "FORBIDDEN",
+      "request_id": "9ce3f34b3a2b8f7db0d2e2b5b8c20da7",
+      "seconds": 0.0098
+    },
+    {
+      "time": "2026-10-31T19:24:23Z",
+      "name": "support cannot create an administrator",
+      "passed": true,
+      "status": 403,
+      "code": "FORBIDDEN",
+      "request_id": "2acf9481bd9be709adacc601f9999215",
+      "seconds": 0.0097
+    },
+    {
+      "time": "2026-10-31T19:24:23Z",
+      "name": "support cannot export customer records",
+      "passed": true,
+      "status": 403,
+      "code": "FORBIDDEN",
+      "request_id": "9a223d30f2a24ac68e702d4dbcfdbd25",
+      "seconds": 0.0122
+    },
+    {
+      "time": "2026-10-31T19:24:23Z",
+      "name": "support cannot change merchant credentials",
+      "passed": true,
+      "status": 403,
+      "code": "FORBIDDEN",
+      "request_id": "c931001ba00e32d412247e00af79f3aa",
+      "seconds": 0.0138
+    },
+    {
+      "time": "2026-10-31T19:24:23Z",
+      "name": "support cannot edit a product",
+      "passed": true,
+      "status": 403,
+      "code": "FORBIDDEN",
+      "request_id": "8a92a4e941fac936e1d9750121686aa7",
+      "seconds": 0.0102
+    },
+    {
+      "time": "2026-10-31T19:24:23Z",
+      "name": "support cannot perform bulk payment reconciliation",
+      "passed": true,
+      "status": 403,
+      "code": "FORBIDDEN",
+      "request_id": "253219e8431cb300fb3bf4b5f674d18e",
+      "seconds": 0.0107
+    },
+    {
+      "time": "2026-10-31T19:24:24Z",
+      "name": "operations desktop login before downgrade",
+      "passed": true,
+      "status": 200,
+      "code": null,
+      "request_id": "1cda077bc49f84219cd374e1715c8507",
+      "seconds": 0.1873
+    },
+    {
+      "time": "2026-10-31T19:24:24Z",
+      "name": "downgrade real operations account to support",
+      "passed": true,
+      "status": 200,
+      "code": null,
+      "request_id": "f57b558968c344fde28c61f1f3910d14",
+      "seconds": 0.0928
+    },
+    {
+      "time": "2026-10-31T19:24:24Z",
+      "name": "role downgrade revokes old website cookie",
+      "passed": true,
+      "status": 401,
+      "code": "AUTH_REQUIRED",
+      "request_id": "abb6153e64660f011dfaf4e23f63e440",
+      "seconds": 0.0084
+    },
+    {
+      "time": "2026-10-31T19:24:24Z",
+      "name": "role downgrade revokes old desktop bearer",
+      "passed": true,
+      "status": 401,
+      "code": "AUTH_REQUIRED",
+      "request_id": "28279e354729de4d9679bfec04d20733",
+      "seconds": 0.0107
+    },
+    {
+      "time": "2026-10-31T19:24:24Z",
+      "name": "downgraded account logs in afresh",
+      "passed": true,
+      "status": 200,
+      "code": null,
+      "request_id": "482ca56cb190a29a18b4d2d2d0dae884",
+      "seconds": 0.1967
+    },
+    {
+      "time": "2026-10-31T19:24:24Z",
+      "name": "fresh session after downgrade has support rights",
+      "passed": true
+    },
+    {
+      "time": "2026-10-31T19:24:24Z",
+      "name": "downgraded fresh session cannot edit products",
+      "passed": true,
+      "status": 403,
+      "code": "FORBIDDEN",
+      "request_id": "3f3501ca2cad0b70281bc6d5c3f0db11",
+      "seconds": 0.0094
+    },
+    {
+      "time": "2026-10-31T19:24:24Z",
+      "name": "restore test account operations role",
+      "passed": true,
+      "status": 200,
+      "code": null,
+      "request_id": "fe9382a981c7c4268df693a24089745e",
+      "seconds": 0.0391
+    },
+    {
+      "time": "2026-10-31T19:24:24Z",
+      "name": "role promotion also invalidates old cookie",
+      "passed": true,
+      "status": 401,
+      "code": "AUTH_REQUIRED",
+      "request_id": "be42b8d8be4801087a0e0d3925ab28a5",
+      "seconds": 0.0057
+    },
+    {
+      "time": "2026-10-31T19:24:24Z",
+      "name": "operations login before disable",
+      "passed": true,
+      "status": 200,
+      "code": null,
+      "request_id": "32314d7d2c2afb55585a1afcef68359a",
+      "seconds": 0.1334
+    },
+    {
+      "time": "2026-10-31T19:24:24Z",
+      "name": "disable the real dedicated operations account",
+      "passed": true,
+      "status": 200,
+      "code": null,
+      "request_id": "2a37cebc29aacb4c1172e5ce7c90cbb6",
+      "seconds": 0.0453
+    },
+    {
+      "time": "2026-10-31T19:24:24Z",
+      "name": "disabled staff old website cookie is rejected",
+      "passed": true,
+      "status": 401,
+      "code": "AUTH_REQUIRED",
+      "request_id": "889e5f0aae00dcd0fb97e474456e0ca7",
+      "seconds": 0.0152
+    },
+    {
+      "time": "2026-10-31T19:24:24Z",
+      "name": "disabled staff cannot create a new login",
+      "passed": true,
+      "status": 401,
+      "code": "LOGIN_FAILED",
+      "request_id": "140be90d9d381b7a551d582ac3f08a78",
+      "seconds": 0.1337
+    },
+    {
+      "time": "2026-10-31T19:24:24Z",
+      "name": "re-enable the dedicated operations account",
+      "passed": true,
+      "status": 200,
+      "code": null,
+      "request_id": "424927c13e3dea08ad972007dda41be2",
+      "seconds": 0.0296
+    },
+    {
+      "time": "2026-10-31T19:24:24Z",
+      "name": "re-enabling does not revive an old staff cookie",
+      "passed": true,
+      "status": 401,
+      "code": "AUTH_REQUIRED",
+      "request_id": "a5798bb5c9b1a37c20facd43c5ef6252",
+      "seconds": 0.0101
+    },
+    {
+      "time": "2026-10-31T19:24:25Z",
+      "name": "re-enabled staff can log in afresh",
+      "passed": true,
+      "status": 200,
+      "code": null,
+      "request_id": "690db80b3e82bafc455f0cb1f3182938",
+      "seconds": 0.2432
+    },
+    {
+      "time": "2026-10-31T19:24:25Z",
+      "name": "re-enabled staff still has operations role",
+      "passed": true
+    },
+    {
+      "time": "2026-10-31T19:24:25Z",
+      "name": "missing website CSRF cannot edit a product",
+      "passed": true,
+      "status": 403,
+      "code": "CSRF_INVALID",
+      "request_id": "65fe6bb57f29af3b5d1f818fe543b07c",
+      "seconds": 0.0183
+    },
+    {
+      "time": "2026-10-31T19:24:25Z",
+      "name": "wrong website CSRF cannot edit a product",
+      "passed": true,
+      "status": 403,
+      "code": "CSRF_INVALID",
+      "request_id": "bbb10ac7f73ddc2dc38be86f61ef6b86",
+      "seconds": 0.0172
+    },
+    {
+      "time": "2026-10-31T19:24:25Z",
+      "name": "cross-site origin cannot edit a product",
+      "passed": true,
+      "status": 403,
+      "code": "FORBIDDEN",
+      "request_id": "1fabf1b3ff563a618ef7e9139d3f17c5",
+      "seconds": 0.003
+    },
+    {
+      "time": "2026-10-31T19:24:25Z",
+      "name": "cross-site fetch metadata cannot edit a product",
+      "passed": true,
+      "status": 403,
+      "code": "FORBIDDEN",
+      "request_id": "c8a9128f716d02b357e2d7af410c5c07",
+      "seconds": 0.0021
+    },
+    {
+      "time": "2026-10-31T19:24:25Z",
+      "name": "identify separate support session for ownership probe",
+      "passed": true,
+      "status": 200,
+      "code": null,
+      "request_id": "1cc586a9bef55af62d7273c29a513ef1",
+      "seconds": 0.0113
+    },
+    {
+      "time": "2026-10-31T19:24:25Z",
+      "name": "operations cannot revoke another user session by UUID",
+      "passed": true,
+      "status": 404,
+      "code": "NOT_FOUND",
+      "request_id": "4b0f2235b953de7698d4ba1882e69c80",
+      "seconds": 0.027
+    },
+    {
+      "time": "2026-10-31T19:24:25Z",
+      "name": "support session remains usable after foreign revoke attempt",
+      "passed": true,
+      "status": 200,
+      "code": null,
+      "request_id": "3b9f7521a132a8692cc20a007f8ef71b",
+      "seconds": 0.0141
+    },
+    {
+      "time": "2026-10-31T19:24:25Z",
+      "name": "close re-enabled operations probe session",
+      "passed": true,
+      "status": 200,
+      "code": null,
+      "request_id": "765897ec62b85cce5cc8bfd12ef24fb5",
+      "seconds": 0.0264
+    },
+    {
+      "time": "2026-10-31T19:24:25Z",
+      "name": "disable dedicated operations fixture after tests",
+      "passed": true,
+      "status": 200,
+      "code": null,
+      "request_id": "f3cd14d97ecdc1e38797a9584f5f2c6c",
+      "seconds": 0.0626
+    },
+    {
+      "time": "2026-10-31T19:24:25Z",
+      "name": "disable dedicated support fixture after tests",
+      "passed": true,
+      "status": 200,
+      "code": null,
+      "request_id": "d89e019767d60b3154f7822c0e9549de",
+      "seconds": 0.0417
+    },
+    {
+      "time": "2026-10-31T19:24:25Z",
+      "name": "original owner session remains active after staff testing",
+      "passed": true,
+      "status": 200,
+      "code": null,
+      "request_id": "fe1132bff33190bd7a4d9b02f38cbcf6",
+      "seconds": 0.0081
+    }
+  ],
+  "fixture_cleanup": "Dedicated test staff retained disabled; original administrator unchanged"
+}

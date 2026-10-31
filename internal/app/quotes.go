@@ -86,6 +86,15 @@ func (s *Service) Quote(ctx context.Context, p Principal, in QuoteInput, request
 	if s.db.WithContext(ctx).First(&publication, "plan_id = ? AND environment = ? AND version_id = ? AND preview_only = false", plan.ID, in.Environment, target.ID).Error != nil {
 		return QuoteView{}, problem(409, "PLAN_NOT_FOR_SALE", "请选择已开放销售的套餐版本")
 	}
+	if in.Action == "upgrade" {
+		var product storage.Product
+		if err := s.db.WithContext(ctx).First(&product, "id = ?", in.ProductID).Error; err != nil {
+			return QuoteView{}, databaseError(err)
+		}
+		if product.Status != "published" {
+			return QuoteView{}, problem(409, "PRODUCT_NOT_PUBLISHED", "该产品已停止新购或升级")
+		}
+	}
 	rows, err := s.coverageRows(s.db.WithContext(ctx), e.ID)
 	if err != nil {
 		return QuoteView{}, ErrStorage

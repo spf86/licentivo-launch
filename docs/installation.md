@@ -4,7 +4,7 @@ This guide starts with a ready-to-run Licentivo Launch release package. The proj
 
 ## Download the server package
 
-Choose a Windows or Linux package for amd64 or arm64 from [GitHub Releases](https://github.com/spf86/licentivo-launch/releases/tag/v0.3.2-beta), then extract it. The package includes the executable, installation guide, public configuration example and license notices.
+Choose a Windows or Linux package for amd64 or arm64 from [GitHub Releases](https://github.com/spf86/licentivo-launch/releases/tag/v0.3.6-beta), then extract it. The package includes the executable, installation guide, public configuration example and license notices.
 
 You need MySQL 8.0.16+, an empty database and an account permitted to create/alter application tables. Go, Git, Node.js and a compiler are not required to run the package. The [binary guide](binary-installation.md) lists direct downloads, architecture selection and checksum verification.
 
@@ -225,10 +225,10 @@ Restore the uploads and verify decryption, accounts, history, and license associ
 ## Upgrades
 
 1. Back up the database, persistent configuration/master key, and upload directory.
-2. Review changes and test the new build against a restored staging database.
+2. Review changes and the [server/SDK/backend compatibility matrix](sdk-compatibility.md). Test the new build and matching application package against a restored staging database and compatible Licentivo backend. A server upgrade cannot update installed clients still calling the removed `/credential` endpoint.
 3. Retain the old executable and a compatible database backup.
 4. Stop the intended application instance and replace the executable.
 5. Restart with the same configuration and master key; GORM may update tables.
 6. Verify health, readiness, login, queues, payments, and license synchronization.
 
-Do not assume that an executable rollback can undo schema/data changes. Plan database restoration and payment reconciliation where necessary. Launch must remain available to process expiration and reconciliation jobs; long outages can delay remote suspension at a local sales deadline.
+Do not assume that an executable rollback can undo schema/data changes. Plan database restoration and payment reconciliation where necessary. Launch must remain available to process purchase/refund synchronization and account-revocation jobs. It sends absolute purchased dates to Licentivo; runtime validity and already-issued offline grants are enforced by Licentivo and its SDK. Outages can delay new snapshots and revocation notifications.

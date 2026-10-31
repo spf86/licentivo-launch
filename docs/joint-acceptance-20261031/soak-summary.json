@@ -1,0 +1,16 @@
+{
+  "started_at_utc": "2026-10-31T15:47:42Z",
+  "last_update_utc": "2026-10-31T19:48:42Z",
+  "done": true,
+  "cycles": 320,
+  "active_seconds": 14400.21,
+  "wall_seconds": 14460.66,
+  "target_active_seconds": 14400,
+  "checks": {
+    "checks": 2636,
+    "passed": 2627,
+    "failed": 9
+  },
+  "replay_enabled": true,
+  "floating_enabled": true
+}

@@ -1,0 +1,51 @@
+{
+  "date": "2026-10-31",
+  "timezone": "Asia/Shanghai",
+  "source_commit": "c04d4ee98e22315087d427d273b8fbd7c9f8a755",
+  "source_was_dirty": true,
+  "native_tests": {
+    "all_test_nodes": {
+      "pass": 343
+    },
+    "top_level_tests": {
+      "pass": 118
+    },
+    "packages_with_tests": 16
+  },
+  "python_sdk_tests": {
+    "passed": 22
+  },
+  "browser_logic_node_tests": {
+    "passed": 55
+  },
+  "go_vet": "passed",
+  "deployment": {
+    "launch_version": "0.3.5-beta",
+    "mysql_version": "mysql  Ver 8.4.11-0ubuntu0.26.04.1 for Linux on x86_64 ((Ubuntu))",
+    "binary_sha256": "23d0bbb0a4afa48f3f3b121ed1e41a67692dc3ecd2f838fd4cd459013ce83bbf",
+    "fixture_payment_account_enabled": false,
+    "configuration_mode": "development HTTP sandbox",
+    "service": "launch-acceptance.service",
+    "origin": "http://192.168.2.177:18080",
+    "main_database": "launch_accept_20261031"
+  },
+  "unresolved_defects": [
+    "HTTP crypto.randomUUID in renewal/device UI",
+    "account purchase status requires legacy license binding",
+    "metered operation journal changes with ephemeral identity",
+    "SDK login cleanup masks original runtime denial"
+  ],
+  "compatibility_limits": [
+    "Real Licentivo Launch account mapping rejects floating policies"
+  ],
+  "raw_http_assertions_note": "Includes exploratory expectations; see report for corrected contract assumptions, eventual success and confirmed defects.",
+  "curated_results": {
+    "known_defects": 4,
+    "compatibility_limits": 1,
+    "paid_orders": 6,
+    "successful_purchase_sync_tasks": 10,
+    "successful_refunds": 3,
+    "stale_release_protection": "passed: asynchronous operations reached stale, replacement generation stayed active",
+    "fixture_payment_account_enabled_at_handover": false
+  }
+}

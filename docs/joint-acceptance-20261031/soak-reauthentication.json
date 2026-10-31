@@ -1,0 +1,44 @@
+[
+  {
+    "time": "2026-10-31T16:27:27Z",
+    "product": "floating",
+    "reason": "LAUNCH_LOGIN_REQUIRED",
+    "fresh_login_succeeded": true
+  },
+  {
+    "time": "2026-10-31T16:57:42Z",
+    "product": "floating",
+    "reason": "LAUNCH_LOGIN_REQUIRED",
+    "fresh_login_succeeded": true
+  },
+  {
+    "time": "2026-10-31T17:28:26Z",
+    "product": "floating",
+    "reason": "LAUNCH_LOGIN_REQUIRED",
+    "fresh_login_succeeded": true
+  },
+  {
+    "time": "2026-10-31T17:59:12Z",
+    "product": "floating",
+    "reason": "LAUNCH_LOGIN_REQUIRED",
+    "fresh_login_succeeded": true
+  },
+  {
+    "time": "2026-10-31T18:29:31Z",
+    "product": "floating",
+    "reason": "LAUNCH_LOGIN_REQUIRED",
+    "fresh_login_succeeded": true
+  },
+  {
+    "time": "2026-10-31T18:59:52Z",
+    "product": "floating",
+    "reason": "LAUNCH_LOGIN_REQUIRED",
+    "fresh_login_succeeded": true
+  },
+  {
+    "time": "2026-10-31T19:30:01Z",
+    "product": "floating",
+    "reason": "LAUNCH_LOGIN_REQUIRED",
+    "fresh_login_succeeded": true
+  }
+]

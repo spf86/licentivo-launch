@@ -1,0 +1,32 @@
+{
+  "go": [
+    "PASS"
+  ],
+  "python": [
+    "Ran 24 tests in 0.690s",
+    "OK (skipped=1)"
+  ],
+  "official-python-tasks": [
+    "Ran 10 tests in 2.981s",
+    "OK"
+  ],
+  "javascript": [
+    "# tests 23",
+    "# pass 23",
+    "# fail 0",
+    "# skipped 0"
+  ],
+  "java": [],
+  "java-runtime": [],
+  "csharp": [],
+  "csharp-runtime": [],
+  "ruby": [
+    "23 Ruby wrapper tests passed"
+  ],
+  "ruby-runtime": [],
+  "rust": [
+    "test result: ok. 21 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.52s",
+    "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+  ],
+  "native": []
+}

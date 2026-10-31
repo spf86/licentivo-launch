@@ -1,0 +1,13 @@
+{
+  "health": {
+    "18080": 200,
+    "18091": 200,
+    "18092": 200
+  },
+  "long_complete": true,
+  "long_passed": true,
+  "long_process_still_exists": false,
+  "temporary_ui_proxy": "stopped separately on client",
+  "temporary_fixture_orders_remaining": 0,
+  "temporary_fixture_customers_removed": 120
+}

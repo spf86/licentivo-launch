@@ -1,32 +1,56 @@
 {
   "schema_version": 1,
-  "sdk_version": "0.11.2",
-  "source_revision": "licentivo-sdk-v0.11.2-release-20261024",
-  "changes": "Only private import and native-library relocation, with embedded text line endings normalized to LF; authorization and cryptographic logic are unchanged. Account-lifecycle revisions are released together with the matching Licentivo server.",
+  "sdk_version": "0.11.8",
+  "source_revision": "20261101-source-snapshot",
+  "changes": "Private import/native-library relocation, a Windows SDK architecture-constant compatibility guard and an optional Java device-name default, with embedded text line endings normalized to LF; authorization and cryptographic logic are unchanged. Account-lifecycle revisions are released together with the matching Licentivo server.",
   "files": [
     {
       "source": "go/advanced.go",
       "destination": "pkg/launchclient/internal/licentivo/advanced.go",
-      "source_sha256": "28043acc196f111fb211fa2acbc0293965199ce65c72080eec82c349e53dded6",
-      "sha256": "cf1b536c0cb61b357ab3784ddde54ac3d494fb1a6892dd6364c51daeba98e8c8"
+      "source_sha256": "f9e63c3e0e0667a0accc522498646a5a142d48b2e5ba0f135fbffa779dbc3613",
+      "sha256": "74df13eb2d25f778e2df68a1c620d9522fb202e3a292ad4b2b379a183b09d62a"
     },
     {
       "source": "go/client.go",
       "destination": "pkg/launchclient/internal/licentivo/client.go",
-      "source_sha256": "8b0158a614c06fce45295ebd6d8d5d9bc9ba2df414e39d7a4dae78fa6836d870",
-      "sha256": "dd04cb4ce487577aa18c1143f2b55a9dd8d6ec5085998e736a57dbc1f4aba5ac"
+      "source_sha256": "d6b72a10afb40a1a77e3ade5ad396c683cd764e3c88f625630ee7c56825617c4",
+      "sha256": "1399e18fb185b8aa54273a66355b1d74daa93c5b52ae8501c2101ecdffc48502"
     },
     {
       "source": "go/credential.go",
       "destination": "pkg/launchclient/internal/licentivo/credential.go",
-      "source_sha256": "dffefcccc045fc3c35815cca058b18b6fe9c51667f47d47ef68fddd1323af4ca",
-      "sha256": "d56423399fee6c03aaaa9f82606e2a3e8d054bdd5e786f1df4ae76dd59a7170e"
+      "source_sha256": "d315d08d38309459f04514f57750e08acdbfd2dfb6971550999b10d9c90cf952",
+      "sha256": "10b1a3d345afb873104862ac4092d94311bd2079c4a335578c0688a37d0178dc"
     },
     {
       "source": "go/device.go",
       "destination": "pkg/launchclient/internal/licentivo/device.go",
       "source_sha256": "b52e3a7942da5575dec3b15d879b9e3fddf35032a20d05c3395248fabc0ddec3",
       "sha256": "b52e3a7942da5575dec3b15d879b9e3fddf35032a20d05c3395248fabc0ddec3"
+    },
+    {
+      "source": "go/device_details.go",
+      "destination": "pkg/launchclient/internal/licentivo/device_details.go",
+      "source_sha256": "b20f314e5e6ce0ce64571fd1436ddf964c110945087a63457059c58e196d5eca",
+      "sha256": "b20f314e5e6ce0ce64571fd1436ddf964c110945087a63457059c58e196d5eca"
+    },
+    {
+      "source": "go/device_info.go",
+      "destination": "pkg/launchclient/internal/licentivo/device_info.go",
+      "source_sha256": "eda48e59633829eeb0e42741ba32e2bee1200ee3fb87dae4eaa6d66256f037ee",
+      "sha256": "eda48e59633829eeb0e42741ba32e2bee1200ee3fb87dae4eaa6d66256f037ee"
+    },
+    {
+      "source": "go/device_resources_unix.go",
+      "destination": "pkg/launchclient/internal/licentivo/device_resources_unix.go",
+      "source_sha256": "28d3978a0e086361cefde149ad5db2463ad4a621c8c943c1a1531ab170bc3f5c",
+      "sha256": "28d3978a0e086361cefde149ad5db2463ad4a621c8c943c1a1531ab170bc3f5c"
+    },
+    {
+      "source": "go/device_resources_windows.go",
+      "destination": "pkg/launchclient/internal/licentivo/device_resources_windows.go",
+      "source_sha256": "34e2759e4012a5dbb626c353d80e472ac5f6d271f415a72d633915aca54bedbc",
+      "sha256": "34e2759e4012a5dbb626c353d80e472ac5f6d271f415a72d633915aca54bedbc"
     },
     {
       "source": "go/feature.go",
@@ -37,14 +61,14 @@
     {
       "source": "go/feature_tasks.go",
       "destination": "pkg/launchclient/internal/licentivo/feature_tasks.go",
-      "source_sha256": "53c737e3476a231f060378b9a030990f02b5eff1eb1dd9cdc98df1a83f21642d",
-      "sha256": "53c737e3476a231f060378b9a030990f02b5eff1eb1dd9cdc98df1a83f21642d"
+      "source_sha256": "e623cdd271f419229eb01c7fe3251f71ccc2b3566344edef9b65a9ece392f496",
+      "sha256": "e623cdd271f419229eb01c7fe3251f71ccc2b3566344edef9b65a9ece392f496"
     },
     {
       "source": "go/logout.go",
       "destination": "pkg/launchclient/internal/licentivo/logout.go",
-      "source_sha256": "276871801f75557c89aed56e8729ff4afd174ee394524aeb0204ef825d2f2e7e",
-      "sha256": "276871801f75557c89aed56e8729ff4afd174ee394524aeb0204ef825d2f2e7e"
+      "source_sha256": "8685287202af8ccffbce40c6f85a3a6f216846b565726e2cb7f4cd61101ee7fa",
+      "sha256": "8685287202af8ccffbce40c6f85a3a6f216846b565726e2cb7f4cd61101ee7fa"
     },
     {
       "source": "go/reservations.go",
@@ -55,14 +79,14 @@
     {
       "source": "go/status.go",
       "destination": "pkg/launchclient/internal/licentivo/status.go",
-      "source_sha256": "51862fb591ed0bf6962e302f04bb2c68ac4212c047597517ab8b14290b9f361e",
-      "sha256": "a16f2f0d3bed7994aba5d58b7107b57eee44224a695927144793dab4bf2840ab"
+      "source_sha256": "1bf1845720f3491600b3bea197a1a11e713fc82cbff0cf3914539f46796bf3fc",
+      "sha256": "e874f55c4f2a0a00f4254230ef8b81046bd5a66075316fd75a0f63aa1ca08f9e"
     },
     {
       "source": "go/internal/lease/lease.go",
       "destination": "pkg/launchclient/internal/licentivo/internal/lease/lease.go",
-      "source_sha256": "94c6957cc22ee0094e4fd676af6aa47cf6b840e29e4133c4fffa7617c3aeb100",
-      "sha256": "94c6957cc22ee0094e4fd676af6aa47cf6b840e29e4133c4fffa7617c3aeb100"
+      "source_sha256": "d7b38a4976c253889731163bd1a16ad7e740260e98fdf99f1fbf0cb44aeb8f21",
+      "sha256": "d7b38a4976c253889731163bd1a16ad7e740260e98fdf99f1fbf0cb44aeb8f21"
     },
     {
       "source": "LICENSE",
@@ -79,26 +103,26 @@
     {
       "source": "VERSION",
       "destination": "pkg/launchclient/internal/licentivo/VERSION",
-      "source_sha256": "be904fd6626f304ea2dd11524bfc70f77348a90d5163118bf9e92b71d3c9a35f",
-      "sha256": "be904fd6626f304ea2dd11524bfc70f77348a90d5163118bf9e92b71d3c9a35f"
+      "source_sha256": "a6576a398af92dc97a76db69dcaa413486295103825f8db191fafd7ab6347371",
+      "sha256": "f8b4c1734b71016ea74dbdb5962960a3961615f3377ddf585c956cfd397b1d6d"
     },
     {
       "source": "python/licentivo.py",
       "destination": "sdk/python/src/licentivo_launch/_vendor/licentivo.py",
-      "source_sha256": "693541fcb20a3e040a1e2bf4f354254c22128445249b1c05f1cc928752913828",
-      "sha256": "b8012015324c8fa3d1e8324b9d33de511040f2370ed6029f7f7d0e6d311ea4f1"
+      "source_sha256": "4fdb5114fbc10be7e5a08f6e2d44277d3830918b465344daa77515a082b2626b",
+      "sha256": "edf23f878a2243017d0f1c97f7fe1cdd8651f3afa1ffef6f13fa418571a7575a"
     },
     {
       "source": "python/licentivo_logout.py",
       "destination": "sdk/python/src/licentivo_launch/_vendor/licentivo_logout.py",
-      "source_sha256": "f16fe1f4f5e44586bde0f4d387aeaaa493e0fb9d58f1aa833daf50367f898de3",
-      "sha256": "f16fe1f4f5e44586bde0f4d387aeaaa493e0fb9d58f1aa833daf50367f898de3"
+      "source_sha256": "68b12d442536b882523add8975a8904a79f682fc1afd00b9a24f3cc71a3b7a16",
+      "sha256": "68b12d442536b882523add8975a8904a79f682fc1afd00b9a24f3cc71a3b7a16"
     },
     {
       "source": "python/licentivo_tasks.py",
       "destination": "sdk/python/src/licentivo_launch/_vendor/licentivo_tasks.py",
-      "source_sha256": "9d7f16d5c31ece707a57ea6221fbfeda46fcc82f9aead64be9de3988c009bdcc",
-      "sha256": "9d7f16d5c31ece707a57ea6221fbfeda46fcc82f9aead64be9de3988c009bdcc"
+      "source_sha256": "90ab35adc267d07c901ebf5b629797c15099990a4a5b8370809bba604a9752a6",
+      "sha256": "90ab35adc267d07c901ebf5b629797c15099990a4a5b8370809bba604a9752a6"
     },
     {
       "source": "LICENSE",
@@ -115,8 +139,8 @@
     {
       "source": "VERSION",
       "destination": "sdk/python/src/licentivo_launch/_vendor/VERSION",
-      "source_sha256": "be904fd6626f304ea2dd11524bfc70f77348a90d5163118bf9e92b71d3c9a35f",
-      "sha256": "be904fd6626f304ea2dd11524bfc70f77348a90d5163118bf9e92b71d3c9a35f"
+      "source_sha256": "a6576a398af92dc97a76db69dcaa413486295103825f8db191fafd7ab6347371",
+      "sha256": "f8b4c1734b71016ea74dbdb5962960a3961615f3377ddf585c956cfd397b1d6d"
     },
     {
       "source": "javascript/app.mjs",
@@ -127,20 +151,20 @@
     {
       "source": "javascript/feature-tasks.mjs",
       "destination": "sdk/javascript/src/vendor/feature-tasks.mjs",
-      "source_sha256": "c0c8d6430e375349a40c5998d7dd0ac2b9a3184fd9c41c2c3d5665f8e506fcec",
-      "sha256": "c0c8d6430e375349a40c5998d7dd0ac2b9a3184fd9c41c2c3d5665f8e506fcec"
+      "source_sha256": "02c83641dc137772ddd8467d85c4e51a836e81550386fa7763f395006bcf0982",
+      "sha256": "02c83641dc137772ddd8467d85c4e51a836e81550386fa7763f395006bcf0982"
     },
     {
       "source": "javascript/licentivo.mjs",
       "destination": "sdk/javascript/src/vendor/licentivo.mjs",
-      "source_sha256": "6a225f40f0d20dbf832296c19603af970354e5b44cf696851ded70596a61d7dc",
-      "sha256": "188706f2b013dfd7da557934e4763e1b9377f2c1156b9f79d48bbec16ff54e30"
+      "source_sha256": "37e79b0c48994069f17e265dfbe35af6fcc8e96dae319985f65a08c3b8b13780",
+      "sha256": "37e79b0c48994069f17e265dfbe35af6fcc8e96dae319985f65a08c3b8b13780"
     },
     {
       "source": "javascript/logout.mjs",
       "destination": "sdk/javascript/src/vendor/logout.mjs",
-      "source_sha256": "fcc4bb278519a0d2fe48841791d59590b554777fd89c198ddd212dd07525a99a",
-      "sha256": "fcc4bb278519a0d2fe48841791d59590b554777fd89c198ddd212dd07525a99a"
+      "source_sha256": "76d3a69d621b6a772e5e1919a705cf1569be927480fda9c982f0dd5e55f11f32",
+      "sha256": "76d3a69d621b6a772e5e1919a705cf1569be927480fda9c982f0dd5e55f11f32"
     },
     {
       "source": "javascript/quickstart.mjs",
@@ -163,20 +187,26 @@
     {
       "source": "VERSION",
       "destination": "sdk/javascript/src/vendor/VERSION",
-      "source_sha256": "be904fd6626f304ea2dd11524bfc70f77348a90d5163118bf9e92b71d3c9a35f",
-      "sha256": "be904fd6626f304ea2dd11524bfc70f77348a90d5163118bf9e92b71d3c9a35f"
+      "source_sha256": "a6576a398af92dc97a76db69dcaa413486295103825f8db191fafd7ab6347371",
+      "sha256": "f8b4c1734b71016ea74dbdb5962960a3961615f3377ddf585c956cfd397b1d6d"
     },
     {
       "source": "csharp/Advanced.cs",
       "destination": "sdk/csharp/vendor/Advanced.cs",
-      "source_sha256": "393f6da1c495667015ba05e1d4240295e341fbee1de8396b6ad693e5e310ec74",
-      "sha256": "c44721e81974eac1794b72f7d29c6c53138aa285795060e15ee7b3b4183fdf8a"
+      "source_sha256": "147f270daf53b9f353e3b7093a5e1cf5bad2e443eb9b12636a6d5b50d06e08f9",
+      "sha256": "147f270daf53b9f353e3b7093a5e1cf5bad2e443eb9b12636a6d5b50d06e08f9"
     },
     {
       "source": "csharp/DeviceCredential.cs",
       "destination": "sdk/csharp/vendor/DeviceCredential.cs",
-      "source_sha256": "7c0ac551b7534546744fab85880953b82f1575de2aa5e611bf98e9b10b37d800",
-      "sha256": "e01ddaa32200a67bbb1441034e848bbb0f56182a3d13cee45fad3f94aff4118f"
+      "source_sha256": "8174d95c547762c891e3000c3b81bc63ef2e3b6c1ecebc16e92fa15436c18a28",
+      "sha256": "8174d95c547762c891e3000c3b81bc63ef2e3b6c1ecebc16e92fa15436c18a28"
+    },
+    {
+      "source": "csharp/DeviceInfo.cs",
+      "destination": "sdk/csharp/vendor/DeviceInfo.cs",
+      "source_sha256": "904ba0f8fb93662a273db2984ed01729f007b249e3b30e91dfe1fb754988a933",
+      "sha256": "904ba0f8fb93662a273db2984ed01729f007b249e3b30e91dfe1fb754988a933"
     },
     {
       "source": "csharp/Feature.cs",
@@ -187,32 +217,32 @@
     {
       "source": "csharp/FeatureTasks.cs",
       "destination": "sdk/csharp/vendor/FeatureTasks.cs",
-      "source_sha256": "1aefb9d9bda169ebdfff105bc04c528454e88fbc072e9b1dd09dff49109231a9",
-      "sha256": "1aefb9d9bda169ebdfff105bc04c528454e88fbc072e9b1dd09dff49109231a9"
+      "source_sha256": "a834080f9395ff63051a2946c04a8701c6847bb28ca1e779606abb832a3f0104",
+      "sha256": "a834080f9395ff63051a2946c04a8701c6847bb28ca1e779606abb832a3f0104"
     },
     {
       "source": "csharp/LicentivoClient.cs",
       "destination": "sdk/csharp/vendor/LicentivoClient.cs",
-      "source_sha256": "b0c104f4c1ea9c9b4b03a8efb2c6862ae120431be7a762e65177bda79cdc902c",
-      "sha256": "b0c104f4c1ea9c9b4b03a8efb2c6862ae120431be7a762e65177bda79cdc902c"
+      "source_sha256": "e6f034f9f35da3291085406c091d95813eca0339ec2899d9f79581c2b96b51aa",
+      "sha256": "e6f034f9f35da3291085406c091d95813eca0339ec2899d9f79581c2b96b51aa"
     },
     {
       "source": "csharp/Logout.cs",
       "destination": "sdk/csharp/vendor/Logout.cs",
-      "source_sha256": "91481dfe8c0b67dc217d90628809595a29d4f471b62c7b43b923d5ca64cad11c",
-      "sha256": "91481dfe8c0b67dc217d90628809595a29d4f471b62c7b43b923d5ca64cad11c"
+      "source_sha256": "8b291cbb1bfd87c3d59564e9617c5f17f882f324ac0dc7060b11c68f8b0662fa",
+      "sha256": "8b291cbb1bfd87c3d59564e9617c5f17f882f324ac0dc7060b11c68f8b0662fa"
     },
     {
       "source": "csharp/MachineIdentity.cs",
       "destination": "sdk/csharp/vendor/MachineIdentity.cs",
-      "source_sha256": "de41e9f2ffcea1f25b88d4cc17c25c919fc3b739288987125bb301e020cd2cdf",
+      "source_sha256": "5d3fbc5152239bd4971391776bc9152ee0b2af615ea0a9345caa2ee511a6f1eb",
       "sha256": "5d3fbc5152239bd4971391776bc9152ee0b2af615ea0a9345caa2ee511a6f1eb"
     },
     {
       "source": "csharp/Status.cs",
       "destination": "sdk/csharp/vendor/Status.cs",
-      "source_sha256": "20e8fa08490d3a61085143808f79defacd5e996c978c1a1fc7e54d720b5f71f1",
-      "sha256": "be94f3f25a4b88071de3094d2a757113b6113654e65c503bceb7ea2f7b9f4db0"
+      "source_sha256": "eb21e153cd2058ac865a4ca8095ccdc6f7f93b96e78a55e82be69dc5f4c3af78",
+      "sha256": "eb21e153cd2058ac865a4ca8095ccdc6f7f93b96e78a55e82be69dc5f4c3af78"
     },
     {
       "source": "LICENSE",
@@ -229,26 +259,26 @@
     {
       "source": "VERSION",
       "destination": "sdk/csharp/vendor/VERSION",
-      "source_sha256": "be904fd6626f304ea2dd11524bfc70f77348a90d5163118bf9e92b71d3c9a35f",
-      "sha256": "be904fd6626f304ea2dd11524bfc70f77348a90d5163118bf9e92b71d3c9a35f"
+      "source_sha256": "a6576a398af92dc97a76db69dcaa413486295103825f8db191fafd7ab6347371",
+      "sha256": "f8b4c1734b71016ea74dbdb5962960a3961615f3377ddf585c956cfd397b1d6d"
     },
     {
       "source": "java/src/licentivo/Capabilities.java",
       "destination": "sdk/java/src/licentivo/Capabilities.java",
-      "source_sha256": "453baec987af6fcb6bb9eccf7a1dc2e32feedba195d55fd545db96e7a98420a2",
-      "sha256": "453baec987af6fcb6bb9eccf7a1dc2e32feedba195d55fd545db96e7a98420a2"
+      "source_sha256": "03379929ac17d6cd1cedc459775815e9a40f3e23565a70748b6af19f4de7e7b4",
+      "sha256": "03379929ac17d6cd1cedc459775815e9a40f3e23565a70748b6af19f4de7e7b4"
     },
     {
       "source": "java/src/licentivo/Client.java",
       "destination": "sdk/java/src/licentivo/Client.java",
-      "source_sha256": "729e03730ce80324f489ac76fde5bfddbb8ca1863d33c48cdd43cd6896b2d1d4",
-      "sha256": "f09af74d550d307b9b62e84c30a5e946e88cc89f6c9c7e86a4739eece4bc3e97"
+      "source_sha256": "29f95d8b83a11115bb95195009126500de54a6c1d6e001cb5edf2820971e7960",
+      "sha256": "29f95d8b83a11115bb95195009126500de54a6c1d6e001cb5edf2820971e7960"
     },
     {
       "source": "java/src/licentivo/Demo.java",
       "destination": "sdk/java/src/licentivo/Demo.java",
-      "source_sha256": "5d5677795a31f152f1e5230cbe964197013fff62099815e8036b20bdd3ae8e9a",
-      "sha256": "23566d1e74c9a08b21c973c884ba3b92d549938bc9d8ac5f18e7dad4d37d4f14"
+      "source_sha256": "97db01ced01fc1729c1fce5bcc43bf13f7bfe5e99583f2a97fea1da7d9c6c458",
+      "sha256": "97db01ced01fc1729c1fce5bcc43bf13f7bfe5e99583f2a97fea1da7d9c6c458"
     },
     {
       "source": "java/src/licentivo/DesktopDemo.java",
@@ -259,14 +289,14 @@
     {
       "source": "java/src/licentivo/DeviceCredential.java",
       "destination": "sdk/java/src/licentivo/DeviceCredential.java",
-      "source_sha256": "c285868ae9656d62076ad6f978ec017e3530d72b481b05e3dfc17ac023a80e18",
-      "sha256": "c6e6dd8d82dab6344fad7d0dc5b373022e7823520066d22a6150b798772b40fc"
+      "source_sha256": "816c72340f10d70697f4dc799dc899936e46ff785cbe3565a1a2635d082af80f",
+      "sha256": "816c72340f10d70697f4dc799dc899936e46ff785cbe3565a1a2635d082af80f"
     },
     {
       "source": "java/src/licentivo/FeatureTasks.java",
       "destination": "sdk/java/src/licentivo/FeatureTasks.java",
-      "source_sha256": "bcf0615cc59f583fdbd08f02523f3305cb98a03b73aeb431c642a5a4cd41ff16",
-      "sha256": "bcf0615cc59f583fdbd08f02523f3305cb98a03b73aeb431c642a5a4cd41ff16"
+      "source_sha256": "1a8140727c36e403aba4dc4eb34146cdb7225eb9d6fd6bd0f4fd0c898adb6273",
+      "sha256": "1a8140727c36e403aba4dc4eb34146cdb7225eb9d6fd6bd0f4fd0c898adb6273"
     },
     {
       "source": "java/src/licentivo/Json.java",
@@ -277,13 +307,13 @@
     {
       "source": "java/src/licentivo/LogoutJournal.java",
       "destination": "sdk/java/src/licentivo/LogoutJournal.java",
-      "source_sha256": "c8adefb392e0e078b47edd8aec1648d1d6b5ae34485d9b8bb6fe8b258a650f85",
-      "sha256": "c8adefb392e0e078b47edd8aec1648d1d6b5ae34485d9b8bb6fe8b258a650f85"
+      "source_sha256": "985345d0d2d3933ef6eec0e28c880deda438f278a3babdd0f07d0b8271e3250e",
+      "sha256": "985345d0d2d3933ef6eec0e28c880deda438f278a3babdd0f07d0b8271e3250e"
     },
     {
       "source": "java/src/licentivo/MachineIdentity.java",
       "destination": "sdk/java/src/licentivo/MachineIdentity.java",
-      "source_sha256": "2b50f35a52406d43f606e2b05339b663f4065f690c2651beab9222c08f1c7cfa",
+      "source_sha256": "f46869c8c9d6b749c11d5e3e5d47fcde4a45a78a746ad7997decd7fa812dd0cd",
       "sha256": "f46869c8c9d6b749c11d5e3e5d47fcde4a45a78a746ad7997decd7fa812dd0cd"
     },
     {
@@ -295,14 +325,14 @@
     {
       "source": "java/src/licentivo/RuntimePolicy.java",
       "destination": "sdk/java/src/licentivo/RuntimePolicy.java",
-      "source_sha256": "8beb3c7a131278006efcc1a197fb4dbb883b8cd317643207787305d3a69a3f1f",
+      "source_sha256": "e631e7642bbc4ac5ec537089ae794acebaffd742d793c2afb1fbecafc84b4698",
       "sha256": "e631e7642bbc4ac5ec537089ae794acebaffd742d793c2afb1fbecafc84b4698"
     },
     {
       "source": "java/src/licentivo/TestVectors.java",
       "destination": "sdk/java/src/licentivo/TestVectors.java",
-      "source_sha256": "a2ad4e4629ce3d15815979e75faedd660979ee42cc02b5b22ad809f8a084b3d3",
-      "sha256": "a2ad4e4629ce3d15815979e75faedd660979ee42cc02b5b22ad809f8a084b3d3"
+      "source_sha256": "b31eeaad595e208fd30544b8048d2612a6aac317ce51cc04addd3c21db97ccc8",
+      "sha256": "b31eeaad595e208fd30544b8048d2612a6aac317ce51cc04addd3c21db97ccc8"
     },
     {
       "source": "LICENSE",
@@ -319,8 +349,8 @@
     {
       "source": "VERSION",
       "destination": "sdk/java/vendor/VERSION",
-      "source_sha256": "be904fd6626f304ea2dd11524bfc70f77348a90d5163118bf9e92b71d3c9a35f",
-      "sha256": "be904fd6626f304ea2dd11524bfc70f77348a90d5163118bf9e92b71d3c9a35f"
+      "source_sha256": "a6576a398af92dc97a76db69dcaa413486295103825f8db191fafd7ab6347371",
+      "sha256": "f8b4c1734b71016ea74dbdb5962960a3961615f3377ddf585c956cfd397b1d6d"
     },
     {
       "source": "rust/src/lib.rs",
@@ -337,26 +367,32 @@
     {
       "source": "c/demo.c",
       "destination": "sdk/rust/vendor/c/demo.c",
-      "source_sha256": "e754c9f3c5b4c931ac17eb17f5e171a3783971e8fae5d4ae2464ac407951538f",
-      "sha256": "ac4cdddfc0b0fc0d691845131990a01483ac893c203bbdff41d9d3f81207eeca"
+      "source_sha256": "6577505701fcf4594546034b673c6662c0c75662dba4a47d11128109dfdd014e",
+      "sha256": "6577505701fcf4594546034b673c6662c0c75662dba4a47d11128109dfdd014e"
+    },
+    {
+      "source": "c/device_display.h",
+      "destination": "sdk/rust/vendor/c/device_display.h",
+      "source_sha256": "bc7e99e9ec94455933e32c92202f2bb74f0b608f19bfc072293022bc5351167e",
+      "sha256": "bc7e99e9ec94455933e32c92202f2bb74f0b608f19bfc072293022bc5351167e"
     },
     {
       "source": "c/device_logout.h",
       "destination": "sdk/rust/vendor/c/device_logout.h",
-      "source_sha256": "1a71ab3d6125f59772d519ea72d031c5a8dc1ade43ed3abbc75accea3714745a",
-      "sha256": "1a71ab3d6125f59772d519ea72d031c5a8dc1ade43ed3abbc75accea3714745a"
+      "source_sha256": "a362b3adbb1fb63c251b5150cac0221670f92c764ed13888c5be4a854319aa7f",
+      "sha256": "a362b3adbb1fb63c251b5150cac0221670f92c764ed13888c5be4a854319aa7f"
     },
     {
       "source": "c/feature_tasks.h",
       "destination": "sdk/rust/vendor/c/feature_tasks.h",
-      "source_sha256": "3dc4df2eedfd56571d47404ad13a699ca2d4b5c8d775d36222f470903a3c60d4",
-      "sha256": "3dc4df2eedfd56571d47404ad13a699ca2d4b5c8d775d36222f470903a3c60d4"
+      "source_sha256": "4d7f183b9e3a6971571e3653833f847d4afb49b12d98b9c934e3cffa502daddb",
+      "sha256": "4d7f183b9e3a6971571e3653833f847d4afb49b12d98b9c934e3cffa502daddb"
     },
     {
       "source": "c/licentivo.c",
       "destination": "sdk/rust/vendor/c/licentivo.c",
-      "source_sha256": "15c67270e30e08f0d3073ad6948293580af68244215437595df186c6e4452c0b",
-      "sha256": "da7fc6f55a04f94af3a934cac5a26dcd8d491e3800faef6c73b45f34c205a32b"
+      "source_sha256": "8d086fa8eae28729b4d28d182cf0cbdeb112c16e1e7a51f4a2fa2bc8975ebbc6",
+      "sha256": "8d086fa8eae28729b4d28d182cf0cbdeb112c16e1e7a51f4a2fa2bc8975ebbc6"
     },
     {
       "source": "c/licentivo.h",
@@ -369,6 +405,24 @@
       "destination": "sdk/rust/vendor/c/quickstart.c",
       "source_sha256": "ea07af987ac7f460c1657b28a10fbadd61175eff5346027dbf84595af418f892",
       "sha256": "ea07af987ac7f460c1657b28a10fbadd61175eff5346027dbf84595af418f892"
+    },
+    {
+      "source": "c/test_feature_deadlines.c",
+      "destination": "sdk/rust/vendor/c/test_feature_deadlines.c",
+      "source_sha256": "b944a5c1770695c1a5fb12b3e326d02e2860ed5a8d72c9cdf28a38d0201fe2b5",
+      "sha256": "b944a5c1770695c1a5fb12b3e326d02e2860ed5a8d72c9cdf28a38d0201fe2b5"
+    },
+    {
+      "source": "c/test_platform_lines.c",
+      "destination": "sdk/rust/vendor/c/test_platform_lines.c",
+      "source_sha256": "f0b5ed49b4033cf888a196bfa34b778e884cadb97843224f21e33e773940d15e",
+      "sha256": "f0b5ed49b4033cf888a196bfa34b778e884cadb97843224f21e33e773940d15e"
+    },
+    {
+      "source": "c/test_state_files.c",
+      "destination": "sdk/rust/vendor/c/test_state_files.c",
+      "source_sha256": "2307b62dbed6fecf157f1475d914b7da8f50f5c63fae2f5e9213ddf1126e4b4e",
+      "sha256": "2307b62dbed6fecf157f1475d914b7da8f50f5c63fae2f5e9213ddf1126e4b4e"
     },
     {
       "source": "c/test_vectors.c",
@@ -439,14 +493,14 @@
     {
       "source": "VERSION",
       "destination": "sdk/rust/vendor/VERSION",
-      "source_sha256": "be904fd6626f304ea2dd11524bfc70f77348a90d5163118bf9e92b71d3c9a35f",
-      "sha256": "be904fd6626f304ea2dd11524bfc70f77348a90d5163118bf9e92b71d3c9a35f"
+      "source_sha256": "a6576a398af92dc97a76db69dcaa413486295103825f8db191fafd7ab6347371",
+      "sha256": "f8b4c1734b71016ea74dbdb5962960a3961615f3377ddf585c956cfd397b1d6d"
     },
     {
       "source": "ruby/lib/licentivo.rb",
       "destination": "sdk/ruby/lib/licentivo_launch/vendor/licentivo.rb",
-      "source_sha256": "52944e41904d241c58dd7caecbf52d7caf2764e26e902fbf2a1c95b221d65f4c",
-      "sha256": "865a37e39dcce27e3e64bea26fbc58ff17a92058dd2f1c1336ccf9f021386c23"
+      "source_sha256": "c4608aaa25667028593999e9bd2dbe48b86ad9a15c05d85c389e83f66afa8cb3",
+      "sha256": "f96cf6c76cd253b9c81770ceefa6595f6a95fad312c7e31a534321d709533dbc"
     },
     {
       "source": "c/app.c",
@@ -457,26 +511,32 @@
     {
       "source": "c/demo.c",
       "destination": "sdk/ruby/vendor/c/demo.c",
-      "source_sha256": "e754c9f3c5b4c931ac17eb17f5e171a3783971e8fae5d4ae2464ac407951538f",
-      "sha256": "ac4cdddfc0b0fc0d691845131990a01483ac893c203bbdff41d9d3f81207eeca"
+      "source_sha256": "6577505701fcf4594546034b673c6662c0c75662dba4a47d11128109dfdd014e",
+      "sha256": "6577505701fcf4594546034b673c6662c0c75662dba4a47d11128109dfdd014e"
+    },
+    {
+      "source": "c/device_display.h",
+      "destination": "sdk/ruby/vendor/c/device_display.h",
+      "source_sha256": "bc7e99e9ec94455933e32c92202f2bb74f0b608f19bfc072293022bc5351167e",
+      "sha256": "bc7e99e9ec94455933e32c92202f2bb74f0b608f19bfc072293022bc5351167e"
     },
     {
       "source": "c/device_logout.h",
       "destination": "sdk/ruby/vendor/c/device_logout.h",
-      "source_sha256": "1a71ab3d6125f59772d519ea72d031c5a8dc1ade43ed3abbc75accea3714745a",
-      "sha256": "1a71ab3d6125f59772d519ea72d031c5a8dc1ade43ed3abbc75accea3714745a"
+      "source_sha256": "a362b3adbb1fb63c251b5150cac0221670f92c764ed13888c5be4a854319aa7f",
+      "sha256": "a362b3adbb1fb63c251b5150cac0221670f92c764ed13888c5be4a854319aa7f"
     },
     {
       "source": "c/feature_tasks.h",
       "destination": "sdk/ruby/vendor/c/feature_tasks.h",
-      "source_sha256": "3dc4df2eedfd56571d47404ad13a699ca2d4b5c8d775d36222f470903a3c60d4",
-      "sha256": "3dc4df2eedfd56571d47404ad13a699ca2d4b5c8d775d36222f470903a3c60d4"
+      "source_sha256": "4d7f183b9e3a6971571e3653833f847d4afb49b12d98b9c934e3cffa502daddb",
+      "sha256": "4d7f183b9e3a6971571e3653833f847d4afb49b12d98b9c934e3cffa502daddb"
     },
     {
       "source": "c/licentivo.c",
       "destination": "sdk/ruby/vendor/c/licentivo.c",
-      "source_sha256": "15c67270e30e08f0d3073ad6948293580af68244215437595df186c6e4452c0b",
-      "sha256": "da7fc6f55a04f94af3a934cac5a26dcd8d491e3800faef6c73b45f34c205a32b"
+      "source_sha256": "8d086fa8eae28729b4d28d182cf0cbdeb112c16e1e7a51f4a2fa2bc8975ebbc6",
+      "sha256": "8d086fa8eae28729b4d28d182cf0cbdeb112c16e1e7a51f4a2fa2bc8975ebbc6"
     },
     {
       "source": "c/licentivo.h",
@@ -489,6 +549,24 @@
       "destination": "sdk/ruby/vendor/c/quickstart.c",
       "source_sha256": "ea07af987ac7f460c1657b28a10fbadd61175eff5346027dbf84595af418f892",
       "sha256": "ea07af987ac7f460c1657b28a10fbadd61175eff5346027dbf84595af418f892"
+    },
+    {
+      "source": "c/test_feature_deadlines.c",
+      "destination": "sdk/ruby/vendor/c/test_feature_deadlines.c",
+      "source_sha256": "b944a5c1770695c1a5fb12b3e326d02e2860ed5a8d72c9cdf28a38d0201fe2b5",
+      "sha256": "b944a5c1770695c1a5fb12b3e326d02e2860ed5a8d72c9cdf28a38d0201fe2b5"
+    },
+    {
+      "source": "c/test_platform_lines.c",
+      "destination": "sdk/ruby/vendor/c/test_platform_lines.c",
+      "source_sha256": "f0b5ed49b4033cf888a196bfa34b778e884cadb97843224f21e33e773940d15e",
+      "sha256": "f0b5ed49b4033cf888a196bfa34b778e884cadb97843224f21e33e773940d15e"
+    },
+    {
+      "source": "c/test_state_files.c",
+      "destination": "sdk/ruby/vendor/c/test_state_files.c",
+      "source_sha256": "2307b62dbed6fecf157f1475d914b7da8f50f5c63fae2f5e9213ddf1126e4b4e",
+      "sha256": "2307b62dbed6fecf157f1475d914b7da8f50f5c63fae2f5e9213ddf1126e4b4e"
     },
     {
       "source": "c/test_vectors.c",
@@ -559,14 +637,14 @@
     {
       "source": "VERSION",
       "destination": "sdk/ruby/vendor/VERSION",
-      "source_sha256": "be904fd6626f304ea2dd11524bfc70f77348a90d5163118bf9e92b71d3c9a35f",
-      "sha256": "be904fd6626f304ea2dd11524bfc70f77348a90d5163118bf9e92b71d3c9a35f"
+      "source_sha256": "a6576a398af92dc97a76db69dcaa413486295103825f8db191fafd7ab6347371",
+      "sha256": "f8b4c1734b71016ea74dbdb5962960a3961615f3377ddf585c956cfd397b1d6d"
     },
     {
       "source": "CMakeLists.txt",
       "destination": "sdk/native/vendor/sdk/CMakeLists.txt",
-      "source_sha256": "31d0519f7125f78eae16dfadc7358804a441c791a38310b60e1991e4773b7499",
-      "sha256": "31d0519f7125f78eae16dfadc7358804a441c791a38310b60e1991e4773b7499"
+      "source_sha256": "e0ec556f8649ca6d88801478e249974fed8d0e2a850d15cfd19d14a7bb6bc70e",
+      "sha256": "e39abe016e3b36ca3586e210a7978a2a78105c0ac0eba590d5bb51a1578b20be"
     },
     {
       "source": "LicentivoConfig.cmake.in",
@@ -589,8 +667,8 @@
     {
       "source": "VERSION",
       "destination": "sdk/native/vendor/sdk/VERSION",
-      "source_sha256": "be904fd6626f304ea2dd11524bfc70f77348a90d5163118bf9e92b71d3c9a35f",
-      "sha256": "be904fd6626f304ea2dd11524bfc70f77348a90d5163118bf9e92b71d3c9a35f"
+      "source_sha256": "a6576a398af92dc97a76db69dcaa413486295103825f8db191fafd7ab6347371",
+      "sha256": "f8b4c1734b71016ea74dbdb5962960a3961615f3377ddf585c956cfd397b1d6d"
     },
     {
       "source": "c/app.c",
@@ -601,26 +679,32 @@
     {
       "source": "c/demo.c",
       "destination": "sdk/native/vendor/sdk/c/demo.c",
-      "source_sha256": "e754c9f3c5b4c931ac17eb17f5e171a3783971e8fae5d4ae2464ac407951538f",
-      "sha256": "ac4cdddfc0b0fc0d691845131990a01483ac893c203bbdff41d9d3f81207eeca"
+      "source_sha256": "6577505701fcf4594546034b673c6662c0c75662dba4a47d11128109dfdd014e",
+      "sha256": "6577505701fcf4594546034b673c6662c0c75662dba4a47d11128109dfdd014e"
+    },
+    {
+      "source": "c/device_display.h",
+      "destination": "sdk/native/vendor/sdk/c/device_display.h",
+      "source_sha256": "bc7e99e9ec94455933e32c92202f2bb74f0b608f19bfc072293022bc5351167e",
+      "sha256": "bc7e99e9ec94455933e32c92202f2bb74f0b608f19bfc072293022bc5351167e"
     },
     {
       "source": "c/device_logout.h",
       "destination": "sdk/native/vendor/sdk/c/device_logout.h",
-      "source_sha256": "1a71ab3d6125f59772d519ea72d031c5a8dc1ade43ed3abbc75accea3714745a",
-      "sha256": "1a71ab3d6125f59772d519ea72d031c5a8dc1ade43ed3abbc75accea3714745a"
+      "source_sha256": "a362b3adbb1fb63c251b5150cac0221670f92c764ed13888c5be4a854319aa7f",
+      "sha256": "a362b3adbb1fb63c251b5150cac0221670f92c764ed13888c5be4a854319aa7f"
     },
     {
       "source": "c/feature_tasks.h",
       "destination": "sdk/native/vendor/sdk/c/feature_tasks.h",
-      "source_sha256": "3dc4df2eedfd56571d47404ad13a699ca2d4b5c8d775d36222f470903a3c60d4",
-      "sha256": "3dc4df2eedfd56571d47404ad13a699ca2d4b5c8d775d36222f470903a3c60d4"
+      "source_sha256": "4d7f183b9e3a6971571e3653833f847d4afb49b12d98b9c934e3cffa502daddb",
+      "sha256": "4d7f183b9e3a6971571e3653833f847d4afb49b12d98b9c934e3cffa502daddb"
     },
     {
       "source": "c/licentivo.c",
       "destination": "sdk/native/vendor/sdk/c/licentivo.c",
-      "source_sha256": "15c67270e30e08f0d3073ad6948293580af68244215437595df186c6e4452c0b",
-      "sha256": "da7fc6f55a04f94af3a934cac5a26dcd8d491e3800faef6c73b45f34c205a32b"
+      "source_sha256": "8d086fa8eae28729b4d28d182cf0cbdeb112c16e1e7a51f4a2fa2bc8975ebbc6",
+      "sha256": "8d086fa8eae28729b4d28d182cf0cbdeb112c16e1e7a51f4a2fa2bc8975ebbc6"
     },
     {
       "source": "c/licentivo.h",
@@ -633,6 +717,24 @@
       "destination": "sdk/native/vendor/sdk/c/quickstart.c",
       "source_sha256": "ea07af987ac7f460c1657b28a10fbadd61175eff5346027dbf84595af418f892",
       "sha256": "ea07af987ac7f460c1657b28a10fbadd61175eff5346027dbf84595af418f892"
+    },
+    {
+      "source": "c/test_feature_deadlines.c",
+      "destination": "sdk/native/vendor/sdk/c/test_feature_deadlines.c",
+      "source_sha256": "b944a5c1770695c1a5fb12b3e326d02e2860ed5a8d72c9cdf28a38d0201fe2b5",
+      "sha256": "b944a5c1770695c1a5fb12b3e326d02e2860ed5a8d72c9cdf28a38d0201fe2b5"
+    },
+    {
+      "source": "c/test_platform_lines.c",
+      "destination": "sdk/native/vendor/sdk/c/test_platform_lines.c",
+      "source_sha256": "f0b5ed49b4033cf888a196bfa34b778e884cadb97843224f21e33e773940d15e",
+      "sha256": "f0b5ed49b4033cf888a196bfa34b778e884cadb97843224f21e33e773940d15e"
+    },
+    {
+      "source": "c/test_state_files.c",
+      "destination": "sdk/native/vendor/sdk/c/test_state_files.c",
+      "source_sha256": "2307b62dbed6fecf157f1475d914b7da8f50f5c63fae2f5e9213ddf1126e4b4e",
+      "sha256": "2307b62dbed6fecf157f1475d914b7da8f50f5c63fae2f5e9213ddf1126e4b4e"
     },
     {
       "source": "c/test_vectors.c",

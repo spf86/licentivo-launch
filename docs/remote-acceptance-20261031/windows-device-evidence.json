@@ -1,0 +1,30 @@
+[
+  {
+    "phase": "full",
+    "scope": "second_actual_host_Windows_with_Linux_slot_active",
+    "allowed": false,
+    "error_type": "ValueError",
+    "error_codes": [
+      "DEVICE_LIMIT_REACHED"
+    ]
+  },
+  {
+    "phase": "replacement",
+    "scope": "second_actual_host_Windows_with_Linux_slot_active",
+    "allowed": true,
+    "state": "active",
+    "device": {
+      "name": "LAPTOP-ACAGBUDL",
+      "code": "72A6-5461",
+      "platform": "windows",
+      "os_version": "Windows 11 Home China 26H2 (26340)",
+      "cpu": "AMD Ryzen 7 5800H with Radeon Graphics",
+      "memory_mb": 32768,
+      "gpu": "OrayIddDriver Device / AMD Radeon(TM) Graphics / NVIDIA GeForce RTX 3060 Laptop GPU",
+      "system_type": "AMD64",
+      "storage_gb": 475
+    },
+    "export_exists": true,
+    "logout_confirmed": true
+  }
+]

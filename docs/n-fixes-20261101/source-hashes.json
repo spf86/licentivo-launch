@@ -1,0 +1,252 @@
+{
+  "launch_files": [
+    {
+      "path": "internal/app/devices.go",
+      "before_sha256": "0415278634bb4ee0f6c7ab733e112e96c717a1a596b15f58d09132919da7cb24",
+      "sha256": "cb8ba10abf3fe3fb9be2d2a21096022d21f068848ae560f186a342e4929e71b2",
+      "changed_this_turn": true
+    },
+    {
+      "path": "internal/app/licentivo_errors.go",
+      "before_sha256": "90a3146cfc5def98406044e90c0969052701744409b12a59ebbb7d7637fc0437",
+      "sha256": "677e7d65aa9c479bf6152b3b561ef14d554847ddbc2cbec9e2285ecd067768b2",
+      "changed_this_turn": true
+    },
+    {
+      "path": "internal/app/management.go",
+      "before_sha256": "b7adfcd368899a12715c445c8ee0b7d99b3449627081e55b7c60d40ad9eed126",
+      "sha256": "b7adfcd368899a12715c445c8ee0b7d99b3449627081e55b7c60d40ad9eed126",
+      "changed_this_turn": false
+    },
+    {
+      "path": "internal/httpapi/application.go",
+      "before_sha256": "3f0597ec34d76835afd63980fd66dfcb27c84239f211e01636f479ea160c0576",
+      "sha256": "e491b23b03664b52dbaf3b947826eea1e371f62b9a2390ce7f40d6862120cd29",
+      "changed_this_turn": true
+    },
+    {
+      "path": "internal/httpapi/commerce.go",
+      "before_sha256": "07c701ed6fa97279630944b915ebc8c16c3d5f7605be1ba9dd9fbe3a1de9d1e5",
+      "sha256": "07c701ed6fa97279630944b915ebc8c16c3d5f7605be1ba9dd9fbe3a1de9d1e5",
+      "changed_this_turn": false
+    },
+    {
+      "path": "internal/httpapi/web/app.js",
+      "before_sha256": "27a25eea66146adb479180c655ac05bd329ee3a00a8060a80b038e72704f1262",
+      "sha256": "e4905d6804960cdaf3c76eea457393ebca97b01c9f4520db41765d721e4d7abd",
+      "changed_this_turn": true
+    },
+    {
+      "path": "internal/httpapi/web/device-details.js",
+      "before_sha256": "303bb23bc01633bb35266453232cdcbe4ce6d8fbd2ab8eeab93978ac4c159059",
+      "sha256": "9752856d64b4400e1303c462deea3a1795498a1795b74685e1892a33a00d290c",
+      "changed_this_turn": true
+    },
+    {
+      "path": "internal/httpapi/web/interface.css",
+      "before_sha256": "8bd6f0c690ff3fbe25b1e786eeda06fb5456b8bf431cb7e04d7a663703740a59",
+      "sha256": "301777be043266d1df9ff1a90f16b7c3510231285b29f337125e986a0939f017",
+      "changed_this_turn": true
+    },
+    {
+      "path": "internal/httpapi/web/integration-prompts.js",
+      "before_sha256": "4307e1b8e3d5a0dd7bbd43d45714d86edff81f36fe1a8fb6459c9a80b610305a",
+      "sha256": "3dc3fbb35c2b43288358b3560d65460354462e0afc195790c05f05e7ffe8ae31",
+      "changed_this_turn": true
+    },
+    {
+      "path": "pkg/launchclient/application.go",
+      "before_sha256": "192779a7afedf98a714a42db0266910b5dd4a2ee020edef5f948dc91694061e1",
+      "sha256": "f402fd3e6acd84252883ee79b1b2907256ab29e4c0676669134b759d4e5f4254",
+      "changed_this_turn": true
+    },
+    {
+      "path": "pkg/launchclient/runtime.go",
+      "before_sha256": "d5b6a016f8d460f79497620e9fd55eb4a57ec0eee58e4d63023311fa63c08ab8",
+      "sha256": "f7ddd26fa918eac2e6e8e57973a641ac31fe936bb799eef1fe63bd2f16432ad6",
+      "changed_this_turn": true
+    },
+    {
+      "path": "sdk/python/src/licentivo_launch/client.py",
+      "before_sha256": "3aed5a6858485a2b5f7da08a1bdd0f3641702f9ff19591e1cd9de412db4dfa9e",
+      "sha256": "262e6c069ab6ebbe122e3b76d66c7c9c8be2b88bb0cb93b6d80e8ba4e08ce692",
+      "changed_this_turn": true
+    },
+    {
+      "path": "sdk/javascript/src/index.mjs",
+      "before_sha256": "5798041c77cd91a74dc41012774e15ae883906a21267dcc2b70c5e94362a5e65",
+      "sha256": "ecc27117444b8ce6fc8757f8f8b4fc33cd8e2f3eaac180231cab95412fdeaad9",
+      "changed_this_turn": true
+    },
+    {
+      "path": "sdk/csharp/Application.cs",
+      "before_sha256": "d8514d4c178e8fabb82304dd8a4c5776defe40427218605c480673f6aceda19e",
+      "sha256": "1153c59802cb974427927a5931ec2cc6cba328a678734cfa4f0a8d537e006d7f",
+      "changed_this_turn": true
+    },
+    {
+      "path": "sdk/java/src/com/licentivo/launch/Launch.java",
+      "before_sha256": "1c3c559315cfb3a4f7695ad0d74c0458828f8dc728f3455db69a0de517708814",
+      "sha256": "8953f54b1205eb5a2818a0df0c414006b83202799e91fab06b10b4488eec3da9",
+      "changed_this_turn": true
+    },
+    {
+      "path": "sdk/ruby/lib/licentivo_launch.rb",
+      "before_sha256": "9e58ce76239a39049e09a0a8365da3fa699fec509eb2455d34e680d32a5e85d0",
+      "sha256": "8a05dd90bca6128e362f150e03d5ded1da6bb843938ec8ceddbf9b0a1180b7d8",
+      "changed_this_turn": true
+    },
+    {
+      "path": "sdk/rust/src/lib.rs",
+      "before_sha256": "6a292e483467590a9b24aac0b810c457ec2050601e0a0e03a4bd76205135dc5d",
+      "sha256": "397415ae9aed144180fc55ed5ef33a7ca5af2fe80962385d0dd8c80969ef371e",
+      "changed_this_turn": true
+    },
+    {
+      "path": "sdk/native/account.h",
+      "before_sha256": "930dc154aafd84eda5f82ee5dbbc0aae85fd3fa290c0fb21d76f4d8db291a8d5",
+      "sha256": "93c12e36f38864e128f38d807c03d4739176d9b88db7efc05f1408a41ae1c557",
+      "changed_this_turn": true
+    },
+    {
+      "path": "sdk/native/account.c",
+      "before_sha256": "705121329e6ce3a2c3e0877f48fbb984643d135f4607f055a157efab1762499e",
+      "sha256": "9fef01ac44075537a17b498fa18df4a0bc07a4cbf714df4aeab4872368934099",
+      "changed_this_turn": true
+    },
+    {
+      "path": "sdk/native/launch.hpp",
+      "before_sha256": "32916f8346a411a18fd7b077e34478cb5baec840b4dfa6db3b07b979ca96da1b",
+      "sha256": "80c743fb389c803fa2911b195909b92ca4a8632d388723ba1368b8b75107a06b",
+      "changed_this_turn": true
+    },
+    {
+      "path": "internal/app/translations.go",
+      "before_sha256": "51a1ed117dd32e406f718bbc03ccd804f344e9aecbc2f8ee0d686e09eaaca52a",
+      "sha256": "8555f3344a75d5c30ca9842b68cfb897fbaefef44260bef87ea0992849663f44",
+      "changed_this_turn": true
+    },
+    {
+      "path": "internal\\app\\ui_catalogs.go",
+      "before_sha256": "d996cf3ab530cc19b9ca8e4f9a24514fa6bcd59e82d0c928c2664169b356d7fe",
+      "sha256": "62efa431385e9013c1c2eb149e07078a83b0f6c81467cbc8ebe80d7af3cdaec7",
+      "changed_this_turn": true
+    },
+    {
+      "path": "internal\\app\\ui_catalogs_de.go",
+      "before_sha256": "4359b8599c667a7112e7c137573ac234806a10161fd45165383f98042426f6b5",
+      "sha256": "aa3797839d1cd93e059244ca792920431da83c7d3229a2a9d50a409cf35dd8ec",
+      "changed_this_turn": true
+    },
+    {
+      "path": "internal\\app\\ui_catalogs_es.go",
+      "before_sha256": "94666aa57d789ffecfefeced0c44302268200a789c3fdbd121e5517c8c6b9c27",
+      "sha256": "810c0506ee3b293bbd16c8fea6b291f37959e9d9a81bd840e255871928a8f1fa",
+      "changed_this_turn": true
+    },
+    {
+      "path": "internal\\app\\ui_catalogs_fr.go",
+      "before_sha256": "b1739a5d45fad5014466e9bb34f4f41f9b285d01468fab553bf9490af2bd544a",
+      "sha256": "2f37717bd0f2d4cea2128433fe177280dbcee0689e0bf97cdb2fb8a7257290f1",
+      "changed_this_turn": true
+    },
+    {
+      "path": "internal\\app\\ui_catalogs_it.go",
+      "before_sha256": "e3e6014f995cb10764643286c74dae19e55dc10af9d6a77bf7c844f160aba5ca",
+      "sha256": "68c6de72349f2f4c023e6d8f3ce195a8852f6ec6b4c0de013f12bfa55513f4bb",
+      "changed_this_turn": true
+    },
+    {
+      "path": "internal\\app\\ui_catalogs_ja.go",
+      "before_sha256": "6a36e6b5ab8602330dca11fc6f362cbe823537bdd1c4b77ee6e49f7f1ac86cfd",
+      "sha256": "bde91497121f284d8a513b636f6289fe24388fa1d0f556bc6513440bbca9ba48",
+      "changed_this_turn": true
+    },
+    {
+      "path": "internal\\app\\ui_catalogs_ko.go",
+      "before_sha256": "627bd4701297b60d1bff00f4f5ed40089c5d46abdb391f75e153c3d14487c778",
+      "sha256": "3171986a024a44a855ef2d73437d21e8602732d68131119699aa28c0d1ad591a",
+      "changed_this_turn": true
+    },
+    {
+      "path": "internal\\app\\ui_catalogs_ptbr.go",
+      "before_sha256": "cfd9dfddda600b8b3b2abdd2ab843d21f60439b317f2da40ccda0e02ad10ff93",
+      "sha256": "5b361931bfd249e27aafa0731f3692ae2b5ae861831be744812ef876da4fd8e6",
+      "changed_this_turn": true
+    },
+    {
+      "path": "internal\\app\\ui_catalogs_ru.go",
+      "before_sha256": "b883126d6e470f0daa4497982870f2be6e063433920df2d1fcf453a3b02f3525",
+      "sha256": "5365829fdc2f97904ddc7cd017e82e5efbbde8377a89bc1eb663432957986b92",
+      "changed_this_turn": true
+    },
+    {
+      "path": "internal\\app\\ui_catalogs_test.go",
+      "before_sha256": "a6c902b99da2b5fc939d0c0569874eaca9cd4160d014add96b4b0188ee02b943",
+      "sha256": "a6c902b99da2b5fc939d0c0569874eaca9cd4160d014add96b4b0188ee02b943",
+      "changed_this_turn": false
+    },
+    {
+      "path": "internal/app/customer_lists.go",
+      "before_sha256": null,
+      "sha256": "3a4e7fa2701e2a117b9346a38839b1f5443681ef82af4cb16048dd32e4f6acab",
+      "changed_this_turn": true
+    },
+    {
+      "path": "internal/httpapi/list_pagination.go",
+      "before_sha256": null,
+      "sha256": "f4d7af86d8471e93ffb646acae04277213b1acb0c2a3be1e1df02827d4f717b5",
+      "changed_this_turn": true
+    },
+    {
+      "path": "internal/httpapi/customer_lists_integration_test.go",
+      "before_sha256": null,
+      "sha256": "b3adcf2c5bd6faf2198bee8ff993e4d1968ee973c003f146633e3977a037e3fd",
+      "changed_this_turn": true
+    },
+    {
+      "path": "internal/httpapi/web/record-list.js",
+      "before_sha256": null,
+      "sha256": "d0120523c077db3359a87ac047443f36df498d6ffbb68d6301cc814340730c5d",
+      "changed_this_turn": true
+    },
+    {
+      "path": "pkg/launchclient/metered_test.go",
+      "before_sha256": null,
+      "sha256": "3dd61662ec8a5008f7d924c7ef72c60ff05a439805d7c87cfdf2874794e7709f",
+      "changed_this_turn": true
+    },
+    {
+      "path": "docs/metered-feature-tasks.md",
+      "before_sha256": null,
+      "sha256": "5e214fc765200f55e6ceffa32044319763f5c088b54c1bc994a25e726bda7953",
+      "changed_this_turn": true
+    },
+    {
+      "path": "docs/list-queries.md",
+      "before_sha256": null,
+      "sha256": "72195162baa92bcb3edb7dcd6f0daf47f79084456a833e859319718333c9b793",
+      "changed_this_turn": true
+    }
+  ],
+  "upstream_n04_n09_files": [
+    {
+      "path": "sdk/python/licentivo.py",
+      "sha256": "4fdb5114fbc10be7e5a08f6e2d44277d3830918b465344daa77515a082b2626b"
+    },
+    {
+      "path": "sdk/python/licentivo_tasks.py",
+      "sha256": "90ab35adc267d07c901ebf5b629797c15099990a4a5b8370809bba604a9752a6"
+    },
+    {
+      "path": "sdk/python/test_tasks.py",
+      "sha256": "3a2cdaaffcc4b39d3f70fbc58dc926640aad56eee9a95e5e0464bca1c987aee9"
+    },
+    {
+      "path": "internal/httpapi/feature_reservations.go",
+      "sha256": "0bf88f5a6d043aae6ea83bf6127ff4e7b176f58ff7b655623a9eb84ba30a9b65"
+    }
+  ],
+  "upstream_changed_by_this_chat": false,
+  "public_packages_published": false
+}

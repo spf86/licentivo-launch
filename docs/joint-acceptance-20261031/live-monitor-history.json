@@ -1,0 +1,1186 @@
+[
+  {
+    "time_utc": "2026-10-31T17:14:17Z",
+    "live_process_verified": true,
+    "pid": 55544,
+    "unit_state": "activating",
+    "done": false,
+    "cycle": 115,
+    "active_seconds": 5175.07,
+    "target_active_seconds": 14400,
+    "checks": {
+      "checks": 932,
+      "passed": 923,
+      "failed": 9
+    },
+    "successful_unique_operations": 335,
+    "repeated_business_operations": [],
+    "new_failures_after_harness_reauthentication": [],
+    "services": {
+      "launch-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73851",
+        "NRestarts": "0",
+        "MemoryCurrent": "12271616"
+      },
+      "licentivo-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73900",
+        "NRestarts": "0",
+        "MemoryCurrent": "104587264"
+      }
+    }
+  },
+  {
+    "time_utc": "2026-10-31T17:16:02Z",
+    "live_process_verified": true,
+    "pid": 55544,
+    "unit_state": "activating",
+    "done": false,
+    "cycle": 117,
+    "active_seconds": 5265.08,
+    "target_active_seconds": 14400,
+    "checks": {
+      "checks": 948,
+      "passed": 939,
+      "failed": 9
+    },
+    "successful_unique_operations": 341,
+    "repeated_business_operations": [],
+    "new_failures_after_harness_reauthentication": [],
+    "services": {
+      "launch-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73851",
+        "NRestarts": "0",
+        "MemoryCurrent": "11894784"
+      },
+      "licentivo-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73900",
+        "NRestarts": "0",
+        "MemoryCurrent": "99602432"
+      }
+    }
+  },
+  {
+    "time_utc": "2026-10-31T17:16:53Z",
+    "live_process_verified": true,
+    "pid": 55544,
+    "unit_state": "activating",
+    "done": false,
+    "cycle": 118,
+    "active_seconds": 5310.08,
+    "target_active_seconds": 14400,
+    "checks": {
+      "checks": 956,
+      "passed": 947,
+      "failed": 9
+    },
+    "successful_unique_operations": 344,
+    "repeated_business_operations": [],
+    "new_failures_after_harness_reauthentication": [],
+    "services": {
+      "launch-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73851",
+        "NRestarts": "0",
+        "MemoryCurrent": "11821056"
+      },
+      "licentivo-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73900",
+        "NRestarts": "0",
+        "MemoryCurrent": "99622912"
+      }
+    }
+  },
+  {
+    "time_utc": "2026-10-31T17:17:45Z",
+    "live_process_verified": true,
+    "pid": 55544,
+    "unit_state": "activating",
+    "done": false,
+    "cycle": 119,
+    "active_seconds": 5355.08,
+    "target_active_seconds": 14400,
+    "checks": {
+      "checks": 964,
+      "passed": 955,
+      "failed": 9
+    },
+    "successful_unique_operations": 347,
+    "repeated_business_operations": [],
+    "new_failures_after_harness_reauthentication": [],
+    "services": {
+      "launch-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73851",
+        "NRestarts": "0",
+        "MemoryCurrent": "81440768"
+      },
+      "licentivo-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73900",
+        "NRestarts": "0",
+        "MemoryCurrent": "99364864"
+      }
+    }
+  },
+  {
+    "time_utc": "2026-10-31T17:18:37Z",
+    "live_process_verified": true,
+    "pid": 55544,
+    "unit_state": "activating",
+    "done": false,
+    "cycle": 120,
+    "active_seconds": 5400.08,
+    "target_active_seconds": 14400,
+    "checks": {
+      "checks": 975,
+      "passed": 966,
+      "failed": 9
+    },
+    "successful_unique_operations": 350,
+    "repeated_business_operations": [],
+    "new_failures_after_harness_reauthentication": [],
+    "services": {
+      "launch-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73851",
+        "NRestarts": "0",
+        "MemoryCurrent": "89501696"
+      },
+      "licentivo-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73900",
+        "NRestarts": "0",
+        "MemoryCurrent": "99381248"
+      }
+    }
+  },
+  {
+    "time_utc": "2026-10-31T17:19:28Z",
+    "live_process_verified": true,
+    "pid": 55544,
+    "unit_state": "activating",
+    "done": false,
+    "cycle": 122,
+    "active_seconds": 5490.08,
+    "target_active_seconds": 14400,
+    "checks": {
+      "checks": 991,
+      "passed": 982,
+      "failed": 9
+    },
+    "successful_unique_operations": 356,
+    "repeated_business_operations": [],
+    "new_failures_after_harness_reauthentication": [],
+    "services": {
+      "launch-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73851",
+        "NRestarts": "0",
+        "MemoryCurrent": "59953152"
+      },
+      "licentivo-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73900",
+        "NRestarts": "0",
+        "MemoryCurrent": "99663872"
+      }
+    }
+  },
+  {
+    "time_utc": "2026-10-31T17:20:20Z",
+    "live_process_verified": true,
+    "pid": 55544,
+    "unit_state": "activating",
+    "done": false,
+    "cycle": 123,
+    "active_seconds": 5535.08,
+    "target_active_seconds": 14400,
+    "checks": {
+      "checks": 999,
+      "passed": 990,
+      "failed": 9
+    },
+    "successful_unique_operations": 359,
+    "repeated_business_operations": [],
+    "new_failures_after_harness_reauthentication": [],
+    "services": {
+      "launch-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73851",
+        "NRestarts": "0",
+        "MemoryCurrent": "11886592"
+      },
+      "licentivo-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73900",
+        "NRestarts": "0",
+        "MemoryCurrent": "99676160"
+      }
+    }
+  },
+  {
+    "time_utc": "2026-10-31T17:21:11Z",
+    "live_process_verified": true,
+    "pid": 55544,
+    "unit_state": "activating",
+    "done": false,
+    "cycle": 124,
+    "active_seconds": 5580.08,
+    "target_active_seconds": 14400,
+    "checks": {
+      "checks": 1007,
+      "passed": 998,
+      "failed": 9
+    },
+    "successful_unique_operations": 362,
+    "repeated_business_operations": [],
+    "new_failures_after_harness_reauthentication": [],
+    "services": {
+      "launch-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73851",
+        "NRestarts": "0",
+        "MemoryCurrent": "12410880"
+      },
+      "licentivo-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73900",
+        "NRestarts": "0",
+        "MemoryCurrent": "98426880"
+      }
+    }
+  },
+  {
+    "time_utc": "2026-10-31T17:22:03Z",
+    "live_process_verified": true,
+    "pid": 55544,
+    "unit_state": "activating",
+    "done": false,
+    "cycle": 125,
+    "active_seconds": 5625.08,
+    "target_active_seconds": 14400,
+    "checks": {
+      "checks": 1015,
+      "passed": 1006,
+      "failed": 9
+    },
+    "successful_unique_operations": 365,
+    "repeated_business_operations": [],
+    "new_failures_after_harness_reauthentication": [],
+    "services": {
+      "launch-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73851",
+        "NRestarts": "0",
+        "MemoryCurrent": "12406784"
+      },
+      "licentivo-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73900",
+        "NRestarts": "0",
+        "MemoryCurrent": "98443264"
+      }
+    }
+  },
+  {
+    "time_utc": "2026-10-31T17:22:54Z",
+    "live_process_verified": true,
+    "pid": 55544,
+    "unit_state": "activating",
+    "done": false,
+    "cycle": 126,
+    "active_seconds": 5670.08,
+    "target_active_seconds": 14400,
+    "checks": {
+      "checks": 1023,
+      "passed": 1014,
+      "failed": 9
+    },
+    "successful_unique_operations": 368,
+    "repeated_business_operations": [],
+    "new_failures_after_harness_reauthentication": [],
+    "services": {
+      "launch-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73851",
+        "NRestarts": "0",
+        "MemoryCurrent": "12148736"
+      },
+      "licentivo-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73900",
+        "NRestarts": "0",
+        "MemoryCurrent": "97939456"
+      }
+    }
+  },
+  {
+    "time_utc": "2026-10-31T17:23:46Z",
+    "live_process_verified": true,
+    "pid": 55544,
+    "unit_state": "activating",
+    "done": false,
+    "cycle": 127,
+    "active_seconds": 5715.08,
+    "target_active_seconds": 14400,
+    "checks": {
+      "checks": 1031,
+      "passed": 1022,
+      "failed": 9
+    },
+    "successful_unique_operations": 371,
+    "repeated_business_operations": [],
+    "new_failures_after_harness_reauthentication": [],
+    "services": {
+      "launch-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73851",
+        "NRestarts": "0",
+        "MemoryCurrent": "12148736"
+      },
+      "licentivo-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73900",
+        "NRestarts": "0",
+        "MemoryCurrent": "97939456"
+      }
+    }
+  },
+  {
+    "time_utc": "2026-10-31T17:24:37Z",
+    "live_process_verified": true,
+    "pid": 55544,
+    "unit_state": "activating",
+    "done": false,
+    "cycle": 128,
+    "active_seconds": 5760.08,
+    "target_active_seconds": 14400,
+    "checks": {
+      "checks": 1039,
+      "passed": 1030,
+      "failed": 9
+    },
+    "successful_unique_operations": 374,
+    "repeated_business_operations": [],
+    "new_failures_after_harness_reauthentication": [],
+    "services": {
+      "launch-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73851",
+        "NRestarts": "0",
+        "MemoryCurrent": "12406784"
+      },
+      "licentivo-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73900",
+        "NRestarts": "0",
+        "MemoryCurrent": "98213888"
+      }
+    }
+  },
+  {
+    "time_utc": "2026-10-31T17:25:29Z",
+    "live_process_verified": true,
+    "pid": 55544,
+    "unit_state": "activating",
+    "done": false,
+    "cycle": 130,
+    "active_seconds": 5850.08,
+    "target_active_seconds": 14400,
+    "checks": {
+      "checks": 1058,
+      "passed": 1049,
+      "failed": 9
+    },
+    "successful_unique_operations": 380,
+    "repeated_business_operations": [],
+    "new_failures_after_harness_reauthentication": [],
+    "services": {
+      "launch-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73851",
+        "NRestarts": "0",
+        "MemoryCurrent": "83877888"
+      },
+      "licentivo-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73900",
+        "NRestarts": "0",
+        "MemoryCurrent": "98496512"
+      }
+    }
+  },
+  {
+    "time_utc": "2026-10-31T17:26:19Z",
+    "live_process_verified": true,
+    "pid": 55544,
+    "unit_state": "activating",
+    "done": false,
+    "cycle": 131,
+    "active_seconds": 5895.09,
+    "target_active_seconds": 14400,
+    "checks": {
+      "checks": 1066,
+      "passed": 1057,
+      "failed": 9
+    },
+    "successful_unique_operations": 383,
+    "repeated_business_operations": [],
+    "new_failures_after_harness_reauthentication": [],
+    "services": {
+      "launch-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73851",
+        "NRestarts": "0",
+        "MemoryCurrent": "91320320"
+      },
+      "licentivo-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73900",
+        "NRestarts": "0",
+        "MemoryCurrent": "97988608"
+      }
+    }
+  },
+  {
+    "time_utc": "2026-10-31T17:27:11Z",
+    "live_process_verified": true,
+    "pid": 55544,
+    "unit_state": "activating",
+    "done": false,
+    "cycle": 132,
+    "active_seconds": 5940.09,
+    "target_active_seconds": 14400,
+    "checks": {
+      "checks": 1074,
+      "passed": 1065,
+      "failed": 9
+    },
+    "successful_unique_operations": 386,
+    "repeated_business_operations": [],
+    "new_failures_after_harness_reauthentication": [],
+    "services": {
+      "launch-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73851",
+        "NRestarts": "0",
+        "MemoryCurrent": "12070912"
+      },
+      "licentivo-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73900",
+        "NRestarts": "0",
+        "MemoryCurrent": "98000896"
+      }
+    }
+  },
+  {
+    "time_utc": "2026-10-31T17:28:03Z",
+    "live_process_verified": true,
+    "pid": 55544,
+    "unit_state": "activating",
+    "done": false,
+    "cycle": 133,
+    "active_seconds": 5985.09,
+    "target_active_seconds": 14400,
+    "checks": {
+      "checks": 1082,
+      "passed": 1073,
+      "failed": 9
+    },
+    "successful_unique_operations": 389,
+    "repeated_business_operations": [],
+    "new_failures_after_harness_reauthentication": [],
+    "services": {
+      "launch-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73851",
+        "NRestarts": "0",
+        "MemoryCurrent": "12455936"
+      },
+      "licentivo-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73900",
+        "NRestarts": "0",
+        "MemoryCurrent": "98009088"
+      }
+    }
+  },
+  {
+    "time_utc": "2026-10-31T17:28:54Z",
+    "live_process_verified": true,
+    "pid": 55544,
+    "unit_state": "activating",
+    "done": false,
+    "cycle": 134,
+    "active_seconds": 6030.09,
+    "target_active_seconds": 14400,
+    "checks": {
+      "checks": 1090,
+      "passed": 1081,
+      "failed": 9
+    },
+    "successful_unique_operations": 392,
+    "repeated_business_operations": [],
+    "new_failures_after_harness_reauthentication": [],
+    "services": {
+      "launch-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73851",
+        "NRestarts": "0",
+        "MemoryCurrent": "80850944"
+      },
+      "licentivo-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73900",
+        "NRestarts": "0",
+        "MemoryCurrent": "98701312"
+      }
+    }
+  },
+  {
+    "time_utc": "2026-10-31T17:29:46Z",
+    "live_process_verified": true,
+    "pid": 55544,
+    "unit_state": "activating",
+    "done": false,
+    "cycle": 135,
+    "active_seconds": 6075.09,
+    "target_active_seconds": 14400,
+    "checks": {
+      "checks": 1098,
+      "passed": 1089,
+      "failed": 9
+    },
+    "successful_unique_operations": 395,
+    "repeated_business_operations": [],
+    "new_failures_after_harness_reauthentication": [],
+    "services": {
+      "launch-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73851",
+        "NRestarts": "0",
+        "MemoryCurrent": "89178112"
+      },
+      "licentivo-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73900",
+        "NRestarts": "0",
+        "MemoryCurrent": "99368960"
+      }
+    }
+  },
+  {
+    "time_utc": "2026-10-31T17:30:38Z",
+    "live_process_verified": true,
+    "pid": 55544,
+    "unit_state": "activating",
+    "done": false,
+    "cycle": 137,
+    "active_seconds": 6165.09,
+    "target_active_seconds": 14400,
+    "checks": {
+      "checks": 1114,
+      "passed": 1105,
+      "failed": 9
+    },
+    "successful_unique_operations": 399,
+    "repeated_business_operations": [],
+    "new_failures_after_harness_reauthentication": [],
+    "services": {
+      "launch-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73851",
+        "NRestarts": "0",
+        "MemoryCurrent": "32440320"
+      },
+      "licentivo-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73900",
+        "NRestarts": "0",
+        "MemoryCurrent": "99889152"
+      }
+    }
+  },
+  {
+    "time_utc": "2026-10-31T17:31:29Z",
+    "live_process_verified": true,
+    "pid": 55544,
+    "unit_state": "activating",
+    "done": false,
+    "cycle": 138,
+    "active_seconds": 6210.09,
+    "target_active_seconds": 14400,
+    "checks": {
+      "checks": 1122,
+      "passed": 1113,
+      "failed": 9
+    },
+    "successful_unique_operations": 404,
+    "repeated_business_operations": [],
+    "new_failures_after_harness_reauthentication": [],
+    "services": {
+      "launch-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73851",
+        "NRestarts": "0",
+        "MemoryCurrent": "12054528"
+      },
+      "licentivo-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73900",
+        "NRestarts": "0",
+        "MemoryCurrent": "99647488"
+      }
+    }
+  },
+  {
+    "time_utc": "2026-10-31T17:32:21Z",
+    "live_process_verified": true,
+    "pid": 55544,
+    "unit_state": "activating",
+    "done": false,
+    "cycle": 139,
+    "active_seconds": 6255.09,
+    "target_active_seconds": 14400,
+    "checks": {
+      "checks": 1130,
+      "passed": 1121,
+      "failed": 9
+    },
+    "successful_unique_operations": 407,
+    "repeated_business_operations": [],
+    "new_failures_after_harness_reauthentication": [],
+    "services": {
+      "launch-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73851",
+        "NRestarts": "0",
+        "MemoryCurrent": "79298560"
+      },
+      "licentivo-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73900",
+        "NRestarts": "0",
+        "MemoryCurrent": "99934208"
+      }
+    }
+  },
+  {
+    "time_utc": "2026-10-31T17:41:53Z",
+    "live_process_verified": true,
+    "pid": 55544,
+    "unit_state": "activating",
+    "done": false,
+    "cycle": 152,
+    "active_seconds": 6840.1,
+    "target_active_seconds": 14400,
+    "checks": {
+      "checks": 1240,
+      "passed": 1231,
+      "failed": 9
+    },
+    "successful_unique_operations": 444,
+    "repeated_business_operations": [],
+    "new_failures_after_harness_reauthentication": [],
+    "services": {
+      "launch-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73851",
+        "NRestarts": "0",
+        "MemoryCurrent": "89108480"
+      },
+      "licentivo-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73900",
+        "NRestarts": "0",
+        "MemoryCurrent": "102838272"
+      }
+    }
+  },
+  {
+    "time_utc": "2026-10-31T17:42:44Z",
+    "live_process_verified": true,
+    "pid": 55544,
+    "unit_state": "activating",
+    "done": false,
+    "cycle": 153,
+    "active_seconds": 6885.1,
+    "target_active_seconds": 14400,
+    "checks": {
+      "checks": 1248,
+      "passed": 1239,
+      "failed": 9
+    },
+    "successful_unique_operations": 449,
+    "repeated_business_operations": [],
+    "new_failures_after_harness_reauthentication": [],
+    "services": {
+      "launch-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73851",
+        "NRestarts": "0",
+        "MemoryCurrent": "12361728"
+      },
+      "licentivo-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73900",
+        "NRestarts": "0",
+        "MemoryCurrent": "103133184"
+      }
+    }
+  },
+  {
+    "time_utc": "2026-10-31T17:43:36Z",
+    "live_process_verified": true,
+    "pid": 55544,
+    "unit_state": "activating",
+    "done": false,
+    "cycle": 154,
+    "active_seconds": 6930.1,
+    "target_active_seconds": 14400,
+    "checks": {
+      "checks": 1256,
+      "passed": 1247,
+      "failed": 9
+    },
+    "successful_unique_operations": 452,
+    "repeated_business_operations": [],
+    "new_failures_after_harness_reauthentication": [],
+    "services": {
+      "launch-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73851",
+        "NRestarts": "0",
+        "MemoryCurrent": "11968512"
+      },
+      "licentivo-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73900",
+        "NRestarts": "0",
+        "MemoryCurrent": "103129088"
+      }
+    }
+  },
+  {
+    "time_utc": "2026-10-31T17:44:27Z",
+    "live_process_verified": true,
+    "pid": 55544,
+    "unit_state": "activating",
+    "done": false,
+    "cycle": 155,
+    "active_seconds": 6975.1,
+    "target_active_seconds": 14400,
+    "checks": {
+      "checks": 1264,
+      "passed": 1255,
+      "failed": 9
+    },
+    "successful_unique_operations": 455,
+    "repeated_business_operations": [],
+    "new_failures_after_harness_reauthentication": [],
+    "services": {
+      "launch-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73851",
+        "NRestarts": "0",
+        "MemoryCurrent": "12361728"
+      },
+      "licentivo-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73900",
+        "NRestarts": "0",
+        "MemoryCurrent": "103399424"
+      }
+    }
+  },
+  {
+    "time_utc": "2026-10-31T17:45:19Z",
+    "live_process_verified": true,
+    "pid": 55544,
+    "unit_state": "activating",
+    "done": false,
+    "cycle": 156,
+    "active_seconds": 7020.1,
+    "target_active_seconds": 14400,
+    "checks": {
+      "checks": 1272,
+      "passed": 1263,
+      "failed": 9
+    },
+    "successful_unique_operations": 458,
+    "repeated_business_operations": [],
+    "new_failures_after_harness_reauthentication": [],
+    "services": {
+      "launch-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73851",
+        "NRestarts": "0",
+        "MemoryCurrent": "12361728"
+      },
+      "licentivo-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73900",
+        "NRestarts": "0",
+        "MemoryCurrent": "97673216"
+      }
+    }
+  },
+  {
+    "time_utc": "2026-10-31T17:46:10Z",
+    "live_process_verified": true,
+    "pid": 55544,
+    "unit_state": "activating",
+    "done": false,
+    "cycle": 157,
+    "active_seconds": 7065.1,
+    "target_active_seconds": 14400,
+    "checks": {
+      "checks": 1280,
+      "passed": 1271,
+      "failed": 9
+    },
+    "successful_unique_operations": 461,
+    "repeated_business_operations": [],
+    "new_failures_after_harness_reauthentication": [],
+    "services": {
+      "launch-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73851",
+        "NRestarts": "0",
+        "MemoryCurrent": "11833344"
+      },
+      "licentivo-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73900",
+        "NRestarts": "0",
+        "MemoryCurrent": "97726464"
+      }
+    }
+  },
+  {
+    "time_utc": "2026-10-31T17:47:03Z",
+    "live_process_verified": true,
+    "pid": 55544,
+    "unit_state": "activating",
+    "done": false,
+    "cycle": 158,
+    "active_seconds": 7110.1,
+    "target_active_seconds": 14400,
+    "checks": {
+      "checks": 1288,
+      "passed": 1279,
+      "failed": 9
+    },
+    "successful_unique_operations": 464,
+    "repeated_business_operations": [],
+    "new_failures_after_harness_reauthentication": [],
+    "services": {
+      "launch-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73851",
+        "NRestarts": "0",
+        "MemoryCurrent": "12353536"
+      },
+      "licentivo-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73900",
+        "NRestarts": "0",
+        "MemoryCurrent": "98496512"
+      }
+    }
+  },
+  {
+    "time_utc": "2026-10-31T17:47:55Z",
+    "live_process_verified": true,
+    "pid": 55544,
+    "unit_state": "activating",
+    "done": false,
+    "cycle": 160,
+    "active_seconds": 7200.11,
+    "target_active_seconds": 14400,
+    "checks": {
+      "checks": 1307,
+      "passed": 1298,
+      "failed": 9
+    },
+    "successful_unique_operations": 468,
+    "repeated_business_operations": [],
+    "new_failures_after_harness_reauthentication": [],
+    "services": {
+      "launch-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73851",
+        "NRestarts": "0",
+        "MemoryCurrent": "82313216"
+      },
+      "licentivo-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73900",
+        "NRestarts": "0",
+        "MemoryCurrent": "98312192"
+      }
+    }
+  },
+  {
+    "time_utc": "2026-10-31T18:15:00Z",
+    "live_process_verified": true,
+    "pid": 55544,
+    "unit_state": "activating",
+    "done": false,
+    "cycle": 196,
+    "active_seconds": 8820.13,
+    "target_active_seconds": 14400,
+    "checks": {
+      "checks": 1604,
+      "passed": 1595,
+      "failed": 9
+    },
+    "successful_unique_operations": 578,
+    "repeated_business_operations": [],
+    "new_failures_after_harness_reauthentication": [],
+    "services": {
+      "launch-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73851",
+        "NRestarts": "0",
+        "MemoryCurrent": "11829248"
+      },
+      "licentivo-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73900",
+        "NRestarts": "0",
+        "MemoryCurrent": "101109760"
+      }
+    }
+  },
+  {
+    "time_utc": "2026-10-31T18:22:57Z",
+    "live_process_verified": true,
+    "pid": 55544,
+    "unit_state": "activating",
+    "done": false,
+    "cycle": 206,
+    "active_seconds": 9270.14,
+    "target_active_seconds": 14400,
+    "checks": {
+      "checks": 1687,
+      "passed": 1678,
+      "failed": 9
+    },
+    "successful_unique_operations": 608,
+    "repeated_business_operations": [],
+    "new_failures_after_harness_reauthentication": [],
+    "services": {
+      "launch-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "98837",
+        "NRestarts": "0",
+        "MemoryCurrent": "79216640"
+      },
+      "licentivo-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73900",
+        "NRestarts": "0",
+        "MemoryCurrent": "99254272"
+      }
+    }
+  },
+  {
+    "time_utc": "2026-10-31T18:31:49Z",
+    "live_process_verified": true,
+    "pid": 55544,
+    "unit_state": "activating",
+    "done": false,
+    "cycle": 218,
+    "active_seconds": 9810.14,
+    "target_active_seconds": 14400,
+    "checks": {
+      "checks": 1786,
+      "passed": 1777,
+      "failed": 9
+    },
+    "successful_unique_operations": 641,
+    "repeated_business_operations": [],
+    "new_failures_after_harness_reauthentication": [],
+    "services": {
+      "launch-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "101713",
+        "NRestarts": "0",
+        "MemoryCurrent": "7905280"
+      },
+      "licentivo-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73900",
+        "NRestarts": "0",
+        "MemoryCurrent": "109232128"
+      }
+    }
+  },
+  {
+    "time_utc": "2026-10-31T18:49:48Z",
+    "live_process_verified": true,
+    "pid": 55544,
+    "unit_state": "activating",
+    "done": false,
+    "cycle": 241,
+    "active_seconds": 10845.16,
+    "target_active_seconds": 14400,
+    "checks": {
+      "checks": 1979,
+      "passed": 1970,
+      "failed": 9
+    },
+    "successful_unique_operations": 713,
+    "repeated_business_operations": [],
+    "new_failures_after_harness_reauthentication": [],
+    "services": {
+      "launch-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "105886",
+        "NRestarts": "0",
+        "MemoryCurrent": "91426816"
+      },
+      "licentivo-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73900",
+        "NRestarts": "0",
+        "MemoryCurrent": "101085184"
+      }
+    }
+  },
+  {
+    "time_utc": "2026-10-31T19:02:41Z",
+    "live_process_verified": true,
+    "pid": 55544,
+    "unit_state": "activating",
+    "done": false,
+    "cycle": 258,
+    "active_seconds": 11610.17,
+    "target_active_seconds": 14400,
+    "checks": {
+      "checks": 2118,
+      "passed": 2109,
+      "failed": 9
+    },
+    "successful_unique_operations": 764,
+    "repeated_business_operations": [],
+    "new_failures_after_harness_reauthentication": [],
+    "services": {
+      "launch-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "105886",
+        "NRestarts": "0",
+        "MemoryCurrent": "11284480"
+      },
+      "licentivo-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73900",
+        "NRestarts": "0",
+        "MemoryCurrent": "102580224"
+      }
+    }
+  },
+  {
+    "time_utc": "2026-10-31T19:06:33Z",
+    "live_process_verified": true,
+    "pid": 55544,
+    "unit_state": "activating",
+    "done": false,
+    "cycle": 263,
+    "active_seconds": 11835.17,
+    "target_active_seconds": 14400,
+    "checks": {
+      "checks": 2161,
+      "passed": 2152,
+      "failed": 9
+    },
+    "successful_unique_operations": 779,
+    "repeated_business_operations": [],
+    "new_failures_after_harness_reauthentication": [],
+    "services": {
+      "launch-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "110120",
+        "NRestarts": "0",
+        "MemoryCurrent": "95502336"
+      },
+      "licentivo-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73900",
+        "NRestarts": "0",
+        "MemoryCurrent": "101572608"
+      }
+    }
+  },
+  {
+    "time_utc": "2026-10-31T19:08:48Z",
+    "live_process_verified": true,
+    "pid": 55544,
+    "unit_state": "activating",
+    "done": false,
+    "cycle": 266,
+    "active_seconds": 11970.18,
+    "target_active_seconds": 14400,
+    "checks": {
+      "checks": 2185,
+      "passed": 2176,
+      "failed": 9
+    },
+    "successful_unique_operations": 788,
+    "repeated_business_operations": [],
+    "new_failures_after_harness_reauthentication": [],
+    "services": {
+      "launch-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "110120",
+        "NRestarts": "0",
+        "MemoryCurrent": "92590080"
+      },
+      "licentivo-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73900",
+        "NRestarts": "0",
+        "MemoryCurrent": "101474304"
+      }
+    }
+  },
+  {
+    "time_utc": "2026-10-31T19:13:49Z",
+    "live_process_verified": true,
+    "pid": 55544,
+    "unit_state": "activating",
+    "done": false,
+    "cycle": 273,
+    "active_seconds": 12285.18,
+    "target_active_seconds": 14400,
+    "checks": {
+      "checks": 2244,
+      "passed": 2235,
+      "failed": 9
+    },
+    "successful_unique_operations": 809,
+    "repeated_business_operations": [],
+    "new_failures_after_harness_reauthentication": [],
+    "services": {
+      "launch-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "110120",
+        "NRestarts": "0",
+        "MemoryCurrent": "11558912"
+      },
+      "licentivo-joint-acceptance.service": {
+        "ActiveState": "active",
+        "MainPID": "73900",
+        "NRestarts": "0",
+        "MemoryCurrent": "121552896"
+      }
+    }
+  }
+]

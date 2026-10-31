@@ -1,0 +1,51 @@
+{
+  "receipts": [
+    {
+      "operation_id": "nfix-c-5d5bb91afaa8491d878e84a5cdcb627c",
+      "quantity": "1",
+      "status": "committed"
+    },
+    {
+      "operation_id": "nfix-cpp-5d5bb91afaa8491d878e84a5cdcb627c",
+      "quantity": "1",
+      "status": "committed"
+    },
+    {
+      "operation_id": "nfix-csharp-a884c7b8-7894-4b53-9207-a61a485416de",
+      "quantity": "1",
+      "status": "committed"
+    },
+    {
+      "operation_id": "nfix-go-5d5bb91afaa8491d878e84a5cdcb627c",
+      "quantity": "1",
+      "status": "committed"
+    },
+    {
+      "operation_id": "nfix-java-08b09f73-706d-4094-9dc4-57e225ac82f8",
+      "quantity": "1",
+      "status": "committed"
+    },
+    {
+      "operation_id": "nfix-javascript-5d5bb91afaa8491d878e84a5cdcb627c",
+      "quantity": "1",
+      "status": "committed"
+    },
+    {
+      "operation_id": "nfix-python-1f5b1071-d2c1-4c6a-a318-2f7129d00f06",
+      "quantity": "1",
+      "status": "committed"
+    },
+    {
+      "operation_id": "nfix-ruby-5d5bb91afaa8491d878e84a5cdcb627c",
+      "quantity": "1",
+      "status": "committed"
+    },
+    {
+      "operation_id": "nfix-rust-5d5bb91afaa8491d878e84a5cdcb627c",
+      "quantity": "1",
+      "status": "committed"
+    }
+  ],
+  "receipt_count": 9,
+  "all_committed_once": true
+}

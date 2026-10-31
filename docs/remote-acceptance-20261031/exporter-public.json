@@ -1,0 +1,38 @@
+{
+  "ready": true,
+  "config": {
+    "schema_version": 1,
+    "merchant_origin": "http://192.168.2.177:18080",
+    "launch_product_id": "2d779e4e-80f9-445b-b850-3c125dd61f58",
+    "licentivo_product_id": "3f01130b-7457-4323-89b5-3996bb82e506",
+    "environment": "sandbox",
+    "allow_http": true
+  },
+  "checks": [
+    {
+      "code": "MERCHANT_ORIGIN_READY",
+      "status": "ready",
+      "message": "商户访问地址有效"
+    },
+    {
+      "code": "POLICY_MAPPING_READY",
+      "status": "ready",
+      "message": "套餐 d93a0537-8c4b-49d7-bf92-a7af3df95b29：Licentivo 产品与策略版本 3 已在线验证"
+    },
+    {
+      "code": "PUBLIC_KEYS_READY",
+      "status": "ready",
+      "message": "已自动读取对应授权产品的签名公钥"
+    }
+  ],
+  "product_config": {
+    "base_url": "https://www.licentivo.com",
+    "product_id": "3f01130b-7457-4323-89b5-3996bb82e506",
+    "trusted_keys": {
+      "b3fc52c0-b4ef-499b-ae02-1292006fb98a": "Cm_kstb2sXcbyLV0Txix5RWaRpYTfUVVUaDu_J1p4MY"
+    }
+  },
+  "language": "python",
+  "example_path": "examples/python/main.py",
+  "checked_at": "2026-10-31T13:05:04.937325Z"
+}

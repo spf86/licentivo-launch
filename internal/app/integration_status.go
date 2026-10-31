@@ -94,14 +94,8 @@ func (s *Service) SoftwareEntitlementStatus(ctx context.Context, p Principal, pr
 			view.Message = "购买状态已同步，请在客户中心读取商户授权交付"
 			return view, nil
 		}
-		var count int64
-		if s.db.WithContext(ctx).Model(&storage.LicenseBinding{}).Where("entitlement_id = ? AND replaced_at IS NULL", row.ID).Count(&count).Error != nil {
-			return view, ErrStorage
-		}
-		if count == 0 {
-			view.Status, view.Code, view.Message, view.NextAction = "pending", "ENTITLEMENT_PENDING", "软件凭证正在恢复，请稍后重试；持续未完成时请联系商家", "retry"
-			view.RetryAfterSeconds, view.MaxRetryAttempts = 3, 5
-		}
+		// Account purchases synchronize without a legacy long-key binding.
+		// This is commercial readiness; only the official SDK grants runtime use.
 	}
 	return view, nil
 }

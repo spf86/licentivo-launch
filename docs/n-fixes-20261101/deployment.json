@@ -1,0 +1,11 @@
+{
+  "deployed_at_utc": "2026-10-31T20:20:20Z",
+  "binaries": {
+    "18080": "a658678b5de184f65efb80a3545abeb6fb19573789c4d715e9086d8bb716cd6f",
+    "18092": "74058e2753362b35c46872d15453e4a966a8c904450be93e57160d0359c77ae2",
+    "18091": "547c9614befbc6d8f3d65af5f9201e1b1f62216624c6e811c4fdb490b929672e"
+  },
+  "test_only_licensing_origin_override": true,
+  "previous_binaries_retained": true,
+  "public_packages_published": false
+}

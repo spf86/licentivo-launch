@@ -83,6 +83,8 @@ func testStaffAndExports(a *testApp, admin, customer *browser, credentials map[s
 	a.expect(a.request("POST", "/api/v1/auth/login", map[string]string{"email": staffEmail, "password": staffPassword, "kind": "website"}, support), 200)
 	a.expect(a.request("GET", "/api/v1/admin/dashboard", nil, support), 200)
 	a.expect(a.request("GET", "/api/v1/admin/orders", nil, support), 200)
+	a.expect(a.request("GET", "/api/v1/admin/orders/search", nil, support), 200)
+	a.expect(a.request("POST", "/api/v1/admin/orders/reconcile", app.ReconcileOrdersInput{OrderIDs: []string{"11111111-1111-4111-8111-111111111111"}, Reason: "客服不能核对付款"}, support), 403)
 	a.expect(a.request("GET", "/api/v1/admin/staff", nil, support), 403)
 	a.expect(a.request("POST", "/api/v1/admin/exports", map[string]string{"kind": "users", "reason": "客服越权导出"}, support), 403)
 

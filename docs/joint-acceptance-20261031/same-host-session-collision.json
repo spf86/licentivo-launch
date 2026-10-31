@@ -1,0 +1,29 @@
+{
+  "original_admin_login": {
+    "status": 200,
+    "code": null,
+    "role": "admin"
+  },
+  "original_before_other_instance_login": {
+    "status": 200,
+    "code": null,
+    "role": "admin"
+  },
+  "joint_customer_login": {
+    "status": 200,
+    "code": null,
+    "role": "customer"
+  },
+  "original_after_other_instance_login": {
+    "status": 401,
+    "code": "AUTH_REQUIRED",
+    "role": null
+  },
+  "joint_current_session": {
+    "status": 200,
+    "code": null,
+    "role": "customer"
+  },
+  "same_host_cookie_collision_confirmed": true,
+  "scope": "Same host with two independent Launch databases; cookies do not isolate by TCP port."
+}

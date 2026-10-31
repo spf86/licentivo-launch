@@ -1,8 +1,8 @@
-# Launch C / C++ 0.1.4
+# Launch C / C++ 0.1.8
 
-> Local account-exchange changes are unpublished. Login uses a short-lived identity assertion; Launch calculates purchased dates and Licentivo owns runtime permission. See the repository guide docs/account-purchase-boundary.md.
+> This README describes the current account-exchange source: Launch package 0.1.8 with embedded official SDK 0.11.8, paired with Launch server 0.3.6-beta. Login obtains a short-lived identity assertion; Licentivo owns runtime permission. Check [backend requirements, migration and release evidence](https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/sdk-compatibility.md) and the [account boundary](https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/account-purchase-boundary.md). A public version number alone does not certify uncommitted local changes.
 
-C11/C++17 and CMake. Download the Windows amd64 GNU or Linux amd64 native installation ZIP from [GitHub Releases](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.4), verify SHA256SUMS, then add only that Launch prefix to CMake. SDK 0.11.2 core, adapters, import targets and notices are included. The Windows archive bundles curl. Other platforms can build the complete source using standard C11/curl/OpenSSL development libraries.
+C11/C++17 and CMake. Download the Windows amd64 GNU or Linux amd64 native installation ZIP from [GitHub Releases](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.8), verify SHA256SUMS, then add only that Launch prefix to CMake. SDK 0.11.8 core, adapters, import targets and notices are included. The Windows archive bundles curl. Other platforms can build the complete source using standard C11/curl/OpenSSL development libraries.
 
 ```cmake
 find_package(LicentivoLaunch CONFIG REQUIRED)
@@ -13,7 +13,7 @@ licentivo_launch_link(myapp)
 
 The helper handles SDK/transitive linkage and bundled Windows runtime DLLs. No second find_package for an official SDK or copied adapter is required.
 
-Version 0.1.4 embeds the SDK 0.11.2 CMake fix: installed SDK targets resolve curl through the consumer's public `CURL::libcurl` target, including when the SDK was built with curl's config package and the consumer uses FindCURL. Consumers do not need to add curl compatibility aliases. Match the compiler, architecture and curl runtime/development dependencies to the downloaded native package. The licensing protocol and client API are unchanged.
+Version 0.1.8 embeds SDK 0.11.8 device-information reporting and portable native sources. Its installed CMake targets also resolve curl through the consumer's public `CURL::libcurl` target, including config-package/FindCURL combinations; consumers do not need compatibility aliases. Match the compiler, architecture and curl runtime/development dependencies to the native package. See the [compatibility guide](https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/sdk-compatibility.md) for the matching backend revision and migration from key-based clients.
 
 ## Direct initialization
 
@@ -39,7 +39,7 @@ Manual development is supported without AI. The combined source bundle includes 
 
 
 <!-- account-store-ownership-2026-10-24 -->
-## Local account logout and session ownership (unpublished)
+## Local account logout and session ownership
 
 Account logout tasks use a separate key in the configured secure store. Custom stores must support multiple opaque keys, atomic value replacement and isolation to the current OS user and host. Account lifecycle operations are coordinated across local instances/processes, independently of the licensing cache directory.
 
@@ -52,3 +52,7 @@ An old instance only changes its own account record and logout task. Repeating a
 The merchant address selects HTTP or HTTPS; failed HTTPS requests never downgrade to HTTP. For an HTTP customer test server, the customer must enable HTTP on the specific Licentivo API key and enable **Allow SDK HTTP (test environment only)** in their own Launch website/security settings. Use `sandbox` and the explicit client option C: `launch_application_connect_http(..., "sandbox", 1, 0, NULL)`; C++: `Application::ConnectHTTP(..., "sandbox")`. The generated test integration code includes it after successful checks. `live` requires HTTPS. Old SDK versions must be upgraded; server switches cannot update compiled client URLs. No access to Licentivo’s private network is needed.
 
 See the [setup, failure and HTTPS migration guide in 14 languages](../../docs/http-testing/README.md) ([简体中文](../../docs/http-testing.zh-CN.md)). HTTP does not encrypt credentials; use dedicated test data.
+
+## Metered business tasks
+
+The started Application exposes metered execution and interrupted-task settlement. Use a stable job ID, preserve SDK journals, and check the real business outcome before resolving. Ordinary feature calls do not settle quantity. See [the nine-language API and recovery contract](../../docs/metered-feature-tasks.md). Verify the exact installed artifact includes these APIs; this source does not imply that a public package was republished.

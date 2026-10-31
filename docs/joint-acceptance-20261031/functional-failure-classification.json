@@ -1,0 +1,110 @@
+[
+  {
+    "time": "2026-10-31T15:40:48Z",
+    "name": "fixed configuration ready",
+    "classification": "resolved_test_expectation",
+    "reason": "Preview-only plans deliberately lack payment configuration; runtime configuration was subsequently checked separately"
+  },
+  {
+    "time": "2026-10-31T15:44:28Z",
+    "name": "real alice desktop login",
+    "classification": "resolved_test_expectation",
+    "reason": "The first test sent a browser Origin on a desktop login; the normal desktop request omits it"
+  },
+  {
+    "time": "2026-10-31T15:44:52Z",
+    "name": "alice rejects invalid environment",
+    "classification": "resolved_test_expectation",
+    "reason": "Non-sandbox HTTP is rejected by transport policy before the assumed input-validation response"
+  },
+  {
+    "time": "2026-10-31T15:52:30Z",
+    "name": "concurrent processes share one metered operation 1",
+    "classification": "resolved_test_harness",
+    "reason": "The first barrier did not release the successful worker after its peer received an idempotency conflict; the corrected synchronization passed three actual runs"
+  },
+  {
+    "time": "2026-10-31T15:53:01Z",
+    "name": "concurrent processes share one metered operation 2",
+    "classification": "resolved_test_harness",
+    "reason": "The first barrier did not release the successful worker after its peer received an idempotency conflict; the corrected synchronization passed three actual runs"
+  },
+  {
+    "time": "2026-10-31T15:53:32Z",
+    "name": "concurrent processes share one metered operation 3",
+    "classification": "resolved_test_harness",
+    "reason": "The first barrier did not release the successful worker after its peer received an idempotency conflict; the corrected synchronization passed three actual runs"
+  },
+  {
+    "time": "2026-10-31T16:49:32Z",
+    "name": "pre-fork initialized SDK workers share one metered job 1",
+    "classification": "confirmed_product_defect",
+    "reason": "N04: two callbacks for one committed quantity-one reservation"
+  },
+  {
+    "time": "2026-10-31T16:49:33Z",
+    "name": "pre-fork initialized SDK workers share one metered job 2",
+    "classification": "confirmed_product_defect",
+    "reason": "N04: two callbacks for one committed quantity-one reservation"
+  },
+  {
+    "time": "2026-10-31T16:52:51Z",
+    "name": "device release preserves a remote idempotency conflict",
+    "classification": "confirmed_product_defect",
+    "reason": "N05: deterministic remote HTTP 409 was returned as temporary HTTP 503"
+  },
+  {
+    "time": "2026-10-31T17:54:49Z",
+    "name": "permanent offline policy signs an unrestricted offline lifetime",
+    "classification": "resolved_test_expectation",
+    "reason": "The protocol represents perpetual offline validity as 253402300799 (9999-12-31), not zero; the signed permanent/HB=0 policy and offline business were verified separately"
+  },
+  {
+    "time": "2026-10-31T18:27:13Z",
+    "name": "advanced scenario interrupted: license editing keys and export",
+    "classification": "resolved_test_harness",
+    "reason": "After suspension invalidates the running credential, recovery requires a fresh runtime/login; the corrected real edit, key, term, usage and CSV chain passed"
+  },
+  {
+    "time": "2026-10-31T18:27:15Z",
+    "name": "advanced scenario interrupted: customer portal release",
+    "classification": "resolved_test_harness",
+    "reason": "The initial driver used activations instead of devices or the wrong device-label request fields; the corrected real portal, release, cross-system transfer and quota checks passed"
+  },
+  {
+    "time": "2026-10-31T18:27:42Z",
+    "name": "customer labels their actual device",
+    "classification": "resolved_test_harness",
+    "reason": "Device labels require device_alias and expected_alias; the original guessed field was correctly rejected and the documented request passed"
+  },
+  {
+    "time": "2026-10-31T18:27:42Z",
+    "name": "advanced scenario interrupted: customer portal release",
+    "classification": "resolved_test_harness",
+    "reason": "The initial driver used activations instead of devices or the wrong device-label request fields; the corrected real portal, release, cross-system transfer and quota checks passed"
+  },
+  {
+    "time": "2026-10-31T18:30:48Z",
+    "name": "a used temporary code cannot activate actual Linux again",
+    "classification": "resolved_test_expectation",
+    "reason": "The expected error name is ACTIVATION_CODE_USED, not TRANSFER_CODE_USED; business was denied in both the original observation and explicit corrected rerun"
+  },
+  {
+    "time": "2026-10-31T18:57:40Z",
+    "name": "customer order history includes all 120 temporary orders",
+    "classification": "confirmed_product_defect",
+    "reason": "N07: customer endpoint returns only 100 rows and the UI displays 100 as its order count without pagination"
+  },
+  {
+    "time": "2026-10-31T19:25:40Z",
+    "name": "admin customer default list includes all registered customers",
+    "classification": "confirmed_product_defect",
+    "reason": "N08: 126 customers exist, but the default admin list shows 100 and offers no search or pagination; direct backend prefix query still finds the old customer"
+  },
+  {
+    "time": "2026-10-31T19:52:07Z",
+    "name": "long completed metered business can settle its original operation",
+    "classification": "confirmed_product_defect",
+    "reason": "N09: a real callback exceeded the unchanged default 900-second reservation; completed business remains uncharged and commit_pending, and fresh-runtime retry plus explicit success resolution cannot settle it. Expired-reservation rejection by the server is expected."
+  }
+]

@@ -4,7 +4,7 @@ For HTTP tests on customer machines or private networks, follow [the two HTTP pe
 
 This guide applies to the Licentivo provider. To connect a merchant-owned licensing system without Licentivo, use [the custom licensing API and integration flow](external-licensing.md), select `custom_http` for the product/environment and retain that system's runtime SDK.
 
-These local, unpublished changes use account identity exchange. See [the responsibility and purchase-sync contract](account-purchase-boundary.md) for migration and server-side session revocation. Package version numbers have not been published or upgraded by this change.
+The current source baseline is Launch server **0.3.6-beta**, Launch package **0.1.8** and embedded official SDK **0.11.8**, using account identity exchange. Check the [compatibility matrix](sdk-compatibility.md) for required Licentivo endpoints, the device-information backend revision, package evidence and upgrade order. See [the responsibility and purchase-sync contract](account-purchase-boundary.md) for migration and server-side session revocation. Public releases and uncommitted source changes have separate evidence.
 
 Launch owns merchant accounts, orders, prices, renewal/upgrade quotes, refunds and absolute purchased dates. Licentivo owns licenses, policies, device allowances, authorization sessions, signed permissions and runtime decisions. A successful Launch login or synchronized purchase is never permission to execute protected work.
 
@@ -51,7 +51,7 @@ Do not write this runtime configuration to a public file or persist its assertio
 - `Restore`: confirm the remembered account online, request a fresh assertion, start the official SDK. A Launch outage does not select offline permission.
 - `RunFeature`: delegate every protected execution to the official SDK. A rejected callback must never execute.
 - `Close` / `Dispose` / `Drop`: stop background work, preserve intentionally remembered login and node binding.
-- `Logout`: invoke the official SDK unified logout, then clear the Launch account record and end its account session.
+- `Logout`: mark the local account signed out, invoke the official SDK unified logout, and revoke the Launch session. Keep a protected pending account-exit task until the server confirms revocation; never restore it as a login.
 - `ReleaseDevice`: compatibility alias for explicit logout. Report pending remote revocation honestly.
 
 Only the official SDK removes its device credential and lease files. Never delete its cache directory or `.logout.json`: that journal holds restricted release tickets needed after failed network requests. The SDK resumes pending tickets when the matching cache is initialized again. Launch's own account storage and SDK storage have separate owners.
@@ -73,3 +73,5 @@ Test account exchange, ephemeral assertion storage, SDK-controlled feature execu
 Launch also uses Licentivo V39's `session-revocations` POST and receipt GET endpoints for desktop logout, forced session logout, password changes and account disablement. It durably freezes the original recipients and request, recovers lost responses, and confirms each environment independently. Pending account-wide notifications pause new desktop authentication; after confirmation a genuinely new login must have `auth_time` strictly after the latest `revoked_before` second. Website recovery remains available. These notifications never change purchased dates. See [the boundary and recovery contract](account-purchase-boundary.md).
 
 See [manual integration](manual-integration.md), [AI integration](ai-integration.md), [integration packages](integration-packages.md) and [acceptance](acceptance.md).
+
+For quantity-based business operations, use the [Application metered task APIs and recovery contract](metered-feature-tasks.md). Ordinary feature authorization does not reserve or settle quota.

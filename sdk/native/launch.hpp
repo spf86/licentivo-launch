@@ -30,6 +30,12 @@ public:
         if(context.failure)std::rethrow_exception(context.failure);Require(ok);
     }
     std::string Status() { char *value=launch_application_status(app_);std::string result=value?value:"";ln_free_string(value);return result; }
+    template<class Action> void RunMeteredFeature(const char *feature,int64_t quantity,const char *operation_id,Action action) {
+        struct Context { Action *action; std::exception_ptr failure; } context{&action,{}};
+        int ok=launch_application_run_metered_feature(app_,feature,quantity,operation_id,[](void *raw)->int {auto *ctx=static_cast<Context*>(raw);try{(*ctx->action)();return 1;}catch(...){ctx->failure=std::current_exception();return 0;}},&context);
+        if(context.failure)std::rethrow_exception(context.failure);Require(ok);
+    }
+    void ResolveMeteredFeature(const char *operation_id,bool succeeded) { Require(launch_application_resolve_metered_feature(app_,operation_id,succeeded)); }
     void Logout() { Require(launch_application_logout(app_)); }
     void ReleaseDevice() { Require(launch_application_release_device(app_)); }
 };

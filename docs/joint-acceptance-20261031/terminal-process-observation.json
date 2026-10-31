@@ -1,0 +1,50 @@
+{
+  "observed_at_utc": "2026-10-31T19:49:13Z",
+  "units": {
+    "launch-joint-soak.service": {
+      "ActiveState": "failed",
+      "SubState": "failed",
+      "MainPID": "0",
+      "Result": "exit-code",
+      "ExecMainStartTimestamp": "Sat 2026-10-31 15:47:41 UTC",
+      "ExecMainExitTimestamp": "Sat 2026-10-31 19:48:43 UTC",
+      "ExecMainCode": "1",
+      "ExecMainStatus": "1",
+      "live_process_verified": false
+    },
+    "launch-joint-postcheck.service": {
+      "ActiveState": "active",
+      "SubState": "exited",
+      "MainPID": "0",
+      "Result": "success",
+      "ExecMainStartTimestamp": "Sat 2026-10-31 19:17:12 UTC",
+      "ExecMainExitTimestamp": "Sat 2026-10-31 19:48:53 UTC",
+      "ExecMainCode": "1",
+      "ExecMainStatus": "0",
+      "live_process_verified": false
+    }
+  },
+  "summary": {
+    "started_at_utc": "2026-10-31T15:47:42Z",
+    "last_update_utc": "2026-10-31T19:48:42Z",
+    "done": true,
+    "cycles": 320,
+    "active_seconds": 14400.21,
+    "wall_seconds": 14460.66,
+    "target_active_seconds": 14400,
+    "checks": {
+      "checks": 2636,
+      "passed": 2627,
+      "failed": 9
+    },
+    "replay_enabled": true,
+    "floating_enabled": true
+  },
+  "postcheck": {
+    "audit_complete": true,
+    "duration_verified": true,
+    "soak_audit_passed": true,
+    "observed_at_utc": "2026-10-31T19:48:52Z",
+    "verified_live_pid_at_start": 55544
+  }
+}

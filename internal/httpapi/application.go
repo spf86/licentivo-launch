@@ -365,6 +365,14 @@ func (a *application) register(mux *http.ServeMux) {
 	a.route(mux, "GET /api/v1/me/orders", true, 0, func(w http.ResponseWriter, r *http.Request, p app.Principal) (any, error) {
 		return a.service.Orders(r.Context(), p)
 	})
+	a.route(mux, "GET /api/v1/me/orders/search", true, 0, func(w http.ResponseWriter, r *http.Request, p app.Principal) (any, error) {
+		limit, offset, err := listPagination(r)
+		if err != nil {
+			return nil, err
+		}
+		q := r.URL.Query()
+		return a.service.SearchOrders(r.Context(), p, app.AdminOrderQuery{Query: q.Get("q"), Status: q.Get("status"), Environment: q.Get("environment"), Limit: limit, Offset: offset})
+	})
 	a.route(mux, "GET /api/v1/admin/dashboard", true, 0, func(w http.ResponseWriter, r *http.Request, p app.Principal) (any, error) {
 		return a.service.Dashboard(r.Context(), p)
 	})
@@ -483,6 +491,13 @@ func (a *application) register(mux *http.ServeMux) {
 	})
 	a.route(mux, "GET /api/v1/admin/users", true, 0, func(w http.ResponseWriter, r *http.Request, p app.Principal) (any, error) {
 		return a.service.Users(r.Context(), p, r.URL.Query().Get("q"))
+	})
+	a.route(mux, "GET /api/v1/admin/users/search", true, 0, func(w http.ResponseWriter, r *http.Request, p app.Principal) (any, error) {
+		limit, offset, err := listPagination(r)
+		if err != nil {
+			return nil, err
+		}
+		return a.service.SearchUsers(r.Context(), p, app.UserQuery{Query: r.URL.Query().Get("q"), Status: r.URL.Query().Get("status"), Limit: limit, Offset: offset})
 	})
 	a.route(mux, "POST /api/v1/admin/users/{id}/status", true, 5, func(w http.ResponseWriter, r *http.Request, p app.Principal) (any, error) {
 		var in struct {

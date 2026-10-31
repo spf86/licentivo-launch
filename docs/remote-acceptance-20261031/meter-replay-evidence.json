@@ -1,0 +1,16 @@
+[
+  {
+    "name": "same-process metered replay",
+    "passed": true,
+    "callback_count": 1,
+    "operation_id": "f04fafa5-099b-40bd-92cf-1aa850b6840f"
+  },
+  {
+    "name": "restored account metered replay",
+    "passed": false,
+    "code": "IDEMPOTENCY_CONFLICT",
+    "request_id": "f06a313a-cfa0-4bc0-b73b-464b5c8102aa",
+    "callback_count": 1,
+    "identity_hash_changed": true
+  }
+]

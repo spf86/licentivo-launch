@@ -1,0 +1,50 @@
+[
+  {
+    "policy": "go",
+    "environment": "sandbox",
+    "status": 409,
+    "response": {
+      "error": {
+        "code": "LAUNCH_POLICY_UNSUPPORTED",
+        "message": "Launch account sessions require a node-locked device policy"
+      },
+      "request_id": "2dd4d11b-0ef4-4204-8628-51afbeda5d2d"
+    }
+  },
+  {
+    "policy": "go",
+    "environment": "live",
+    "status": 409,
+    "response": {
+      "error": {
+        "code": "LAUNCH_POLICY_UNSUPPORTED",
+        "message": "Launch account sessions require a node-locked device policy"
+      },
+      "request_id": "f26d4ca3-62ec-4904-b4bd-9ea60f39f330"
+    }
+  },
+  {
+    "policy": "pro",
+    "environment": "sandbox",
+    "status": 409,
+    "response": {
+      "error": {
+        "code": "LAUNCH_POLICY_UNSUPPORTED",
+        "message": "Launch account sessions require a node-locked device policy"
+      },
+      "request_id": "3651d8f7-0cdd-4e0d-a883-025b81e6da15"
+    }
+  },
+  {
+    "policy": "pro",
+    "environment": "live",
+    "status": 409,
+    "response": {
+      "error": {
+        "code": "LAUNCH_POLICY_UNSUPPORTED",
+        "message": "Launch account sessions require a node-locked device policy"
+      },
+      "request_id": "afe49c16-fb31-4930-a98c-61d791cf8c39"
+    }
+  }
+]

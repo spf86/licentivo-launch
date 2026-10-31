@@ -1,0 +1,32 @@
+{"Time":"2026-10-31T13:09:52.767437871Z","Action":"start","Package":"internal_app.test"}
+{"Time":"2026-10-31T13:09:52.821503314Z","Action":"run","Package":"internal_app.test","Test":"TestProductUploadRoundTrip"}
+{"Time":"2026-10-31T13:09:52.821577611Z","Action":"output","Package":"internal_app.test","Test":"TestProductUploadRoundTrip","Output":"=== RUN   TestProductUploadRoundTrip\n"}
+{"Time":"2026-10-31T13:09:58.783329108Z","Action":"output","Package":"internal_app.test","Test":"TestProductUploadRoundTrip","Output":"[mysql] 2026/10/31 13:09:58 packets.go:58 read tcp 127.0.0.1:37828-\u003e127.0.0.1:3306: i/o timeout\n"}
+{"Time":"2026-10-31T13:09:58.783426504Z","Action":"output","Package":"internal_app.test","Test":"TestProductUploadRoundTrip","Output":"    downloads_integration_test.go:50: STORAGE_UNAVAILABLE\n"}
+{"Time":"2026-10-31T13:09:58.783541799Z","Action":"output","Package":"internal_app.test","Test":"TestProductUploadRoundTrip","Output":"--- FAIL: TestProductUploadRoundTrip (5.96s)\n"}
+{"Time":"2026-10-31T13:09:58.783578098Z","Action":"fail","Package":"internal_app.test","Test":"TestProductUploadRoundTrip","Elapsed":5.96}
+{"Time":"2026-10-31T13:09:58.783693893Z","Action":"output","Package":"internal_app.test","Output":"FAIL\n"}
+{"Time":"2026-10-31T13:09:58.793958184Z","Action":"fail","Package":"internal_app.test","Elapsed":6.027}
+{"Time":"2026-10-31T13:09:58.804485564Z","Action":"start","Package":"pkg_launchclient.test"}
+{"Time":"2026-10-31T13:09:58.828946988Z","Action":"run","Package":"pkg_launchclient.test","Test":"TestAccountStoreOwnershipHTTP"}
+{"Time":"2026-10-31T13:09:58.829001986Z","Action":"output","Package":"pkg_launchclient.test","Test":"TestAccountStoreOwnershipHTTP","Output":"=== RUN   TestAccountStoreOwnershipHTTP\n"}
+{"Time":"2026-10-31T13:10:03.177021348Z","Action":"run","Package":"pkg_launchclient.test","Test":"TestAccountStoreOwnershipHTTP/atomic_store_save_failure_does_not_restore_account"}
+{"Time":"2026-10-31T13:10:03.177064347Z","Action":"output","Package":"pkg_launchclient.test","Test":"TestAccountStoreOwnershipHTTP/atomic_store_save_failure_does_not_restore_account","Output":"=== RUN   TestAccountStoreOwnershipHTTP/atomic_store_save_failure_does_not_restore_account\n"}
+{"Time":"2026-10-31T13:10:03.414826362Z","Action":"run","Package":"pkg_launchclient.test","Test":"TestAccountStoreOwnershipHTTP/old_instance_401_preserves_new_login"}
+{"Time":"2026-10-31T13:10:03.41486416Z","Action":"output","Package":"pkg_launchclient.test","Test":"TestAccountStoreOwnershipHTTP/old_instance_401_preserves_new_login","Output":"=== RUN   TestAccountStoreOwnershipHTTP/old_instance_401_preserves_new_login\n"}
+{"Time":"2026-10-31T13:10:03.86136195Z","Action":"run","Package":"pkg_launchclient.test","Test":"TestAccountStoreOwnershipHTTP/old_instance_network_failure_retries_own_queue"}
+{"Time":"2026-10-31T13:10:03.861411148Z","Action":"output","Package":"pkg_launchclient.test","Test":"TestAccountStoreOwnershipHTTP/old_instance_network_failure_retries_own_queue","Output":"=== RUN   TestAccountStoreOwnershipHTTP/old_instance_network_failure_retries_own_queue\n"}
+{"Time":"2026-10-31T13:10:04.255358333Z","Action":"output","Package":"pkg_launchclient.test","Test":"TestAccountStoreOwnershipHTTP","Output":"--- PASS: TestAccountStoreOwnershipHTTP (5.43s)\n"}
+{"Time":"2026-10-31T13:10:04.255426331Z","Action":"output","Package":"pkg_launchclient.test","Test":"TestAccountStoreOwnershipHTTP/atomic_store_save_failure_does_not_restore_account","Output":"    --- PASS: TestAccountStoreOwnershipHTTP/atomic_store_save_failure_does_not_restore_account (0.24s)\n"}
+{"Time":"2026-10-31T13:10:04.255492228Z","Action":"pass","Package":"pkg_launchclient.test","Test":"TestAccountStoreOwnershipHTTP/atomic_store_save_failure_does_not_restore_account","Elapsed":0.24}
+{"Time":"2026-10-31T13:10:04.255513327Z","Action":"output","Package":"pkg_launchclient.test","Test":"TestAccountStoreOwnershipHTTP/old_instance_401_preserves_new_login","Output":"    --- PASS: TestAccountStoreOwnershipHTTP/old_instance_401_preserves_new_login (0.44s)\n"}
+{"Time":"2026-10-31T13:10:04.255543926Z","Action":"pass","Package":"pkg_launchclient.test","Test":"TestAccountStoreOwnershipHTTP/old_instance_401_preserves_new_login","Elapsed":0.44}
+{"Time":"2026-10-31T13:10:04.255610823Z","Action":"output","Package":"pkg_launchclient.test","Test":"TestAccountStoreOwnershipHTTP/old_instance_network_failure_retries_own_queue","Output":"    --- PASS: TestAccountStoreOwnershipHTTP/old_instance_network_failure_retries_own_queue (0.39s)\n"}
+{"Time":"2026-10-31T13:10:04.255786916Z","Action":"pass","Package":"pkg_launchclient.test","Test":"TestAccountStoreOwnershipHTTP/old_instance_network_failure_retries_own_queue","Elapsed":0.39}
+{"Time":"2026-10-31T13:10:04.255861313Z","Action":"pass","Package":"pkg_launchclient.test","Test":"TestAccountStoreOwnershipHTTP","Elapsed":5.43}
+{"Time":"2026-10-31T13:10:04.255878013Z","Action":"run","Package":"pkg_launchclient.test","Test":"TestLaunchAccountLogoutRecovery"}
+{"Time":"2026-10-31T13:10:04.255893212Z","Action":"output","Package":"pkg_launchclient.test","Test":"TestLaunchAccountLogoutRecovery","Output":"=== RUN   TestLaunchAccountLogoutRecovery\n"}
+{"Time":"2026-10-31T13:10:07.172231781Z","Action":"output","Package":"pkg_launchclient.test","Test":"TestLaunchAccountLogoutRecovery","Output":"--- PASS: TestLaunchAccountLogoutRecovery (2.92s)\n"}
+{"Time":"2026-10-31T13:10:07.172291078Z","Action":"pass","Package":"pkg_launchclient.test","Test":"TestLaunchAccountLogoutRecovery","Elapsed":2.92}
+{"Time":"2026-10-31T13:10:07.172324477Z","Action":"output","Package":"pkg_launchclient.test","Output":"PASS\n"}
+{"Time":"2026-10-31T13:10:07.189102107Z","Action":"pass","Package":"pkg_launchclient.test","Elapsed":8.385}

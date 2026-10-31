@@ -33,7 +33,12 @@ public final class OfficialSDKTests {
    else if(path.endsWith("/identity"))value=Map.of("product_id",PRODUCT,"licentivo_product_id",REMOTE,"launch_connection_id",CONNECTION,"environment","sandbox","identity_token","I".repeat(64),"expires_at",Instant.now().plusSeconds(120).toString());
    else if(path.endsWith("/auth/logout"))value=Map.of("signed_out",true);
    else if(path.endsWith("/sessions/logout")){released.set(true);value=Map.of("operation_id",OPERATION,"activation_id",ACTIVATION,"expected_generation",1L,"status","succeeded");}
-   else if(path.endsWith("/launch/exchange")||path.endsWith("/validate")||path.endsWith("/heartbeat")){if(path.endsWith("/launch/exchange"))check("I".repeat(64).equals(input.get("identity_token")),"SDK did not exchange account identity");value=Map.of("activation_id",ACTIVATION,"device_key","lv_dev_"+"d".repeat(43),"lease",lease,"heartbeat_seconds",600L,"logout_ticket",Map.of("operation_id",OPERATION,"product_id",REMOTE,"activation_id",ACTIVATION,"expected_generation",1L,"release_token","lv_out_"+"o".repeat(43)));}
+   else if(path.endsWith("/launch/exchange")||path.endsWith("/validate")||path.endsWith("/heartbeat")){
+    if(path.endsWith("/launch/exchange"))check("I".repeat(64).equals(input.get("identity_token")),"SDK did not exchange account identity");
+    check(input.get("device_name") instanceof String name&&!name.isBlank(),"SDK did not supply the optional device name");
+    check(input.get("device_info") instanceof Map<?,?> info&&info.get("system_type") instanceof String type&&!type.isBlank(),"SDK omitted display details");
+    value=Map.of("activation_id",ACTIVATION,"device_key","lv_dev_"+"d".repeat(43),"lease",lease,"heartbeat_seconds",600L,"logout_ticket",Map.of("operation_id",OPERATION,"product_id",REMOTE,"activation_id",ACTIVATION,"expected_generation",1L,"release_token","lv_out_"+"o".repeat(43)));
+   }
    else throw new AssertionError("Unexpected endpoint "+path);
    reply(e,value);
   }catch(Exception error){e.close();}});server.start();
