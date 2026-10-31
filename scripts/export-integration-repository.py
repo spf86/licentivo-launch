@@ -20,7 +20,7 @@ if any(not re.fullmatch(r'http-testing(?:\.[A-Za-z-]+)?\.md', item['file']) for 
     raise ValueError('Invalid localized HTTP documentation path.')
 DOCS = ('manual-integration.md', 'application-quickstart.zh-CN.md', 'software-sdk-integration.md',
         'integration-packages.md', 'ai-integration.md', 'one-day-integration.md', 'acceptance.md', 'openapi.json',
-        'sdk-compatibility.md', 'account-purchase-boundary.md', 'licentivo-contract.md',
+        'sdk-compatibility.md', 'account-purchase-boundary.md', 'licentivo-contract.md', 'metered-feature-tasks.md',
         'sdk-validation-20261030.md', 'external-licensing.md', 'external-licensing-openapi.json',
         'account-store-fix-2026-10-24.md', 'account-store-fix-evidence-2026-10-24.json',
         'logout-retry-fix-2026-10-24.md', 'logout-retry-fix-evidence-2026-10-24.json',
