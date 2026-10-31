@@ -13,3 +13,5 @@
 *.ps1 text eol=crlf
 Dockerfile text eol=lf
 third_party/*.LICENSE -whitespace
+# Keep captured acceptance files byte-for-byte for their recorded SHA-256 values.
+docs/launch-sdk-renewal-20261101/** -text -whitespace
