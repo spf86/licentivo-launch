@@ -520,6 +520,7 @@ func TestApplicationFlows(t *testing.T) {
 	}
 	testStorePolicies(a, admin, customer)
 	testCommerce(a, admin, customer, register, next)
+	testSalesSEO(a, admin, customer)
 	// Keep the long-running preview honest: the isolated fixture used a fake
 	// DeepL key and translator, so it must not look like a real connection.
 	if db.Where("1 = 1").Delete(&storage.ContentTranslation{}).Error != nil || db.Where("1 = 1").Delete(&storage.TranslationTask{}).Error != nil || db.Delete(&storage.TranslationSettings{}, "id = ?", 1).Error != nil || db.Delete(&storage.SecretRecord{}, "id = ?", translationSettings.CredentialSecretID).Error != nil {

@@ -28,10 +28,14 @@ func (s *Service) queueCustomerNotification(tx *gorm.DB, userID, subject, body s
 	if err := tx.First(&user, "id = ?", userID).Error; err != nil {
 		return err
 	}
-	return s.queueMail(tx, MailMessage{To: user.Email, Subject: subject, Body: body + "\r\n\r\n" + s.PublicURL() + "/#/account"})
+	return s.queueMailWithPriority(tx, MailMessage{To: user.Email, Subject: subject, Body: body + "\r\n\r\n" + s.PublicURL() + "/#/account"}, 10)
 }
 
 func (s *Service) queueMail(tx *gorm.DB, message MailMessage) error {
+	return s.queueMailWithPriority(tx, message, 0)
+}
+
+func (s *Service) queueMailWithPriority(tx *gorm.DB, message MailMessage, priority int) error {
 	enabled, err := mailEnabled(tx)
 	if err != nil || !enabled {
 		return err
@@ -45,10 +49,13 @@ func (s *Service) queueMail(tx *gorm.DB, message MailMessage) error {
 		return err
 	}
 	at := now()
-	return tx.Create(&storage.EmailOutbox{ID: id, Ciphertext: sealed, Status: "pending", AvailableAt: at, CreatedAt: at}).Error
+	return tx.Create(&storage.EmailOutbox{ID: id, Ciphertext: sealed, Status: "pending", Priority: priority, AvailableAt: at, CreatedAt: at}).Error
 }
 
 func (s *Service) RunMail(ctx context.Context) {
+	// Scan independently: a large, low-priority scan must not hold up the
+	// existing authentication mail sender.
+	go s.RunExpiryReminderWorker(ctx)
 	timer := time.NewTicker(time.Second)
 	defer timer.Stop()
 	lastHeartbeat := time.Time{}
@@ -87,7 +94,7 @@ func (s *Service) ProcessMail(ctx context.Context, sender mailer.Sender) (bool, 
 	}
 	err = s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		at := now()
-		result := tx.Clauses(clause.Locking{Strength: "UPDATE", Options: "SKIP LOCKED"}).Where("(status IN ('pending','retrying') AND available_at <= ?) OR (status = 'running' AND lease_until < ?)", at, at).Order("available_at,id").First(&row)
+		result := tx.Clauses(clause.Locking{Strength: "UPDATE", Options: "SKIP LOCKED"}).Where("(status IN ('pending','retrying') AND available_at <= ?) OR (status = 'running' AND lease_until < ?)", at, at).Order("priority,available_at,id").First(&row)
 		if result.Error != nil {
 			return result.Error
 		}
@@ -101,10 +108,27 @@ func (s *Service) ProcessMail(ctx context.Context, sender mailer.Sender) (bool, 
 	if err != nil {
 		return false, ErrStorage
 	}
+	row.LeaseToken = &lease
 	plain, deliveryErr := s.vault.Open(row.Ciphertext, "email-outbox:"+row.ID)
 	var message mailer.Message
 	if deliveryErr == nil {
 		deliveryErr = json.Unmarshal(plain, &message)
+	}
+	if deliveryErr == nil && row.Kind == "expiry_reminder" {
+		var reason string
+		message, reason, deliveryErr = s.prepareExpiryReminder(ctx, row)
+		if deliveryErr == nil && reason != "" {
+			result := s.db.WithContext(ctx).Model(&storage.EmailOutbox{}).Where("id=? AND lease_token=?", row.ID, lease).Updates(map[string]any{"status": "cancelled", "last_error_code": reason, "ciphertext": []byte{}, "notification_key": nil, "lease_token": nil, "lease_until": nil})
+			return true, databaseError(result.Error)
+		}
+	}
+	if deliveryErr == nil {
+		var wait time.Time
+		wait, deliveryErr = s.reserveMailQuota(ctx, row.Priority >= expiryMailPriority)
+		if deliveryErr == nil && !wait.IsZero() {
+			result := s.db.WithContext(ctx).Model(&storage.EmailOutbox{}).Where("id=? AND lease_token=?", row.ID, lease).Updates(map[string]any{"status": "pending", "available_at": wait, "attempts": row.Attempts - 1, "last_error_code": "MAIL_QUOTA_WAIT", "lease_token": nil, "lease_until": nil})
+			return true, databaseError(result.Error)
+		}
 	}
 	if deliveryErr == nil {
 		message.IdempotencyKey = "launch-mail/" + row.ID
@@ -115,6 +139,9 @@ func (s *Service) ProcessMail(ctx context.Context, sender mailer.Sender) (bool, 
 	changes := map[string]any{"lease_token": nil, "lease_until": nil}
 	if deliveryErr == nil {
 		changes["status"], changes["sent_at"], changes["last_error_code"] = "sent", now(), nil
+		if row.Kind == "expiry_reminder" || row.Kind == "expiry_test" {
+			changes["ciphertext"] = []byte{}
+		}
 	} else {
 		changes["status"] = "retrying"
 		if row.Attempts >= 10 {

@@ -1,0 +1,1741 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Licentivo Launch expiry reminder administration API",
+    "version": "1.0.0",
+    "description": "Site-wide email budgets are managed in Email & registration. Reminders scan hourly, have lowest priority, and cannot consume the protected authentication/transaction reserve. All instances must use the same site database."
+  },
+  "servers": [
+    {
+      "url": "https://shop.example.com"
+    }
+  ],
+  "paths": {
+    "/api/v1/admin/mail/quotas": {
+      "get": {
+        "operationId": "getMailQuota",
+        "summary": "Read shared site-wide limits and current UTC usage",
+        "description": "Administrator only.",
+        "security": [
+          {
+            "websiteCookie": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/MailQuotaView"
+                    },
+                    "request_id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "request_id"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or unknown input fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Role, CSRF, or origin forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stale version or missing prerequisite",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate or sending limit reached",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Storage unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "saveMailQuota",
+        "summary": "Save shared limits without resetting usage",
+        "description": "Administrator only. Supply the latest version, or an empty version for the first save. Hour, day, and month limits all apply.",
+        "security": [
+          {
+            "websiteCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Must match the configured Launch origin."
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The current launch_csrf cookie value."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/MailQuotaView"
+                    },
+                    "request_id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "request_id"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or unknown input fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Role, CSRF, or origin forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stale version or missing prerequisite",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate or sending limit reached",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Storage unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MailQuotaInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/expiry-reminders/settings": {
+      "get": {
+        "operationId": "getExpiryReminders",
+        "summary": "Read reminder settings and hourly scan status",
+        "description": "Administrator only.",
+        "security": [
+          {
+            "websiteCookie": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/ExpiryReminderSettingsView"
+                    },
+                    "request_id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "request_id"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or unknown input fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Role, CSRF, or origin forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stale version or missing prerequisite",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate or sending limit reached",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Storage unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "saveExpiryReminders",
+        "summary": "Save reminder defaults and optional explicit contact",
+        "description": "Administrator only. Enabling requires configured SMTP and site-wide email budgets. Global disable applies to individually enabled authorizations too.",
+        "security": [
+          {
+            "websiteCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Must match the configured Launch origin."
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The current launch_csrf cookie value."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/ExpiryReminderSettingsView"
+                    },
+                    "request_id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "request_id"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or unknown input fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Role, CSRF, or origin forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stale version or missing prerequisite",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate or sending limit reached",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Storage unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExpiryReminderSettingsInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/expiry-reminders/preview": {
+      "get": {
+        "operationId": "previewExpiryReminder",
+        "summary": "Preview saved settings without sending",
+        "description": "Administrator only.",
+        "security": [
+          {
+            "websiteCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "zh-CN",
+                "en",
+                "ja",
+                "ko",
+                "de",
+                "fr",
+                "es",
+                "pt-BR",
+                "it",
+                "ru"
+              ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "entitlement_id",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional actual authorization. Omit for sample data."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/ExpiryReminderPreview"
+                    },
+                    "request_id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "request_id"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or unknown input fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Role, CSRF, or origin forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stale version or missing prerequisite",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate or sending limit reached",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Storage unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/expiry-reminders/test": {
+      "post": {
+        "operationId": "testExpiryReminder",
+        "summary": "Queue an explicitly addressed sample reminder",
+        "description": "Administrator only. Subject includes [TEST]. Uses the same lowest priority and reminder budget as real reminder jobs.",
+        "security": [
+          {
+            "websiteCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Must match the configured Launch origin."
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The current launch_csrf cookie value."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/ExpiryReminderTestResult"
+                    },
+                    "request_id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "request_id"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or unknown input fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Role, CSRF, or origin forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stale version or missing prerequisite",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate or sending limit reached",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Storage unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExpiryReminderTestInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/expiry-reminders/jobs": {
+      "get": {
+        "operationId": "listExpiryReminderJobs",
+        "summary": "List delivery metadata without message ciphertext or credentials",
+        "description": "Administrator only.",
+        "security": [
+          {
+            "websiteCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/ExpiryReminderHistory"
+                    },
+                    "request_id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "request_id"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or unknown input fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Role, CSRF, or origin forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stale version or missing prerequisite",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate or sending limit reached",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Storage unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/entitlements/{id}/expiry-reminder": {
+      "get": {
+        "operationId": "getAuthorizationExpiryReminder",
+        "summary": "Read the preference and effective delivery eligibility",
+        "description": "Administrator, operations, or support role. A customer session cannot read other customers’ preferences.",
+        "security": [
+          {
+            "websiteCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Launch entitlement ID for this customer and product."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/ExpiryReminderPreferenceView"
+                    },
+                    "request_id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "request_id"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or unknown input fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Role, CSRF, or origin forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stale version or missing prerequisite",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate or sending limit reached",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Storage unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "saveAuthorizationExpiryReminder",
+        "summary": "Set one authorization’s preference and language",
+        "description": "Administrator or operations role. The global switch, shared limits, and lowest priority still apply. Empty locale inherits the site default. Supply the latest version, or empty for the first save.",
+        "security": [
+          {
+            "websiteCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Launch entitlement ID for this customer and product."
+          },
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Must match the configured Launch origin."
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The current launch_csrf cookie value."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/ExpiryReminderPreferenceView"
+                    },
+                    "request_id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "request_id"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or unknown input fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Role, CSRF, or origin forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stale version or missing prerequisite",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate or sending limit reached",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Storage unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExpiryReminderPreferenceInput"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "PeriodBudget": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "minimum": 2,
+            "maximum": 10000000
+          },
+          "reserve": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9999999
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9999999
+          }
+        },
+        "required": [
+          "total",
+          "reserve",
+          "limit"
+        ],
+        "additionalProperties": false,
+        "description": "Reminder limit must be <= total minus reserve. All customers and instances share this site-wide policy."
+      },
+      "MailQuotaInput": {
+        "type": "object",
+        "properties": {
+          "hour": {
+            "$ref": "#/components/schemas/PeriodBudget"
+          },
+          "day": {
+            "$ref": "#/components/schemas/PeriodBudget"
+          },
+          "month": {
+            "$ref": "#/components/schemas/PeriodBudget"
+          },
+          "version": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "hour",
+          "day",
+          "month",
+          "version"
+        ],
+        "additionalProperties": false
+      },
+      "MailQuotaUsage": {
+        "type": "object",
+        "properties": {
+          "total_used": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "reminder_used": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "resets_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "total_used",
+          "reminder_used",
+          "resets_at"
+        ],
+        "additionalProperties": false
+      },
+      "MailQuotaView": {
+        "type": "object",
+        "properties": {
+          "hour": {
+            "$ref": "#/components/schemas/PeriodBudget"
+          },
+          "day": {
+            "$ref": "#/components/schemas/PeriodBudget"
+          },
+          "month": {
+            "$ref": "#/components/schemas/PeriodBudget"
+          },
+          "version": {
+            "type": "string"
+          },
+          "configured": {
+            "type": "boolean"
+          },
+          "usage": {
+            "type": "object",
+            "properties": {
+              "hour": {
+                "$ref": "#/components/schemas/MailQuotaUsage"
+              },
+              "day": {
+                "$ref": "#/components/schemas/MailQuotaUsage"
+              },
+              "month": {
+                "$ref": "#/components/schemas/MailQuotaUsage"
+              }
+            },
+            "required": [
+              "hour",
+              "day",
+              "month"
+            ],
+            "additionalProperties": false
+          },
+          "reminder_available": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "hour",
+          "day",
+          "month",
+          "version",
+          "configured",
+          "usage",
+          "reminder_available"
+        ],
+        "additionalProperties": false
+      },
+      "ExpiryReminderSettingsInput": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "default_send": {
+            "type": "boolean"
+          },
+          "reminder_days": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 10,
+            "uniqueItems": true,
+            "items": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 90
+            }
+          },
+          "locale": {
+            "type": "string",
+            "enum": [
+              "zh-CN",
+              "en",
+              "ja",
+              "ko",
+              "de",
+              "fr",
+              "es",
+              "pt-BR",
+              "it",
+              "ru"
+            ]
+          },
+          "contact_email": {
+            "type": "string",
+            "maxLength": 254,
+            "description": "Explicit administrator-entered address, or empty to omit contact and Reply-To. No inferred login, sender, or website support address."
+          },
+          "version": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "enabled",
+          "default_send",
+          "reminder_days",
+          "locale",
+          "contact_email",
+          "version"
+        ],
+        "additionalProperties": false
+      },
+      "ExpiryReminderSettingsView": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "default_send": {
+            "type": "boolean"
+          },
+          "reminder_days": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 10,
+            "uniqueItems": true,
+            "items": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 90
+            }
+          },
+          "locale": {
+            "type": "string",
+            "enum": [
+              "zh-CN",
+              "en",
+              "ja",
+              "ko",
+              "de",
+              "fr",
+              "es",
+              "pt-BR",
+              "it",
+              "ru"
+            ]
+          },
+          "contact_email": {
+            "type": "string",
+            "maxLength": 254,
+            "description": "Explicit administrator-entered address, or empty to omit contact and Reply-To. No inferred login, sender, or website support address."
+          },
+          "version": {
+            "type": "string"
+          },
+          "scan_interval_seconds": {
+            "const": 3600
+          },
+          "next_check_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "last_scan_error": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "enabled",
+          "default_send",
+          "reminder_days",
+          "locale",
+          "contact_email",
+          "version",
+          "scan_interval_seconds"
+        ],
+        "additionalProperties": false
+      },
+      "ExpiryReminderPreferenceInput": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "enum": [
+              "inherit",
+              "on",
+              "off"
+            ]
+          },
+          "locale": {
+            "type": "string",
+            "enum": [
+              "",
+              "zh-CN",
+              "en",
+              "ja",
+              "ko",
+              "de",
+              "fr",
+              "es",
+              "pt-BR",
+              "it",
+              "ru"
+            ]
+          },
+          "version": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "mode",
+          "locale",
+          "version"
+        ],
+        "additionalProperties": false
+      },
+      "ExpiryReminderPreferenceView": {
+        "type": "object",
+        "properties": {
+          "preference": {
+            "type": "object",
+            "properties": {
+              "entitlement_id": {
+                "type": "string"
+              },
+              "mode": {
+                "enum": [
+                  "inherit",
+                  "on",
+                  "off"
+                ]
+              },
+              "locale": {
+                "enum": [
+                  "",
+                  "zh-CN",
+                  "en",
+                  "ja",
+                  "ko",
+                  "de",
+                  "fr",
+                  "es",
+                  "pt-BR",
+                  "it",
+                  "ru"
+                ]
+              },
+              "version": {
+                "type": "string"
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "entitlement_id",
+              "mode",
+              "locale",
+              "version",
+              "updated_at"
+            ],
+            "additionalProperties": false
+          },
+          "details": {
+            "type": "object",
+            "properties": {
+              "entitlement_id": {
+                "type": "string"
+              },
+              "product_name": {
+                "type": "string"
+              },
+              "plan_name": {
+                "type": "string"
+              },
+              "policy_name": {
+                "type": "string"
+              },
+              "customer_email": {
+                "type": "string"
+              },
+              "environment": {
+                "type": "string",
+                "enum": [
+                  "live",
+                  "sandbox"
+                ]
+              },
+              "brand": {
+                "type": "string"
+              },
+              "ends_at": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "entitlement_id",
+              "product_name",
+              "plan_name",
+              "policy_name",
+              "customer_email",
+              "environment",
+              "brand",
+              "ends_at"
+            ],
+            "additionalProperties": false
+          },
+          "locale": {
+            "enum": [
+              "zh-CN",
+              "en",
+              "ja",
+              "ko",
+              "de",
+              "fr",
+              "es",
+              "pt-BR",
+              "it",
+              "ru"
+            ]
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "preference",
+          "details",
+          "locale",
+          "enabled",
+          "reason"
+        ],
+        "additionalProperties": false
+      },
+      "ExpiryReminderPreview": {
+        "type": "object",
+        "properties": {
+          "to": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "reply_to": {
+            "type": "string"
+          },
+          "locale": {
+            "enum": [
+              "zh-CN",
+              "en",
+              "ja",
+              "ko",
+              "de",
+              "fr",
+              "es",
+              "pt-BR",
+              "it",
+              "ru"
+            ]
+          }
+        },
+        "required": [
+          "to",
+          "subject",
+          "body",
+          "reply_to",
+          "locale"
+        ],
+        "additionalProperties": false
+      },
+      "ExpiryReminderTestInput": {
+        "type": "object",
+        "properties": {
+          "to": {
+            "type": "string",
+            "format": "email"
+          },
+          "locale": {
+            "type": "string",
+            "enum": [
+              "zh-CN",
+              "en",
+              "ja",
+              "ko",
+              "de",
+              "fr",
+              "es",
+              "pt-BR",
+              "it",
+              "ru"
+            ]
+          }
+        },
+        "required": [
+          "to"
+        ],
+        "additionalProperties": false
+      },
+      "ExpiryReminderTestResult": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "const": "pending"
+          }
+        },
+        "required": [
+          "id",
+          "status"
+        ],
+        "additionalProperties": false
+      },
+      "ExpiryReminderHistory": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "entitlement_id": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "kind": {
+                  "enum": [
+                    "expiry_reminder",
+                    "expiry_test"
+                  ]
+                },
+                "status": {
+                  "enum": [
+                    "pending",
+                    "running",
+                    "retrying",
+                    "sent",
+                    "manual_review",
+                    "cancelled"
+                  ]
+                },
+                "attempts": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "recipient_email": {
+                  "type": "string"
+                },
+                "locale": {
+                  "enum": [
+                    "zh-CN",
+                    "en",
+                    "ja",
+                    "ko",
+                    "de",
+                    "fr",
+                    "es",
+                    "pt-BR",
+                    "it",
+                    "ru"
+                  ]
+                },
+                "reminder_days": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "product_name": {
+                  "type": "string"
+                },
+                "plan_name": {
+                  "type": "string"
+                },
+                "policy_name": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "created_at": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "sent_at": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "date-time"
+                },
+                "available_at": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "id",
+                "entitlement_id",
+                "kind",
+                "status",
+                "attempts",
+                "recipient_email",
+                "locale",
+                "reminder_days",
+                "product_name",
+                "plan_name",
+                "policy_name",
+                "reason",
+                "created_at",
+                "sent_at",
+                "available_at"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset"
+        ],
+        "additionalProperties": false
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "message"
+            ],
+            "additionalProperties": false
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "error",
+          "request_id"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "securitySchemes": {
+      "websiteCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "launch_session",
+        "description": "Authenticated website session. Mutations require matching Origin and X-CSRF-Token from the launch_csrf cookie."
+      }
+    }
+  }
+}

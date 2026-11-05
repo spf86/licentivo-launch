@@ -1,0 +1,28 @@
+.mail-quota-settings .mail-quota-head,.mail-quota-settings .mail-quota-row{display:grid;grid-template-columns:80px repeat(3,minmax(0,1fr));gap:12px;align-items:center}
+.mail-quota-head{color:var(--muted);font-size:13px;padding:0 0 12px;border-bottom:1px solid var(--line)}
+.mail-quota-row{padding:16px 0;border-bottom:1px solid var(--line)}
+.mail-quota-row label{min-width:0}
+.mail-quota-row input{min-width:0;width:100%}
+.mail-quota-row small{grid-column:2/-1;color:var(--muted);font-size:12px}
+.quota-mobile-label{display:none}
+.expiry-reminder-settings .section-head{flex-wrap:wrap}
+.expiry-reminder-settings .table-scroll{max-width:100%;min-width:0;overflow-x:auto}
+.expiry-reminder-settings .form-actions>label{display:flex;align-items:center;gap:10px}
+.expiry-reminder-settings .form-actions>label select{width:auto;max-width:260px}
+.expiry-reminder-settings .expiry-mail-preview{margin-top:20px;border-top:1px solid var(--line);padding-top:20px}
+.expiry-mail-preview h3{line-height:1.6;overflow-wrap:anywhere}
+.expiry-mail-preview small{display:block;color:var(--muted);margin-top:10px}
+.expiry-mail-preview pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;font-size:14px;line-height:1.8;margin:18px 0 0;background:var(--page);color:var(--ink);padding:18px;border-radius:7px}
+.expiry-reminder-settings td small{display:block;font-size:12px;color:var(--muted);margin-top:5px;overflow-wrap:anywhere}
+.expiry-history-pagination{justify-content:flex-end;margin-top:16px}
+.expiry-reminder-dialog{width:460px;max-width:calc(100vw - 32px);max-height:calc(100vh - 40px);overflow:auto;border:1px solid var(--line);border-radius:10px;padding:24px;background:var(--paper,#fff);color:var(--ink)}
+.expiry-reminder-dialog::backdrop{background:#142d2366}
+.expiry-reminder-dialog .section-head{display:flex;justify-content:space-between;gap:12px;align-items:center}
+.expiry-reminder-dialog h2{font-size:21px;margin:0}
+.expiry-preference-options{display:grid;gap:16px;border:0;padding:0;margin:0;min-width:0}
+.expiry-preference-options legend{font-size:14px;margin-bottom:12px}
+.expiry-preference-options .check-option{font-weight:400}
+.expiry-reminder-dialog .success,.mail-quota-settings .success,.expiry-reminder-settings .success{color:var(--accent)}
+.customer-expiry-controls{display:grid;justify-items:start;gap:5px;margin-top:9px}
+.customer-expiry-controls>small{font-size:12px;color:var(--muted)}
+@media(max-width:700px){.mail-quota-head{display:none!important}.mail-quota-settings .mail-quota-row{grid-template-columns:minmax(0,1fr);gap:12px}.mail-quota-row small{grid-column:auto}.quota-mobile-label{display:block;font-size:13px;color:var(--muted)}.expiry-reminder-dialog{padding:20px}.expiry-reminder-settings .form-actions>label{display:grid;width:100%}.expiry-reminder-settings .form-actions>label select{max-width:100%;width:100%}}

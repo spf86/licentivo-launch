@@ -16,6 +16,7 @@ import (
 
 type Message struct {
 	To, Subject, Body string
+	ReplyTo           string `json:",omitempty"`
 	IdempotencyKey    string
 }
 type Sender interface {
@@ -46,6 +47,14 @@ func (s *SMTP) Send(ctx context.Context, message Message) error {
 	to, err := mail.ParseAddress(message.To)
 	if err != nil || to.Address != message.To || strings.ContainsAny(message.To+message.Subject+message.IdempotencyKey, "\r\n") {
 		return ErrDelivery
+	}
+	replyHeader := ""
+	if message.ReplyTo != "" {
+		reply, err := mail.ParseAddress(message.ReplyTo)
+		if err != nil || reply.Address != message.ReplyTo || strings.ContainsAny(message.ReplyTo, "\r\n") {
+			return ErrDelivery
+		}
+		replyHeader = "Reply-To: " + message.ReplyTo + "\r\n"
 	}
 	address := net.JoinHostPort(s.config.Host, s.config.Port)
 	dialer := &net.Dialer{Timeout: 10 * time.Second}
@@ -102,7 +111,7 @@ func (s *SMTP) Send(ctx context.Context, message Message) error {
 	if message.IdempotencyKey != "" {
 		idempotency = "Resend-Idempotency-Key: " + message.IdempotencyKey + "\r\n"
 	}
-	_, err = fmt.Fprintf(writer, "From: %s\r\nTo: %s\r\nSubject: %s\r\n%sMIME-Version: 1.0\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: 8bit\r\n\r\n%s\r\n", s.config.From, message.To, mime.QEncoding.Encode("UTF-8", message.Subject), idempotency, body)
+	_, err = fmt.Fprintf(writer, "From: %s\r\nTo: %s\r\n%sSubject: %s\r\n%sMIME-Version: 1.0\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: 8bit\r\n\r\n%s\r\n", s.config.From, message.To, replyHeader, mime.QEncoding.Encode("UTF-8", message.Subject), idempotency, body)
 	if err != nil {
 		_ = writer.Close()
 		return ErrDelivery

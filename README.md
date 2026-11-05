@@ -38,7 +38,7 @@ The customer website has ten locales. The administration interface currently use
 
 ## Custom licensing services
 
-Launch 0.3.6-beta can synchronize purchases with an existing licensing service using signed HTTP requests. Select one store-wide provider, map products and plans per environment, and keep runtime authorization in your own service and SDK. See the [receiver protocol and API guide](docs/external-licensing.md), [OpenAPI contract](docs/external-licensing-openapi.json), and [Python adapter example](examples/custom-licensing/README.md).
+Launch 0.3.7-beta can synchronize purchases with an existing licensing service using signed HTTP requests. Select one store-wide provider, map products and plans per environment, and keep runtime authorization in your own service and SDK. See the [receiver protocol and API guide](docs/external-licensing.md), [OpenAPI contract](docs/external-licensing-openapi.json), and [Python adapter example](examples/custom-licensing/README.md).
 
 ## Features
 
@@ -53,13 +53,15 @@ Launch 0.3.6-beta can synchronize purchases with an existing licensing service u
 | Entitlements | Per-account/product/payment-environment isolation, perpetual and fixed-term plans, UTC calendar terms, paid coverage ledger, renewal and upgrade quotes |
 | Reliability | Persistent payment and licensing events, task leases, stable request identifiers, retries, reconciliation, and recovery of interrupted remote operations |
 | Administration | Customer and order management, separate administrator/operator/support roles, audit records, CSV exports, and encrypted backup/restore |
+| Expiry reminders | Hourly live-authorization scans, per-authorization consent and ten email languages, product/policy identification, and an optional explicit merchant contact |
+| Shared mail budgets | Administrator-configured hourly/daily/monthly site-wide limits and protected capacity for account and transactional mail; reminders have the lowest priority |
 | Email and languages | Optional Resend or generic SMTP, independent verification and order-notification preferences, encrypted queue, and test email; DeepL Free/Pro, ten customer locales, deduplication, retries, and source-language fallback |
 | HTTPS | External TLS termination or an optional built-in HTTPS listener with encrypted certificate storage and hot replacement |
 | Application integration | Public-configuration wizard, local AI integration prompts, actionable entitlement status, lifecycle wrappers for all nine official SDK languages (Go, Python, C#, Java, JavaScript, Rust, Ruby, C and C++), protected session restoration, and trusted Web backend examples |
 
 Automatic recurring billing and partial refunds are future work. Fixed-term purchases and manual renewals do not automatically charge the customer.
 
-The redesigned interface uses a persistent administration sidebar, focused settings tabs, one payment provider editor at a time, and customer tabs for software, orders, refunds, and security. See [Waffo/Paddle setup](docs/waffo-paddle.md) and [email preferences](docs/resend-email.md).
+The redesigned interface uses a persistent administration sidebar, expandable settings and operations groups, one payment provider editor at a time, and customer tabs for software, orders, refunds, and security. See [Waffo/Paddle setup](docs/waffo-paddle.md) and [email preferences](docs/resend-email.md).
 
 ## How it works
 
@@ -76,14 +78,14 @@ Licentivo receives the data required for licensing, such as opaque customer refe
 
 ## Install the release package
 
-Download the package for your server from [GitHub Releases](https://github.com/spf86/licentivo-launch/releases/tag/v0.3.6-beta) and extract it. **Running the package requires MySQL 8.0.16+; Go, Git, Node.js and a compiler are not required.**
+Download the package for your server from [GitHub Releases](https://github.com/spf86/licentivo-launch/releases/tag/v0.3.7-beta) and extract it. **Running the package requires MySQL 8.0.16+; Go, Git, Node.js and a compiler are not required.**
 
 | Server | Package |
 | --- | --- |
-| Windows, Intel/AMD x64 | [windows_amd64.zip](https://github.com/spf86/licentivo-launch/releases/download/v0.3.6-beta/licentivo-launch_0.3.6-beta_windows_amd64.zip) |
-| Windows, ARM64 | [windows_arm64.zip](https://github.com/spf86/licentivo-launch/releases/download/v0.3.6-beta/licentivo-launch_0.3.6-beta_windows_arm64.zip) |
-| Linux, Intel/AMD x64 | [linux_amd64.tar.gz](https://github.com/spf86/licentivo-launch/releases/download/v0.3.6-beta/licentivo-launch_0.3.6-beta_linux_amd64.tar.gz) |
-| Linux, ARM64 | [linux_arm64.tar.gz](https://github.com/spf86/licentivo-launch/releases/download/v0.3.6-beta/licentivo-launch_0.3.6-beta_linux_arm64.tar.gz) |
+| Windows, Intel/AMD x64 | [windows_amd64.zip](https://github.com/spf86/licentivo-launch/releases/download/v0.3.7-beta/licentivo-launch_0.3.7-beta_windows_amd64.zip) |
+| Windows, ARM64 | [windows_arm64.zip](https://github.com/spf86/licentivo-launch/releases/download/v0.3.7-beta/licentivo-launch_0.3.7-beta_windows_arm64.zip) |
+| Linux, Intel/AMD x64 | [linux_amd64.tar.gz](https://github.com/spf86/licentivo-launch/releases/download/v0.3.7-beta/licentivo-launch_0.3.7-beta_linux_amd64.tar.gz) |
+| Linux, ARM64 | [linux_arm64.tar.gz](https://github.com/spf86/licentivo-launch/releases/download/v0.3.7-beta/licentivo-launch_0.3.7-beta_linux_arm64.tar.gz) |
 
 `amd64` works on compatible Intel and AMD 64-bit processors. Choose the package for the machine hosting Launch. Customer installer platforms are configured separately in the storefront. Prebuilt server packages are currently provided for Windows and Linux.
 
@@ -248,7 +250,7 @@ See the public [installation and development documentation](https://www.licentiv
 
 The administration **程序接入 → 接入检查与代码** page reads the current merchant address, existing product mapping and signing public keys, validates them, and provides a ready-to-use connection function for each language. Start with the [manual nine-language guide](docs/manual-integration.md), [Chinese quick start](docs/application-quickstart.zh-CN.md), [versioned integration packages](docs/integration-packages.md), and [automated/external acceptance workflow](docs/acceptance.md).
 
-The current source baseline is **Launch server 0.3.6-beta → Launch SDK 0.1.8 → embedded Licentivo SDK 0.11.8**. The [public SDK v0.1.8 release](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.8) describes device names and optional system/hardware details. Review the [application integration guide](docs/software-sdk-integration.md) and [Licentivo contract](docs/licentivo-contract.md) for the required backend endpoints and migration flow. Check the version and checksums inside each publication/installation report; older reports do not certify a newer package or uncommitted local changes. External merchant/payment/licensing acceptance remains separate.
+The current source baseline is **Launch server 0.3.7-beta → Launch SDK 0.1.8 → embedded Licentivo SDK 0.11.8**. The [public SDK v0.1.8 release](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.8) describes device names and optional system/hardware details. Review the [application integration guide](docs/software-sdk-integration.md) and [Licentivo contract](docs/licentivo-contract.md) for the required backend endpoints and migration flow. Check the version and checksums inside each publication/installation report; older reports do not certify a newer package or uncommitted local changes. External merchant/payment/licensing acceptance remains separate.
 
 **运营工具 → AI 快速接入** generates an English prompt from your language, platform, project type and protected feature. Select the existing software and environment to include the automatically filled direct initialization code, or generate a clearly marked unconfigured draft. The prompt includes the exact versioned package-manager command or GitHub download, links to the language README and integration guides, the `Connect/connect → Login/Restore → RunFeature` lifecycle, and an acceptance checklist. No configuration files or manual internal product-ID entry are required. Copy or download the prompt for your own AI coding tool; Launch never automatically sends it to an AI service, and excludes passwords, license credentials, sessions, management keys, payment keys and server configuration. See [AI integration](docs/ai-integration.md).
 

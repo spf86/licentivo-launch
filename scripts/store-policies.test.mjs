@@ -55,3 +55,9 @@ test('account menu groups existing actions and escapes administrator identity',(
  assert.match(html,/aria-label="账号菜单"/);assert.match(html,/账号中心/);assert.match(html,/查看商店/);assert.match(html,/data-action="logout"/);
  assert.ok(!html.includes('<img src=x>'));assert.match(html,/&lt;img src=x&gt;/);
 });
+
+test('account menu receives its active locale without browser storage globals',()=>{
+ const user={role:'admin',email:'owner@example.test'};
+ assert.match(workspaceAccountMenu(user,'en'),/<option value="en" selected>English<\/option>/);
+ assert.match(workspaceAccountMenu(user),/<option value="zh-CN" selected>简体中文<\/option>/);
+});

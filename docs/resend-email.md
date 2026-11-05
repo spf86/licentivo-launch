@@ -86,8 +86,11 @@ Email delivery and required verification are independent. On an existing install
 | Order and software notifications | When enabled, a confirmed payment, software access becoming active or being updated while active, or a confirmed full refund queues a notification. License keys and passwords are never included. |
 | Invoice result | An administrator issues or rejects the invoice request while delivery is enabled. |
 | Test delivery | An administrator explicitly sends a test message using the saved configuration. |
+| Authorization expiry reminder | When explicitly enabled, the hourly scan checks eligible live authorizations and their individual sending/language preferences. Subject and body identify the product and license policy. Reminder jobs use the lowest priority and cannot consume the protected reserve for other mail. |
 
 Pending refund approval does not produce a refund-completed email. The account portal remains the source for current order, entitlement, refund, and invoice status. Queued deliveries retry after temporary failures; messages already queued before a preference changes are retained.
+
+Expiry reminders additionally recheck eligibility immediately before sending and on every retry, and cancel stale reminders after renewal, opt-out, or a changed customer email. Configure the site's shared hourly/daily/monthly limits and protected reserves in **Email and registration → Email sending limits**, and reminder preferences under **Expiry reminders**. All customers and application instances share one budget. See [expiry email reminders](expiry-email-reminders.md) for configuration and accounting details.
 
 ## Use another SMTP provider
 

@@ -192,6 +192,7 @@ func requestLocale(r *http.Request) string {
 }
 
 func (a *application) register(mux *http.ServeMux) {
+	a.registerExpiryReminders(mux)
 	a.registerCommerce(mux)
 	a.registerIntegration(mux)
 	mux.HandleFunc("GET /api/v1/product-document-images/{id}", func(w http.ResponseWriter, r *http.Request) {
@@ -497,7 +498,21 @@ func (a *application) register(mux *http.ServeMux) {
 		if err != nil {
 			return nil, err
 		}
-		return a.service.SearchUsers(r.Context(), p, app.UserQuery{Query: r.URL.Query().Get("q"), Status: r.URL.Query().Get("status"), Limit: limit, Offset: offset})
+		return a.service.SearchUsers(r.Context(), p, app.UserQuery{Query: r.URL.Query().Get("q"), Status: r.URL.Query().Get("status"), Environment: r.URL.Query().Get("environment"), Limit: limit, Offset: offset})
+	})
+	a.route(mux, "GET /api/v1/admin/users/{id}/products", true, 0, func(w http.ResponseWriter, r *http.Request, p app.Principal) (any, error) {
+		limit, offset, err := listPagination(r)
+		if err != nil {
+			return nil, err
+		}
+		return a.service.CustomerProducts(r.Context(), p, r.PathValue("id"), r.URL.Query().Get("environment"), limit, offset)
+	})
+	a.route(mux, "GET /api/v1/admin/users/{id}/orders", true, 0, func(w http.ResponseWriter, r *http.Request, p app.Principal) (any, error) {
+		limit, offset, err := listPagination(r)
+		if err != nil {
+			return nil, err
+		}
+		return a.service.CustomerOrders(r.Context(), p, r.PathValue("id"), app.AdminOrderQuery{Query: r.URL.Query().Get("q"), Status: r.URL.Query().Get("status"), Environment: r.URL.Query().Get("environment"), Limit: limit, Offset: offset})
 	})
 	a.route(mux, "POST /api/v1/admin/users/{id}/status", true, 5, func(w http.ResponseWriter, r *http.Request, p app.Principal) (any, error) {
 		var in struct {

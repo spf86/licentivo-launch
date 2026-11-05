@@ -38,16 +38,27 @@ type MailSettings struct {
 func (MailSettings) TableName() string { return "mail_settings" }
 
 type EmailOutbox struct {
-	ID            string     `gorm:"type:char(36) CHARACTER SET ascii COLLATE ascii_bin;primaryKey"`
-	Ciphertext    []byte     `gorm:"type:mediumblob;not null"`
-	Status        string     `gorm:"type:enum('pending','running','retrying','sent','manual_review');not null;index:ix_mail_claim,priority:1"`
-	Attempts      uint64     `gorm:"not null;default:0"`
-	AvailableAt   time.Time  `gorm:"type:datetime(6);not null;index:ix_mail_claim,priority:2"`
-	LeaseToken    *string    `gorm:"type:char(36) CHARACTER SET ascii COLLATE ascii_bin"`
-	LeaseUntil    *time.Time `gorm:"type:datetime(6)"`
-	LastErrorCode *string    `gorm:"type:varchar(80) CHARACTER SET ascii COLLATE ascii_bin"`
-	CreatedAt     time.Time  `gorm:"type:datetime(6);not null"`
-	SentAt        *time.Time `gorm:"type:datetime(6)"`
+	Priority           int        `gorm:"not null;default:0;index:ix_mail_priority,priority:1"`
+	Kind               string     `gorm:"type:varchar(32) CHARACTER SET ascii COLLATE ascii_bin;not null;default:'';index"`
+	EntitlementID      *string    `gorm:"type:char(36) CHARACTER SET ascii COLLATE ascii_bin;index"`
+	ReminderEnd        *time.Time `gorm:"type:datetime(6)"`
+	ReminderDays       int        `gorm:"not null;default:0"`
+	NotificationKey    *string    `gorm:"type:char(64) CHARACTER SET ascii COLLATE ascii_bin;uniqueIndex:uq_expiry_notification"`
+	RecipientEmail     string     `gorm:"type:varchar(254);not null;default:''"`
+	NotificationLocale string     `gorm:"type:varchar(16);not null;default:''"`
+	ProductName        string     `gorm:"type:varchar(160);not null;default:''"`
+	PlanName           string     `gorm:"type:varchar(160);not null;default:''"`
+	PolicyName         string     `gorm:"type:varchar(160);not null;default:''"`
+	ID                 string     `gorm:"type:char(36) CHARACTER SET ascii COLLATE ascii_bin;primaryKey"`
+	Ciphertext         []byte     `gorm:"type:mediumblob;not null"`
+	Status             string     `gorm:"type:enum('pending','running','retrying','sent','manual_review','cancelled');not null;index:ix_mail_claim,priority:1;index:ix_mail_priority,priority:2"`
+	Attempts           uint64     `gorm:"not null;default:0"`
+	AvailableAt        time.Time  `gorm:"type:datetime(6);not null;index:ix_mail_claim,priority:2;index:ix_mail_priority,priority:3"`
+	LeaseToken         *string    `gorm:"type:char(36) CHARACTER SET ascii COLLATE ascii_bin"`
+	LeaseUntil         *time.Time `gorm:"type:datetime(6)"`
+	LastErrorCode      *string    `gorm:"type:varchar(80) CHARACTER SET ascii COLLATE ascii_bin"`
+	CreatedAt          time.Time  `gorm:"type:datetime(6);not null"`
+	SentAt             *time.Time `gorm:"type:datetime(6)"`
 }
 
 // PlanPublication keeps public versions separate from newer unpublished drafts.

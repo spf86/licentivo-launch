@@ -1,0 +1,132 @@
+{
+  "zh-CN": {
+    "title": "{product} · {policy}即将到期",
+    "intro": "您购买的以下授权将在 {days} 天后到期，请提前安排续期。",
+    "labels": [
+      "产品",
+      "购买套餐",
+      "授权策略",
+      "到期时间"
+    ],
+    "ending": "请在到期前安排续期，以免影响后续使用。",
+    "footer": "授权到期提醒",
+    "contact": "联系商家："
+  },
+  "en": {
+    "title": "{product} · {policy} expires soon",
+    "intro": "The following software access expires in {days} days. Please arrange your renewal in advance.",
+    "labels": [
+      "Product",
+      "Purchased plan",
+      "License policy",
+      "Expires at"
+    ],
+    "ending": "Please renew before the expiry date to continue using your software.",
+    "footer": "Software access expiry reminder",
+    "contact": "Contact the merchant: "
+  },
+  "ja": {
+    "title": "{product} · {policy}の有効期限が近づいています",
+    "intro": "以下の購入済みライセンスは、あと {days} 日で有効期限を迎えます。お早めに更新をご検討ください。",
+    "labels": [
+      "製品",
+      "購入プラン",
+      "ライセンスポリシー",
+      "有効期限"
+    ],
+    "ending": "引き続きご利用いただくため、有効期限前に更新をお願いします。",
+    "footer": "ライセンス有効期限のお知らせ",
+    "contact": "販売元へのお問い合わせ："
+  },
+  "ko": {
+    "title": "{product} · {policy}의 만료일이 다가옵니다",
+    "intro": "구매하신 다음 이용 권한이 {days}일 후 만료됩니다. 미리 갱신해 주세요.",
+    "labels": [
+      "제품",
+      "구매한 요금제",
+      "라이선스 정책",
+      "만료일"
+    ],
+    "ending": "계속 이용하시려면 만료일 전에 갱신해 주세요.",
+    "footer": "이용 권한 만료 알림",
+    "contact": "판매자 문의: "
+  },
+  "de": {
+    "title": "{product} · {policy} läuft bald ab",
+    "intro": "Die folgende erworbene Softwareberechtigung läuft in {days} Tagen ab. Bitte kümmern Sie sich rechtzeitig um die Verlängerung.",
+    "labels": [
+      "Produkt",
+      "Gekaufter Tarif",
+      "Lizenzrichtlinie",
+      "Ablaufdatum"
+    ],
+    "ending": "Bitte verlängern Sie vor dem Ablaufdatum, um Ihre Software weiter zu nutzen.",
+    "footer": "Erinnerung an den Lizenzablauf",
+    "contact": "Händler kontaktieren: "
+  },
+  "fr": {
+    "title": "{product} · {policy} expire bientôt",
+    "intro": "Le droit d’utilisation suivant expire dans {days} jours. Veuillez prévoir son renouvellement.",
+    "labels": [
+      "Produit",
+      "Offre achetée",
+      "Politique de licence",
+      "Date d’expiration"
+    ],
+    "ending": "Veuillez renouveler avant la date d’expiration pour continuer à utiliser votre logiciel.",
+    "footer": "Rappel d’expiration de licence",
+    "contact": "Contacter le vendeur : "
+  },
+  "es": {
+    "title": "{product} · {policy} caduca pronto",
+    "intro": "El siguiente acceso adquirido caduca en {days} días. Organice la renovación con antelación.",
+    "labels": [
+      "Producto",
+      "Plan adquirido",
+      "Política de licencia",
+      "Fecha de caducidad"
+    ],
+    "ending": "Renueve antes de la fecha de caducidad para seguir utilizando el software.",
+    "footer": "Recordatorio de caducidad",
+    "contact": "Contactar con el vendedor: "
+  },
+  "pt-BR": {
+    "title": "{product} · {policy} expira em breve",
+    "intro": "O acesso adquirido a seguir expira em {days} dias. Organize a renovação com antecedência.",
+    "labels": [
+      "Produto",
+      "Plano adquirido",
+      "Política de licença",
+      "Data de expiração"
+    ],
+    "ending": "Renove antes do vencimento para continuar usando seu software.",
+    "footer": "Lembrete de expiração da licença",
+    "contact": "Contato do vendedor: "
+  },
+  "it": {
+    "title": "{product} · {policy} sta per scadere",
+    "intro": "Il seguente accesso acquistato scade tra {days} giorni. Organizza il rinnovo in anticipo.",
+    "labels": [
+      "Prodotto",
+      "Piano acquistato",
+      "Politica di licenza",
+      "Scadenza"
+    ],
+    "ending": "Rinnova prima della scadenza per continuare a utilizzare il software.",
+    "footer": "Promemoria di scadenza della licenza",
+    "contact": "Contatta il venditore: "
+  },
+  "ru": {
+    "title": "Скоро истекает срок действия {product} · {policy}",
+    "intro": "Срок действия указанного доступа истекает через {days} дней. Пожалуйста, продлите его заранее.",
+    "labels": [
+      "Продукт",
+      "Приобретённый тариф",
+      "Политика лицензии",
+      "Срок действия"
+    ],
+    "ending": "Продлите доступ до истечения срока действия, чтобы продолжить использование программы.",
+    "footer": "Напоминание об окончании срока действия",
+    "contact": "Связаться с продавцом: "
+  }
+}

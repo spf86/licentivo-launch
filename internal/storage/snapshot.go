@@ -153,6 +153,12 @@ func snapshotEntries(snap Snapshot, tableNames []string) (map[string]json.RawMes
 	}
 	for _, name := range tableNames {
 		if _, exists := entries[name]; !exists {
+			if name == "mail_quota_settings" || name == "mail_quota_windows" || name == "expiry_reminder_settings" || name == "expiry_reminder_preferences" || name == "expiry_reminder_schedules" {
+				// Older archives predate expiry reminders. Restored sites keep the
+				// new feature off until an administrator configures a mail budget.
+				entries[name] = json.RawMessage("[]")
+				continue
+			}
 			if name != "payment_reversals" && name != "external_licensing_connections" && name != "product_licensing_bindings" && name != "external_plan_mappings" {
 				return nil, errors.New("backup table is missing")
 			}

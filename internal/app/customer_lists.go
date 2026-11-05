@@ -15,8 +15,8 @@ type CustomerOrderPage struct {
 }
 
 type UserQuery struct {
-	Query, Status string
-	Limit, Offset int
+	Query, Status, Environment string
+	Limit, Offset              int
 }
 
 type UserPage struct {
@@ -43,6 +43,9 @@ func literalSearch(value string) string {
 // Customer order queries always scope the complete history to the authenticated
 // user, including the count. A UUID or search term cannot widen that scope.
 func (s *Service) SearchOrders(ctx context.Context, p Principal, in AdminOrderQuery) (CustomerOrderPage, error) {
+	return s.searchCustomerOrders(ctx, p.User.ID, in)
+}
+func (s *Service) searchCustomerOrders(ctx context.Context, ownerID string, in AdminOrderQuery) (CustomerOrderPage, error) {
 	limit, err := listBounds(in.Limit, in.Offset)
 	if err != nil {
 		return CustomerOrderPage{}, err
@@ -63,10 +66,10 @@ func (s *Service) SearchOrders(ctx context.Context, p Principal, in AdminOrderQu
 		q := s.db.WithContext(ctx).Table("orders AS o").
 			Joins("JOIN products AS p ON p.id=o.product_id").
 			Joins("JOIN plan_versions AS pv ON pv.id=o.plan_version_id").
-			Joins("JOIN plans AS pl ON pl.id=pv.plan_id").Where("o.user_id=?", p.User.ID)
+			Joins("JOIN plans AS pl ON pl.id=pv.plan_id").Where("o.user_id=?", ownerID)
 		if in.Query != "" {
 			pattern := "%" + literalSearch(in.Query) + "%"
-			q = q.Where("(LOWER(o.id) LIKE ? ESCAPE '!' OR LOWER(p.name) LIKE ? ESCAPE '!' OR LOWER(pl.name) LIKE ? ESCAPE '!')", pattern, pattern, pattern)
+			q = q.Where("(LOWER(CONVERT(o.id USING utf8mb4)) LIKE ? ESCAPE '!' OR LOWER(p.name) LIKE ? ESCAPE '!' OR LOWER(pl.name) LIKE ? ESCAPE '!' OR LOWER(JSON_UNQUOTE(JSON_EXTRACT(o.price_snapshot, '$.plan_name'))) LIKE ? ESCAPE '!')", pattern, pattern, pattern, pattern)
 		}
 		if in.Status != "" {
 			q = q.Where("o.status=?", in.Status)
@@ -91,6 +94,10 @@ func (s *Service) SearchUsers(ctx context.Context, p Principal, in UserQuery) (U
 		return UserPage{}, ErrForbidden
 	}
 	limit, err := listBounds(in.Limit, in.Offset)
+	if err != nil {
+		return UserPage{}, err
+	}
+	environment, err := customerEnvironment(in.Environment)
 	if err != nil {
 		return UserPage{}, err
 	}
@@ -120,6 +127,18 @@ func (s *Service) SearchUsers(ctx context.Context, p Principal, in UserQuery) (U
 	// Read only public management fields; password hashes never enter the view.
 	if err = query().Select("u.id,u.email,(u.email_verified_at IS NOT NULL) AS verified,'customer' AS role,FALSE AS full_access,u.password_change_required,u.status,u.created_at").Order("u.created_at DESC,u.id DESC").Limit(limit).Offset(in.Offset).Scan(&out.Items).Error; err != nil {
 		return out, ErrStorage
+	}
+	ids := make([]string, 0, len(out.Items))
+	for _, u := range out.Items {
+		ids = append(ids, u.ID)
+	}
+	products, paid, err := s.customerPurchaseProducts(ctx, ids, environment)
+	if err != nil {
+		return out, err
+	}
+	for i := range out.Items {
+		u := &out.Items[i]
+		u.Purchases = summarizeCustomerProducts(products[u.ID], paid[u.ID], now())
 	}
 	return out, nil
 }

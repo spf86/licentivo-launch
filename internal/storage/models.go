@@ -7,6 +7,7 @@ import (
 )
 
 type InstanceSettings struct {
+	SEOSettings             json.RawMessage `gorm:"type:json"`
 	AllowSDKHTTP            bool            `gorm:"type:boolean;not null;default:false"`
 	StorePolicies           json.RawMessage `gorm:"type:json"`
 	LicensingProvider       string          `gorm:"type:varchar(32) CHARACTER SET ascii COLLATE ascii_bin;not null;default:''"`
@@ -77,6 +78,7 @@ type Session struct {
 func (Session) TableName() string { return "sessions" }
 
 type Product struct {
+	SEO json.RawMessage `gorm:"type:json"`
 	// Public routing context, fixed when this product is first mapped. This is
 	// not a local authorization decision or a customer entitlement.
 	LicentivoProductID *string         `gorm:"type:char(36) CHARACTER SET ascii COLLATE ascii_bin"`
@@ -306,15 +308,15 @@ type Payment struct {
 	ID                    string          `gorm:"column:id;type:char(36) CHARACTER SET ascii COLLATE ascii_bin;primaryKey;autoIncrement:false;uniqueIndex:uq_payment_account,priority:1;check:ck_payment_amount,amount_minor >= 0"`
 	OrderID               string          `gorm:"column:order_id;type:char(36) CHARACTER SET ascii COLLATE ascii_bin;not null"`
 	AccountID             string          `gorm:"column:account_id;type:char(36) CHARACTER SET ascii COLLATE ascii_bin;not null;uniqueIndex:uq_provider_transaction,priority:1;uniqueIndex:uq_provider_checkout,priority:1;uniqueIndex:uq_payment_account,priority:2"`
-	Environment           string          `gorm:"column:environment;type:enum('sandbox','live');not null"`
+	Environment           string          `gorm:"column:environment;type:enum('sandbox','live');not null;index:ix_payments_sales,priority:1;index:ix_payments_attempts,priority:1"`
 	OperationID           string          `gorm:"column:operation_id;type:char(36) CHARACTER SET ascii COLLATE ascii_bin;not null;uniqueIndex:uq_payments_operation_id"`
 	ExternalCheckoutID    *string         `gorm:"column:external_checkout_id;type:varchar(128) CHARACTER SET ascii COLLATE ascii_bin;uniqueIndex:uq_provider_checkout,priority:2"`
 	ExternalTransactionID *string         `gorm:"column:external_transaction_id;type:varchar(128) CHARACTER SET ascii COLLATE ascii_bin;uniqueIndex:uq_provider_transaction,priority:2"`
 	Status                string          `gorm:"column:status;type:enum('creating','pending','succeeded','failed','unknown');not null"`
-	Currency              string          `gorm:"column:currency;type:char(3) CHARACTER SET ascii COLLATE ascii_bin;not null"`
+	Currency              string          `gorm:"column:currency;type:char(3) CHARACTER SET ascii COLLATE ascii_bin;not null;index:ix_payments_sales,priority:2;index:ix_payments_attempts,priority:2"`
 	AmountMinor           int64           `gorm:"column:amount_minor;type:bigint;not null"`
-	PaidAt                *time.Time      `gorm:"column:paid_at;type:datetime(6)"`
-	CreatedAt             time.Time       `gorm:"column:created_at;type:datetime(6);not null;default:CURRENT_TIMESTAMP(6)"`
+	PaidAt                *time.Time      `gorm:"column:paid_at;type:datetime(6);index:ix_payments_sales,priority:3"`
+	CreatedAt             time.Time       `gorm:"column:created_at;type:datetime(6);not null;default:CURRENT_TIMESTAMP(6);index:ix_payments_attempts,priority:3"`
 	FkPaymentOrder        *Order          `gorm:"foreignKey:OrderID,Environment;references:ID,Environment;constraint:fk_payment_order,OnUpdate:RESTRICT,OnDelete:RESTRICT"`
 	FkPaymentAccount      *PaymentAccount `gorm:"foreignKey:AccountID,Environment;references:ID,Environment;constraint:fk_payment_account,OnUpdate:RESTRICT,OnDelete:RESTRICT"`
 }
@@ -493,5 +495,5 @@ type AuditEntry struct {
 func (AuditEntry) TableName() string { return "audit_entries" }
 
 func models() []any {
-	return []any{&LaunchTrustConnection{}, &LaunchEventStream{}, &LaunchOutbox{}, &InstanceSettings{}, &SecretRecord{}, &User{}, &StaffAccount{}, &Session{}, &Product{}, &ProductDownload{}, &ProductDocumentImage{}, &TranslationSettings{}, &ContentTranslation{}, &TranslationTask{}, &LicentivoConnection{}, &Plan{}, &PlanVersion{}, &PlanLicenseMapping{}, &PaymentAccount{}, &Order{}, &Payment{}, &Refund{}, &PaymentReversal{}, &PaymentEvent{}, &Entitlement{}, &EntitlementCoverage{}, &LicenseBinding{}, &SyncTask{}, &LicentivoEvent{}, &AuditEntry{}, &EmailCredential{}, &MailSettings{}, &EmailOutbox{}, &PlanPublication{}, &InvoiceRequest{}, &RuntimeStatus{}, &DeviceOperation{}, &ExternalLicensingConnection{}, &ProductLicensingBinding{}, &ExternalPlanMapping{}}
+	return []any{&LaunchTrustConnection{}, &LaunchEventStream{}, &LaunchOutbox{}, &InstanceSettings{}, &SecretRecord{}, &User{}, &StaffAccount{}, &Session{}, &Product{}, &ProductDownload{}, &ProductDocumentImage{}, &TranslationSettings{}, &ContentTranslation{}, &TranslationTask{}, &LicentivoConnection{}, &Plan{}, &PlanVersion{}, &PlanLicenseMapping{}, &PaymentAccount{}, &Order{}, &Payment{}, &Refund{}, &PaymentReversal{}, &PaymentEvent{}, &Entitlement{}, &EntitlementCoverage{}, &LicenseBinding{}, &SyncTask{}, &LicentivoEvent{}, &AuditEntry{}, &EmailCredential{}, &MailSettings{}, &EmailOutbox{}, &PlanPublication{}, &InvoiceRequest{}, &RuntimeStatus{}, &DeviceOperation{}, &ExternalLicensingConnection{}, &ProductLicensingBinding{}, &ExternalPlanMapping{}, &MailQuotaSetting{}, &MailQuotaWindow{}, &ExpiryReminderSetting{}, &ExpiryReminderPreference{}, &ExpiryReminderSchedule{}}
 }

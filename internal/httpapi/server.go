@@ -40,6 +40,7 @@ func Handler(options Options) http.Handler {
 	}
 	application := &application{service: options.App, publicURL: publicURLProvider, forceSecureCookies: options.SecureCookies}
 	application.register(mux)
+	application.registerSalesSEO(mux)
 	application.registerPaddleCheckout(mux)
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
 		respond(w, r, http.StatusOK, map[string]any{"status": "ok"})
@@ -76,6 +77,15 @@ func Handler(options Options) http.Handler {
 	}
 	mux.Handle("GET /assets/", http.StripPrefix("/assets/", http.FileServerFS(webFS)))
 	pageHandler := func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/" && application.service != nil {
+			site, err := application.service.Site(r.Context(), "live", "", "")
+			if err == nil && site.Installed {
+				r.SetPathValue("locale", site.SourceLocale)
+				application.publicStorefront(w, r)
+				return
+			}
+		}
+		w.Header().Set("X-Robots-Tag", "noindex")
 		page, err := assets.ReadFile("web/index.html")
 		if err != nil {
 			http.Error(w, "页面暂不可用", http.StatusInternalServerError)

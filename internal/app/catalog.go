@@ -492,6 +492,9 @@ func (s *Service) SaveProduct(ctx context.Context, p Principal, in ProductView) 
 		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&settings, "id = ?", 1).Error; err != nil {
 			return err
 		}
+		if err := reserveProductSlug(tx, in.Slug, in.ID); err != nil {
+			return err
+		}
 		if in.ID == "" {
 			id, err := newID()
 			if err != nil {
@@ -507,8 +510,26 @@ func (s *Service) SaveProduct(ctx context.Context, p Principal, in ProductView) 
 				}
 			}
 		} else {
-			if err := tx.First(&product, "id = ?", in.ID).Error; err != nil {
+			if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&product, "id = ?", in.ID).Error; err != nil {
 				return err
+			}
+			if product.Slug != in.Slug {
+				seo := readProductSEO(product.SEO)
+				if len(seo.Aliases) >= 128 {
+					return problem(409, "PRODUCT_SLUG_HISTORY_FULL", "页面简称修改次数已达上限，请保留当前地址")
+				}
+				found := false
+				for _, alias := range seo.Aliases {
+					if alias == product.Slug {
+						found = true
+					}
+				}
+				if !found {
+					seo.Aliases = append(seo.Aliases, product.Slug)
+				}
+				if err := tx.Model(&product).Update("seo", marshal(seo)).Error; err != nil {
+					return err
+				}
 			}
 			if err := tx.Model(&product).Updates(map[string]any{"slug": in.Slug, "name": in.Name, "content": marshal(in.Content), "status": in.Status}).Error; err != nil {
 				return err

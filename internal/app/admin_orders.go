@@ -57,7 +57,7 @@ func (s *Service) SearchAdminOrders(ctx context.Context, p Principal, in AdminOr
 		if in.Query != "" {
 			literal := strings.NewReplacer("!", "!!", "%", "!%", "_", "!_").Replace(strings.ToLower(in.Query))
 			pattern := "%" + literal + "%"
-			q = q.Where("(LOWER(o.id) LIKE ? ESCAPE '!' OR u.email_key LIKE ? ESCAPE '!' OR LOWER(p.name) LIKE ? ESCAPE '!')", pattern, pattern, pattern)
+			q = q.Where("(LOWER(CONVERT(o.id USING utf8mb4)) LIKE ? ESCAPE '!' OR u.email_key LIKE ? ESCAPE '!' OR LOWER(p.name) LIKE ? ESCAPE '!')", pattern, pattern, pattern)
 		}
 		if in.Status != "" {
 			q = q.Where("o.status = ?", in.Status)

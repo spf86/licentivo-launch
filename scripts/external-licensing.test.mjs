@@ -40,10 +40,11 @@ test('previewing another provider requires explicit activation and keeps the cur
  assert.ok(!preview.includes('data-form="license-settings"'));
 });
 
-test('both settings routes show one unified licensing tab',()=>{
+test('both settings routes select one unified licensing category',()=>{
  const html=settingsWorkspace({licensing:'UNIFIED-LICENSING'},'customlicensing');
- assert.equal((html.match(/href="#\/admin\/settings\/licensing"/g)||[]).length,1);
- assert.ok(!html.includes('href="#/admin/settings/customlicensing"'));
+ assert.equal((html.match(/<option value="licensing" selected>/g)||[]).length,1);
+ assert.ok(!html.includes('value="customlicensing"'));
+ assert.match(html,/data-settings-section aria-label="设置分类"/);
  assert.match(html,/data-settings-current="licensing">UNIFIED-LICENSING/);
 });
 

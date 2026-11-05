@@ -144,14 +144,37 @@ func TestSMTPVerifiedTLSAndAcceptedData(t *testing.T) {
 			sender.dial = dial
 			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 			defer cancel()
-			if err := sender.Send(ctx, Message{To: "customer@example.invalid", Subject: "邮箱验证", Body: "Line one\n.leading dot\nLine three", IdempotencyKey: "launch-mail/test-message"}); err != nil {
+			if err := sender.Send(ctx, Message{To: "customer@example.invalid", Subject: "邮箱验证", Body: "Line one\n.leading dot\nLine three", ReplyTo: "merchant-contact@example.invalid", IdempotencyKey: "launch-mail/test-message"}); err != nil {
 				t.Fatal(err)
 			}
 			message := <-messages
 			if !strings.Contains(message, ".leading dot") || !strings.Contains(message, "Subject: =?UTF-8?") || !strings.Contains(message, "Resend-Idempotency-Key: launch-mail/test-message") {
 				t.Fatal("MIME encoding or dot transparency failed")
 			}
+			if !strings.Contains(message, "Reply-To: merchant-contact@example.invalid") {
+				t.Fatal("explicit merchant contact was not emitted as Reply-To")
+			}
+			dial, messages = smtpPipe(t, cert, implicit, true)
+			sender.dial = dial
+			if err := sender.Send(ctx, Message{To: "customer@example.invalid", Subject: "No contact configured", Body: "Test"}); err != nil {
+				t.Fatal(err)
+			}
+			if strings.Contains(<-messages, "Reply-To:") {
+				t.Fatal("blank contact inferred a reply address from SMTP credentials")
+			}
 		})
+	}
+}
+
+func TestSMTPRejectsInvalidReplyToBeforeConnecting(t *testing.T) {
+	for _, reply := range []string{"merchant@example.invalid\r\nBcc: attacker@example.invalid", "Merchant <merchant@example.invalid>", "invalid"} {
+		sender, err := NewSMTP(Config{Host: "localhost", Port: "587", From: "sender@example.invalid", Username: "test", Password: "test"})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err = sender.Send(context.Background(), Message{To: "customer@example.invalid", Subject: "Test", ReplyTo: reply}); err == nil {
+			t.Fatal("unsafe Reply-To was accepted")
+		}
 	}
 }
 func TestSMTPRefusesDowngradeBadCertificateAndHeaderInjection(t *testing.T) {

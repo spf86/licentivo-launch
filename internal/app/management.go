@@ -12,6 +12,7 @@ import (
 )
 
 type ManagedUser struct {
+	Purchases *CustomerPurchaseSummary `json:"purchases,omitempty" gorm:"-"`
 	UserView
 	Status    string    `json:"status"`
 	CreatedAt time.Time `json:"created_at"`

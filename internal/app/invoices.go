@@ -165,7 +165,7 @@ func (s *Service) DecideInvoice(ctx context.Context, p Principal, id string, in 
 		if in.Status == "issued" {
 			subject, body = "你的发票已开具", "发票已经开具，请登录客户中心下载：\n"+in.URL
 		}
-		if err := s.queueMail(tx, MailMessage{To: row.RecipientEmail, Subject: subject, Body: body, IdempotencyKey: "invoice/" + row.ID + "/" + in.Status}); err != nil {
+		if err := s.queueMailWithPriority(tx, MailMessage{To: row.RecipientEmail, Subject: subject, Body: body, IdempotencyKey: "invoice/" + row.ID + "/" + in.Status}, 10); err != nil {
 			return err
 		}
 		return audit(tx, p.User.ID, "invoice."+in.Status, "invoice", row.ID, in.Note)

@@ -151,6 +151,7 @@ func testCommerce(a *testApp, admin, customer *browser, credentials map[string]s
 	}
 	testOrderWorkspace(a, admin, customer, settled)
 	testCustomerLists(a, admin, customer, settled)
+	testCustomerPurchaseWorkspace(a, admin, customer, settled)
 	testStaffAndExports(a, admin, customer, credentials)
 	// Account security is delivered through the identity contract, never by
 	// changing purchase dates. Website recovery stays available during retries.

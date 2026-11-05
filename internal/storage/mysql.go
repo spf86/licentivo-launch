@@ -103,6 +103,9 @@ func Initialize(ctx context.Context, db *gorm.DB) error {
 	if err := ensurePaymentReversalStatus(db.WithContext(ctx)); err != nil {
 		return ErrSchema
 	}
+	if err := ensureEmailOutboxStatus(db.WithContext(ctx)); err != nil {
+		return ErrSchema
+	}
 	return nil
 }
 

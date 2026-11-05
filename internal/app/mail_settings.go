@@ -383,6 +383,15 @@ func (s *Service) CheckMail(ctx context.Context, p Principal, in MailCheckInput)
 	if err != nil {
 		return MailCheckResult{}, err
 	}
+	// Explicit SMTP checks are still site traffic. They share the same total
+	// counters so a connection check cannot create an invisible quota bypass.
+	wait, err := s.reserveMailQuota(ctx, false)
+	if err != nil {
+		return MailCheckResult{}, err
+	}
+	if !wait.IsZero() {
+		return MailCheckResult{}, problem(429, "MAIL_QUOTA_WAIT", "全站邮件额度已用尽，请等待额度重置后再测试")
+	}
 	deliveryCtx, cancel := context.WithTimeout(ctx, 20*time.Second)
 	err = sender.Send(deliveryCtx, mailer.Message{
 		To: to, Subject: "Licentivo Launch mail delivery test",

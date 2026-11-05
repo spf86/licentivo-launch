@@ -15,7 +15,7 @@ type PaymentReversal struct {
 	SourceEventID     string    `gorm:"type:char(36) CHARACTER SET ascii COLLATE ascii_bin;not null"`
 	AmountMinor       int64     `gorm:"type:bigint;not null"`
 	Currency          string    `gorm:"type:char(3) CHARACTER SET ascii COLLATE ascii_bin;not null"`
-	CreatedAt         time.Time `gorm:"type:datetime(6);not null"`
+	CreatedAt         time.Time `gorm:"type:datetime(6);not null;index:ix_payment_reversal_time"`
 	FkReversalPayment *Payment  `gorm:"foreignKey:PaymentID,AccountID;references:ID,AccountID;constraint:fk_reversal_payment,OnUpdate:RESTRICT,OnDelete:RESTRICT"`
 }
 
