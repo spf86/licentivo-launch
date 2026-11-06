@@ -8,6 +8,23 @@ Run a branded software storefront and customer portal on your own domain. Custom
 
 [One-day integration guide](docs/one-day-integration.md) · [Download binaries](https://github.com/spf86/licentivo-launch/releases) · [Installation](docs/installation.md) · [Application integration](docs/software-sdk-integration.md) · [Licentivo website](https://www.licentivo.com/)
 
+![From checkout to a protected feature: publish products, verify payment, synchronize access and guard application actions](docs/images/readme/purchase-to-protected-action.svg)
+
+## A quick look
+
+<table>
+  <tr>
+    <td width="50%" valign="top"><strong>1. Sell under your brand</strong><br><br><a href="docs/images/readme/storefront.webp"><img src="docs/images/readme/storefront.webp" alt="English Launch storefront showing a Studio plan and purchase button" width="440"></a></td>
+    <td width="50%" valign="top"><strong>2. Choose a purchase term</strong><br><br><a href="docs/images/readme/checkout.webp"><img src="docs/images/readme/checkout.webp" alt="English sandbox checkout with monthly and annual terms and a payment provider selector" width="440"></a></td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top"><strong>3. Keep access in the customer portal</strong><br><br><a href="docs/images/readme/account-software.webp"><img src="docs/images/readme/account-software.webp" alt="English customer software card with entitlement validity, license synchronization and downloads" width="440"></a></td>
+    <td width="50%" valign="top"><strong>4. Connect your existing application</strong><br><br><a href="docs/images/readme/integration-code.webp"><img src="docs/images/readme/integration-code.webp" alt="English integration screen with successful checks and generated Go connection code" width="440"></a></td>
+  </tr>
+</table>
+
+Screenshots use sandbox example data. Open an image to inspect the interface, or follow the [one-day integration guide](docs/one-day-integration.md).
+
 ## Integrate in one day
 
 With an existing application, a server/MySQL database, an HTTPS domain, and Licentivo/payment sandbox accounts ready, follow this working-day plan for a standard Licentivo integration:
