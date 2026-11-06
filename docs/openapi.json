@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Licentivo Launch Integration API",
-    "version": "0.3.8-beta",
-    "description": "System, account, desktop identity exchange, integration wizard and basic purchase APIs. This is not the full staff administration/payment-webhook API. The Licentivo account flow returns an identity assertion valid for at most 120 seconds; the embedded official SDK exchanges it with Licentivo and checks every protected operation. The removed /credential endpoint returns HTTP 410, never a license key. See sdk-compatibility.md for the Launch 0.3.8-beta / Launch SDK 0.1.8 / official SDK 0.11.8 source baseline and backend requirements. Email verification is required only when enabled by the merchant. Custom licensing connections and customer delivery are also documented. External receiver endpoints are specified separately in external-licensing-openapi.json.",
+    "version": "0.3.9-beta",
+    "description": "System, account, desktop identity exchange, integration wizard and basic purchase APIs. This is not the full staff administration/payment-webhook API. The Licentivo account flow returns an identity assertion valid for at most 120 seconds; the embedded official SDK exchanges it with Licentivo and checks every protected operation. The removed /credential endpoint returns HTTP 410, never a license key. See sdk-compatibility.md for the Launch 0.3.9-beta / Launch SDK 0.1.8 / official SDK 0.11.8 source baseline and backend requirements. Email verification is required only when enabled by the merchant. Custom licensing connections and customer delivery are also documented. External receiver endpoints are specified separately in external-licensing-openapi.json.",
     "license": {
       "name": "MIT",
       "identifier": "MIT"

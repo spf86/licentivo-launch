@@ -37,6 +37,10 @@ func (s *Service) processLicentivoAuthorization(ctx context.Context) (bool, erro
 		return false, err
 	}
 	err = s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		// A reversal and its final snapshot commit together. Only the newest
+		// snapshot for that voided order can bypass earlier work; the original
+		// positive snapshot has a newer reversal and must still wait. Compare
+		// entitlement versions so existing queues tolerate different host clocks.
 		q := tx.Where("provider <> ? AND launch_connection_id IS NOT NULL AND available_at <= ? AND (status IN ('pending','retrying') OR (status = 'running' AND lease_until < ?))", CustomLicensing, now(), now()).
 			Where(`NOT EXISTS (
 				SELECT 1 FROM sync_tasks prior
@@ -50,7 +54,12 @@ func (s *Service) processLicentivoAuthorization(ctx context.Context) (bool, erro
 							JOIN entitlement_coverages removed ON removed.source_order_id = reversal.id
 							WHERE reversal.id = sync_tasks.source_order_id AND reversal.status IN ('refunded','reversed')
 							AND removed.entitlement_id = sync_tasks.entitlement_id
-							AND removed.voided_at <= sync_tasks.created_at)))
+							AND removed.voided_at IS NOT NULL
+							AND NOT EXISTS (SELECT 1 FROM sync_tasks later_snapshot
+								WHERE later_snapshot.entitlement_id = sync_tasks.entitlement_id
+								AND later_snapshot.source_order_id = reversal.id
+								AND later_snapshot.launch_connection_id IS NOT NULL
+								AND later_snapshot.target_version > sync_tasks.target_version))))
 			)`)
 		if err := q.Clauses(clause.Locking{Strength: "UPDATE", Options: "SKIP LOCKED"}).Order("created_at,operation_id").First(&task).Error; err != nil {
 			return err

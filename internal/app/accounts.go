@@ -322,7 +322,7 @@ func (s *Service) queueCredential(tx *gorm.DB, user storage.User, kind, target s
 		subject = "确认新的邮箱"
 	}
 	link := s.PublicURL() + "/account#action=" + action + "&token=" + url.QueryEscape(token)
-	return s.queueMail(tx, MailMessage{To: target, Subject: subject, Body: "请打开以下链接完成操作：\r\n" + link + "\r\n\r\n如果不是你发起的操作，请忽略此邮件。"})
+	return s.queueCredentialMail(tx, credential.ID, MailMessage{To: target, Subject: subject, Body: "请打开以下链接完成操作：\r\n" + link + "\r\n\r\n如果不是你发起的操作，请忽略此邮件。"})
 }
 
 func (s *Service) CompleteEmail(ctx context.Context, token, newPassword string) error {

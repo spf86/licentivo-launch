@@ -157,7 +157,7 @@ func data[T any](t *testing.T, w *httptest.ResponseRecorder) T {
 func (a *testApp) mailToken(kind, address string) string {
 	a.t.Helper()
 	var rows []storage.EmailOutbox
-	if a.db.Order("created_at DESC,id DESC").Find(&rows).Error != nil {
+	if a.db.Where("status <> 'cancelled'").Order("created_at DESC,id DESC").Find(&rows).Error != nil {
 		a.t.Fatal("outbox read failed")
 	}
 	vault, _ := security.NewVault(a.key)
@@ -482,6 +482,10 @@ func TestApplicationFlows(t *testing.T) {
 	if invoices := data[[]app.InvoiceView](t, a.request("GET", "/api/v1/me/invoices", nil, customer)); len(invoices) != 0 {
 		t.Fatal("disabled invoice request created a new record")
 	}
+	// Earlier account operations consumed their one-time links. Use a fresh,
+	// unconsumed request for the SMTP failure/retry check, and discard old links.
+	a.expect(a.request("POST", "/api/v1/auth/email", map[string]string{"email": register["email"], "kind": "reset"}, nil), 200)
+	freshResetToken := a.mailToken("reset", register["email"])
 	var outbox []storage.EmailOutbox
 	_ = db.Find(&outbox).Error
 	for _, row := range outbox {
@@ -494,12 +498,17 @@ func TestApplicationFlows(t *testing.T) {
 		t.Fatal(err)
 	}
 	sender := &capturingSender{fail: true}
-	handled, err := svc.ProcessMail(context.Background(), sender)
-	if err != nil || !handled {
-		t.Fatal("mail claim failed")
-	}
 	var pending storage.EmailOutbox
-	if db.Where("status = 'retrying'").First(&pending).Error != nil {
+	for range len(outbox) {
+		handled, processErr := svc.ProcessMail(context.Background(), sender)
+		if processErr != nil || !handled {
+			t.Fatal("mail claim failed", processErr)
+		}
+		if db.Where("status = 'retrying'").First(&pending).Error == nil {
+			break
+		}
+	}
+	if pending.ID == "" || pending.LastErrorCode == nil || *pending.LastErrorCode != "MAIL_DELIVERY_FAILED" {
 		t.Fatal("failed email was not retained")
 	}
 	if db.Model(&pending).Update("available_at", time.Now().Add(-time.Minute)).Error != nil {
@@ -515,8 +524,12 @@ func TestApplicationFlows(t *testing.T) {
 			break
 		}
 	}
-	if len(sender.messages) != len(outbox) {
-		t.Fatalf("outbox did not drain: got %d messages, want %d", len(sender.messages), len(outbox))
+	var cancelled, sent int64
+	if db.Model(&storage.EmailOutbox{}).Where("status = 'cancelled'").Count(&cancelled).Error != nil || db.Model(&storage.EmailOutbox{}).Where("status = 'sent'").Count(&sent).Error != nil {
+		t.Fatal("outbox result read failed")
+	}
+	if len(sender.messages) != 1 || sent != 1 || cancelled != int64(len(outbox)-1) || !strings.Contains(sender.messages[0].Body, "token="+freshResetToken) {
+		t.Fatal("outbox did not discard consumed links and retry only the valid link")
 	}
 	testStorePolicies(a, admin, customer)
 	testCommerce(a, admin, customer, register, next)

@@ -6,7 +6,7 @@ This guide describes the **Licentivo account-exchange integration in the current
 
 | Component | Version or contract | Requirement |
 | --- | --- | --- |
-| Launch server | `0.3.8-beta` | Provides desktop account sessions, short-lived identity assertions, purchase snapshots and durable session-revocation notifications. The server version is defined in `cmd/launch/main.go`. |
+| Launch server | `0.3.9-beta` | Provides desktop account sessions, short-lived identity assertions, purchase snapshots and durable session-revocation notifications. The server version is defined in `cmd/launch/main.go`. |
 | Launch application packages | `0.1.8` | All nine language wrappers use account identity exchange. Install only the Launch package for your language. The source version is recorded in [sdk/VERSION](../sdk/VERSION). |
 | Embedded official Licentivo SDK | `0.11.8` | Owns identity exchange with Licentivo, device credentials, signed permissions, feature execution, offline rules and device logout. See [sdk/UPSTREAM_VERSION](../sdk/UPSTREAM_VERSION) and the [reviewed file manifest](../sdk/managed-sdk-manifest.json). |
 | Licentivo backend | Account contract `licentivo-launch-account-v1`, including session revocation | Must implement the endpoint set below. This repository does not record a minimum semantic server version; confirm the deployed backend's supported contract rather than inferring it from an SDK version. |

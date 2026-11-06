@@ -15,6 +15,13 @@ import (
 
 type MailMessage = mailer.Message
 
+// Credential metadata stays inside the encrypted queue, never in SMTP headers.
+// Embedding Message preserves the JSON shape of already queued messages.
+type queuedMail struct {
+	mailer.Message
+	CredentialID string `json:"credential_id,omitempty"`
+}
+
 // Transactional messages never contain passwords, API keys, or license keys.
 func (s *Service) queueCustomerNotification(tx *gorm.DB, userID, subject, body string) error {
 	var count int64
@@ -36,6 +43,14 @@ func (s *Service) queueMail(tx *gorm.DB, message MailMessage) error {
 }
 
 func (s *Service) queueMailWithPriority(tx *gorm.DB, message MailMessage, priority int) error {
+	return s.queueMailRecord(tx, queuedMail{Message: message}, priority)
+}
+
+func (s *Service) queueCredentialMail(tx *gorm.DB, credentialID string, message MailMessage) error {
+	return s.queueMailRecord(tx, queuedMail{Message: message, CredentialID: credentialID}, 0)
+}
+
+func (s *Service) queueMailRecord(tx *gorm.DB, message queuedMail, priority int) error {
 	enabled, err := mailEnabled(tx)
 	if err != nil || !enabled {
 		return err
@@ -110,17 +125,23 @@ func (s *Service) ProcessMail(ctx context.Context, sender mailer.Sender) (bool, 
 	}
 	row.LeaseToken = &lease
 	plain, deliveryErr := s.vault.Open(row.Ciphertext, "email-outbox:"+row.ID)
-	var message mailer.Message
+	var queued queuedMail
 	if deliveryErr == nil {
-		deliveryErr = json.Unmarshal(plain, &message)
+		deliveryErr = json.Unmarshal(plain, &queued)
 	}
-	if deliveryErr == nil && row.Kind == "expiry_reminder" {
-		var reason string
-		message, reason, deliveryErr = s.prepareExpiryReminder(ctx, row)
-		if deliveryErr == nil && reason != "" {
-			result := s.db.WithContext(ctx).Model(&storage.EmailOutbox{}).Where("id=? AND lease_token=?", row.ID, lease).Updates(map[string]any{"status": "cancelled", "last_error_code": reason, "ciphertext": []byte{}, "notification_key": nil, "lease_token": nil, "lease_until": nil})
-			return true, databaseError(result.Error)
-		}
+	message := queued.Message
+	var cancellation string
+	if deliveryErr == nil {
+		cancellation, deliveryErr = s.credentialMailCancellation(ctx, message, queued.CredentialID)
+	}
+	if deliveryErr == nil && cancellation == "" && row.Kind == "expiry_reminder" {
+		message, cancellation, deliveryErr = s.prepareExpiryReminder(ctx, row)
+	}
+	if deliveryErr == nil && cancellation != "" {
+		finishCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
+		defer cancel()
+		result := s.db.WithContext(finishCtx).Model(&storage.EmailOutbox{}).Where("id=? AND lease_token=?", row.ID, lease).Updates(map[string]any{"status": "cancelled", "last_error_code": cancellation, "ciphertext": []byte{}, "notification_key": nil, "lease_token": nil, "lease_until": nil})
+		return true, databaseError(result.Error)
 	}
 	if deliveryErr == nil {
 		var wait time.Time

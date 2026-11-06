@@ -1,0 +1,92 @@
+{
+  "scope": "standard_scripts/test-mysql.ps1",
+  "passed_test_events": 380,
+  "failed": [],
+  "skipped": [
+    {
+      "package": "licentivo-launch/internal/app",
+      "test": "TestProductUploadRoundTrip"
+    }
+  ],
+  "required_tests": {
+    "TestExpiryRemindersDatabase": true,
+    "TestExpiryReminderHTTPPermissionsAndQuotaContract": true,
+    "TestQueuedCredentialMail": true,
+    "TestPurchaseSnapshotBridge": true
+  },
+  "packages": [
+    {
+      "package": "licentivo-launch/cmd/launch",
+      "result": "pass"
+    },
+    {
+      "package": "licentivo-launch/internal/adapters/deepl",
+      "result": "pass"
+    },
+    {
+      "package": "licentivo-launch/pkg/launchclient/internal/licentivo",
+      "result": "skip"
+    },
+    {
+      "package": "licentivo-launch/pkg/launchclient/internal/licentivo/internal/lease",
+      "result": "skip"
+    },
+    {
+      "package": "licentivo-launch/internal/adapters/licentivo",
+      "result": "pass"
+    },
+    {
+      "package": "licentivo-launch/internal/adapters/externallicensing",
+      "result": "pass"
+    },
+    {
+      "package": "licentivo-launch/internal/domain",
+      "result": "pass"
+    },
+    {
+      "package": "licentivo-launch/internal/origin",
+      "result": "pass"
+    },
+    {
+      "package": "licentivo-launch/internal/ports",
+      "result": "pass"
+    },
+    {
+      "package": "licentivo-launch/internal/config",
+      "result": "pass"
+    },
+    {
+      "package": "licentivo-launch/internal/security",
+      "result": "pass"
+    },
+    {
+      "package": "licentivo-launch/internal/backup",
+      "result": "pass"
+    },
+    {
+      "package": "licentivo-launch/internal/payments",
+      "result": "pass"
+    },
+    {
+      "package": "licentivo-launch/internal/mailer",
+      "result": "pass"
+    },
+    {
+      "package": "licentivo-launch/internal/storage",
+      "result": "pass"
+    },
+    {
+      "package": "licentivo-launch/pkg/launchclient",
+      "result": "pass"
+    },
+    {
+      "package": "licentivo-launch/internal/httpapi",
+      "result": "pass"
+    },
+    {
+      "package": "licentivo-launch/internal/app",
+      "result": "pass"
+    }
+  ],
+  "evidence": "artifacts/integration-fix-20261106/standard-tests.jsonl"
+}

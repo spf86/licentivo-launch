@@ -1,0 +1,178 @@
+{
+  "host": "192.168.2.178",
+  "run_id": "f7ece9a",
+  "baseline_product_overlay": true,
+  "test_filter": "^(TestQueuedCredentialMail|TestPurchaseSnapshotBridge)$/^(reviewed_(upgrade|renew)_cannot_block_the_refund_snapshot|current_.*|legacy_.*|valid_.*)$",
+  "functional_tests_skipped": false,
+  "schema_name_overlay_only": false,
+  "mysql_version": "8.4.11-0ubuntu0.26.04.1",
+  "exit_code": 1,
+  "go_exit_code": 1,
+  "required_tests": {
+    "TestExpiryRemindersDatabase": false,
+    "TestExpiryReminderHTTPPermissionsAndQuotaContract": false,
+    "TestQueuedCredentialMail": false,
+    "TestPurchaseSnapshotBridge": false
+  },
+  "passed_test_events": 3,
+  "failed": [
+    {
+      "Package": "licentivo-launch/internal/app",
+      "Test": "TestQueuedCredentialMail/current_expired_after_quota_wait"
+    },
+    {
+      "Package": "licentivo-launch/internal/app",
+      "Test": "TestQueuedCredentialMail/current_superseded_reset"
+    },
+    {
+      "Package": "licentivo-launch/internal/app",
+      "Test": "TestQueuedCredentialMail/current_used_link_is_not_retried"
+    },
+    {
+      "Package": "licentivo-launch/internal/app",
+      "Test": "TestQueuedCredentialMail/legacy_expired_after_quota_wait"
+    },
+    {
+      "Package": "licentivo-launch/internal/app",
+      "Test": "TestQueuedCredentialMail/legacy_superseded_reset"
+    },
+    {
+      "Package": "licentivo-launch/internal/app",
+      "Test": "TestQueuedCredentialMail/legacy_used_link_is_not_retried"
+    },
+    {
+      "Package": "licentivo-launch/internal/app",
+      "Test": "TestQueuedCredentialMail"
+    },
+    {
+      "Package": "licentivo-launch/internal/app",
+      "Test": "TestPurchaseSnapshotBridge/reviewed_upgrade_cannot_block_the_refund_snapshot"
+    },
+    {
+      "Package": "licentivo-launch/internal/app",
+      "Test": "TestPurchaseSnapshotBridge"
+    },
+    {
+      "Package": "licentivo-launch/internal/app"
+    }
+  ],
+  "skipped": [],
+  "packages": [
+    {
+      "Package": "licentivo-launch/internal/domain",
+      "Action": "pass",
+      "Elapsed": 0.264
+    },
+    {
+      "Package": "licentivo-launch/internal/backup",
+      "Action": "pass",
+      "Elapsed": 0.295
+    },
+    {
+      "Package": "licentivo-launch/pkg/launchclient/internal/licentivo",
+      "Action": "skip",
+      "Elapsed": 0
+    },
+    {
+      "Package": "licentivo-launch/pkg/launchclient/internal/licentivo/internal/lease",
+      "Action": "skip",
+      "Elapsed": 0
+    },
+    {
+      "Package": "licentivo-launch/internal/config",
+      "Action": "pass",
+      "Elapsed": 0.346
+    },
+    {
+      "Package": "licentivo-launch/pkg/launchclient",
+      "Action": "pass",
+      "Elapsed": 0.295
+    },
+    {
+      "Package": "licentivo-launch/internal/adapters/deepl",
+      "Action": "pass",
+      "Elapsed": 1.175
+    },
+    {
+      "Package": "licentivo-launch/internal/httpapi",
+      "Action": "pass",
+      "Elapsed": 0.354
+    },
+    {
+      "Package": "licentivo-launch/internal/origin",
+      "Action": "pass",
+      "Elapsed": 0.362
+    },
+    {
+      "Package": "licentivo-launch/internal/security",
+      "Action": "pass",
+      "Elapsed": 0.374
+    },
+    {
+      "Package": "licentivo-launch/internal/adapters/externallicensing",
+      "Action": "pass",
+      "Elapsed": 1.252
+    },
+    {
+      "Package": "licentivo-launch/internal/ports",
+      "Action": "pass",
+      "Elapsed": 0.421
+    },
+    {
+      "Package": "licentivo-launch/internal/adapters/licentivo",
+      "Action": "pass",
+      "Elapsed": 1.292
+    },
+    {
+      "Package": "licentivo-launch/internal/mailer",
+      "Action": "pass",
+      "Elapsed": 0.486
+    },
+    {
+      "Package": "licentivo-launch/cmd/launch",
+      "Action": "pass",
+      "Elapsed": 1.353
+    },
+    {
+      "Package": "licentivo-launch/internal/storage",
+      "Action": "pass",
+      "Elapsed": 0.629
+    },
+    {
+      "Package": "licentivo-launch/internal/payments",
+      "Action": "pass",
+      "Elapsed": 0.665
+    },
+    {
+      "Package": "licentivo-launch/internal/app",
+      "Action": "fail",
+      "Elapsed": 13.477
+    }
+  ],
+  "cleaned_databases": [
+    "launch_test_expiry_f7ece9a_075bc63f194c4e788746ec951253da40",
+    "launch_test_expiry_f7ece9a_52ba82bfa8a840a39337f4bf371a9148",
+    "launch_test_expiry_f7ece9a_ab0d483b43664d18aeafee0bf72d0b6c",
+    "launch_test_expiry_f7ece9a_b6b7ada2400c4c59adf8267c47c80266",
+    "launch_test_expiry_f7ece9a_control",
+    "launch_test_expiry_f7ece9a_d6e26be5cd924b4790abc40907035500",
+    "launch_test_expiry_f7ece9a_e6201df83f774ef69b07614fa8f90eae",
+    "launch_test_expiry_f7ece9a_f2ac96c6c59345eba75d3e6092980f53",
+    "launch_test_expiry_f7ece9a_f722ccdb808d47469457514bc32f2ea5",
+    "launch_test_f7ece9a",
+    "launch_test_f7ece9a_account_store",
+    "launch_test_f7ece9a_app",
+    "launch_test_f7ece9a_bootstrap",
+    "launch_test_f7ece9a_bridge",
+    "launch_test_f7ece9a_external",
+    "launch_test_f7ece9a_http",
+    "launch_test_f7ece9a_logout",
+    "launch_test_f7ece9a_mapping",
+    "launch_test_f7ece9a_providers",
+    "launch_test_f7ece9a_restore"
+  ],
+  "temporary_user_removed": true,
+  "cleanup_verified": true,
+  "duration_seconds": 23.33,
+  "intentional_test_exclusions": []
+}

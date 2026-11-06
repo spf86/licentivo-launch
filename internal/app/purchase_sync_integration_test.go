@@ -1215,8 +1215,27 @@ func TestPurchaseSnapshotBridge(t *testing.T) {
 					t.Fatal("lost response retry", handled, err)
 				}
 			}
+			if action == "renew" {
+				// Older history can lack the positive task's source-order link.
+				// The committed refund snapshot must still be identifiable.
+				if err := db.Model(&older).Update("source_order_id", nil).Error; err != nil {
+					t.Fatal(err)
+				}
+			}
 			refund(order)
 			newer := latest()
+			var removed storage.EntitlementCoverage
+			if err := db.First(&removed, "source_order_id=? AND entitlement_id=?", order.ID, newer.EntitlementID).Error; err != nil {
+				t.Fatal(err)
+			}
+			if removed.VoidedAt == nil {
+				t.Fatal("refund did not void its coverage")
+			}
+			// Reproduce a pre-upgrade queue written by a slower database clock.
+			// The snapshot must remain processable without rewriting business facts.
+			if err := db.Model(&newer).Update("created_at", removed.VoidedAt.Add(-time.Hour)).Error; err != nil {
+				t.Fatal(err)
+			}
 			if handled, err := service.ProcessAuthorization(ctx); err != nil || !handled {
 				t.Fatal("refund was blocked by the reviewed positive task", handled, err)
 			}
@@ -1331,7 +1350,8 @@ func TestPurchaseSnapshotBridge(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		boundary := now().Add(time.Second)
+		// Leave time for database round trips before deliberately crossing expiry.
+		boundary := now().Add(5 * time.Second)
 		paidAt := boundary.Add(-24 * time.Hour)
 		if err := db.Model(&storage.Order{}).Where("id = ?", view.ID).Update("created_at", paidAt.Add(-time.Second)).Error; err != nil {
 			t.Fatal(err)
@@ -1374,8 +1394,18 @@ func TestPurchaseSnapshotBridge(t *testing.T) {
 		positive := latest()
 		refund(order)
 		negative := latest()
+		// A database clock ahead of the application must not make the original
+		// positive event look like the later refund event.
+		if err := db.Model(&positive).Update("created_at", now().Add(time.Hour)).Error; err != nil {
+			t.Fatal(err)
+		}
 		if handled, err := service.ProcessAuthorization(ctx); err != nil || !handled {
 			t.Fatal("refund snapshot not delivered", handled, err)
+		}
+		// The newest snapshot is accepted but not applied yet. A worker tick
+		// must still leave the obsolete positive snapshot blocked.
+		if _, err := service.ProcessAuthorization(ctx); err != nil {
+			t.Fatal(err)
 		}
 		peer.mu.Lock()
 		_, positiveDelivered := peer.events[positive.OperationID]

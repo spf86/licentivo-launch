@@ -1,0 +1,142 @@
+{
+  "host": "192.168.2.178",
+  "run_id": "f8bedb9",
+  "baseline_product_overlay": true,
+  "test_filter": "^TestPurchaseSnapshotBridge$/^reviewed_(upgrade|renew)_cannot_block_the_refund_snapshot$",
+  "functional_tests_skipped": false,
+  "schema_name_overlay_only": false,
+  "mysql_version": "8.4.11-0ubuntu0.26.04.1",
+  "exit_code": 1,
+  "go_exit_code": 1,
+  "required_tests": {
+    "TestExpiryRemindersDatabase": false,
+    "TestExpiryReminderHTTPPermissionsAndQuotaContract": false,
+    "TestQueuedCredentialMail": false,
+    "TestPurchaseSnapshotBridge": false
+  },
+  "passed_test_events": 0,
+  "failed": [
+    {
+      "Package": "licentivo-launch/internal/app",
+      "Test": "TestPurchaseSnapshotBridge/reviewed_upgrade_cannot_block_the_refund_snapshot"
+    },
+    {
+      "Package": "licentivo-launch/internal/app",
+      "Test": "TestPurchaseSnapshotBridge"
+    },
+    {
+      "Package": "licentivo-launch/internal/app"
+    }
+  ],
+  "skipped": [],
+  "packages": [
+    {
+      "Package": "licentivo-launch/cmd/launch",
+      "Action": "pass",
+      "Elapsed": 1.512
+    },
+    {
+      "Package": "licentivo-launch/internal/adapters/deepl",
+      "Action": "pass",
+      "Elapsed": 1.8159999999999998
+    },
+    {
+      "Package": "licentivo-launch/internal/adapters/licentivo",
+      "Action": "pass",
+      "Elapsed": 1.927
+    },
+    {
+      "Package": "licentivo-launch/pkg/launchclient/internal/licentivo",
+      "Action": "skip",
+      "Elapsed": 0
+    },
+    {
+      "Package": "licentivo-launch/pkg/launchclient/internal/licentivo/internal/lease",
+      "Action": "skip",
+      "Elapsed": 0
+    },
+    {
+      "Package": "licentivo-launch/internal/adapters/externallicensing",
+      "Action": "pass",
+      "Elapsed": 2.077
+    },
+    {
+      "Package": "licentivo-launch/pkg/launchclient",
+      "Action": "pass",
+      "Elapsed": 0.289
+    },
+    {
+      "Package": "licentivo-launch/internal/httpapi",
+      "Action": "pass",
+      "Elapsed": 0.309
+    },
+    {
+      "Package": "licentivo-launch/internal/backup",
+      "Action": "pass",
+      "Elapsed": 0.43
+    },
+    {
+      "Package": "licentivo-launch/internal/security",
+      "Action": "pass",
+      "Elapsed": 0.449
+    },
+    {
+      "Package": "licentivo-launch/internal/origin",
+      "Action": "pass",
+      "Elapsed": 0.474
+    },
+    {
+      "Package": "licentivo-launch/internal/domain",
+      "Action": "pass",
+      "Elapsed": 0.484
+    },
+    {
+      "Package": "licentivo-launch/internal/config",
+      "Action": "pass",
+      "Elapsed": 0.509
+    },
+    {
+      "Package": "licentivo-launch/internal/ports",
+      "Action": "pass",
+      "Elapsed": 0.525
+    },
+    {
+      "Package": "licentivo-launch/internal/mailer",
+      "Action": "pass",
+      "Elapsed": 0.606
+    },
+    {
+      "Package": "licentivo-launch/internal/payments",
+      "Action": "pass",
+      "Elapsed": 0.724
+    },
+    {
+      "Package": "licentivo-launch/internal/storage",
+      "Action": "pass",
+      "Elapsed": 0.739
+    },
+    {
+      "Package": "licentivo-launch/internal/app",
+      "Action": "fail",
+      "Elapsed": 2.665
+    }
+  ],
+  "cleaned_databases": [
+    "launch_test_f8bedb9",
+    "launch_test_f8bedb9_app",
+    "launch_test_f8bedb9_restore",
+    "launch_test_f8bedb9_bootstrap",
+    "launch_test_f8bedb9_providers",
+    "launch_test_f8bedb9_account_store",
+    "launch_test_f8bedb9_logout",
+    "launch_test_f8bedb9_external",
+    "launch_test_f8bedb9_bridge",
+    "launch_test_f8bedb9_mapping",
+    "launch_test_f8bedb9_http",
+    "launch_test_expiry_f8bedb9_control"
+  ],
+  "temporary_user_removed": true,
+  "cleanup_verified": true,
+  "duration_seconds": 9.77,
+  "intentional_test_exclusions": []
+}

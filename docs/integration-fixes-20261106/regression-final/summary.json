@@ -1,0 +1,146 @@
+{
+  "host": "192.168.2.178",
+  "run_id": "f126ff6",
+  "baseline_product_overlay": false,
+  "test_filter": null,
+  "functional_tests_skipped": true,
+  "schema_name_overlay_only": true,
+  "mysql_version": "8.4.11-0ubuntu0.26.04.1",
+  "exit_code": 0,
+  "go_exit_code": 0,
+  "required_tests": {
+    "TestExpiryRemindersDatabase": true,
+    "TestExpiryReminderHTTPPermissionsAndQuotaContract": true,
+    "TestQueuedCredentialMail": true,
+    "TestPurchaseSnapshotBridge": true
+  },
+  "passed_test_events": 380,
+  "failed": [],
+  "skipped": [
+    {
+      "Package": "licentivo-launch/internal/app",
+      "Test": "TestProductUploadRoundTrip"
+    }
+  ],
+  "packages": [
+    {
+      "Package": "licentivo-launch/cmd/launch",
+      "Action": "pass",
+      "Elapsed": 1.5110000000000001
+    },
+    {
+      "Package": "licentivo-launch/internal/adapters/deepl",
+      "Action": "pass",
+      "Elapsed": 1.673
+    },
+    {
+      "Package": "licentivo-launch/internal/adapters/licentivo",
+      "Action": "pass",
+      "Elapsed": 2.043
+    },
+    {
+      "Package": "licentivo-launch/internal/adapters/externallicensing",
+      "Action": "pass",
+      "Elapsed": 2.199
+    },
+    {
+      "Package": "licentivo-launch/pkg/launchclient/internal/licentivo",
+      "Action": "skip",
+      "Elapsed": 0.001
+    },
+    {
+      "Package": "licentivo-launch/pkg/launchclient/internal/licentivo/internal/lease",
+      "Action": "skip",
+      "Elapsed": 0
+    },
+    {
+      "Package": "licentivo-launch/internal/origin",
+      "Action": "pass",
+      "Elapsed": 0.501
+    },
+    {
+      "Package": "licentivo-launch/internal/ports",
+      "Action": "pass",
+      "Elapsed": 0.639
+    },
+    {
+      "Package": "licentivo-launch/internal/domain",
+      "Action": "pass",
+      "Elapsed": 0.722
+    },
+    {
+      "Package": "licentivo-launch/internal/config",
+      "Action": "pass",
+      "Elapsed": 0.844
+    },
+    {
+      "Package": "licentivo-launch/internal/backup",
+      "Action": "pass",
+      "Elapsed": 0.989
+    },
+    {
+      "Package": "licentivo-launch/internal/security",
+      "Action": "pass",
+      "Elapsed": 1.005
+    },
+    {
+      "Package": "licentivo-launch/internal/payments",
+      "Action": "pass",
+      "Elapsed": 1.585
+    },
+    {
+      "Package": "licentivo-launch/internal/mailer",
+      "Action": "pass",
+      "Elapsed": 2.734
+    },
+    {
+      "Package": "licentivo-launch/pkg/launchclient",
+      "Action": "pass",
+      "Elapsed": 26.965
+    },
+    {
+      "Package": "licentivo-launch/internal/storage",
+      "Action": "pass",
+      "Elapsed": 29.223
+    },
+    {
+      "Package": "licentivo-launch/internal/httpapi",
+      "Action": "pass",
+      "Elapsed": 58.634
+    },
+    {
+      "Package": "licentivo-launch/internal/app",
+      "Action": "pass",
+      "Elapsed": 109.847
+    }
+  ],
+  "cleaned_databases": [
+    "launch_test_expiry_f126ff6_147eca2f78ef4a8c90f0a1f26c1feef4",
+    "launch_test_expiry_f126ff6_32973bf6650d4ac9b1e75a94c1da0690",
+    "launch_test_expiry_f126ff6_53907f9e70064c5b8ad47f42b4a2b04b",
+    "launch_test_expiry_f126ff6_7bc6a49448f04b2abd1d13f88309b36e",
+    "launch_test_expiry_f126ff6_94bba00f3d804bc1a9cdbfa803932421",
+    "launch_test_expiry_f126ff6_af72bb851029463c963cfe2a5e6ba368",
+    "launch_test_expiry_f126ff6_control",
+    "launch_test_expiry_f126ff6_d14a77f7fd3447d6b55ad5d1fdba249f",
+    "launch_test_expiry_f126ff6_e3a6bf480eff47259c5f6d8aab7b5b4f",
+    "launch_test_expiry_f126ff6_f6ea311efe1d49548ae4dee0a4182981",
+    "launch_test_expiry_f126ff6_fc3377ede73c402b80913a0973880d0b",
+    "launch_test_expiry_f126ff6_ff02a427f65146158dbdadcf6a51ae74",
+    "launch_test_f126ff6",
+    "launch_test_f126ff6_account_store",
+    "launch_test_f126ff6_app",
+    "launch_test_f126ff6_bootstrap",
+    "launch_test_f126ff6_bridge",
+    "launch_test_f126ff6_external",
+    "launch_test_f126ff6_http",
+    "launch_test_f126ff6_logout",
+    "launch_test_f126ff6_mapping",
+    "launch_test_f126ff6_providers",
+    "launch_test_f126ff6_restore"
+  ],
+  "temporary_user_removed": true,
+  "cleanup_verified": true,
+  "duration_seconds": 123.78,
+  "intentional_test_exclusions": []
+}

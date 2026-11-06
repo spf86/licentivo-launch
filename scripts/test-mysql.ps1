@@ -82,6 +82,7 @@ $taskExternalDatabase = $taskDatabase + '_external'
 $taskBridgeDatabase = $taskDatabase + '_bridge'
 $taskMappingDatabase = $taskDatabase + '_mapping'
 $taskHTTPDatabase = $taskDatabase + '_http'
+$taskExpiryDatabase = 'launch_test_expiry_' + [Guid]::NewGuid().ToString('N')
 $taskPreviewDatabase = $taskDatabase + '_preview'
 $taskInitFile = Join-Path $taskRun 'initialize-test.sql'
 $taskInitSQL = "ALTER USER 'root'@'localhost' IDENTIFIED BY '$taskPassword';`nCREATE DATABASE $taskDatabase CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;`nCREATE DATABASE $taskAppDatabase CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;`nCREATE USER 'launch_test'@'127.0.0.1' IDENTIFIED BY '$taskPassword';`nGRANT ALL ON $taskDatabase.* TO 'launch_test'@'127.0.0.1';`nGRANT ALL ON $taskAppDatabase.* TO 'launch_test'@'127.0.0.1';`n"
@@ -93,6 +94,10 @@ $taskInitSQL = "ALTER USER 'root'@'localhost' IDENTIFIED BY '$taskPassword';`nCR
 foreach($taskExtraDatabase in @($taskAccountStoreDatabase,$taskLogoutDatabase,$taskExternalDatabase,$taskBridgeDatabase,$taskMappingDatabase,$taskHTTPDatabase)){
  [IO.File]::AppendAllText($taskInitFile, "CREATE DATABASE $taskExtraDatabase CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;`nGRANT ALL ON $taskExtraDatabase.* TO 'launch_test'@'127.0.0.1';`n", [Text.UTF8Encoding]::new($false))
 }
+# Reminder fixtures create their own fresh databases beneath this prefix. This
+# grant is confined to the disposable MySQL instance started by this script.
+[IO.File]::AppendAllText($taskInitFile, "CREATE DATABASE $taskExpiryDatabase CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;`n", [Text.UTF8Encoding]::new($false))
+[IO.File]::AppendAllText($taskInitFile, ('GRANT ALL ON `launch\_test\_expiry\_%`.* TO ''launch_test''@''127.0.0.1'';' + "`n"), [Text.UTF8Encoding]::new($false))
 $taskServerArgs = @('--no-defaults', ('--basedir="' + $taskBase + '"'), ('--datadir="' + $taskData + '"'), '--bind-address=127.0.0.1', "--port=$taskPort", '--mysqlx=OFF', '--skip-name-resolve', ('--init-file="' + $taskInitFile + '"'), '--console')
 $taskServer = Start-Process -FilePath $taskMySQLD -ArgumentList $taskServerArgs -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $taskRun 'server.out') -RedirectStandardError (Join-Path $taskRun 'server.err')
 $taskPreviousDSN = $env:LAUNCH_TEST_DATABASE_DSN
@@ -106,6 +111,8 @@ $taskPreviousExternalDSN = $env:LAUNCH_TEST_EXTERNAL_DATABASE_DSN
 $taskPreviousBridgeDSN = $env:LAUNCH_TEST_BRIDGE_DATABASE_DSN
 $taskPreviousMappingDSN = $env:LAUNCH_TEST_MAPPING_DATABASE_DSN
 $taskPreviousHTTPDSN = $env:LAUNCH_TEST_HTTP_DATABASE_DSN
+$taskPreviousExpiryDSN = $env:LAUNCH_TEST_EXPIRY_DSN
+$taskPreviousLocalAppData = $env:LOCALAPPDATA
 $taskTestExit = 1
 $taskPreviewProcess = $null
 try {
@@ -132,12 +139,36 @@ try {
     $env:LAUNCH_TEST_BRIDGE_DATABASE_DSN = "launch_test:$taskPassword@tcp(127.0.0.1:$taskPort)/$taskBridgeDatabase"
     $env:LAUNCH_TEST_MAPPING_DATABASE_DSN = "launch_test:$taskPassword@tcp(127.0.0.1:$taskPort)/$taskMappingDatabase"
     $env:LAUNCH_TEST_HTTP_DATABASE_DSN = "launch_test:$taskPassword@tcp(127.0.0.1:$taskPort)/$taskHTTPDatabase"
+    $env:LAUNCH_TEST_EXPIRY_DSN = "launch_test:$taskPassword@tcp(127.0.0.1:$taskPort)/$taskExpiryDatabase"
+    $env:LOCALAPPDATA = Join-Path $taskRun 'user-cache'
+    New-Item -ItemType Directory -Path $env:LOCALAPPDATA -Force | Out-Null
 	$taskState=@{mysql_pid=$taskServer.Id; mysql_port=$taskPort; database_dsn=$env:LAUNCH_TEST_DATABASE_DSN; app_database_dsn=$env:LAUNCH_TEST_APP_DATABASE_DSN;restore_database_dsn=$env:LAUNCH_TEST_RESTORE_DATABASE_DSN;bootstrap_database_dsn=$env:LAUNCH_TEST_BOOTSTRAP_DATABASE_DSN;provider_database_dsn=$env:LAUNCH_TEST_PROVIDER_DATABASE_DSN}
 	[IO.File]::WriteAllText((Join-Path $taskRun 'run-state.json'),($taskState|ConvertTo-Json),[Text.UTF8Encoding]::new($false))
 	Write-Output ('Private test state: '+(Join-Path $taskRun 'run-state.json'))
     Push-Location -LiteralPath $taskRoot
     try {
-		if($SkipTests){$taskTestExit=0}else{go test ./cmd/... ./internal/... ./pkg/... -count=1; $taskTestExit=$LASTEXITCODE}
+		if($SkipTests){$taskTestExit=0}else{
+            $taskRequiredTests = @('TestExpiryRemindersDatabase','TestExpiryReminderHTTPPermissionsAndQuotaContract','TestQueuedCredentialMail')
+            $taskRequiredPassed = @{}
+            $taskTestLog = Join-Path $taskRun 'tests.jsonl'
+            go test ./cmd/... ./internal/... ./pkg/... -count=1 -json | Tee-Object -FilePath $taskTestLog | ForEach-Object {
+                $taskEvent = $_ | ConvertFrom-Json
+                if ($taskEvent.Action -eq 'pass' -and $taskEvent.Test -in $taskRequiredTests) { $taskRequiredPassed[$taskEvent.Test] = $true }
+                if (-not $taskEvent.Test -and $taskEvent.Action -in @('pass','fail','skip')) {
+                    Write-Output ($taskEvent.Action + ' ' + $taskEvent.Package)
+                } elseif ($taskEvent.Test -and $taskEvent.Action -in @('fail','skip')) {
+                    Write-Output ($taskEvent.Action + ' ' + $taskEvent.Test)
+                }
+            }
+            $taskTestExit=$LASTEXITCODE
+            foreach ($taskRequiredTest in $taskRequiredTests) {
+                if (-not $taskRequiredPassed.ContainsKey($taskRequiredTest)) {
+                    Write-Output ('Required MySQL test did not pass: ' + $taskRequiredTest)
+                    $taskTestExit=1
+                }
+            }
+            Write-Output ('MySQL JSON evidence: ' + $taskTestLog)
+        }
         if ($Preview -and $taskTestExit -eq 0) {
 			go build -o (Join-Path $taskRoot 'bin\launch.exe') ./cmd/launch
 			if ($LASTEXITCODE -ne 0) { throw 'Preview build failed.' }
@@ -252,6 +283,8 @@ try {
     $env:LAUNCH_TEST_BRIDGE_DATABASE_DSN = $taskPreviousBridgeDSN
     $env:LAUNCH_TEST_MAPPING_DATABASE_DSN = $taskPreviousMappingDSN
     $env:LAUNCH_TEST_HTTP_DATABASE_DSN = $taskPreviousHTTPDSN
+    $env:LAUNCH_TEST_EXPIRY_DSN = $taskPreviousExpiryDSN
+    $env:LOCALAPPDATA = $taskPreviousLocalAppData
 	if(-not $DetachPreview){Stop-TaskProcess $taskPreviewProcess}
 	if(-not $KeepMySQL){
 		Stop-TaskProcess $taskServer
