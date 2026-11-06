@@ -44,6 +44,15 @@ test("licensing context handles an installation without a connection", () => {
   assert.deepEqual(context.mappings, []);
 });
 
+test("English policy labels localize metadata while preserving merchant product and policy names", () => {
+  const remoteProduct={...product,name:"编辑器"};
+  const policy={...timedPolicy,name:"专业版",max_devices:2,duration_days:30};
+  const connections={licensing:[{catalog:{products:{items:[remoteProduct]},policies:{items:[policy]}}}]};
+  const english=licensingContext(connections,"en").policyLabel(policy);
+  assert.equal(english,"编辑器 · 专业版 · 30 days · 2 devices/seats · v1");
+  assert.ok(licensingContext(connections,"zh-CN").policyLabel(policy).includes("30 天"));
+});
+
 test("licensing context excludes policies whose products are unavailable", () => {
   const orphan = { ...timedPolicy, id: "orphan", product_id: "deleted-product" };
   const context = connected({ policies: [orphan, timedPolicy] });

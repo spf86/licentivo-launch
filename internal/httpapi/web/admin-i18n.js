@@ -1,3 +1,4 @@
+import {interfaceText} from './interface-locale.js';
 // Merchant-authored values are never translated. This dictionary localizes
 // static interface labels on the existing administration screens.
 const en={
@@ -33,13 +34,77 @@ Object.assign(en,{
  '只影响当前客户的这张产品授权，仍受网站总开关、全站邮件额度和最低优先级约束。':'Applies to this customer’s authorization only. The site-wide switch, shared email limits, and lowest priority still apply.',
  '测试收件邮箱':'Test recipient email','使用示例数据，主题附带 [TEST]，并遵守全站邮件额度及最低发送优先级。':'Uses sample data and a [TEST] subject prefix, following the shared email budget and lowest priority.','确认发送':'Queue test email'
 });
-function translate(value){const trim=value.trim();if(en[trim])return value.replace(trim,en[trim]);for(const [pattern,replacement]of patterns)if(pattern.test(trim))return value.replace(trim,trim.replace(pattern,replacement));return value}
+Object.assign(en,{
+ '选择现有软件，自动读取当前站点地址、授权产品映射和签名公钥。支持 9 种语言直接传参初始化。':'Select your software to read the store URL, licensing product mapping, and signing public keys. Initialize directly in any of nine languages.',
+ '管理销售套餐':'Manage sales plans','接入检查与代码':'Integration checks & code','选择接入目标':'Choose an integration target','软件产品':'Software product','开发语言':'Programming language','环境':'Environment','测试 sandbox':'Sandbox','正式 live':'Live',
+ '只安装对应语言的 Launch 接入包。无需手填产品 ID、公钥，也无需生成或下载 JSON 配置文件。':'Install the Launch package for your language. Product IDs and public keys are filled in automatically; no JSON configuration file is needed.',
+ '当前商店地址':'Store URL','官方授权服务':'Licensing service','读取产品信息并生成接入代码':'Read product details and generate code','使用 AI 快速接入':'Integrate with AI','，或按开发文档手动编写代码。':', or follow the developer documentation to write your integration.',
+ '初始化代码':'Initialization code','Launch 会根据所选软件自动填写参数，代码通过 Connect/connect 直接初始化。缺少套餐映射或公钥时会显示待处理事项。':'Launch fills in the parameters for your software. The code initializes it with Connect/connect. Missing plan mappings or public keys appear as pending tasks.',
+ '初始化不等于已授权；真实登录、激活和功能校验仍需验收。':'Initialization does not grant access. Verify actual sign-in, activation, and feature checks.',
+ '选择语言和要保护的功能，生成适合现有项目的英文提示词，交给你使用的 AI 编程工具。':'Choose a language and a protected feature to generate an English prompt for the AI coding tool you use with your existing project.',
+ '描述项目':'Describe your project','选择语言、平台与功能':'Choose a language, platform, and feature','准备材料':'Prepare the materials','现有工程、接入包与初始化参数':'Existing project, integration package, and initialization parameters','交给 AI':'Hand off to AI','复制提示词，再按清单验收':'Copy the prompt, then verify the checklist','你的项目':'Your project','程序类型':'Application type','桌面程序':'Desktop application','Web 应用（后端接入）':'Web application (backend integration)','后台服务 / CLI':'Service / CLI','运行平台':'Platform','跨平台':'Cross-platform','受保护功能名':'Protected feature ID',
+ '使用 Licentivo 策略中的真实功能名；export 只是示例。支持字母、数字、点、下划线和连字符，最多 64 字符。':'Use the actual feature ID from your Licentivo policy; export is an example. Use letters, numbers, dots, underscores, or hyphens, up to 64 characters.',
+ '项目说明（选填）':'Project notes (optional)','请用英文填写框架、登录方式和接入位置，最多 600 字符。不要填写密码、管理密钥或客户授权。':'Describe your framework, sign-in flow, and integration points in English, up to 600 characters. Exclude passwords, management keys, and customer licenses.',
+ '选择现有软件与环境':'Choose your software and environment','Launch 软件产品':'Launch product','订单与授权环境':'Order and license environment','选择后生成时自动读取该软件已有的授权映射和公钥。无需输入产品 ID 或创建配置文件。':'Generating the prompt reads the selected product’s licensing mapping and public keys. No product IDs or configuration files need to be entered.',
+ '生成英文接入提示词':'Generate English integration prompt','交给 AI 的提示词':'Prompt for your AI tool','待生成':'Not generated','可以先生成草稿；选择软件后，自动填入当前网址与产品信息。':'Generate a draft, or select a product to fill in the store URL and product details.','复制提示词':'Copy prompt','下载提示词.txt':'Download prompt.txt','AI 接入提示词':'AI integration prompt','选择项目设置后，点击“生成英文接入提示词”。':'Choose the project settings, then select Generate English integration prompt.',
+ '怎样交给 AI 才能快速开始？':'How do I get started with my AI tool?',
+ '在 AI 编程工具中打开现有程序工程，并提供 Licentivo Launch 接入包。':'Open your existing project in your AI coding tool and provide the Licentivo Launch integration package.',
+ '粘贴提示词。配置已就绪时，提示词会填入当前站点地址、产品 ID 与公钥，AI 直接传给 Launch 接入包，无需生成配置文件。':'Paste the prompt. When configuration is ready, it includes the store URL, product IDs, and public keys for the Launch package. No configuration file is needed.',
+ '让 AI 读取对应语言的 README 和示例，再接入现有界面和业务流程。':'Ask your AI tool to read the README and examples for your language, then integrate with your existing interface and business flow.',
+ '核对受保护操作确实经过 SDK 校验，完成提示词中的本地测试。支付与实际激活另做测试环境验收。':'Verify that protected operations pass through SDK checks and complete the local tests in the prompt. Verify payments and actual activation separately in the sandbox.',
+ '提示词在当前浏览器生成；复制或下载由你操作，本页面不会向 AI 服务发送内容。':'The prompt is generated in your browser. Copy or download it yourself; this page does not send content to an AI service.',
+ '已自动填入当前站点、产品映射与公钥。':'The store URL, product mapping, and public keys are filled in.','尚未读取产品配置；可先生成待配置草稿。':'Product configuration has not been read; you can generate a draft first.','参数已自动填写':'Parameters filled in','待配置草稿':'Draft: configuration needed',
+ '初始化参数已读取':'Initialization parameters loaded','提示词会包含当前站点地址与对应产品的初始化参数。配置检查不代表支付、激活或功能验收已通过。':'The prompt includes the store URL and product initialization parameters. Configuration checks do not verify payments, activation, or protected features.','查看或重新检查配置':'View or recheck configuration','可以先生成接入草稿':'Start with an integration draft','请选择已有软件；生成时将自动读取站点地址、授权映射和公钥。缺少设置时仅生成标明待完成项的草稿。':'Select an existing product to load the store URL, licensing mapping, and public keys. Missing settings produce a draft with pending tasks.','前往接入检查':'Go to integration checks',
+ '可直接使用的初始化代码':'Ready-to-use initialization code','需要先完成以下设置':'Complete these settings first','选择已变化，请重新读取产品信息。':'Your selection changed. Read the product details again.','正在读取并验证…':'Reading and verifying…','地址、产品和公钥已自动填写。将此连接函数加入程序，再接入登录与受保护功能；不要另建配置文件。':'The URL, product IDs, and public keys are filled in. Add this connection function to your application, then integrate sign-in and protected features. No separate configuration file is needed.','复制初始化代码':'Copy initialization code','保存代码':'Save code','生成英文 AI 提示词':'Generate English AI prompt','完整手动开发流程见接入包内':'For the complete manual integration workflow, see','和':'and','。':'.','检查套餐映射':'Check plan mappings','检查 Licentivo 连接':'Check Licentivo connection','初始化代码已复制。':'Initialization code copied.','浏览器未允许自动复制，请选中上方代码手动复制。':'Automatic copying is unavailable. Select the code above and copy it manually.','读取失败，请稍后重试':'Could not read the product details. Try again later.',
+ '设置已变化，请重新生成与当前项目一致的提示词。':'Your settings changed. Generate a new prompt for the current project.','已复制。请在 AI 编程工具中粘贴，并提供现有工程和接入包。':'Copied. Paste it into your AI coding tool and provide your existing project and integration package.','浏览器未允许自动复制，已选中文本。请按 Ctrl+C（Mac 为 ⌘C）复制。':'Automatic copying is unavailable. The text is selected; press Ctrl+C (⌘C on Mac) to copy.','请检查项目设置后重试。':'Check your project settings and try again.',
+ '请配置 HTTPS 访问地址；内网 HTTP 测试须在“网站与安全”开启 SDK HTTP 测试接入，并选择测试环境':'Configure an HTTPS URL. For internal HTTP testing, enable SDK HTTP testing in Website & security and select the sandbox environment.',
+ '商户访问地址有效':'Store URL is valid','该环境还没有已发布套餐，请先在销售套餐中选择 Licentivo 策略并发布':'This environment has no published plans. Select a Licentivo policy in Sales plans and publish the plan.','该产品的历史套餐映射存在冲突，请先核对已购套餐对应的 Licentivo 产品':'Existing plan mappings conflict. Check the Licentivo product associated with the purchased plans.','同一 Launch 产品的套餐映射到了不同 Licentivo 产品，请创建一致的套餐新版本':'Plans for this Launch product map to different Licentivo products. Create consistent plan versions.','无法连接 Licentivo，请检查授权连接后重试':'Could not connect to Licentivo. Check the licensing connection and try again.','Licentivo 连接或管理权限检查未通过，请在授权连接中重新验证':'Licentivo connection or management permission checks failed. Verify the licensing connection again.','授权连接暂不支持自动读取签名公钥，请检查 Licentivo 连接':'The connection cannot read signing public keys automatically. Check the Licentivo connection.','无法自动读取产品签名公钥，请检查 Licentivo 连接和产品签名密钥状态':'Could not read the product signing public keys. Check the Licentivo connection and signing key status.','Licentivo 返回的产品公钥格式无效，暂时无法生成接入代码':'Licentivo returned invalid public keys. Integration code cannot be generated.','已自动读取对应授权产品的签名公钥':'Signing public keys loaded for the mapped product','请先为该软件发布映射到 Licentivo 产品的套餐；接入信息将自动读取':'Publish a plan mapped to a Licentivo product for this software. Integration details will then be loaded automatically.'
+});
+patterns.push(
+ [/^套餐 (.+)：Licentivo 产品与策略版本 (\d+) 已在线验证$/,'Plan $1: Licentivo product and policy version $2 verified online'],
+ [/^套餐 (.+) 仅供预览，请完成授权映射并发布可购买版本$/,'Plan $1 is preview-only. Complete the licensing mapping and publish a purchasable version.'],
+ [/^套餐 (.+) 缺少 Licentivo 授权映射$/,'Plan $1 has no Licentivo licensing mapping.'],
+ [/^套餐 (.+) 的远程策略检查未通过，请检查连接与策略版本；策略有变更时请创建匹配的新版本$/,'Plan $1 failed remote policy checks. Check the connection and policy version, then create a matching plan version if the policy changed.']
+);
+Object.assign(en,{
+ '。你只需维护这一种语言；保存后 DeepL 会在后台自动更新另外九种译文。':'. Maintain this source language; DeepL updates the other nine translations after you save.',
+ '当前内容原文：':'Source content: ',
+ '每个环境只能启用一个支付供应商。验证并启用后，会自动停用同环境的其他供应商。':'Each environment has one active payment provider. Verifying and enabling a provider disables other providers in the same environment.',
+ '商户账号 ID':'Merchant account ID','Webhook 签名密钥':'Webhook signing secret','API 版本':'API version','验证并启用':'Verify and enable','接入文档':'Integration documentation',
+ '全站只能启用一个授权系统，所有商品及测试、正式环境统一使用。选择后点击启用生效。':'The store uses one licensing system for all products in both sandbox and live environments. Select a provider, then enable it.',
+ 'Licentivo 授权策略、SDK 与设备管理':'Licentivo policies, SDK, and device management','已启用':'Enabled','正在配置':'Configuring','自定义授权服务':'Custom licensing service','使用商户自己的授权服务和 SDK':'Use your own licensing service and SDK','Licentivo 授权连接':'Licentivo connection','连接':'Connect to','Licentivo 官网 ↗':'Licentivo website ↗',
+ '，保存读写管理 API Key 后，在销售套餐中选择授权策略。':', save a read/write management API key, then select a license policy in Sales plans.','账号授权连接已建立。':'Account licensing connection established.','Licentivo API Key（留空刷新策略）':'Licentivo API key (leave blank to refresh policies)','已加密保存；留空刷新策略':'Encrypted and saved; leave blank to refresh policies',
+ '先选择邮件服务，再决定是否要求注册验证。未启用邮件也可以正常注册、登录和购买。':'Choose an email provider, then decide whether registration requires verification. Registration, sign-in, and purchases also work with email disabled.',
+ '邮件发送方式':'Email provider','注册时验证邮箱':'Verify email on registration','发送验证链接；验证后才可购买和获取软件凭证。关闭后可直接购买。':'Send a verification link. Customers must verify before purchasing or receiving software credentials. Disable this to allow direct purchases.',
+ '发送订单与软件通知':'Send order and software notifications','付款确认、软件授权就绪和退款确认时通知客户。':'Notify customers when payment is confirmed, software licensing is ready, or a refund is confirmed.',
+ 'SMTP 服务器':'SMTP server','SMTP 账号':'SMTP username','端口':'Port','加密方式':'Encryption','SMTP 密码 / API Key':'SMTP password / API key','发件人邮箱':'Sender email','保存设置':'Save settings','邮件已启用 · 注册需要验证':'Email enabled · Registration verification required','邮件已启用 · 允许直接注册':'Email enabled · Direct registration allowed','邮件未启用 · 允许直接注册':'Email disabled · Direct registration allowed',
+ '测试发信':'Test email delivery','收件邮箱':'Recipient email','哪些操作会发送邮件':'When emails are sent','注册验证：':'Registration verification:','启用「注册时验证邮箱」后，注册或重发验证时发送。':'Sent on registration or verification resend when email verification is required.',
+ '找回密码、修改邮箱：':'Password recovery and email changes:','启用邮件服务后，客户主动申请时发送确认链接。':'When email is enabled, send a confirmation link at the customer’s request.','付款、软件授权、退款：':'Payments, software licensing, and refunds:','启用「发送订单与软件通知」后，在确认成功时发送。':'Sent after confirmation when order and software notifications are enabled.','发票处理结果：':'Invoice processing results:','启用邮件服务后，开具或拒绝申请时发送。':'When email is enabled, notify customers when an invoice request is issued or rejected.',
+ '不启用邮件时，客户可在账号中心查看订单、授权、退款和发票；找回密码或修改邮箱需联系商家。':'With email disabled, customers can view orders, licenses, refunds, and invoices in their account. They must contact the merchant to recover a password or change email.','设置邮件服务':'Set up email delivery','未启用（可选）':'Disabled (optional)','通用 SMTP':'Custom SMTP','隐式 TLS / SMTPS':'Implicit TLS / SMTPS','已加密保存；留空保留':'Encrypted and saved; leave blank to keep',
+ '已接入 Licentivo':'Connected to Licentivo','配置授权系统':'Configure licensing','重新读取策略':'Reload policies','授权配置':'License configuration','版本':'Version','历史版本':'Version history','发布测试版':'Publish to sandbox','下架':'Archive'
+});
+patterns.push(
+ [/^当前启用：(.+)$/,'Active provider: $1'],
+ [/^已读取 (\d+) 个产品和 (\d+) 个授权策略。$/,'Catalog loaded: $1 products, $2 license policies.'],
+ [/^已读取 (\d+) 个产品、(\d+) 个可用策略。选择策略后，价格类型和授权信息会自动匹配。$/,'Catalog loaded: $1 products, $2 available policies. Selecting a policy matches pricing and licensing settings automatically.'],
+ [/^每个套餐先选择所属软件产品。套餐名称请使用 (.+)；保存后会自动翻译。编辑会创建新版本，旧价格不会被改写。$/,'Choose a product for each plan. Enter plan names in $1; translations are generated after saving. Editing creates a new version and preserves previous prices.'],
+ [/^重试失败邮件（(\d+)）$/,'Retry failed emails ($1)'],
+ [/^待发送 (\d+) 封。测试成功表示邮件服务已接收，请同时检查收件箱。$/,'$1 emails queued. A successful test confirms provider acceptance; also check the inbox.']
+);
+function translate(value,locale='en'){
+ const trim=value.trim(),localized=interfaceText(trim,locale);
+ if(localized!==trim)return value.replace(trim,localized);
+ if(!locale.startsWith('en'))return value;
+ if(en[trim])return value.replace(trim,en[trim]);
+ for(const [pattern,replacement]of patterns)if(pattern.test(trim))return value.replace(trim,trim.replace(pattern,replacement));
+ return value;
+}
 export function translateAdmin(root,locale){
- if(!locale?.startsWith('en'))return;
+ if(!locale||locale==='zh-CN')return;
  const surfaces=[...root.querySelectorAll('.workspace,.sidebar,.workspace-account,.mobile-workspace-bar')];
  for(const surface of surfaces){
   const walker=document.createTreeWalker(surface,NodeFilter.SHOW_TEXT);let node;
-  while((node=walker.nextNode())){const parent=node.parentElement;if(!parent||parent.closest('script,style,textarea,code,[data-user-content]'))continue;if(parent.closest('td')&&!parent.closest('button,a,.pill,label,summary,.order-status,.customer-sync'))continue;const next=translate(node.nodeValue);if(next!==node.nodeValue)node.nodeValue=next}
-  for(const element of [surface,...surface.querySelectorAll('[placeholder],[aria-label],[data-label]')])for(const attr of ['placeholder','aria-label','data-label']){const value=element.getAttribute(attr);if(value&&en[value])element.setAttribute(attr,en[value])}
+  while((node=walker.nextNode())){const parent=node.parentElement;if(!parent||parent.closest('script,style,textarea,code,[data-user-content]'))continue;if(parent.closest('td')&&!parent.closest('button,a,.pill,label,summary,.order-status,.customer-sync'))continue;const next=translate(node.nodeValue,locale);if(next!==node.nodeValue)node.nodeValue=next}
+  for(const element of [surface,...surface.querySelectorAll('[placeholder],[aria-label],[data-label]')])for(const attr of ['placeholder','aria-label','data-label']){const value=element.getAttribute(attr);if(value){const translated=translate(value,locale);if(translated!==value)element.setAttribute(attr,translated)}}
  }
 }

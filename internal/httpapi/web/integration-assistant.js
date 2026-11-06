@@ -1,4 +1,6 @@
 import {integrationTargets, buildIntegrationPrompt} from "/assets/integration-prompts.js";
+import {translateAdmin} from "/assets/admin-i18n.js";
+import {interfaceText} from "/assets/interface-locale.js";
 import {integrationDraft as draft, selectIntegration, currentIntegrationReport, rememberIntegrationReport, clearIntegrationReport, integrationNavigation} from "/assets/integration-state.js";
 
 const esc = value => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -7,7 +9,7 @@ const options = (entries, selected) => Object.entries(entries).map(([key, label]
 export async function integrationAssistant(root, api) {
   const catalog = await api("/admin/catalog");
   if (!(catalog.products || []).some(product => product.id === draft.productID)) selectIntegration({productID:catalog.default_product_id || (catalog.products?.length === 1 ? catalog.products[0].id : "")});
-  const products = `<option value="">暂不关联产品</option>${(catalog.products || []).map(product => `<option value="${esc(product.id)}" ${product.id === draft.productID ? "selected" : ""}>${esc(product.name)}</option>`).join("")}`;
+  const products = `<option value="">暂不关联产品</option>${(catalog.products || []).map(product => `<option data-user-content value="${esc(product.id)}" ${product.id === draft.productID ? "selected" : ""}>${esc(product.name)}</option>`).join("")}`;
   const languages = Object.fromEntries(Object.entries(integrationTargets).map(([key, target]) => [key, target.label]));
   root.innerHTML = `<div class="section-head"><div><p class="eyebrow">AI assisted integration</p><h1>AI 快速接入</h1><p class="hint">选择语言和要保护的功能，生成适合现有项目的英文提示词，交给你使用的 AI 编程工具。</p></div></div>${integrationNavigation("ai")}
     <ol class="integration-steps"><li><strong>描述项目</strong><span>选择语言、平台与功能</span></li><li><strong>准备材料</strong><span>现有工程、接入包与初始化参数</span></li><li><strong>交给 AI</strong><span>复制提示词，再按清单验收</span></li></ol>
@@ -40,6 +42,7 @@ export async function integrationAssistant(root, api) {
     root.querySelector("[data-prompt-state]").textContent = "待生成";
     root.querySelector("[data-prompt-state]").className = "pill orange";
     root.querySelector("[data-prompt-description]").textContent = "设置已变化，请重新生成与当前项目一致的提示词。";
+    translateAdmin(document, document.documentElement.lang);
   };
   form.addEventListener("input", markChanged); form.addEventListener("change", markChanged);
   let generation = 0;
@@ -57,17 +60,20 @@ export async function integrationAssistant(root, api) {
       output.value = prompt.text; copy.disabled = false; save.disabled = false; status.textContent = "";
       root.querySelector("[data-prompt-state]").textContent = prompt.ready ? "参数已自动填写" : "待配置草稿";
       root.querySelector("[data-prompt-state]").className = `pill ${prompt.ready ? "" : "orange"}`;
-      root.querySelector("[data-prompt-description]").textContent = prompt.title;
+      root.querySelector("[data-prompt-description]").textContent = integrationTargets[selected.language].label+' · '+interfaceText('英文接入提示词',document.documentElement.lang);
     } catch (reason) {
       if (current !== generation || !root.isConnected) return;
       output.value = ""; copy.disabled = true; save.disabled = true; error.textContent = reason.message || "请检查项目设置后重试。"; error.focus();
+    } finally {
+      if (current === generation && root.isConnected) translateAdmin(document, document.documentElement.lang);
     }
   };
   form.addEventListener("submit", event => { event.preventDefault(); generate(); });
   copy.addEventListener("click", async () => {
     if (copy.disabled || !output.value) return;
-    try { await navigator.clipboard.writeText(output.value); status.textContent = "已复制。请在 AI 编程工具中粘贴，并提供现有工程和接入包。"; }
-    catch { output.focus(); output.select(); status.textContent = "浏览器未允许自动复制，已选中文本。请按 Ctrl+C（Mac 为 ⌘C）复制。"; }
+    try { await navigator.clipboard.writeText(output.value); status.textContent = "已复制"; }
+    catch { output.focus(); output.select(); status.textContent = "请手动复制"; }
+    translateAdmin(document, document.documentElement.lang);
   });
   save.addEventListener("click", () => {
     if (save.disabled || !output.value) return;

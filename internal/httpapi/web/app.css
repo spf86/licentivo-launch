@@ -364,8 +364,9 @@ details summary { cursor: pointer; color: var(--green); font-size: 14px; margin-
   list-style: none;
 }
 .settings-group > summary::-webkit-details-marker { display: none; }
-.settings-group > summary::after { content: "展开"; margin-left: auto; color: var(--muted); font-size: 12px; font-weight: 500; }
-.settings-group[open] > summary::after { content: "收起"; }
+.settings-group > summary::after { content: var(--settings-expand,"展开"); margin-left: auto; color: var(--muted); font-size: 12px; font-weight: 500; }
+.settings-group[open] > summary::after { content: var(--settings-collapse,"收起"); }
+html:lang(en) .settings-group { --settings-expand: "Expand"; --settings-collapse: "Collapse"; }
 .settings-group > summary .pill { margin-left: 8px; }
 .settings-group-body { padding: 0 26px 26px; border-top: 1px solid var(--line); }
 .settings-group-body > p:first-child { margin-top: 20px; }

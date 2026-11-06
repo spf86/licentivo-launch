@@ -1,4 +1,4 @@
-export function licensingContext(connections) {
+export function licensingContext(connections,locale="zh-CN") {
  const provider=connections?.licensing_provider||connections?.external?.default_provider||"licentivo";
  const licensing=provider==="licentivo"?connections?.licensing?.[0]||null:null;
  const products=licensing?.catalog?.products?.items||[];
@@ -6,7 +6,8 @@ export function licensingContext(connections) {
  const selectablePolicies=policies.filter(policy=>products.some(product=>product.id===policy.product_id));
  const mappings=provider==="licentivo"?connections?.mappings||[]:[];
  const productName=id=>products.find(product=>product.id===id)?.name||id;
- const policyLabel=policy=>`${productName(policy.product_id)} · ${policy.name} · ${policy.mode==="perpetual"?"永久":policy.duration_days?policy.duration_days+" 天":"限期"} · ${policy.max_devices||"—"} 台/席位 · v${policy.version}`;
+ const english=locale.startsWith('en');
+ const policyLabel=policy=>`${productName(policy.product_id)} · ${policy.name} · ${policy.mode==="perpetual"?(english?"Perpetual":"永久"):policy.duration_days?policy.duration_days+(english?" days":" 天"):(english?"Time-limited":"限期")} · ${policy.max_devices||"—"} ${english?"devices/seats":"台/席位"} · v${policy.version}`;
  return {provider,licensing,products,policies,selectablePolicies,mappings,productName,policyLabel,external:connections?.external||null};
 }
 

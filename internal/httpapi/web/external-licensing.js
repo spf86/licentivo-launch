@@ -66,13 +66,13 @@ export async function mountExternalLicensing(host,{api,connections:initialConnec
  });
 }
 
-export function mountExternalDeliveries(root,products,{api}){
+export function mountExternalDeliveries(root,products,{api,t=(_key,fallback)=>fallback}){
  for(const product of products.filter(row=>row.licensing_provider==="custom_http")){
   const card=[...root.querySelectorAll("[data-account-product]")].find(node=>node.dataset.accountProduct===product.product_id&&node.dataset.environment===product.environment);if(!card)continue;
-  const section=document.createElement("section"),button=document.createElement("button"),output=document.createElement("div");button.type="button";button.className="secondary";button.textContent="查看授权交付";button.disabled=product.status!=="active"||!product.synchronized;output.setAttribute("aria-live","polite");section.append(button,output);card.append(section);
+  const section=document.createElement("section"),button=document.createElement("button"),output=document.createElement("div");section.className="external-delivery";button.type="button";button.className="secondary";button.textContent=t('delivery.view','查看授权交付');button.disabled=product.status!=="active"||!product.synchronized;output.setAttribute("aria-live","polite");section.append(button,output);card.append(section);
   button.addEventListener("click",async()=>{button.disabled=true;output.replaceChildren();try{
-   const result=await api(`/me/products/${encodeURIComponent(product.product_id)}/delivery?environment=${encodeURIComponent(product.environment)}`);if(result.status!=="ready"||!result.delivery){output.textContent=result.status==="pending"?"授权服务仍在准备交付，请稍后重试。":"授权交付暂不可用，请联系商家。";return}
-   const value=result.delivery;if(value.type==="activation_url"){const link=document.createElement("a"),url=new URL(value.value);if(url.protocol!=="https:")throw new Error("激活入口无效");link.href=url.href;link.target="_blank";link.rel="noopener noreferrer";link.textContent="打开商家激活页面";output.append(link)}else{const text=document.createElement(value.type==="license_key"?"code":"p");text.textContent=value.value;text.style.whiteSpace="pre-wrap";output.append(text)}
+   const result=await api(`/me/products/${encodeURIComponent(product.product_id)}/delivery?environment=${encodeURIComponent(product.environment)}`);if(result.status!=="ready"||!result.delivery){output.textContent=result.status==="pending"?t('delivery.pending','授权服务仍在准备交付，请稍后重试。'):t('delivery.unavailable','授权交付暂不可用，请联系商家。');return}
+   const value=result.delivery;if(value.type==="activation_url"){const link=document.createElement("a"),url=new URL(value.value);if(url.protocol!=="https:")throw new Error(t('delivery.invalid_url','激活入口无效'));link.href=url.href;link.target="_blank";link.rel="noopener noreferrer";link.textContent=t('delivery.open','打开商家激活页面');output.append(link)}else{const text=document.createElement(value.type==="license_key"?"code":"p");text.textContent=value.value;text.style.whiteSpace="pre-wrap";output.append(text)}
   }catch(error){output.textContent=error.message}finally{button.disabled=false}});
  }
 }

@@ -17,11 +17,13 @@ import {mountSalesAnalytics} from "/assets/sales-analytics.js";
 import {mountSEOSettings} from "/assets/seo-settings.js";
 import {pathLocale,routeParts,publicRouteURL,updatePublicLinks,migratePublicHash,changePublicLanguage} from "/assets/public-routing.js";
 import {translateAdmin} from "/assets/admin-i18n.js";
+import {interfaceLanguages,interfaceLanguage,prepareInterfaceLocale,interfaceText,applyInterfaceLocale} from "/assets/interface-locale.js";
 "use strict";
 const main=document.getElementById("main");
-const knownLocales=["zh-CN","en","ja","ko","de","fr","es","pt-BR","it","ru"];
-const preferredLocale=()=>{if(pathLocale())return pathLocale();const saved=localStorage.getItem("launch_locale");if(knownLocales.includes(saved))return saved;for(const value of navigator.languages||[navigator.language]){const lower=String(value||"").toLowerCase();const match=knownLocales.find(code=>lower===code.toLowerCase()||lower.split("-")[0]===code.toLowerCase().split("-")[0]);if(match)return match}return "zh-CN"};
+const knownLocales=[...interfaceLanguages.map(item=>item.code),'ko','ru'];
+const preferredLocale=()=>{const requested=new URLSearchParams(location.search).get('ui_locale');if(knownLocales.includes(requested))return requested;if(pathLocale())return pathLocale();const saved=localStorage.getItem("launch_locale");if(knownLocales.includes(saved))return saved;for(const value of navigator.languages||[navigator.language]){const lower=String(value||"").toLowerCase();const match=knownLocales.find(code=>lower===code.toLowerCase()||lower.split("-")[0]===code.toLowerCase().split("-")[0]);if(match)return match}return "zh-CN"};
 const state={site:null,user:null,admin:null,licenseContext:null,licenseCatalogSyncedAt:0,licenseCatalogSyncError:"",linkToken:null,linkAction:null,locale:preferredLocale()};
+await prepareInterfaceLocale(state.locale);
 Object.assign(state,{paymentEnvironment:"sandbox",paymentProvider:null,paymentConnections:null,dirtyForm:false});
 const formBaselines=new WeakMap(),editedForms=new WeakSet();
 function captureFormBaselines(saved=false){
@@ -36,8 +38,8 @@ function refreshDirtyState(){
 }
 function markFormsSaved(){captureFormBaselines(true);state.dirtyForm=false}
 function markFormSaved(form,values){formBaselines.set(form,formFingerprint(form,values));editedForms.add(form);refreshDirtyState()}
-document.documentElement.lang=state.locale;
-const t=(key,fallback)=>state.site?.ui?.[key]||fallback;
+applyInterfaceLocale(state.locale);
+const t=(key,fallback)=>interfaceText(fallback,state.locale,state.site?.ui?.[key]);
 const themes=[["forest","森林绿"],["ocean","海洋蓝"],["indigo","靛青"],["amber","暖棕"],["rose","玫瑰"],["graphite","石墨"],["teal","青绿"],["violet","紫罗兰"]];
 const esc=value=>String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const cookie=name=>document.cookie.split("; ").find(v=>v.startsWith(name+"="))?.slice(name.length+1)||"";
@@ -76,7 +78,7 @@ const money=plan=>{try{return new Intl.NumberFormat(state.locale,{style:"currenc
 const decimal=plan=>(plan.amount_minor/(10**digits(plan.currency))).toFixed(digits(plan.currency));
 const term=plan=>plan.purchase_type==="perpetual"?t("common.permanent","永久使用"):`${plan.term_count} ${{day:t("common.days","天"),month:t("common.months","个月"),year:t("common.years","年")}[plan.term_unit]||""}`;
 const moneyMinor=(currency,amount)=>money({currency,amount_minor:amount});
-const periodLabel=periods=>periods===12?t("plans.one_year","1 年"):t("plans.month_count",`${periods} 个月`).replace("{count}",periods);
+const periodLabel=periods=>periods===12?t("plans.one_year","1 年"):periods===1?t("plans.one_month","1 个月"):t("plans.month_count","{count} 个月").replace("{count}",periods);
 const productWizardSteps=["基本信息","产品介绍","产品文档与政策","平台与安装包","发布设置"];
 const downloadPlatforms=[
  {key:"windows",label:"Windows",accept:".exe,.msi,.msix,.zip",formats:"EXE、MSI、MSIX 或 ZIP"},
@@ -129,7 +131,9 @@ async function uploadAPI(path,body){
 async function refresh(){
  const previousUser=state.user?.id;
  state.site=await siteFor();
-	state.locale=state.site.locale||state.locale;document.documentElement.lang=state.locale;localStorage.setItem("launch_locale",state.locale);
+	if(!interfaceLanguage(state.locale))state.locale=state.site.locale||state.locale;
+	await prepareInterfaceLocale(state.locale);applyInterfaceLocale(state.locale);localStorage.setItem("launch_locale",state.locale);
+	state.site.supported_locales=[...interfaceLanguages,...(state.site.supported_locales||[]).filter(item=>!interfaceLanguages.some(language=>language.code===item.code))];
  try{state.user=(await api("/me")).user}catch{state.user=null}
  if(previousUser!==state.user?.id)resetIntegrationDraft();
  applyBrand(state.site.brand);
@@ -139,7 +143,10 @@ async function siteFor(product=""){
  if(new URLSearchParams(location.search).get("preview")==="sandbox")query.set("environment","sandbox");
  if(product)query.set("product",product);
 	query.set("locale",state.locale);
- return api("/site"+(query.size?"?"+query:""));
+ const site=await api("/site"+(query.size?"?"+query:""));
+ site.interface_language_only=Boolean(interfaceLanguage(state.locale))&&interfaceLanguage(site.locale)?.code!==interfaceLanguage(state.locale)?.code;
+ if(site.interface_language_only)site.translation_ready=false;
+ return site;
 }
 function applyBrand(brand){
  document.documentElement.dataset.theme=brand.theme||"forest";
@@ -183,13 +190,13 @@ function publicPlanBenefits(plan){
 function productDirectory(site){
  const {brand,products}=site;
  if(!products.length)return empty(t("home.preparing","产品正在准备"),t("home.preparing_body","站长发布产品后会显示在这里。"));
- const pending=!site.translation_ready?`<div class="notice warning">${esc(t("translation.preparing","所选语言的内容正在生成，当前显示原文。"))}</div>`:"";
+ const pending=!site.translation_ready?`<div class="notice warning">${esc(site.interface_language_only?t("translation.original","商家内容暂时显示原文。"):t("translation.preparing","所选语言的内容正在生成，当前显示原文。"))}</div>`:"";
  return `${pending}<section class="catalog-hero"><div><p class="eyebrow">${esc(brand.tagline||t("section.products","产品"))}</p><h1>${esc(t("home.choose_product","选择软件产品"))}</h1><p>${esc(t("home.choose_product_body","每个产品都有独立的介绍、安装包和销售套餐。进入产品后再选择对应套餐。"))}</p></div><span class="pill">${products.length} ${esc(t("home.product_count","个产品"))}</span></section><section class="section product-directory" aria-labelledby="product-directory-title"><div class="section-head"><div><p class="eyebrow">${esc(t("section.products","产品"))}</p><h2 id="product-directory-title">${esc(t("home.all_products","全部产品"))}</h2></div></div>${productCards(products)}</section>`;
 }
 function productLanding(site){
  const {brand,product,plans,environment}=site,content=product?.content||{};
  if(!product)return empty(t("home.preparing","产品正在准备"),t("home.preparing_body","站长发布产品后会显示在这里。"));
- const pending=!site.translation_ready?`<div class="notice warning">${esc(t("translation.preparing","所选语言的内容正在生成，当前显示原文。"))}</div>`:"";
+ const pending=!site.translation_ready?`<div class="notice warning">${esc(site.interface_language_only?t("translation.original","商家内容暂时显示原文。"):t("translation.preparing","所选语言的内容正在生成，当前显示原文。"))}</div>`:"";
  const downloadVersion=productVersionSummary(product);
  return `${pending}${environment==="sandbox"?'<div class="notice warning">'+esc(t("home.test_notice","测试环境：支付使用沙箱，不会产生真实扣款。"))+'</div>':""}<nav class="product-breadcrumb" aria-label="${esc(t("product.position","当前位置"))}"><a href="#/home">${esc(t("home.all_products","全部产品"))}</a><span aria-hidden="true">/</span><strong>${esc(product.name)}</strong></nav><section class="hero"><div><p class="eyebrow">${esc(brand.tagline||t("home.software_start","软件，从这里开始"))}</p><h1>${esc(product.name)}</h1><p>${esc(content.summary||brand.description||t("home.summary_fallback","产品正在准备中，欢迎稍后访问。"))}</p><div class="actions">${hasProductDownloads(product)?`<a class="button" href="#/download/${encodeURIComponent(product.slug)}">${esc(t("common.download","下载"))}${downloadVersion&&downloadVersion!=="—"?" · "+esc(downloadVersion):""}</a>`:""}<a class="button secondary" href="#/docs/${encodeURIComponent(product.slug)}/installation">${esc(t("nav.docs","产品文档"))}</a><a class="button secondary" href="#/account">${esc(t("common.account_center","进入账号中心"))}</a></div></div><aside class="hero-aside"><div class="large-mark" aria-hidden="true">${brandHeroMark(brand)}</div><p class="eyebrow">${esc(t("product.current","当前产品"))}</p><h2>${esc(product.name)}</h2><p>${esc(t("product.independent_scope","下方介绍、下载和套餐均只属于此产品。"))}</p></aside></section>${content.features?.length?`<section class="section grid">${content.features.map((v,i)=>`<article class="card feature"><p class="eyebrow">0${i+1}</p><h3>${esc(v)}</h3></article>`).join("")}</section>`:""}${content.description||content.requirements?`<section class="card section"><h2>${esc(t("product.about","关于产品"))}</h2>${content.description?`<p>${prose(content.description)}</p>`:""}${content.requirements?`<p class="hint">${esc(t("product.requirements","系统要求"))}：${prose(content.requirements)}</p>`:""}</section>`:""}<section class="section product-plans"><div class="section-head"><div><p class="eyebrow">${esc(product.name)} · ${esc(t("section.plans","套餐"))}</p><h2>${esc(t("plans.for_product","选择 {product} 套餐")).replace("{product}",esc(product.name))}</h2><p class="hint">${esc(t("plans.product_scope","以下套餐只适用于当前产品。"))}</p></div><p class="hint">${esc(t("plans.no_auto","固定期限购买不会自动扣款"))}</p></div>${plans.length?`<div class="grid">${plans.map(plan=>`<article class="card public-plan-card"><p class="eyebrow">${esc(product.name)}</p><h2>${esc(plan.name)}</h2><p class="price">${esc(planPriceSummary(plan))}</p><p class="plan-summary">${esc(plan.summary||t("plans.summary_fallback","购买后立即获得对应期限的软件使用权。"))}</p><ul class="plan-features">${publicPlanBenefits(plan).map(item=>`<li>${esc(item)}</li>`).join("")}</ul><p class="hint">${esc(plan.purchase_type==="perpetual"?term(plan):enabledPurchaseOptions(plan).map(option=>periodLabel(option.periods)).join(" / "))} · ${plan.snapshot.max_devices} ${esc(plan.snapshot.license_model==="floating"?t("common.seat","个同时使用席位"):t("common.device","台设备"))}</p><button class="secondary" data-action="${plan.preview_only?"purchase-unavailable":"begin-checkout"}" data-product="${esc(product.slug)}" data-version="${esc(plan.version_id)}">${esc(plan.preview_only?t("plans.preview","测试预览套餐"):t("plans.choose","选择套餐"))}</button></article>`).join("")}</div>`:empty(t("plans.soon","套餐即将开放"),t("plans.soon_body","商家正在准备销售套餐，可先创建账号。"))}</section>`;
 }
@@ -268,7 +275,7 @@ async function account(){
  main.innerHTML=`<div class="section-head account-heading"><div><p class="eyebrow">${esc(t("account.center","客户中心"))}</p><h1>${esc(t("account.title","我的账号"))}</h1><p>${esc(user.email)} <span class="pill ${user.verified||!state.site.email_verification_required?"":"orange"}">${esc(user.verified?t("account.verified","已验证"):state.site.email_verification_required?t("account.unverified","待验证"):t("account.email_optional","无需邮箱验证"))}</span></p></div>${!user.verified&&state.site.email_verification_required?'<button class="secondary" data-action="resend-verification">'+esc(t("account.resend","重发验证邮件"))+'</button>':""}</div><div class="stats account-stats">${[[t("account.products_count","软件权益"),products.length],[t("account.orders_count","订单"),orderPage.total],[t("account.refunds_pending","退款处理中"),refunds.filter(v=>!["succeeded","failed"].includes(v.status)).length]].map(([label,value])=>`<div class="stat"><p>${esc(label)}</p><strong>${value}</strong></div>`).join("")}</div><section class="section"><div class="section-head"><div><p class="eyebrow">${esc(t("account.downloads_title","下载、授权与设备"))}</p><h2>${esc(t("account.my_software","我的软件"))}</h2></div></div>${products.length?`<div class="grid two">${productCards}</div>`:empty(t("account.none","你的软件权益"),t("account.none_body","当前还没有已购产品。购买后，权益和使用期限会显示在这里。"))}</section><section class="section"><h2>${esc(t("account.orders_count","订单"))}</h2><div data-customer-orders></div></section><section class="section"><h2>${esc(t("account.refund_progress","退款进度"))}</h2>${refundRows.length?table([t("account.request_time","申请时间"),t("account.orders_count","订单"),t("common.amount","金额"),t("common.status","状态"),t("account.reason","原因")],refundRows):empty(t("account.no_refunds","暂无退款申请"),t("account.no_refunds_body","申请退款后，审核和原渠道退款进度会显示在这里。"))}</section><details class="card section account-security"><summary>${esc(t("account.security_sessions","账号安全与登录会话"))}</summary><div class="grid two section"><section><h2>${esc(t("account.change_password","修改密码"))}</h2><form data-form="password">${field(t("account.current_password","当前密码"),"current_password","","password","required autocomplete=current-password")}${field(t("account.new_password","新密码"),"new_password","","password","required minlength=12 maxlength=128 autocomplete=new-password")}${formError}<button>${esc(t("account.save_relogin","保存并重新登录"))}</button></form></section><section><h2>${esc(t("account.change_email","修改邮箱"))}</h2><form data-form="change-email">${field(t("account.new_email","新邮箱"),"email","","email","required")}${field(t("account.current_password","当前密码"),"password","","password","required autocomplete=current-password")}${formError}<button class="secondary">${esc(t("account.send_confirm","发送确认邮件"))}</button></form></section></div>${table([t("common.type","类型"),t("common.created","创建时间"),t("common.expires","到期时间"),t("common.action","操作")],sessions.map(s=>`<tr><td>${esc(s.kind==="website"?t("account.website","网站"):t("account.software","软件"))} ${s.current?'<span class="pill">'+esc(t("account.current_session","当前会话"))+'</span>':""}</td><td>${time(s.created_at)}</td><td>${time(s.expires_at)}</td><td><button class="small secondary" data-action="revoke-session" data-id="${esc(s.id)}">${esc(t("account.logout_session","退出此会话"))}</button></td></tr>`))}</details>`;
  enhanceAccountPanels(products.length>0);
  mountRecordList(main.querySelector('[data-customer-orders]'),{api,path:'/me/orders/search',initialPage:orderPage,head:[t("account.product_plan","产品与套餐"),t("account.order_time","订单时间"),t("account.amount_period","金额与期限"),t("common.type","类型"),t("common.status","状态")],row:orderRow,table,t,placeholder:t('account.order_search','搜索订单编号、产品或套餐'),emptyMessage:t('account.no_orders','暂无订单')});
-	 mountExternalDeliveries(main,products,{api});
+	 mountExternalDeliveries(main,products,{api,t});
 }
 function enhanceAccountPanels(hasProducts){
  const sections=[...main.querySelectorAll(':scope > section.section')],security=main.querySelector(':scope > .account-security');
@@ -343,7 +350,7 @@ function planPolicySummary(policy,context){
  return `<div class="policy-summary-head"><div><span class="eyebrow">将连接到</span><strong>${esc(context.productName(policy.product_id))} · ${esc(policy.name)}</strong></div><span class="pill">${perpetual?"永久授权":"限时授权"}</span></div><div class="policy-summary-grid"><div><span>Licentivo 有效期</span><strong>${esc(duration)}</strong></div><div><span>设备或席位</span><strong>${esc(devices)}</strong></div><div><span>策略版本</span><strong>v${esc(policy.version)}</strong></div><div><span>功能</span><strong>${esc(features)}</strong></div></div><p>授权方式、设备数和功能均从 Licentivo 读取。保存后，这个销售套餐版本会自动绑定到该策略，付款成功时按此策略发放授权。</p>`;
 }
 function updatePlanPolicyForm(form){
- const context=state.licenseContext||licensingContext(null);
+ const context=state.licenseContext||licensingContext(null,state.locale);
  const policy=context.selectablePolicies.find(v=>v.id===form.elements.namedItem("policy_id")?.value);
  const summary=form.querySelector("[data-policy-summary]");
  if(summary)summary.innerHTML=planPolicySummary(policy,context);
@@ -428,7 +435,7 @@ function stageDocumentImage(input){
 document.addEventListener("change",async event=>{
  if(event.target.matches('[data-settings-section]')){if(!confirmDiscardChanges()){event.target.value=routeParts()[2]||'payments';return}navigate('admin/settings/'+event.target.value)}
  if(event.target.matches("[data-admin-section]")){if(!confirmDiscardChanges()){event.target.value=event.target.querySelector('option[selected]')?.value||"overview";return}navigate("admin/"+event.target.value)}
- if(event.target.matches("[data-language]")){if(!confirmDiscardChanges()){event.target.value=state.locale;return}state.locale=event.target.value;localStorage.setItem("launch_locale",state.locale);document.documentElement.lang=state.locale;if(changePublicLanguage(state.locale))return;await render()}
+ if(event.target.matches("[data-language]")){if(!confirmDiscardChanges()){event.target.value=state.locale;return}state.locale=event.target.value;await prepareInterfaceLocale(state.locale);localStorage.setItem("launch_locale",state.locale);applyInterfaceLocale(state.locale);if(changePublicLanguage(state.locale))return;await render()}
  if(event.target.matches('[name="resend_encryption"]')){const port=event.target.form?.elements.namedItem("resend_port");if(port)port.value=event.target.value==="implicit_tls"?"465":"587"}
  if(event.target.matches('[name="resend_port"]')){const encryption=event.target.form?.elements.namedItem("resend_encryption");if(encryption)encryption.value=["465","2465"].includes(event.target.value)?"implicit_tls":"starttls"}
  if(event.target.matches('form[data-form="transport-settings"] [name="mode"]')){const form=event.target.form;const input=form?.elements.namedItem("public_url");if(input){try{const target=new URL(input.value);target.protocol=event.target.value+":";if(event.target.value==="https"&&target.port==="80")target.port="";if(event.target.value==="http"&&target.port==="443")target.port="";input.value=target.origin}catch{}}const button=form?.querySelector('button[type="submit"]');if(button)button.textContent=`保存并${event.target.value===form.dataset.currentMode?"应用":"切换到"} ${event.target.value.toUpperCase()}`}
@@ -464,7 +471,7 @@ async function admin(tab="overview"){
   content.innerHTML=`<div class="section-head"><div><h1>品牌与产品</h1><p class="hint">先管理软件产品；品牌资料可在下方按需展开修改。</p></div><button data-action="new-product">添加软件产品</button></div><div class="notice">当前内容原文：<strong>${esc(sourceName)}</strong>。你只需维护这一种语言；${translation.configured?"保存后 DeepL 会在后台自动更新另外九种译文。":"先到“系统设置”连接 DeepL，原文仍会正常保存。"} <a href="#/admin/settings/translation">打开翻译设置</a></div><section class="card section product-list-section"><div class="section-head"><div><h2>软件产品</h2><p class="hint">每个产品有独立的介绍、平台安装包、下载页和销售套餐。</p></div><span class="pill">${products.length} 个产品</span></div>${products.length?table(["产品","页面简称","平台版本","状态","操作"],productRows):empty("还没有产品","点击“添加软件产品”创建第一个软件产品。")}</section><details class="settings-group card section"><summary><span>品牌设置</span><span class="pill gray">按需修改</span></summary><div class="settings-group-body"><p class="hint">品牌名称、标语和支持邮箱会用于整个网站。</p><form data-form="brand">${field("品牌名称","name",brand.name,"text","required maxlength=160")}${field("简短标语","tagline",brand.tagline,"text","maxlength=240")}${area("品牌介绍","description",brand.description)}${field("支持邮箱","support_email",brand.support_email,"email")}${formError}<button>保存品牌</button></form></div></details><dialog id="product-editor" class="plan-editor-dialog" aria-labelledby="product-editor-title"></dialog>`;if(routeParts()[2]==="edit"){const product=products.find(p=>p.id===routeParts()[3]);if(product){productEditor(product);if(routeParts()[4])showProductWizardStep(content.querySelector("form[data-form=product]"),Number(routeParts()[4]))}}return;
  }
  if(tab==="plans"){
-	const [catalog,translation,connections]=await Promise.all([api("/admin/catalog"),api("/admin/translations"),connectionsForPlans()]);state.admin=catalog;state.licenseContext=licensingContext(connections);const sourceName=translation.supported_locales.find(v=>v.code===translation.source_locale)?.name||translation.source_locale;
+	const [catalog,translation,connections]=await Promise.all([api("/admin/catalog"),api("/admin/translations"),connectionsForPlans()]);state.admin=catalog;state.licenseContext=licensingContext(connections,state.locale);const sourceName=translation.supported_locales.find(v=>v.code===translation.source_locale)?.name||translation.source_locale;
   const saveWarning=state.planSaveWarning?`<div class="notice warning" role="status">${esc(state.planSaveWarning)}</div>`:"";
   content.innerHTML=`<div class="section-head"><h1>销售套餐</h1><div class="actions">${state.licenseContext.licensing?'<button class="secondary" data-action="refresh-license-catalog">刷新授权策略</button>':""}<button data-action="new-plan" ${state.admin.products.length?"":"disabled"}>创建套餐</button></div></div>${saveWarning}<p><a href="#/admin/settings/licensing">选择 Licentivo 或自定义授权系统，并配置商品映射</a></p>${planLicenseNotice(state.licenseContext)}<p class="hint">每个套餐先选择所属软件产品。套餐名称请使用 ${esc(sourceName)}；保存后${translation.configured?"会自动翻译":"将在连接 DeepL 后翻译"}。编辑会创建新版本，旧价格不会被改写。</p>${planList(state.admin.plans,state.licenseContext,state.admin.products)}<dialog id="plan-editor" class="plan-editor-dialog" aria-labelledby="plan-editor-title"></dialog><dialog id="plan-versions-dialog" class="action-dialog wide-dialog" aria-labelledby="plan-versions-title"></dialog><dialog id="plan-version-detail-dialog" class="action-dialog" aria-labelledby="plan-version-detail-title"></dialog><div class="actions"><a href="/?preview=sandbox#/home" target="_blank" rel="noopener">查看测试预览 ↗</a></div>`;return;
  }
@@ -502,7 +509,7 @@ function showPlanWizardStep(form,index){
 }
 function planEditor(plan={}){
  const p={currency:"USD",amount_minor:0,purchase_type:"fixed_term",term_unit:"month",term_count:1,allow_purchase:true,allow_renewal:true,...plan};
- const context=state.licenseContext||licensingContext(null);
+ const context=state.licenseContext||licensingContext(null,state.locale);
  const savedMapping=context.mappings.find(item=>item.version_id===p.version_id);
  const selectedPolicy=savedMapping&&context.selectablePolicies.find(policy=>policy.id===savedMapping.policy_id);
  const perpetual=planPricingMode(selectedPolicy,p.purchase_type)==="perpetual";
@@ -556,7 +563,7 @@ async function refreshPlanLicenseCatalog(form){
  updatePlanPolicyForm(form);
  picker.setAttribute("aria-busy","true");
  try{
-  state.licenseContext=licensingContext(await connectionsForPlans(true));
+  state.licenseContext=licensingContext(await connectionsForPlans(true),state.locale);
   picker.innerHTML=planPolicyPicker(state.licenseContext,selectedID,selectedID?{policy_id:selectedID}:form._savedMapping);
   updatePlanPolicyForm(form);
  }finally{delete form.dataset.refreshing;picker.removeAttribute("aria-busy");updatePlanPolicyForm(form)}
@@ -811,7 +818,7 @@ async function devicesPage(product,environment){
  if(!state.user){state.returnTo=`devices/${product}/${environment}`;authPage("login");return}
  const v=await api(`/me/products/${encodeURIComponent(product)}/devices?environment=${encodeURIComponent(environment)}`);
  const operationStatus={pending:t("devices.waiting","正在等待处理"),running:t("devices.releasing","正在释放"),succeeded:t("devices.done","已释放"),manual_review:t("devices.review","需联系商家核实"),stale:t("devices.stale","原绑定已变化")};
- main.innerHTML=`<section class="section"><p class="eyebrow">${esc(t("section.devices","你的授权连接"))}</p><h1>${esc(t("devices.title","设备授权连接"))}</h1><p>${esc(t("devices.remaining_a","最近 30 天剩余"))} ${v.remaining} ${esc(t("devices.remaining_b","次自助释放。重试同一操作只占用一次额度。"))}</p><p class="hint">${esc(t("devices.body","每条记录是一条授权连接：固定授权对应设备绑定，浮动授权对应运行实例。同一设备可有多条浮动连接，释放一条只影响该连接；已签发的离线许可仍受原期限约束。"))}</p>${v.devices.length?`<div class="grid two">${v.devices.map(d=>`<article class="card"><h2>${esc(deviceTitle(d,t("devices.unnamed","未命名设备")))}</h2>${deviceDetails(d,t)}<span class="pill">${esc(d.status==="active"?t("devices.active","使用中"):t("devices.released","已释放"))}</span><p class="hint">${esc(t("devices.last_seen","最近联机"))} ${time(d.last_seen_at)}${d.lease_expires_at?" · "+esc(t("devices.lease_end","连接授权截止"))+" "+time(d.lease_expires_at):""}</p>${d.status==="active"&&v.can_release&&!v.operations.some(o=>o.activation_id===d.id&&o.expected_generation===d.generation&&["pending","running"].includes(o.status))?`<form data-form="device-release"><input type="hidden" name="product_id" value="${esc(product)}"><input type="hidden" name="environment" value="${esc(environment)}"><input type="hidden" name="device_id" value="${esc(d.id)}"><input type="hidden" name="expected_generation" value="${esc(d.generation)}"><input type="hidden" name="idempotency_key" value="${operationID()}">${formError}<button class="secondary">${esc(t("devices.release","释放此授权连接"))}</button></form>`:""}</article>`).join("")}</div>`:empty(t("devices.none","还没有授权连接"),t("devices.none_body","在软件中登录并激活后，会显示对应的授权连接。"))}${v.operations.length?`<section class="card section"><h2>${esc(t("devices.recent","近期释放操作"))}</h2>${v.operations.map(o=>`<p>${esc(operationStatus[o.status]||o.status)}</p>`).join("")}</section>`:""}<p><a href="#/account">${esc(t("common.back_account","返回账号中心"))}</a></p></section>`;
+ main.innerHTML=`<section class="section"><p class="eyebrow">${esc(t("section.devices","你的授权连接"))}</p><h1>${esc(t("devices.title","设备授权连接"))}</h1><p>${esc(t("devices.remaining","最近 30 天剩余 {0} 次自助释放。重试同一操作只占用一次额度。").replace("{0}",String(v.remaining)))}</p><p class="hint">${esc(t("devices.body","每条记录是一条授权连接：固定授权对应设备绑定，浮动授权对应运行实例。同一设备可有多条浮动连接，释放一条只影响该连接；已签发的离线许可仍受原期限约束。"))}</p>${v.devices.length?`<div class="grid two">${v.devices.map(d=>`<article class="card"><h2>${esc(deviceTitle(d,t("devices.unnamed","未命名设备")))}</h2>${deviceDetails(d,t)}<span class="pill">${esc(d.status==="active"?t("devices.active","使用中"):t("devices.released","已释放"))}</span><p class="hint">${esc(t("devices.last_seen","最近联机"))} ${time(d.last_seen_at)}${d.lease_expires_at?" · "+esc(t("devices.lease_end","连接授权截止"))+" "+time(d.lease_expires_at):""}</p>${d.status==="active"&&v.can_release&&!v.operations.some(o=>o.activation_id===d.id&&o.expected_generation===d.generation&&["pending","running"].includes(o.status))?`<form data-form="device-release"><input type="hidden" name="product_id" value="${esc(product)}"><input type="hidden" name="environment" value="${esc(environment)}"><input type="hidden" name="device_id" value="${esc(d.id)}"><input type="hidden" name="expected_generation" value="${esc(d.generation)}"><input type="hidden" name="idempotency_key" value="${operationID()}">${formError}<button class="secondary">${esc(t("devices.release","释放此授权连接"))}</button></form>`:""}</article>`).join("")}</div>`:empty(t("devices.none","还没有授权连接"),t("devices.none_body","在软件中登录并激活后，会显示对应的授权连接。"))}${v.operations.length?`<section class="card section"><h2>${esc(t("devices.recent","近期释放操作"))}</h2>${v.operations.map(o=>`<p>${esc(operationStatus[o.status]||o.status)}</p>`).join("")}</section>`:""}<p><a href="#/account">${esc(t("common.back_account","返回账号中心"))}</a></p></section>`;
  if(v.operations.some(o=>["pending","running"].includes(o.status)))state.deviceRefreshTimer=setTimeout(()=>{if(location.hash===devicePageHash)devicesPage(product,environment).catch(error=>toast(error.message));},3000);
 }
 
