@@ -8,6 +8,10 @@ Run a branded software storefront and customer portal on your own domain. Custom
 
 [One-day integration guide](docs/one-day-integration.md) · [Download binaries](https://github.com/spf86/licentivo-launch/releases) · [Installation](docs/installation.md) · [Application integration](docs/software-sdk-integration.md) · [Licentivo website](https://www.licentivo.com/)
 
+**Paid but cannot find a license?** Follow the order from payment confirmation to the purchase entitlement and the licensing receipt. Open the troubleshooting guide in your language.
+
+[English](https://www.licentivo.com/en/launch-docs/entitlement-troubleshooting/) · [Deutsch](https://www.licentivo.com/de/launch-docs/entitlement-troubleshooting/) · [Italiano](https://www.licentivo.com/it/launch-docs/entitlement-troubleshooting/) · [简体中文](https://www.licentivo.com/zh/launch-docs/entitlement-troubleshooting/) · [繁體中文](https://www.licentivo.com/zh-hant/launch-docs/entitlement-troubleshooting/) · [हिन्दी](https://www.licentivo.com/hi/launch-docs/entitlement-troubleshooting/) · [Español](https://www.licentivo.com/es/launch-docs/entitlement-troubleshooting/) · [العربية](https://www.licentivo.com/ar/launch-docs/entitlement-troubleshooting/) · [Français](https://www.licentivo.com/fr/launch-docs/entitlement-troubleshooting/) · [বাংলা](https://www.licentivo.com/bn/launch-docs/entitlement-troubleshooting/) · [Português](https://www.licentivo.com/pt/launch-docs/entitlement-troubleshooting/) · [Bahasa Indonesia](https://www.licentivo.com/id/launch-docs/entitlement-troubleshooting/) · [اردو](https://www.licentivo.com/ur/launch-docs/entitlement-troubleshooting/) · [日本語](https://www.licentivo.com/ja/launch-docs/entitlement-troubleshooting/)
+
 ![From checkout to a protected feature: publish products, verify payment, synchronize access and guard application actions](docs/images/readme/purchase-to-protected-action.svg)
 
 ## A quick look
