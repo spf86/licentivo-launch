@@ -1,0 +1,7 @@
+Source: GitHub Primer Octicons
+https://github.com/primer/octicons/tree/9a274e212ee25c400ff666ce25a57866b7eacc25/icons
+Revision: 9a274e212ee25c400ff666ce25a57866b7eacc25
+Original names: hubot-24.svg, comment-discussion-24.svg, clock-24.svg,
+plug-24.svg, gear-24.svg, git-branch-24.svg, plus-24.svg, search-24.svg,
+arrow-right-24.svg, shield-check-24.svg.
+License: ai-octicons-LICENSE.txt (MIT).

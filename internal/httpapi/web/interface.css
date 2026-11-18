@@ -390,3 +390,10 @@ dialog::backdrop { background:#12241c66; backdrop-filter:blur(2px); }
 .record-list .record-email{overflow-wrap:anywhere;min-width:180px;max-width:340px;white-space:normal}
 .record-list[aria-busy="true"] .record-rows{opacity:.6}
 @media(max-width:600px){.record-filters .record-search{flex-basis:100%}.record-pager{justify-content:space-between;gap:8px}}
+
+/* The official-site badge remains visible at the foot of the admin navigation. */
+.admin-view .site-footer{display:flex;position:fixed;z-index:16;left:0;bottom:0;width:272px;max-width:none;min-height:58px;margin:0;padding:14px 12px;justify-content:center;align-items:center;border-top:1px solid #e1e7e3;background:#f5f7f5;box-sizing:border-box}
+.admin-view .site-footer>#footer-brand,.admin-view .site-footer .footer-policy-links{display:none}
+.admin-view .site-footer .footer-right{width:auto;gap:0;justify-content:center}
+.admin-view .sidebar{bottom:58px}
+@media(max-width:680px){.admin-view .site-footer{position:static;width:100%;min-height:64px;padding:18px 20px;margin:0;flex-direction:row;background:var(--paper)}}

@@ -16,6 +16,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
+	"licentivo-launch/internal/ai"
 	"licentivo-launch/internal/mailer"
 	"licentivo-launch/internal/origin"
 	"licentivo-launch/internal/ports"
@@ -40,6 +41,7 @@ var (
 )
 
 type Config struct {
+	AIClient                 *ai.Client
 	PublicURL, SetupToken    string
 	MasterKey                []byte
 	UploadDir                string
@@ -54,6 +56,7 @@ type Config struct {
 	ApplyTLSCertificate      func(*tls.Certificate)
 }
 type Service struct {
+	aiTransport   *ai.Client
 	db            *gorm.DB
 	vault         *security.Vault
 	config        Config
@@ -82,7 +85,7 @@ func New(ctx context.Context, db *gorm.DB, config Config) (*Service, error) {
 	if err := os.MkdirAll(uploadDir, 0o700); err != nil {
 		return nil, err
 	}
-	s := &Service{db: db, vault: vault, config: config, dummyHash: dummy, uploadDir: uploadDir}
+	s := &Service{db: db, vault: vault, config: config, dummyHash: dummy, uploadDir: uploadDir, aiTransport: ai.NewClient()}
 	ref, err := security.RandomReference()
 	if err != nil {
 		return nil, err

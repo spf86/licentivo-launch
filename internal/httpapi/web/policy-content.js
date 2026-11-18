@@ -62,12 +62,11 @@ export function policyEditorValue(root){
  return [...root.childNodes].map(node=>content(node)).join("").replace(/\n{3,}/g,"\n\n").trim();
 }
 
-export function policyLinks(site,product=null){
+export function policyLinks(site,product=null,includeUnpublished=false){
  return policyTypes.flatMap(type=>{
   const published=site?.policies?.find(policy=>policy.key===type.key);
   if(published)return [{key:type.key,title:published.title,href:`#/policies/${type.key}`}];
-  if(product?.slug&&String(product.content?.[type.field]||"").trim())return [{key:type.key,title:type.title,href:`#/docs/${encodeURIComponent(product.slug)}/${type.key}`}];
-  return [];
+  return includeUnpublished?[{key:type.key,title:type.title,href:`#/policies/${type.key}`}]:[];
  });
 }
 

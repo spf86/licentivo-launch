@@ -24,13 +24,15 @@ test('policy body never executes raw HTML or unsafe link schemes',()=>{
  assert.equal(policyURL('#/home'),'#/home');
 });
 
-test('global policy links override product policies and retain unpublished legacy fallback',()=>{
+test('only published store policies appear in public links',()=>{
  const product={slug:'editor',content:{terms_of_service:'old terms',refund_policy:'legacy refund',privacy_policy:''}};
  const links=policyLinks({policies:[{key:'terms',title:'Current terms',body:'published'}]},product);
- assert.deepEqual(links,[{key:'terms',title:'Current terms',href:'#/policies/terms'},{key:'refunds',title:'退款政策',href:'#/docs/editor/refunds'}]);
- assert.equal(policyLinks({policies:[]}).length,0);
+ assert.deepEqual(links,[{key:'terms',title:'Current terms',href:'#/policies/terms'}]);
+ assert.equal(policyLinks({policies:[]},product).length,0);
  assert.equal(policyNotice({policies:[]},null),'');
- assert.ok(!policyNotice({policies:[]},product).includes('/privacy'));
+ assert.equal(policyNotice({policies:[]},product),'');
+ const all=policyLinks({policies:['terms','refunds','privacy'].map(key=>({key,title:key,body:'Published'}))},product);
+ assert.deepEqual(all.map(link=>link.href),['#/policies/terms','#/policies/refunds','#/policies/privacy']);
 });
 
 test('admin policy drafts escape titles and HTML in the editing and preview surface',()=>{
@@ -61,3 +63,9 @@ test('account menu receives its active locale without browser storage globals',(
  assert.match(workspaceAccountMenu(user,'en'),/<option value="en" selected>English<\/option>/);
  assert.match(workspaceAccountMenu(user),/<option value="zh-CN" selected>简体中文<\/option>/);
 });
+
+ test("footer always offers all three store policy pages",()=>{
+ const links=policyLinks({policies:[]},null,true);
+ assert.deepEqual(links.map(row=>row.href),["#/policies/terms","#/policies/refunds","#/policies/privacy"]);
+ assert.equal(policyNotice({policies:[]},null),"");
+ });

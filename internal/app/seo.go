@@ -347,10 +347,39 @@ func (s *Service) PublicSEOMetadata(ctx context.Context, site SiteView, kind, do
 			title = site.UI["common.download"] + " · " + site.Product.Name + " | " + site.Brand.Name
 		}
 		if kind == "docs" {
+			// Product-page indexing preferences do not override a document's
+			// independent SEO. Public product status is enforced by Site above.
+			page.NoIndex = false
 			path += "/docs"
 			title = site.UI["docs.title"] + " · " + site.Product.Name + " | " + site.Brand.Name
 			if document != "" {
 				path += "/" + document
+				found := false
+				for _, group := range site.Product.DocumentGroups {
+					for _, article := range group.Articles {
+						if article.Slug != document {
+							continue
+						}
+						found = true
+						title = article.Title + " · " + site.Product.Name + " | " + site.Brand.Name
+						if article.SEO.Title != "" {
+							title = article.SEO.Title
+						}
+						page.Description = DocumentDescription(article.DocumentContent)
+						page.NoIndex = article.SEO.NoIndex
+						if article.SEO.ShareImageURL != "" {
+							page.ShareImageURL = article.SEO.ShareImageURL
+						}
+					}
+				}
+				if !found {
+					return PublicSEOMetadata{}, ErrNotFound
+				}
+			}
+			// New articles currently use the merchant's source language. Do not
+			// advertise untranslated copies as separate translated search pages.
+			if site.Locale != site.SourceLocale {
+				page.NoIndex = true
 			}
 		}
 	}
@@ -365,6 +394,9 @@ func (s *Service) PublicSEOMetadata(ctx context.Context, site SiteView, kind, do
 	}
 	if page.ShareImageURL == "" {
 		page.ShareImageURL = defaults.ShareImageURL
+	}
+	if strings.HasPrefix(page.ShareImageURL, "/") {
+		page.ShareImageURL = s.PublicURL() + page.ShareImageURL
 	}
 	if len(page.Keywords) == 0 {
 		page.Keywords = defaults.Keywords

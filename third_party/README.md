@@ -7,6 +7,8 @@ Launch's own code uses the root [MIT license](../LICENSE). Dependencies retain t
 | `github.com/go-sql-driver/mysql` | 1.9.3 | `go-sql-driver-mysql.LICENSE` (MPL 2.0) |
 | `gorm.io/gorm` | 1.31.1 | `gorm.LICENSE` (MIT) |
 | `gorm.io/driver/mysql` | 1.6.0 | `gorm-mysql.LICENSE` (MIT) |
+| `rsc.io/pdf` | 0.1.1 | `rsc-pdf.LICENSE` (BSD 3-Clause) |
+| [GitHub Primer Octicons](https://github.com/primer/octicons) | Pinned SVG subset | `internal/httpapi/web/icons/ai-octicons-LICENSE.txt` (MIT); revision in `ai-octicons-SOURCE.txt` |
 | `gopkg.in/yaml.v3` | 3.0.1 | `yaml-v3.LICENSE` (MIT/Apache 2.0) |
 | `filippo.io/edwards25519` | 1.1.0 | `edwards25519.LICENSE` (BSD 3-Clause) |
 | `github.com/jinzhu/inflection` | 1.0.0 | `inflection.LICENSE` (MIT) |

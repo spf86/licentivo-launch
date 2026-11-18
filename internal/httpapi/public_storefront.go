@@ -29,10 +29,12 @@ type publicPageView struct {
 	Links                                                                               []publicLink
 	Plans                                                                               []publicPlan
 	Documents                                                                           []publicDocument
+	DocumentHTML                                                                        template.HTML
+	DocHeadings                                                                         []app.DocumentHeading
 	JSONLD                                                                              template.JS
 }
 
-var publicTemplate = template.Must(template.New("storefront").Funcs(template.FuncMap{"lowerLocale": app.PublicLocalePath}).ParseFS(assets, "web/public.html"))
+var publicTemplate = template.Must(template.New("storefront").Funcs(template.FuncMap{"lowerLocale": app.PublicLocalePath, "docURL": func(locale, slug, doc string) string { return publicPath(locale, "docs", slug, doc) }}).ParseFS(assets, "web/public.html"))
 
 func publicPath(locale, kind, slug, doc string) string {
 	base := "/" + app.PublicLocalePath(locale) + "/"
@@ -53,37 +55,13 @@ func publicPath(locale, kind, slug, doc string) string {
 }
 
 func productDocuments(site app.SiteView, locale, slug string) []publicDocument {
-	if site.Product == nil {
-		return nil
-	}
-	c := site.Product.Content
-	requirements := c.Requirements
-	platforms := []string{}
-	for platform := range c.PlatformRequirements {
-		platforms = append(platforms, platform)
-	}
-	sort.Strings(platforms)
-	for _, platform := range platforms {
-		if text := strings.TrimSpace(c.PlatformRequirements[platform]); text != "" {
-			requirements += "\n\n" + platform + "\n" + text
-		}
-	}
-	entries := []struct{ key, label, body string }{
-		{"requirements", "product.requirements", requirements},
-		{"installation", "product.installation", c.InstallationGuide}, {"upgrade", "product.upgrade", c.UpgradeGuide}, {"uninstall", "product.uninstall", c.UninstallGuide}, {"troubleshooting", "product.troubleshooting", c.TroubleshootingGuide},
-		{"terms", "product.terms", c.TermsOfService}, {"privacy", "product.privacy", c.PrivacyPolicy}, {"refunds", "product.refunds", c.RefundPolicy}, {"legal", "product.legal_tax", c.LegalTaxNotice},
-	}
 	out := []publicDocument{}
-	for _, v := range entries {
-		title := site.UI[v.label]
-		for _, policy := range site.Policies {
-			if policy.Key == v.key {
-				v.body = policy.Body
-				title = policy.Title
-			}
-		}
-		if strings.TrimSpace(v.body) != "" {
-			out = append(out, publicDocument{Key: v.key, Title: title, Body: v.body, URL: publicPath(locale, "docs", slug, v.key)})
+	if site.Product == nil {
+		return out
+	}
+	for _, group := range site.Product.DocumentGroups {
+		for _, article := range group.Articles {
+			out = append(out, publicDocument{Key: article.Slug, Title: article.Title, Body: article.Body, URL: publicPath(locale, "docs", slug, article.Slug)})
 		}
 	}
 	return out
@@ -200,6 +178,21 @@ func (a *application) publicStorefront(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Storefront is not configured", 503)
 		return
 	}
+	if kind == "docs" && document != "" {
+		resolved, e := a.service.ResolveDocumentSlug(r.Context(), site.Product.ID, document)
+		if e != nil {
+			publicError(w, r, e)
+			return
+		}
+		if resolved != document {
+			target := publicPath(locale, "docs", slug, resolved)
+			if r.URL.RawQuery != "" {
+				target += "?" + r.URL.RawQuery
+			}
+			http.Redirect(w, r, target, http.StatusMovedPermanently)
+			return
+		}
+	}
 	seo, err := a.service.PublicSEOMetadata(r.Context(), site, kind, document)
 	if err != nil {
 		publicError(w, r, err)
@@ -219,7 +212,8 @@ func (a *application) publicStorefront(w http.ResponseWriter, r *http.Request) {
 				http.NotFound(w, r)
 				return
 			}
-			view.SEO.Title = view.DocumentTitle + " · " + site.Product.Name + " | " + site.Brand.Name
+			view.DocumentHTML = template.HTML(app.RenderDocumentMarkdown(view.DocumentBody))
+			view.DocHeadings = app.DocumentHeadings(view.DocumentBody)
 		}
 		for _, plan := range site.Plans {
 			_, price := publicPrice(plan)

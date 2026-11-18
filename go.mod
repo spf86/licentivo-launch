@@ -16,4 +16,5 @@ require (
 	github.com/jinzhu/now v1.1.5 // indirect
 	golang.org/x/sys v0.41.0 // indirect
 	golang.org/x/text v0.34.0 // indirect
+	rsc.io/pdf v0.1.1
 )

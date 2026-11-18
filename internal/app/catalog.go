@@ -84,12 +84,13 @@ type ProductContent struct {
 }
 
 type ProductView struct {
-	ID        string                `json:"id"`
-	Name      string                `json:"name"`
-	Slug      string                `json:"slug"`
-	Status    string                `json:"status"`
-	Content   ProductContent        `json:"content"`
-	Downloads []ProductDownloadView `json:"downloads"`
+	DocumentGroups []PublishedDocumentGroup `json:"document_groups"`
+	ID             string                   `json:"id"`
+	Name           string                   `json:"name"`
+	Slug           string                   `json:"slug"`
+	Status         string                   `json:"status"`
+	Content        ProductContent           `json:"content"`
+	Downloads      []ProductDownloadView    `json:"downloads"`
 }
 type PlanSnapshot struct {
 	External         *ExternalSaleRoute `json:"external_licensing,omitempty"`
@@ -330,6 +331,10 @@ func (s *Service) Site(ctx context.Context, environment, productSlug, requestedL
 			productView = translated
 		} else {
 			view.TranslationReady = false
+		}
+		productView.DocumentGroups, err = s.publicDocumentGroups(ctx, product.ID)
+		if err != nil {
+			return view, err
 		}
 		view.Products = append(view.Products, productView)
 		index := len(view.Products) - 1

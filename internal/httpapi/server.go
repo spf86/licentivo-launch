@@ -40,6 +40,8 @@ func Handler(options Options) http.Handler {
 	}
 	application := &application{service: options.App, publicURL: publicURLProvider, forceSecureCookies: options.SecureCookies}
 	application.register(mux)
+	application.registerDocuments(mux)
+	application.registerAI(mux)
 	application.registerSalesSEO(mux)
 	application.registerPaddleCheckout(mux)
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
@@ -118,7 +120,7 @@ func requestBoundary(next http.Handler, logger *slog.Logger) http.Handler {
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.Header().Set("Referrer-Policy", "no-referrer")
 		w.Header().Set("Cache-Control", "no-store")
-		w.Header().Set("Content-Security-Policy", "default-src 'none'; style-src 'self'; script-src 'self'; connect-src 'self'; img-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'")
+		w.Header().Set("Content-Security-Policy", "default-src 'none'; style-src 'self'; script-src 'self'; connect-src 'self'; img-src 'self'; media-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'")
 		defer func() {
 			if recover() != nil {
 				// Intentionally exclude panic text, URL/query, cookies and headers.

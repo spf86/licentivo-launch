@@ -187,6 +187,7 @@ func run(logger *slog.Logger) error {
 	if service != nil {
 		go service.RunCommerce(ctx)
 		go service.RunMail(ctx)
+		go service.RunAI(ctx)
 	}
 	type listenerResult struct {
 		name string

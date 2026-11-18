@@ -5,6 +5,19 @@ import (
 	"testing"
 )
 
+func TestLegacySnapshotWithoutAITables(t *testing.T) {
+	base := Snapshot{Format: "licentivo-launch-backup-v1", MasterKey: make([]byte, 32), Tables: []SnapshotTable{{Name: "users", Rows: json.RawMessage("[]")}}}
+	names := []string{"users", "ai_providers", "ai_conversations", "ai_messages", "ai_tasks", "ai_artifacts", "ai_schedules"}
+	entries, err := snapshotEntries(base, names)
+	if err != nil || string(entries["ai_tasks"]) != "[]" {
+		t.Fatal("pre-AI snapshot rejected", err)
+	}
+	base.Tables = append(base.Tables, SnapshotTable{Name: "ai_providers", Rows: json.RawMessage(`[{"ID":"existing"}]`)})
+	if _, err := snapshotEntries(base, names); err == nil {
+		t.Fatal("partial AI backup silently lost history")
+	}
+}
+
 func TestSnapshotBeforeReversalTableRemainsRestorable(t *testing.T) {
 	base := Snapshot{Format: "licentivo-launch-backup-v1", MasterKey: make([]byte, 32), Tables: []SnapshotTable{{Name: "payments", Rows: json.RawMessage("[]")}, {Name: "orders", Rows: json.RawMessage("[]")}}}
 	names := []string{"orders", "payments", "payment_reversals"}

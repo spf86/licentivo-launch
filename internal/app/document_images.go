@@ -173,11 +173,23 @@ func (s *Service) SaveProductDocumentImage(ctx context.Context, p Principal, pro
 }
 
 func (s *Service) OpenProductDocumentImage(ctx context.Context, id string) (ProductDocumentImageFile, error) {
+	return s.openDocumentImage(ctx, id, false)
+}
+
+func (s *Service) OpenStaffDocumentImage(ctx context.Context, p Principal, id string) (ProductDocumentImageFile, error) {
+	if !p.CanManage() {
+		return ProductDocumentImageFile{}, ErrForbidden
+	}
+	return s.openDocumentImage(ctx, id, true)
+}
+
+func (s *Service) openDocumentImage(ctx context.Context, id string, staff bool) (ProductDocumentImageFile, error) {
 	var row storage.ProductDocumentImage
-	err := s.db.WithContext(ctx).
-		Joins("JOIN products ON products.id = product_document_images.product_id").
-		Where("product_document_images.id = ? AND products.status = 'published'", id).
-		First(&row).Error
+	query := s.db.WithContext(ctx).Joins("JOIN products ON products.id = product_document_images.product_id").Where("product_document_images.id = ?", id)
+	if !staff {
+		query = query.Where("products.status = 'published'")
+	}
+	err := query.First(&row).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) || err != nil || s.uploadDir == "" || filepath.Base(row.StorageKey) != row.StorageKey {
 		return ProductDocumentImageFile{}, ErrNotFound
 	}

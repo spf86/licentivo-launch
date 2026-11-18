@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"reflect"
+	"strings"
 	"time"
 
 	"gorm.io/gorm"
@@ -118,6 +119,16 @@ func RestoreSnapshot(ctx context.Context, db *gorm.DB, snap Snapshot) error {
 			}
 		}
 		at := time.Now().UTC()
+		// A restore cannot replay paid AI calls or previously approved changes.
+		if err := tx.Model(&AITask{}).Where("status IN ?", []string{"queued", "running", "submitted", "awaiting_confirmation"}).Updates(map[string]any{"status": "cancelled", "lease_until": nil, "error": "从备份恢复后已取消，请重新提出请求并确认", "updated_at": at}).Error; err != nil {
+			return err
+		}
+		if err := tx.Model(&AISchedule{}).Where("enabled = ?", true).Update("enabled", false).Error; err != nil {
+			return err
+		}
+		if err := tx.Model(&AIMCPConnection{}).Where("revoked_at IS NULL").Update("revoked_at", at).Error; err != nil {
+			return err
+		}
 		if err := tx.Model(&Session{}).Where("revoked_at IS NULL").Update("revoked_at", at).Error; err != nil {
 			return err
 		}
@@ -138,6 +149,7 @@ func snapshotEntries(snap Snapshot, tableNames []string) (map[string]json.RawMes
 	}
 	known := make(map[string]bool, len(tableNames))
 	missingExternal := false
+	missingAI := false
 	for _, name := range tableNames {
 		known[name] = true
 	}
@@ -153,6 +165,15 @@ func snapshotEntries(snap Snapshot, tableNames []string) (map[string]json.RawMes
 	}
 	for _, name := range tableNames {
 		if _, exists := entries[name]; !exists {
+			if name == "ai_uploads" || name == "ai_mcp_connections" {
+				entries[name] = json.RawMessage("[]")
+				continue
+			}
+			if strings.HasPrefix(name, "ai_") {
+				missingAI = true
+				entries[name] = json.RawMessage("[]")
+				continue
+			}
 			if name == "mail_quota_settings" || name == "mail_quota_windows" || name == "expiry_reminder_settings" || name == "expiry_reminder_preferences" || name == "expiry_reminder_schedules" {
 				// Older archives predate expiry reminders. Restored sites keep the
 				// new feature off until an administrator configures a mail budget.
@@ -165,6 +186,17 @@ func snapshotEntries(snap Snapshot, tableNames []string) (map[string]json.RawMes
 			entries[name] = json.RawMessage("[]")
 			if name != "payment_reversals" {
 				missingExternal = true
+			}
+		}
+	}
+	if missingAI {
+		for name, raw := range entries {
+			if !strings.HasPrefix(name, "ai_") {
+				continue
+			}
+			var rows []json.RawMessage
+			if json.Unmarshal(raw, &rows) != nil || len(rows) > 0 {
+				return nil, errors.New("AI backup table is missing")
 			}
 		}
 	}

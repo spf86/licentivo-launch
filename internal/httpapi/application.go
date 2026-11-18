@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"bytes"
 	"crypto/subtle"
 	"encoding/json"
 	"errors"
@@ -137,6 +138,16 @@ func (a *application) route(mux *http.ServeMux, pattern string, authenticated bo
 			_, _ = w.Write(raw.Body)
 			return
 		}
+		if file, ok := result.(app.AIArtifactDownload); ok {
+			disposition := "attachment"
+			if r.URL.Query().Get("preview") == "1" && (strings.HasPrefix(file.MIME, "image/") || file.MIME == "video/mp4") {
+				disposition = "inline"
+			}
+			w.Header().Set("Content-Type", file.MIME)
+			w.Header().Set("Content-Disposition", mime.FormatMediaType(disposition, map[string]string{"filename": file.Filename}))
+			http.ServeContent(w, r, file.Filename, time.Time{}, bytes.NewReader(file.Data))
+			return
+		}
 		respond(w, r, 200, result)
 	})
 }
@@ -210,6 +221,15 @@ func (a *application) register(mux *http.ServeMux) {
 			return
 		}
 		image, err := a.service.OpenProductDocumentImage(r.Context(), r.PathValue("id"))
+		staffImage := false
+		if err != nil {
+			if cookie, e := r.Cookie("launch_session"); e == nil {
+				if principal, e := a.service.Authenticate(r.Context(), cookie.Value, "website"); e == nil && principal.CanManage() {
+					image, err = a.service.OpenStaffDocumentImage(r.Context(), principal, r.PathValue("id"))
+					staffImage = err == nil
+				}
+			}
+		}
 		if err != nil {
 			apiFail(w, r, err)
 			return
@@ -219,6 +239,10 @@ func (a *application) register(mux *http.ServeMux) {
 		w.Header().Set("Content-Disposition", mime.FormatMediaType("inline", map[string]string{"filename": image.Name}))
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		if staffImage {
+			w.Header().Set("Cache-Control", "private, no-store")
+			w.Header().Set("X-Robots-Tag", "noindex")
+		}
 		http.ServeContent(w, r, image.Name, image.UpdatedAt, image.File)
 	})
 	mux.HandleFunc("GET /api/v1/downloads/{id}/{name}", func(w http.ResponseWriter, r *http.Request) {
