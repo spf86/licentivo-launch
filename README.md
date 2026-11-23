@@ -6,7 +6,7 @@ Run a branded software storefront and customer portal on your own domain. Custom
 
 **Free and [MIT-licensed](LICENSE), self-hosted, with SDKs in nine languages.** Use one Launch package and ready-to-use connection code to add account login and protected features to your existing application.
 
-[One-day integration guide](docs/one-day-integration.md) · [Download binaries](https://github.com/spf86/licentivo-launch/releases) · [Installation](docs/installation.md) · [Application integration](docs/software-sdk-integration.md) · [Licentivo website](https://www.licentivo.com/)
+[Launch product overview](https://www.licentivo.com/en/launch.html) · [Install Launch on Windows or Linux](https://www.licentivo.com/en/launch-docs/install-windows-linux/) · [Download binaries](https://github.com/spf86/licentivo-launch/releases) · [One-day integration guide](docs/one-day-integration.md) · [Application integration](docs/software-sdk-integration.md)
 
 **Paid but cannot find a license?** Follow the order from payment confirmation to the purchase entitlement and the licensing receipt. Open the troubleshooting guide in your language.
 
