@@ -1,7 +1,7 @@
 #Requires -Version 7.4
 param(
     [ValidatePattern('^[0-9]+\.[0-9]+\.[0-9]+(?:-[A-Za-z0-9.-]+)?$')]
-    [string]$Version = '0.3.9-beta',
+    [string]$Version = '0.3.10-beta',
     [string]$OutputDirectory = ''
 )
 
@@ -80,6 +80,13 @@ try {
             Write-Output ('Packaged ' + [IO.Path]::GetFileName($taskArchive))
         }
     }
+    $taskSource = "licentivo-launch_${Version}_source"
+    $taskSourceArchive = Join-Path $taskOutput ($taskSource + '.zip')
+    git archive --format=zip "--prefix=$taskSource/" "--output=$taskSourceArchive" $taskCommit
+    if ($LASTEXITCODE -ne 0) { throw 'Source archive failed.' }
+    $taskSourceHash = (Get-FileHash -LiteralPath $taskSourceArchive -Algorithm SHA256).Hash.ToLowerInvariant()
+    $taskChecksums.Add($taskSourceHash + '  ' + [IO.Path]::GetFileName($taskSourceArchive))
+    Write-Output ('Packaged ' + [IO.Path]::GetFileName($taskSourceArchive))
     [IO.File]::WriteAllText((Join-Path $taskOutput 'SHA256SUMS.txt'), ($taskChecksums -join "`n") + "`n", [Text.UTF8Encoding]::new($false))
     Write-Output "Release artifacts: $taskOutput"
 } finally {

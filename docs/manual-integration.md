@@ -2,7 +2,7 @@
 
 本指南适用于 Licentivo 提供方。已有其他授权系统的商户，可在后台“授权选择与自定义”选择自定义服务，按[自定义授权 API 与对接流程](external-licensing.md)接入，并继续使用自有授权系统的 SDK。
 
-> 当前源码采用账号身份交换：Launch 服务端 `0.3.6-beta` → Launch SDK `0.1.8` → 内置官方 SDK `0.11.8`。必需的 Licentivo 接口、服务端/数据库要求及发行包验证边界见[版本兼容性指南](sdk-compatibility.md)，职责与旧数据迁移见[购买期限与账号 SDK 边界](account-purchase-boundary.md)。
+> 当前源码采用账号身份交换：Launch 服务端 `0.3.10-beta` → Launch SDK `0.1.9` → 内置官方 SDK `0.11.9`。必需的 Licentivo 接口、服务端/数据库要求及发行包验证边界见[版本兼容性指南](sdk-compatibility.md)，职责与旧数据迁移见[购买期限与账号 SDK 边界](account-purchase-boundary.md)。
 
 只安装对应语言的 Launch 接入包。Launch 包内部包含官方 SDK、默认适配器和链接配置；官方授权地址固定为 `https://www.licentivo.com`。程序使用购买者在当前 Launch 商店注册的账号登录。
 
@@ -36,21 +36,21 @@ Connect/connect → Login 或 Restore → RunFeature → Logout / Close
 
 ## 安装与初始化入口
 
-下表命令固定到当前源码基线 `0.1.8`，对应内置官方 SDK `0.11.8`。[GitHub Release](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.8) 已存在；使用前应核对所选语言的发布记录、源码提交和包校验值。历史版本的 9/9 安装结果不能证明本版或本地修订已通过公开安装验收。原生包和离线文件用法见[下载包安装说明](integration-packages.md#install-a-downloaded-distribution)。
+下表命令固定到当前源码基线 `0.1.9`，对应内置官方 SDK `0.11.9`。[GitHub Release](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.9) 提供对应版本的发行文件；使用前应核对所选语言的发布记录、源码提交和包校验值。历史版本的 9/9 安装结果不能证明本版或本地修订已通过公开安装验收。原生包和离线文件用法见[下载包安装说明](integration-packages.md#install-a-downloaded-distribution)。
 
 | 语言 | 只安装 Launch | 页面提供的连接函数 | 包内直接初始化 API |
 | --- | --- | --- | --- |
-| Go | `go get github.com/spf86/licentivo-launch-sdk/pkg/launchclient@v0.1.8` | `connectLaunch()` | `launchclient.Connect` |
-| Python 3.10+ | `python -m pip install licentivo-launch==0.1.8` | `connect_launch()` | `Application.connect` |
-| C# / .NET 8+ | `dotnet add package Licentivo.Launch --version 0.1.8` | `LaunchConnection.Open()` | `Application.Connect` |
-| Java 17+ | Maven/Gradle：`com.licentivo.launch:launch-client:0.1.8` | `LaunchConnection.open()` | `Launch.connect` |
-| Node.js 20.3+ | `npm install @licentivo/launch@0.1.8` | `connectLaunch()` | `Application.connect` |
-| Rust 1.85+ | `cargo add licentivo-launch@=0.1.8` | `connect_launch()` | `Application::connect` |
-| Ruby 3.1+ | `gem install licentivo-launch --version 0.1.8` | `connect_launch` | `Application.connect` |
-| C11 | 从 [GitHub Release](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.8) 下载原生包，CMake 导入 | `connect_launch()` | `launch_application_connect` |
+| Go | `go get github.com/spf86/licentivo-launch-sdk/pkg/launchclient@v0.1.9` | `connectLaunch()` | `launchclient.Connect` |
+| Python 3.10+ | `python -m pip install licentivo-launch==0.1.9` | `connect_launch()` | `Application.connect` |
+| C# / .NET 8+ | `dotnet add package Licentivo.Launch --version 0.1.9` | `LaunchConnection.Open()` | `Application.Connect` |
+| Java 17+ | Maven/Gradle：`com.licentivo.launch:launch-client:0.1.9` | `LaunchConnection.open()` | `Launch.connect` |
+| Node.js 20.3+ | `npm install @licentivo/launch@0.1.9` | `connectLaunch()` | `Application.connect` |
+| Rust 1.85+ | `cargo add licentivo-launch@=0.1.9` | `connect_launch()` | `Application::connect` |
+| Ruby 3.1+ | `gem install licentivo-launch --version 0.1.9` | `connect_launch` | `Application.connect` |
+| C11 | 从 [GitHub Release](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.9) 下载原生包，CMake 导入 | `connect_launch()` | `launch_application_connect` |
 | C++17 | 使用同一 Launch 原生包 | `connectLaunch()` | `Application::Connect` |
 
-公开源码和各语言 README 见 [Launch SDK 仓库](https://github.com/spf86/licentivo-launch-sdk)，原生包与离线文件见 [v0.1.8 Release](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.8)，公开安装记录见 [九种语言注册表验证](https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/registry-verification.json)，以记录正文中的版本和日期为准。每个包自己的 README 提供安装命令和 API。JavaScript 包包含 TypeScript 声明。普通语言依赖由包管理器解析，例如 Python 的 cryptography、C# 的 BouncyCastle 和 Ruby 的 base64；无需安装官方 SDK 包。
+公开源码和各语言 README 见 [Launch SDK 仓库](https://github.com/spf86/licentivo-launch-sdk)，原生包与离线文件见 [v0.1.9 Release](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.9)，公开安装记录见 [九种语言注册表验证](https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/registry-verification.json)，以记录正文中的版本和日期为准。每个包自己的 README 提供安装命令和 API。JavaScript 包包含 TypeScript 声明。普通语言依赖由包管理器解析，例如 Python 的 cryptography、C# 的 BouncyCastle 和 Ruby 的 base64；无需安装官方 SDK 包。
 
 Go 公开模块名为 `github.com/spf86/licentivo-launch-sdk`，导入路径为 `github.com/spf86/licentivo-launch-sdk/pkg/launchclient`，应用无需本地 replace。Windows 原生包采用 amd64 GNU/MinGW，另有 Linux amd64 原生包。Ruby 平台包和 Rust/native 的 Windows 分发包含 curl；其他平台源码构建需要常规 C11、curl/OpenSSL 开发依赖。平台工具链说明见各包 README。
 

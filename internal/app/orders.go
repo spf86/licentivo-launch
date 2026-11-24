@@ -41,7 +41,7 @@ func (s *Service) checkoutView(ctx context.Context, order storage.Order) (Checko
 	}
 	v := CheckoutView{OrderView: orderView, Fulfillment: "not_paid"}
 	var payment storage.Payment
-	if s.db.WithContext(ctx).Where("order_id = ?", order.ID).First(&payment).Error == nil {
+	if order.Status == "pending" && s.db.WithContext(ctx).Where("order_id = ? AND status IN ('creating','pending','unknown')", order.ID).First(&payment).Error == nil {
 		v.CheckoutURL = payment.CheckoutURL
 	}
 	if order.Status == "paid" {
@@ -325,8 +325,14 @@ func (s *Service) resumeCheckout(ctx context.Context, order storage.Order) (Chec
 	if s.db.WithContext(ctx).First(&payment, "order_id = ?", order.ID).Error != nil {
 		return CheckoutView{}, ErrStorage
 	}
-	if payment.CheckoutURL != nil {
+	currentView := func() (CheckoutView, error) {
+		if err := s.db.WithContext(ctx).First(&order, "id = ?", order.ID).Error; err != nil {
+			return CheckoutView{}, databaseError(err)
+		}
 		return s.checkoutView(ctx, order)
+	}
+	if payment.CheckoutURL != nil || payment.Status == "succeeded" || payment.Status == "failed" {
+		return currentView()
 	}
 	if now().After(payment.CreatedAt.Add(23 * time.Hour)) {
 		return CheckoutView{}, problem(409, "PAYMENT_REVIEW_REQUIRED", "付款创建结果需要核实，请联系商家，勿重复付款")
@@ -363,8 +369,13 @@ func (s *Service) resumeCheckout(ctx context.Context, order storage.Order) (Chec
 	}
 	if externalErr != nil {
 		at := now().Add(time.Minute)
-		_ = s.db.WithContext(ctx).Model(&payment).Updates(map[string]any{"status": "unknown", "next_check_at": at}).Error
-		return s.checkoutView(ctx, order)
+		err := s.db.WithContext(ctx).Model(&storage.Payment{}).
+			Where("id = ? AND status IN ('creating','unknown') AND external_checkout_id IS NULL", payment.ID).
+			Updates(map[string]any{"status": "unknown", "next_check_at": at}).Error
+		if err != nil {
+			return CheckoutView{}, databaseError(err)
+		}
+		return currentView()
 	}
 	err = s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var current storage.Payment
@@ -374,16 +385,15 @@ func (s *Service) resumeCheckout(ctx context.Context, order storage.Order) (Chec
 		if current.ExternalCheckoutID != nil && *current.ExternalCheckoutID != checkout.ExternalID {
 			return problem(409, "PROVIDER_RESULT_CONFLICT", "付款结果需要人工核实")
 		}
-		changes := map[string]any{"external_checkout_id": checkout.ExternalID, "checkout_url": checkout.RedirectURL, "next_check_at": now().Add(time.Minute)}
-		if current.Status != "succeeded" {
-			changes["status"] = "pending"
+		if current.Status == "succeeded" || current.Status == "failed" {
+			return nil
 		}
-		return tx.Model(&current).Updates(changes).Error
+		return tx.Model(&current).Updates(map[string]any{"external_checkout_id": checkout.ExternalID, "checkout_url": checkout.RedirectURL, "next_check_at": now().Add(time.Minute), "status": "pending"}).Error
 	})
 	if err != nil {
 		return CheckoutView{}, databaseError(err)
 	}
-	return s.checkoutView(ctx, order)
+	return currentView()
 }
 
 func (s *Service) ReconcileOrder(ctx context.Context, p Principal, id string) (CheckoutView, error) {

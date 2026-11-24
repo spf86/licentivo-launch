@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import test from 'node:test';
 import {interfaceLanguages,interfaceLanguage,prepareInterfaceLocale,interfaceText} from '../internal/httpapi/web/interface-locale.js';
-import {changePublicLanguage,migratePublicHash} from '../internal/httpapi/web/public-routing.js';
+import {changePublicLanguage,migratePublicHash,storefrontURL} from '../internal/httpapi/web/public-routing.js';
 
 const directory=new URL('../internal/httpapi/web/interface-locales/',import.meta.url);
 const markers=value=>[...value.matchAll(/\{(?:\d+|[a-z_]+)\}/g)].map(match=>match[0]).sort();
@@ -52,4 +52,19 @@ test('public language changes preserve sandbox and clear stale interface overrid
   assert.equal(changePublicLanguage('ur'),false);assert.equal(next,'/?preview=sandbox&ui_locale=ur#/product/studio');
   assert.equal(migratePublicHash('en'),true);assert.equal(next,'/en/products/studio?preview=sandbox');
  }finally{globalThis.location=originalLocation;globalThis.history=originalHistory;}
+});
+
+test('checkout and storefront links carry sandbox through the hash route and login',()=>{
+ const original=globalThis.location;
+ try{
+  globalThis.location={pathname:'/en/products/docs-studio',search:'?preview=sandbox&checkout=old'};
+  for(const [parts,expected] of [
+   [['checkout','docs-studio','v1'],'/?preview=sandbox#/checkout/docs-studio/v1'],
+   [['login'],'/?preview=sandbox#/login'],
+   [['home'],'/en/?preview=sandbox'],
+   [['docs','docs-studio','intro'],'/en/products/docs-studio/docs/intro?preview=sandbox'],
+  ])assert.equal(storefrontURL(parts,'en'),expected);
+  globalThis.location.search='';
+  assert.equal(storefrontURL(['checkout','docs-studio','v1'],'en'),'/#/checkout/docs-studio/v1');
+ }finally{globalThis.location=original}
 });

@@ -26,11 +26,11 @@ These APIs describe the current source. Check the installed package's methods an
 
 ## Long-task boundary
 
-Launch SDK 0.1.8 embeds Licentivo SDK 0.11.8 with original-reservation renewal in all nine languages. Deploy the matching Licentivo backend and Launch server 0.3.6-beta. The runtime repeats the original reserve request during business execution, keeping the same operation ID, reservation ID and quantity. The server's default reservation TTL remains 900 seconds.
+Launch SDK 0.1.9 embeds Licentivo SDK 0.11.9 with original-reservation renewal in all nine languages. Deploy the matching Licentivo backend and Launch server 0.3.10-beta. The runtime repeats the original reserve request during business execution, keeping the same operation ID, reservation ID and quantity. The server's default reservation TTL remains 900 seconds.
 
 Renewal does not extend authorization or cross the original UTC metering-period boundary, and an expired reservation cannot be revived. Preserve a successful business result when renewal or settlement is uncertain; retain the pending journal and resolve from the actual durable result instead of rerunning work.
 
-JavaScript business callbacks must keep the event loop responsive; put long CPU work in a worker. Python forked children must create a new Client and use the same task-cache path when coordinating the same job. Native C/C++/Rust/Ruby applications must install rebuilt 0.1.8 artifacts rather than reuse libraries from an older package.
+JavaScript business callbacks must keep the event loop responsive; put long CPU work in a worker. Python forked children must create a new Client and use the same task-cache path when coordinating the same job. Native C/C++/Rust/Ruby applications must install rebuilt 0.1.9 artifacts rather than reuse libraries from an older package.
 
 The recorded eight-language long-task checks ran real 920-second business callbacks against the unchanged 900-second TTL, preserving one original reservation and one business execution. These checks supplement the Python fork/renewal regressions; they do not certify every operating-system or compiler combination. See the [0.1.8 release notes](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.8) and the matching package checksums.
 

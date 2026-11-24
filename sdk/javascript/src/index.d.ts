@@ -49,6 +49,7 @@ export interface Runtime {
   resolveMeteredFeature?(operationID: string, succeeded: boolean): Promise<void>;
   deactivate(signal?: AbortSignal): Promise<unknown>;
   logout?(signal?: AbortSignal): Promise<{local_complete: boolean; revocation_pending: boolean; storage_error?: string}>;
+  retryPendingLogouts?(signal?: AbortSignal): Promise<void>;
   close(): Promise<unknown>;
 }
 export interface Options {

@@ -65,7 +65,9 @@ for (const name of fs.readdirSync(path.join(source,'csharp'))) if (name.endsWith
 notices('sdk/csharp/vendor');
 tree('java/src','sdk/java/src',name=>name.endsWith('.java'),javaDeviceNameDefault);
 notices('sdk/java/vendor');
-copy('rust/src/lib.rs','sdk/rust/vendor/rust/lib.rs');
+// Preserve the upstream crate guide as source comments inside Launch's private module.
+copy('rust/src/lib.rs','sdk/rust/vendor/rust/lib.rs', text =>
+  text.replace(/^(?:\/\/![^\n]*(?:\n|$))+/, guide => guide.replace(/^\/\/!/gm, '//')));
 tree('c','sdk/rust/vendor/c',name=>/\.(c|h)$/.test(name)||/LICEN[CS]E|NOTICE/i.test(name),nativePortability);
 notices('sdk/rust/vendor');
 const rb = 'sdk/ruby/lib/licentivo_launch/vendor';
@@ -79,5 +81,5 @@ fs.mkdirSync(path.join(root,rb,'licentivo/native'),{recursive:true});
 for (const name of ['CMakeLists.txt','LicentivoConfig.cmake.in','LICENSE','NOTICE','VERSION']) copy(name,`sdk/native/vendor/sdk/${name}`);
 tree('c','sdk/native/vendor/sdk/c',name=>/\.(c|h)$/.test(name)||/LICEN[CS]E|NOTICE/i.test(name),nativePortability);
 tree('cpp','sdk/native/vendor/sdk/cpp',name=>name.endsWith('.hpp'));
-fs.writeFileSync(path.join(root,'sdk/managed-sdk-manifest.json'),JSON.stringify({schema_version:1,sdk_version:upstreamVersion,source_revision:process.argv[3]||'release',changes:'Private import/native-library relocation, a Windows SDK architecture-constant compatibility guard and an optional Java device-name default, with embedded text line endings normalized to LF; authorization and cryptographic logic are unchanged. Account-lifecycle revisions are released together with the matching Licentivo server.',files:records},null,2)+'\n');
+fs.writeFileSync(path.join(root,'sdk/managed-sdk-manifest.json'),JSON.stringify({schema_version:1,sdk_version:upstreamVersion,source_revision:process.argv[3]||'release',changes:'Private import/native-library relocation, conversion of the standalone Rust crate guide to private source comments, a Windows SDK architecture-constant compatibility guard and an optional Java device-name default, with embedded text line endings normalized to LF; authorization and cryptographic logic are unchanged. Account-lifecycle revisions are released together with the matching Licentivo server.',files:records},null,2)+'\n');
 console.log(`Embedded SDK ${upstreamVersion}: ${records.length} files, with source and destination SHA-256 records.`);

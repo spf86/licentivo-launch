@@ -4,7 +4,7 @@ This guide starts with a ready-to-run Licentivo Launch release package. The proj
 
 ## Download the server package
 
-Choose a Windows or Linux package for amd64 or arm64 from [GitHub Releases](https://github.com/spf86/licentivo-launch/releases/tag/v0.3.9-beta), then extract it. The package includes the executable, installation guide, public configuration example and license notices.
+Choose a Windows or Linux package for amd64 or arm64 from [GitHub Releases](https://github.com/spf86/licentivo-launch/releases/tag/v0.3.10-beta), then extract it. The package includes the executable, installation guide, public configuration example and license notices.
 
 You need MySQL 8.0.16+, an empty database and an account permitted to create/alter application tables. Go, Git, Node.js and a compiler are not required to run the package. The [binary guide](binary-installation.md) lists direct downloads, architecture selection and checksum verification.
 
@@ -175,7 +175,7 @@ docker compose up --build -d
 
 The template builds the Go server, waits for the MySQL health check, and publishes the application at `http://localhost:8080`. MySQL data is stored in the `mysql-data` volume. On an uninitialized database, the initial administrator defaults to `admin@example.com` / `LaunchAdmin123!`. To choose your own credentials, set `LAUNCH_ADMIN_EMAIL` and `LAUNCH_ADMIN_PASSWORD` in `.env` before the first start. The password-change flow is required for either choice. Existing accounts and passwords are preserved; these variables cannot reset them.
 
-The application filesystem is read-only and the default upload directory is not a persistent writable mount. Before using installer or document-image uploads, add a dedicated upload bind mount or volume, set `LAUNCH_UPLOAD_DIR` to its container path, and grant write access to the image's UID/GID `65532`. For a bind mount, prepare permissions on the Docker host. Retain that directory with your database backups.
+Compose mounts the persistent `launch-uploads` volume at `/var/lib/licentivo-launch/uploads`, the image's default `LAUNCH_UPLOAD_DIR`. The application runs as UID/GID `65532` with a read-only root filesystem. Back up the upload volume alongside the database. If you use a bind mount at this path, grant the container user write access to the directory on the host.
 
 Compose/MySQL 8.4 container operation has not yet been validated in the recorded development environment. Treat this as a development scaffold. Validate mounts, permissions, HTTPS, health checks, and image pinning before public deployment. Never use `docker compose down -v` when you need to retain the database volume.
 

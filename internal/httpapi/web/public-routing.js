@@ -27,15 +27,21 @@ export function publicRouteURL(parts,locale='zh-CN'){
  }
  return null;
 }
+export function storefrontURL(parts,locale){
+ const preview=new URLSearchParams(location.search).get('preview')==='sandbox'?'?preview=sandbox':'';
+ const canonical=publicRouteURL(parts,locale);
+ if(canonical)return canonical+preview;
+ const query=locales.includes(String(locale).toLowerCase())?preview:languageSearch(locale,true);
+ return '/'+query+'#/'+parts.join('/');
+}
 export function updatePublicLinks(root,locale){
- const fallback=parts=>'/'+languageSearch(locale,true)+'#/'+parts.join('/');
- const brand=root.querySelector('.site-header .brand');if(brand)brand.setAttribute('href',publicRouteURL(['home'],locale)||fallback(['home']));
+ const brand=root.querySelector('.site-header .brand');if(brand)brand.setAttribute('href',storefrontURL(['home'],locale));
  for(const link of root.querySelectorAll('a[href^="#/"]')){
-  const href=link.getAttribute('href');let next;
-  try{next=publicRouteURL(href.slice(2).split('/'),locale)}catch{continue}
-  if(next){if(new URLSearchParams(location.search).get('preview')==='sandbox')next+='?preview=sandbox';link.setAttribute('href',next)}
-  else if(!locales.includes(String(locale).toLowerCase()))link.setAttribute('href',fallback(href.slice(2).split('/')));
-  else if(pathLocale())link.setAttribute('href','/'+href);
+  const parts=link.getAttribute('href').slice(2).split('/');
+  try{
+   if(pathLocale()||!locales.includes(String(locale).toLowerCase())||publicRouteURL(parts,locale))
+    link.setAttribute('href',storefrontURL(parts,locale));
+  }catch{continue}
  }
 }
 export function migratePublicHash(locale){

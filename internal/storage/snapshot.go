@@ -22,6 +22,7 @@ type Snapshot struct {
 	CreatedAt     time.Time         `json:"created_at"`
 	MasterKey     []byte            `json:"master_key"`
 	Configuration map[string]string `json:"configuration"`
+	TableCount    int               `json:"table_count,omitempty"`
 	Tables        []SnapshotTable   `json:"tables"`
 }
 
@@ -33,7 +34,9 @@ func MakeSnapshot(ctx context.Context, db *gorm.DB, key []byte, configuration ma
 		return snap, errors.New("backup requires the application encryption key")
 	}
 	err := db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		for _, model := range models() {
+		tables := models()
+		snap.TableCount = len(tables)
+		for _, model := range tables {
 			stmt := &gorm.Statement{DB: tx}
 			if err := stmt.Parse(model); err != nil {
 				return err
@@ -147,6 +150,9 @@ func snapshotEntries(snap Snapshot, tableNames []string) (map[string]json.RawMes
 	if snap.Format != "licentivo-launch-backup-v1" || len(snap.MasterKey) != 32 {
 		return nil, errors.New("unsupported or incomplete backup")
 	}
+	if snap.TableCount != 0 && snap.TableCount != len(snap.Tables) {
+		return nil, errors.New("backup table count mismatch")
+	}
 	known := make(map[string]bool, len(tableNames))
 	missingExternal := false
 	missingAI := false
@@ -165,7 +171,7 @@ func snapshotEntries(snap Snapshot, tableNames []string) (map[string]json.RawMes
 	}
 	for _, name := range tableNames {
 		if _, exists := entries[name]; !exists {
-			if name == "ai_uploads" || name == "ai_mcp_connections" {
+			if name == "document_libraries" || name == "ai_uploads" || name == "ai_mcp_connections" {
 				entries[name] = json.RawMessage("[]")
 				continue
 			}

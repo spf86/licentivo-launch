@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -46,6 +47,42 @@ func TestMySQLBaseline(t *testing.T) {
 	if err := Ready(ctx, db); err != nil {
 		t.Fatal(err)
 	}
+	t.Run("restore before document libraries", func(t *testing.T) {
+		snap, err := MakeSnapshot(ctx, db, make([]byte, 32), nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if snap.TableCount != len(snap.Tables) {
+			t.Fatal("generated snapshot did not declare its full table count")
+		}
+		var legacyTables []SnapshotTable
+		for _, table := range snap.Tables {
+			switch table.Name {
+			case "document_libraries":
+				continue
+			case "products":
+				table.Rows = json.RawMessage(`[{"ID":"10000000-0000-4000-8000-000000000001","Name":"Legacy product","Slug":"legacy-product","Status":"published","Content":{"summary":"Original description"}}]`)
+			}
+			legacyTables = append(legacyTables, table)
+		}
+		snap.Tables, snap.TableCount = legacyTables, 0
+		tx := db.Begin()
+		if tx.Error != nil {
+			t.Fatal(tx.Error)
+		}
+		defer tx.Rollback()
+		if err := RestoreSnapshot(ctx, tx, snap); err != nil {
+			t.Fatal(err)
+		}
+		var product Product
+		if err := tx.First(&product, "slug = ?", "legacy-product").Error; err != nil || !strings.Contains(string(product.Content), "Original description") {
+			t.Fatal("legacy product content was not restored", err)
+		}
+		var libraries int64
+		if err := tx.Model(&DocumentLibrary{}).Count(&libraries).Error; err != nil || libraries != 0 {
+			t.Fatal("expected an empty document library", err, libraries)
+		}
+	})
 	pool, err := db.DB()
 	if err != nil {
 		t.Fatal(err)

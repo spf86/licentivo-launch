@@ -37,7 +37,7 @@ func testSalesSEO(a *testApp, admin, customer *browser) {
 	}
 	product := sourceProduct
 	product.ID = id()
-	product.Slug = "sales-fixture-" + product.ID[:8]
+	product.Slug = "docs-fixture-" + product.ID[:8]
 	product.Name = "Analytics fixture"
 	product.Status = "published"
 	product.SEO = nil
@@ -177,6 +177,10 @@ func testSalesSEO(a *testApp, admin, customer *browser) {
 	if preview.Header().Get("X-Robots-Tag") != "noindex" {
 		t.Fatal("sandbox preview was indexable")
 	}
+	if !strings.Contains(preview.Body.String(), `href="`+path+`/download?preview=sandbox"`) {
+		t.Fatal("server-rendered sandbox product link lost the preview environment")
+	}
+	a.expect(a.request("GET", path+"/download", nil, nil), 200)
 	config.Page.NoIndex = true
 	a.expect(a.request("PUT", "/api/v1/admin/seo", config, admin), 200)
 	if a.request("GET", path, nil, nil).Header().Get("X-Robots-Tag") != "noindex" {
@@ -202,6 +206,8 @@ func testSalesSEO(a *testApp, admin, customer *browser) {
 		t.Fatal("saving product content erased its SEO settings")
 	}
 	a.expect(a.request("GET", "/"+app.PublicLocalePath(locale)+"/products/"+newSlug+"/docs/missing", nil, nil), 404)
+	a.expect(a.request("PUT", "/api/v1/admin/product", app.ProductView{ID: product.ID, Name: product.Name, Slug: "download", Status: "published", Content: content}, admin), 200)
+	a.expect(a.request("GET", "/"+app.PublicLocalePath(locale)+"/products/download", nil, nil), 200)
 }
 
 func newFixtureID(t *testing.T) string {

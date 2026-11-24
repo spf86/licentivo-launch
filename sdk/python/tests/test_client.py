@@ -59,6 +59,91 @@ class LifecycleTests(unittest.TestCase):
         def factory(config):
             runtime=Runtime(config);self.runtimes.append(runtime);return runtime
         return Application('https://merchant.example',PRODUCT,CONFIG,'sandbox',store=self.store,opener=self.merchant,cache_dir=self.temp.name,runtime_factory=factory)
+    def test_pending_device_release_retries_until_confirmed_even_after_restart(self):
+        retries, paths, available = [], [], False
+        class Device(Runtime):
+            def logout(self):
+                return {'local_complete': True, 'revocation_pending': True}
+            def retry_pending_logouts(self):
+                retries.append(1)
+                if not available: raise OSError('device service offline')
+        def factory(config):
+            paths.append(config['cache_path'])
+            return Device(config)
+        vault = Path(self.temp.name) / 'accounts'
+        if os.name == 'nt': self.store = WindowsDPAPIStore(vault)
+        app=self.app(); app.runtime_factory=factory
+        app.login('a','b')
+        self.assertFalse(app.release_device())
+        self.assertIsNone(self.store.load(app.scope))
+        self.assertFalse(app.release_device())
+        app.close()
+        if os.name == 'nt': self.store = WindowsDPAPIStore(vault)
+        wrong_cache=self.app(); wrong_cache.cache_dir=Path(self.temp.name) / 'other'; wrong_cache.runtime_factory=factory
+        self.assertFalse(wrong_cache.release_device())
+        self.assertEqual(len(retries),1)
+        wrong_cache.close()
+        restarted=self.app(); restarted.runtime_factory=factory
+        self.addCleanup(restarted.close)
+        self.assertFalse(restarted.release_device())
+        with self.assertRaises(APIError) as failed_restore: restarted.restore()
+        self.assertEqual(failed_restore.exception.code,'ACCOUNT_LOGOUT_PENDING')
+        with self.assertRaises(APIError) as denied: restarted.run_feature('export',lambda:self.fail('restored a signed-out account'))
+        self.assertEqual(denied.exception.code,'LOGIN_REQUIRED')
+        available=True
+        self.assertTrue(restarted.release_device())
+        self.assertEqual(len(retries),4)
+        self.assertEqual(len(set(paths)),1)
+        self.assertEqual(sum(r.full_url.endswith('/auth/logout') for r in self.merchant.requests),1)
+        self.assertIsNone(self.store.load(restarted._pending_key()))
+
+    def test_old_device_retry_preserves_new_account_and_binding(self):
+        old, new = self.app(), self.app()
+        self.addCleanup(old.close); self.addCleanup(new.close)
+        old.login('a','b'); old_device=old.runtime
+        new.login('a','b')
+        newer_record=self.store.load(new.scope)
+        old_device.logout=lambda: {'local_complete':True,'revocation_pending':True}
+        self.assertFalse(old.release_device())
+        devices=len(self.runtimes)
+        self.assertFalse(old.release_device())
+        self.assertEqual(len(self.runtimes),devices)
+        self.assertEqual(self.store.load(new.scope),newer_record)
+        self.assertTrue(new.restore())
+        self.assertFalse(new.logout())
+        recovery=self.app(); self.addCleanup(recovery.close)
+        self.assertTrue(recovery.release_device())
+        new.login('a','b')
+        current=self.store.load(new.scope); devices=len(self.runtimes)
+        self.assertTrue(old.release_device())
+        self.assertEqual(len(self.runtimes),devices)
+        self.assertEqual(self.store.load(new.scope),current)
+    def test_failed_device_cleanup_retries_logout_before_trusting_ticket_journal(self):
+        for failure in ('response_lost','storage_error'):
+            with self.subTest(failure=failure):
+                outcome, logouts, retries = failure, [], []
+                class Device(Runtime):
+                    def logout(self):
+                        logouts.append(1)
+                        if outcome == 'response_lost': raise OSError('lost response')
+                        if outcome == 'storage_error':
+                            return {'local_complete':False,'storage_error':'write failed','revocation_pending':False}
+                        return {'local_complete':True,'revocation_pending':True}
+                    def retry_pending_logouts(self):
+                        retries.append(1)
+                app=self.app(); app.runtime_factory=Device
+                app.login('a','b')
+                with self.assertRaises((APIError,OSError)): app.release_device()
+                self.assertIsNone(self.store.load(app.scope))
+                app.close()
+                restarted=self.app(); restarted.runtime_factory=Device
+                self.addCleanup(restarted.close)
+                with self.assertRaises((APIError,OSError)): restarted.release_device()
+                self.assertEqual((len(logouts),len(retries)),(2,0))
+                outcome='ticket_saved'
+                self.assertFalse(restarted.release_device())
+                self.assertTrue(restarted.release_device())
+                self.assertEqual((len(logouts),len(retries)),(3,1))
     def test_metered_application_delegates_and_never_uses_ordinary_feature_fallback(self):
         app=self.app()
         with self.assertRaises(APIError) as before: app.run_metered_feature('export', 3, 'job-1', lambda: self.fail('not signed in'))

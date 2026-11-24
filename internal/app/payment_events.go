@@ -199,7 +199,15 @@ type ProductEntitlement struct {
 
 func (s *Service) MyProducts(ctx context.Context, p Principal, requestedLocale string) ([]ProductEntitlement, error) {
 	var rows []storage.Entitlement
-	if s.db.WithContext(ctx).Where("user_id = ?", p.User.ID).Find(&rows).Error != nil {
+	// Checkout reserves an entitlement before payment. Keep issued grants and
+	// historical purchases, including payments whose coverage is still pending.
+	err := s.db.WithContext(ctx).Where("user_id = ?", p.User.ID).Where(`
+		status <> 'pending' OR desired_version > 0 OR valid_from IS NOT NULL
+		OR EXISTS (SELECT 1 FROM entitlement_coverages c WHERE c.entitlement_id = entitlements.id)
+		OR EXISTS (SELECT 1 FROM orders o WHERE o.user_id = entitlements.user_id
+			AND o.product_id = entitlements.product_id AND o.environment = entitlements.environment
+			AND o.paid_at IS NOT NULL)`).Find(&rows).Error
+	if err != nil {
 		return nil, ErrStorage
 	}
 	source, locale := requestedContentLocale(s.db.WithContext(ctx), requestedLocale)

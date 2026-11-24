@@ -26,6 +26,7 @@ test('startup denial survives failing runtime shutdown and logout reconstruction
   assert.ok(f.calls.some(r=>r.url.endsWith('/auth/logout')));
   await assert.rejects(app.runFeature('export',()=>assert.fail('denied startup allowed business')),{code:'LOGIN_REQUIRED'});
   if(offlineLogout){assert.equal(f.store.record.records[0].logout_pending,true);assert.equal(JSON.stringify(f.store.record).includes(identity.identity_token),false);}
+  else assert.equal(await f.store.load(f.store.scope),null);
  }
 });
 
@@ -103,7 +104,97 @@ test('a different current user still clears the remembered account',async t=>{
 test('explicit logout releases device and retains durable SDK journal',async t=>{const f=await fixture(t);await f.app.login('a','b');const path=f.runtimes[0].config.cache_path;assert.equal(await f.app.logout(),true);assert.equal(f.runtimes[0].released,1);assert.equal(await readFile(path+'.logout.json','utf8'),'SDK-owned journal');assert.equal(await f.store.load(f.store.scope),null);await assert.rejects(f.app.runFeature('export',()=>0),{code:'LOGIN_REQUIRED'});});
 test('ordinary close preserves login; fresh-process logout recovers SDK',async t=>{const f=await fixture(t);await f.app.login('a','b');await f.app.close();assert.equal(f.runtimes[0].released,0);const next=new Application(launch,product,f.options);assert.equal(await next.logout(),true);assert.equal(f.runtimes[1].released,1);assert.equal(f.runtimes[1].config.identity_token,'');await next.close();});
 test('Launch outage never grants offline permission',async t=>{const f=await fixture(t);await f.app.login('a','b');f.setOffline(true);await assert.rejects(f.app.restore(),{code:'NETWORK_UNAVAILABLE'});assert.equal(f.runtimes.length,1);});
-test('pending device release is reported while account is cleared',async t=>{const f=await fixture(t);await f.app.login('a','b');f.setPending(true);assert.equal(await f.app.logout(),false);assert.equal(await f.store.load(f.store.scope),null);});
+test('pending device release retries the SDK until confirmed, including after restart',async t=>{
+  const f=await fixture(t);
+  let retries=0, available=false;
+  const openStore=()=>new EncryptedFileStore(join(f.options.cacheDir,'accounts'),Buffer.alloc(32,11));
+  const options={...f.options,store:openStore(),runtimeFactory:config=>{
+    const runtime=f.options.runtimeFactory(config);
+    runtime.retryPendingLogouts=async()=>{retries++;if(!available)throw Error('device service offline');};
+    return runtime;
+  }};
+  const app=new Application(launch,product,options);
+  await app.login('a','b');
+  const scope=['launch-account-v2',launch.merchant_origin,launch.launch_product_id,launch.licentivo_product_id,launch.environment].join('\n');
+  const path=f.runtimes[0].config.cache_path;
+  f.setPending(true);
+  await assert.rejects(app.releaseDevice(),{code:'DEVICE_REVOCATION_PENDING'});
+  assert.equal(await options.store.load(scope),null);
+  await assert.rejects(app.releaseDevice(),{code:'DEVICE_REVOCATION_PENDING'});
+  await app.close();
+  const wrongCache=new Application(launch,product,{...options,cacheDir:join(f.options.cacheDir,'other'),store:openStore()});
+  await assert.rejects(wrongCache.releaseDevice(),{code:'DEVICE_REVOCATION_PENDING'});
+  assert.equal(retries,1);
+  await wrongCache.close();
+  const restarted=new Application(launch,product,{...options,store:openStore()});
+  t.after(()=>restarted.close());
+  await assert.rejects(restarted.releaseDevice(),{code:'DEVICE_REVOCATION_PENDING'});
+  await assert.rejects(restarted.restore(),{code:'ACCOUNT_LOGOUT_PENDING'});
+  await assert.rejects(restarted.runFeature('export',()=>assert.fail('restored a signed-out account')),{code:'LOGIN_REQUIRED'});
+  available=true;
+  await restarted.releaseDevice();
+  assert.equal(retries,4);
+  assert.ok(f.runtimes.every(r=>r.config.cache_path===path));
+  assert.equal(f.calls.filter(r=>r.url.endsWith('/auth/logout')).length,1);
+  assert.equal(await openStore().load(scope+'\naccount-logout-queue-v1'),null);
+});
+test('restore preserves the account across retryable SDK failures and clears definitive denials',async t=>{
+  const f=await fixture(t);
+  let failure;
+  const app=new Application(launch,product,{...f.options,runtimeFactory:config=>{
+    const runtime=f.options.runtimeFactory(config);
+    runtime.start=async()=>{if(failure)throw failure;};
+    return runtime;
+  }});
+  t.after(()=>app.close());
+  await app.login('a','b');
+  const scope=f.store.scope,saved=await f.store.load(scope);
+  for(const error of [new LaunchError('NETWORK_UNAVAILABLE'),Object.assign(new TypeError('fetch failed'),{transient:true}),new LaunchError('SERVICE_UNAVAILABLE',503)]){
+    failure=error;
+    await assert.rejects(app.restore(),value=>value===error);
+    assert.deepEqual(await f.store.load(scope),saved);
+    await assert.rejects(app.runFeature('export',()=>assert.fail('failed restore allowed work')),{code:'LOGIN_REQUIRED'});
+  }
+  failure=null;
+  assert.ok(await app.restore());
+  failure=new LaunchError('LAUNCH_ENTITLEMENT_REVOKED',403);
+  await assert.rejects(app.restore(),value=>value===failure);
+  assert.equal(await f.store.load(scope),null);
+});
+test('failed device cleanup retries logout before trusting the ticket journal',async t=>{
+  for(const failure of ['response_lost','storage_error']) {
+    const f=await fixture(t);
+    let outcome=failure, logouts=0, retries=0;
+    const options={...f.options,runtimeFactory:config=>{
+      const runtime=f.options.runtimeFactory(config);
+      runtime.logout=async()=>{
+        logouts++;
+        if(outcome==='response_lost') throw new Error('lost response');
+        if(outcome==='storage_error') return {local_complete:false,storage_error:'write failed',revocation_pending:false};
+        return {local_complete:true,revocation_pending:true};
+      };
+      runtime.retryPendingLogouts=async()=>{retries++;};
+      return runtime;
+    }};
+    const app=new Application(launch,product,options);
+    await app.login('a','b');
+    const scope=f.store.scope;
+    await assert.rejects(app.releaseDevice());
+    assert.equal(await f.store.load(scope),null);
+    await app.close();
+    const restart=new Application(launch,product,options);
+    t.after(()=>restart.close());
+    await assert.rejects(restart.releaseDevice());
+    assert.equal(logouts,2);
+    assert.equal(retries,0);
+    outcome='ticket_saved';
+    await assert.rejects(restart.releaseDevice(),{code:'DEVICE_REVOCATION_PENDING'});
+    await restart.releaseDevice();
+    assert.equal(logouts,3);
+    assert.equal(retries,1);
+    assert.equal(f.calls.filter(r=>r.url.endsWith('/auth/logout')).length,1);
+  }
+});
 test('public configuration rejects private/runtime fields',()=>{assert.throws(()=>validateConfig(launch,{...product,license_key:'private'}),{code:'PUBLIC_CONFIG_INVALID'});assert.throws(()=>validateConfig({...launch,merchant_origin:'http://other.example'},product),{code:'INVALID_CONFIG'});});
 test('account store authenticates and encrypts its own secrets',async t=>{const root=await mkdtemp(join(tmpdir(),'launch-identity-store-'));t.after(()=>rm(root,{recursive:true,force:true}));const store=new EncryptedFileStore(root,Buffer.alloc(32,7));await store.save('scope',{token:'secret-account-token'});assert.deepEqual(await store.load('scope'),{token:'secret-account-token'});const [name]=await readdir(root);assert.equal((await readFile(join(root,name))).includes('secret-account-token'),false);await writeFile(join(root,name),'corrupt');await assert.rejects(store.load('scope'),{code:'INVALID_SAVED_SESSION'});});
 
@@ -118,6 +209,34 @@ test('a completed logout never adopts a newer stored login on retry',async t=>{
   const f=await fixture(t);await f.app.login('a','b');await f.app.logout();
   const newer=new Application(launch,product,f.options);t.after(()=>newer.close());await newer.login('a','b');const scope=f.store.scope;
   assert.equal(await f.app.logout(),true);assert.ok(await f.store.load(scope));assert.ok(await newer.restore());
+});
+test('a device release retry cannot deactivate a newer login using the same cache',async t=>{
+  const f=await fixture(t);
+  let grants=0;
+  const options={...f.options,transport:request=>request.url.endsWith('/auth/login')
+    ? reply({user,access_token:(++grants===1?'A':'B').repeat(43),expires_at:new Date(Date.now()+3600000).toISOString()})
+    : f.options.transport(request)};
+  const old=new Application(launch,product,options), newer=new Application(launch,product,options);
+  t.after(()=>old.close());t.after(()=>newer.close());
+  await old.login('a','b');await newer.login('a','b');
+  const scope=f.store.scope, saved=await f.store.load(scope);
+  f.setPending(true);
+  await assert.rejects(old.releaseDevice(),{code:'DEVICE_REVOCATION_PENDING'});
+  const count=f.runtimes.length;
+  await assert.rejects(old.releaseDevice(),{code:'DEVICE_REVOCATION_PENDING'});
+  assert.equal(f.runtimes.length,count);
+  assert.deepEqual(await f.store.load(scope),saved);
+  assert.ok(await newer.restore());
+  f.setPending(false);
+  assert.equal(await newer.logout(),false);
+  const recovery=new Application(launch,product,options);
+  t.after(()=>recovery.close());
+  await recovery.releaseDevice();
+  await newer.login('a','b');
+  const current=await f.store.load(scope), countAfterRecovery=f.runtimes.length;
+  await old.releaseDevice();
+  assert.equal(f.runtimes.length,countAfterRecovery);
+  assert.deepEqual(await f.store.load(scope),current);
 });
 
 test('late old instance retains its retry without overwriting the new login',async t=>{

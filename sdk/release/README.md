@@ -8,7 +8,7 @@ actions. Follow the [one-day integration plan](docs/one-day-integration.md) and
 [manual integration guide](docs/manual-integration.md), then verify the sandbox
 purchase-to-use flow before production rollout.
 
-The public [v0.1.8 Release](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.8) describes Launch package 0.1.8 with embedded official SDK 0.11.8. Check the [application integration guide](docs/software-sdk-integration.md) for the account-exchange flow and backend requirements. Match artifact checksums and source revisions when checking whether a public package contains a local fix.
+The public [v0.1.9 Release](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.9) describes Launch package 0.1.9 with embedded official SDK 0.11.9. Check the [application integration guide](docs/software-sdk-integration.md) for the account-exchange flow and backend requirements. Match artifact checksums and source revisions when checking whether a public package contains a local fix.
 
 [Website](https://www.licentivo.com/en/launch.html) · [Documentation](https://www.licentivo.com/en/launch-docs.html) · [Source code](https://github.com/spf86/licentivo-launch-sdk)
 
@@ -16,7 +16,7 @@ Account login and license-protected application operations in **Go, Python, C#,
 Java, JavaScript/TypeScript, Rust, Ruby, C and C++**. MIT licensed.
 
 Install only the Launch package for your language. Each package embeds the
-reviewed Licentivo SDK 0.11.8 and manages its adapter and SDK linking. Ordinary
+reviewed Licentivo SDK 0.11.9 and manages its adapter and SDK linking. Ordinary
 language dependencies still use their package manager.
 
 The Launch merchant address is required at initialization. Select your existing
@@ -27,19 +27,19 @@ configuration file or manual entry of two internal product IDs is required.
 
 ## Install into your application
 
-Version: **0.1.8**, with official SDK **0.11.8**, paired with the Launch server **0.3.6-beta** account-exchange source baseline. The commands below target this release. Check the version, source revision and checksums inside [publication status](docs/registry-status.json) and [verification receipts](docs/registry-verification.json); historical reports do not certify a newer package. The [0.1.8 release notes](docs/releases/0.1.8.md) describe this update.
+Version: **0.1.9**, with official SDK **0.11.9**, paired with the Launch server **0.3.10-beta** account-exchange source baseline. The commands below target this release. Check the version, source revision and checksums inside [publication status](docs/registry-status.json) and [verification receipts](docs/registry-verification.json); historical reports do not certify a newer package. The [0.1.9 release notes](docs/releases/0.1.9.md) describe this update.
 
-This update includes device-name/system-information reporting and native portability changes while retaining account ownership, recovery and logout retry behavior. Install one Launch package; it includes its reviewed Licentivo runtime. Confirm the matching backend and database revision before deploying the reviewed device-information clients.
+JavaScript and Python clients now resume pending runtime logout cleanup when restoring a session. The Rust crate includes a documented account-login and protected-operation example. Install one Launch package; it includes its reviewed Licentivo runtime. Confirm the matching backend and database revision before deploying the reviewed device-information clients.
 
 | Language | Registry command / distribution | API reference |
 | --- | --- | --- |
-| Go | `go get github.com/spf86/licentivo-launch-sdk/pkg/launchclient@v0.1.8` | [Go](pkg/launchclient/README.md) |
-| Python | `python -m pip install "licentivo-launch==0.1.8"` | [Python](sdk/python/README.md) |
-| C# | `dotnet add package Licentivo.Launch --version 0.1.8` | [.NET](sdk/csharp/README.md) |
-| Java | Maven/Gradle: `com.licentivo.launch:launch-client:0.1.8` | [Java](sdk/java/README.md) |
-| Node.js / TypeScript | `npm install @licentivo/launch@0.1.8` | [Node.js](sdk/javascript/README.md) |
-| Rust | `cargo add licentivo-launch@=0.1.8` | [Rust](sdk/rust/README.md) |
-| Ruby | `gem install licentivo-launch --version 0.1.8` | [Ruby](sdk/ruby/README.md) |
+| Go | `go get github.com/spf86/licentivo-launch-sdk/pkg/launchclient@v0.1.9` | [Go](pkg/launchclient/README.md) |
+| Python | `python -m pip install "licentivo-launch==0.1.9"` | [Python](sdk/python/README.md) |
+| C# | `dotnet add package Licentivo.Launch --version 0.1.9` | [.NET](sdk/csharp/README.md) |
+| Java | Maven/Gradle: `com.licentivo.launch:launch-client:0.1.9` | [Java](sdk/java/README.md) |
+| Node.js / TypeScript | `npm install @licentivo/launch@0.1.9` | [Node.js](sdk/javascript/README.md) |
+| Rust | `cargo add licentivo-launch@=0.1.9` | [Rust](sdk/rust/README.md) |
+| Ruby | `gem install licentivo-launch --version 0.1.9` | [Ruby](sdk/ruby/README.md) |
 | C / C++ | Versioned CMake packages in [GitHub Releases](https://github.com/spf86/licentivo-launch-sdk/releases) | [C/C++](sdk/native/README.md) |
 
 Go requires 1.26+, Python 3.10+, .NET 8+, Java 17+, Node.js 20.3+, Rust 1.85+,

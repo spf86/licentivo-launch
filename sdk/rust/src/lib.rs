@@ -1,5 +1,58 @@
-//! Launch account lifecycle. All protected work is authorized by Licentivo 0.11.8.
-//! Defaults to memory-only sessions; inject an OS-protected Store to remember login.
+//! # Licentivo Launch Rust SDK
+//!
+//! Connect a Rust application to a [Licentivo Launch](https://www.licentivo.com/en/launch.html)
+//! store for account login, scoped sessions and license-protected operations.
+//! Launch supplies account identity; the bundled official Licentivo SDK owns
+//! device credentials, signed permissions and authorization of business work.
+//!
+//! ## Install
+//!
+//! ```sh
+//! cargo add licentivo-launch
+//! ```
+//!
+//! Requires Rust 1.85+, a C11 compiler and libcurl development files. Windows
+//! builds use the GNU/MinGW target; Linux also needs OpenSSL development libraries.
+//! The official licensing core is bundled, so install only the Launch package.
+//! See the [installation guide](https://www.licentivo.com/en/launch-docs/client-sdk-installation/)
+//! and [published crate](https://crates.io/crates/licentivo-launch).
+//!
+//! ## Log in and protect an operation
+//!
+//! Copy the connection values and signing public keys from your store's
+//! integration page. Read the customer's email and password from your login UI.
+//!
+//! ```no_run
+//! use licentivo_launch::{Application, Failure};
+//!
+//! fn export_report(email: &str, password: &str) -> Result<(), Failure> {
+//!     let mut app = Application::connect(
+//!         "https://store.example.com",
+//!         "YOUR_LAUNCH_PRODUCT_ID",
+//!         "YOUR_LICENTIVO_PRODUCT_ID",
+//!         &[("YOUR_KEY_ID", "YOUR_PUBLIC_KEY")],
+//!         "live",
+//!     )?;
+//!     app.login(email, password)?;
+//!     app.run_feature("export", || {
+//!         std::fs::write("report.csv", "Your report\n")?;
+//!         Ok(())
+//!     })?;
+//!     app.close();
+//!     Ok(())
+//! }
+//! ```
+//!
+//! Retain the application while the program runs. Ordinary close preserves
+//! device bindings; explicit logout and device release have separate recovery
+//! flows. Sessions default to memory-only storage. To remember login, supply
+//! an OS-protected [`Store`]; keep its secrets in the current user's private storage.
+//! Account restoration requires Launch to be online. Metered operations need
+//! a stable job ID and durable business results.
+//!
+//! Use the [API and recovery reference](https://www.licentivo.com/en/launch-docs/sdk-function-reference/)
+//! and [source examples](https://github.com/spf86/licentivo-launch-sdk)
+//! for integration details. Vendor management API keys stay on your server.
 mod store;
 mod account_lock;
 mod transport;
@@ -19,7 +72,7 @@ pub use store::EncryptedFileStore;
 use time::{format_description::well_known::Rfc3339, OffsetDateTime};
 pub use transport::CurlTransport;
 
-pub const VERSION: &str = "0.1.8";
+pub const VERSION: &str = "0.1.9";
 #[derive(Debug, Clone)]
 pub struct Failure {
     pub code: String,

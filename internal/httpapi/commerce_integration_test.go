@@ -61,6 +61,11 @@ func testCommerce(a *testApp, admin, customer *browser, credentials map[string]s
 	a.expect(a.request("POST", "/api/v1/admin/connections/mappings", app.MappingInput{VersionID: plan.VersionID, PolicyID: "44444444-4444-4444-8444-444444444444"}, admin), 409)
 	input := app.CheckoutInput{ProductID: plan.ProductID, PlanVersionID: plan.VersionID, PurchasePeriods: 3, Provider: "stripe", Environment: "sandbox", IdempotencyKey: "test-account-purchase-key"}
 	order := data[app.CheckoutView](t, a.request("POST", "/api/v1/orders", input, customer))
+	for _, owned := range data[[]app.ProductEntitlement](t, a.request("GET", "/api/v1/me/products", nil, customer)) {
+		if owned.ProductID == plan.ProductID && owned.Environment == "sandbox" {
+			t.Fatal("unpaid checkout appeared among owned products")
+		}
+	}
 	replay := data[app.CheckoutView](t, a.request("POST", "/api/v1/orders", input, customer))
 	if order.ID != replay.ID || gateway.creates != 1 {
 		t.Fatal("purchase replay duplicated checkout")
@@ -81,6 +86,15 @@ func testCommerce(a *testApp, admin, customer *browser, credentials map[string]s
 		t.Fatalf("payment event: %v", err)
 	}
 	paid := data[app.CheckoutView](t, a.request("GET", "/api/v1/orders/"+order.ID, nil, customer))
+	foundPurchase := false
+	for _, owned := range data[[]app.ProductEntitlement](t, a.request("GET", "/api/v1/me/products", nil, customer)) {
+		if owned.ProductID == plan.ProductID && owned.Environment == "sandbox" && owned.ValidFrom != nil && owned.ValidUntil != nil {
+			foundPurchase = true
+		}
+	}
+	if !foundPurchase {
+		t.Fatal("paid product was hidden while authorization was pending")
+	}
 	if paid.Status != "paid" || paid.Fulfillment != "pending_authorization" {
 		t.Fatal("payment was mistaken for applied purchase")
 	}
@@ -259,6 +273,9 @@ func testCommerce(a *testApp, admin, customer *browser, credentials map[string]s
 	if err := a.db.First(&legacy, "id = ?", legacy.ID).Error; err != nil || legacy.Status != "pending" || legacy.Attempts != 0 {
 		t.Fatal("channel resend did not recover original reviewed event", err)
 	}
+	t.Run("checkout_state_transitions", func(t *testing.T) {
+		testCheckoutStateTransitions(t, a, config, input)
+	})
 }
 
 type paymentDouble struct {

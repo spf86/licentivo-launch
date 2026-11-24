@@ -2,7 +2,7 @@
 
 For merchant-owned licensing services, start with [the custom HTTP adapter](custom-licensing/README.md) and [protocol guide](../docs/external-licensing.md). The nine application packages below specifically integrate Licentivo; custom services retain their own runtime SDK.
 
-> These examples follow the current account-exchange source baseline: Launch server 0.3.6-beta, Launch package 0.1.8 and embedded official SDK 0.11.8. Check [compatibility, backend requirements and release evidence](../docs/sdk-compatibility.md) before choosing a package. Launch computes purchased dates; the official SDK owns runtime permission and logout recovery. See the [account boundary](../docs/account-purchase-boundary.md).
+> These examples follow the current account-exchange source baseline: Launch server 0.3.10-beta, Launch package 0.1.9 and embedded official SDK 0.11.9. Check [compatibility, backend requirements and release evidence](../docs/sdk-compatibility.md) before choosing a package. Launch computes purchased dates; the official SDK owns runtime permission and logout recovery. See the [account boundary](../docs/account-purchase-boundary.md).
 
 Read the [application integration guide](../docs/software-sdk-integration.md) for the API sequence, security rules, single-package installation, and language-specific commands.
 
@@ -27,7 +27,7 @@ The official Licentivo SDK handles machine identity, signatures, activation, hea
 
 ## Install Launch
 
-Install only the Launch package for your language, following its README. All nine packages embed SDK 0.11.8, the default adapter and SDK linking configuration. No official SDK source checkout, extra official package or adapter copy is required. Windows Ruby/Rust/native distributions bundle curl; source builds on other platforms use their normal C11 and OS curl/OpenSSL tools.
+Install only the Launch package for your language, following its README. All nine packages embed SDK 0.11.9, the default adapter and SDK linking configuration. No official SDK source checkout, extra official package or adapter copy is required. Windows Ruby/Rust/native distributions bundle curl; source builds on other platforms use their normal C11 and OS curl/OpenSSL tools.
 
 The server startup configuration is private config.yaml. Application initialization uses public parameters directly; config files are not a prerequisite. The full CLI harnesses are reference/test utilities; use the direct Connect/connect function in normal applications.
 

@@ -405,26 +405,64 @@ class Application:
         self._update_pending(saved, remove=True)
         clear_intent(self.scope, saved['access_token'])
 
+    def _device_cache_id(self, saved):
+        return hashlib.sha256(str(self._cache_for(saved).resolve()).encode()).hexdigest()
+
+    def _reopen_device(self, saved):
+        return self.runtime_factory(self.config | {'license_key': '', 'identity_token': '',
+            'launch_connection_id': saved['identity_context']['launch_connection_id'],
+            'environment': self.environment, 'cache_path': str(self._cache_for(saved))})
+
+    def _retry_device(self, saved):
+        active = self._saved()
+        if saved['device_pending_cache'] != self._device_cache_id(saved):
+            return False
+        if active and active.get('user_id') == saved['user_id'] and active['access_token'] != saved['access_token']:
+            return False
+        runtime = self._reopen_device(saved)
+        try:
+            retry = getattr(runtime, 'retry_pending_logouts', None)
+            if not saved.get('device_logout_needed') and callable(retry):
+                try: retry()
+                except Exception: return False
+                return True
+            result = runtime.logout() if hasattr(runtime, 'logout') else runtime.deactivate()
+            if isinstance(result, dict) and (result.get('storage_error') or result.get('local_complete') is False):
+                raise APIError('SDK_LOGOUT_STORAGE_FAILED')
+            saved.pop('device_logout_needed', None)
+            return not (isinstance(result, dict) and result.get('revocation_pending'))
+        finally:
+            runtime.close()
+
     def _retry_other_accounts(self, skip):
+        complete = True
         for saved in self._pending_accounts():
             if saved['access_token'] == skip: continue
-            try: self._call('/auth/logout', {}, saved['access_token'])
-            except APIError as error:
-                if error.status != 401: raise APIError('ACCOUNT_LOGOUT_PENDING') from None
-            self._finish_account(saved)
+            if not saved.get('account_logout_confirmed'):
+                try: self._call('/auth/logout', {}, saved['access_token'])
+                except APIError as error:
+                    if error.status != 401: raise APIError('ACCOUNT_LOGOUT_PENDING') from None
+            if saved.get('device_pending_cache') and not self._retry_device(saved):
+                saved['account_logout_confirmed'] = True
+                self._update_pending(saved)
+                self._delete_owned(saved)
+                complete = False
+            else:
+                self._finish_account(saved)
+        return complete
 
     @account_serial
     def logout(self):
         if self._account_cleared and not self._pending_logout and not self.session:
-            self._retry_other_accounts(None)
-            return True
+            return self._retry_other_accounts(None)
         try: saved = self._pending_logout or self.session or self._saved()
         except Exception:
             self._forget()
             raise
         if saved is None: saved = next(iter(self._pending_accounts()), None)
         failure, persist_failure, other_failure, pending = None, None, None, False
-        try: self._retry_other_accounts(saved['access_token'] if saved else None)
+        others_complete = True
+        try: others_complete = self._retry_other_accounts(saved['access_token'] if saved else None)
         except Exception as error: other_failure = error
         if saved:
             saved['logout_pending'] = True
@@ -434,15 +472,23 @@ class Application:
             except Exception as error: persist_failure = error
         try:
             active = self._saved()
-            if self.runtime is None and saved and saved.get('identity_context') and (active is None or active['access_token'] == saved['access_token']):
-                identity = saved['identity_context']
-                self.runtime = self.runtime_factory(self.config | {'license_key': '', 'identity_token': '',
-                    'launch_connection_id': identity['launch_connection_id'], 'environment': self.environment,
-                    'cache_path': str(self._cache_for(saved))})
-            if self.runtime:
-                result = self.runtime.logout() if hasattr(self.runtime, 'logout') else self.runtime.deactivate()
-                pending = isinstance(result, dict) and result.get('revocation_pending', False)
-                if isinstance(result, dict) and result.get('storage_error'): raise APIError('SDK_LOGOUT_STORAGE_FAILED')
+            if saved and saved.get('device_pending_cache'):
+                pending = True
+                pending = not self._retry_device(saved)
+            else:
+                can_reopen = saved and saved.get('identity_context') and (active is None or active['access_token'] == saved['access_token'])
+                # An initial login can fail before its runtime ever binds a device.
+                if saved and (self.runtime is not None or can_reopen and active and active['access_token'] == saved['access_token']):
+                    pending = True
+                    saved['device_logout_needed'] = True
+                if self.runtime is None and can_reopen:
+                    self.runtime = self._reopen_device(saved)
+                if self.runtime:
+                    result = self.runtime.logout() if hasattr(self.runtime, 'logout') else self.runtime.deactivate()
+                    if isinstance(result, dict) and (result.get('storage_error') or result.get('local_complete') is False):
+                        raise APIError('SDK_LOGOUT_STORAGE_FAILED')
+                    pending = isinstance(result, dict) and result.get('revocation_pending', False)
+                    saved.pop('device_logout_needed', None)
         except Exception as error: failure = error
         finally:
             try:
@@ -451,16 +497,22 @@ class Application:
                 if failure is None: failure = error
             finally: self.runtime = None
         confirmed = True
-        if saved:
+        if saved and not saved.get('account_logout_confirmed'):
             try: self._call('/auth/logout', {}, saved['access_token'])
             except APIError as error: confirmed = error.status == 401
-        if confirmed:
+        if saved and pending:
+            saved['device_pending_cache'] = saved.get('device_pending_cache') or self._device_cache_id(saved)
+            saved['account_logout_confirmed'] = confirmed
+            self._update_pending(saved)
+            # Another instance can settle the queued device before we retry.
+            if confirmed: self._forget(saved)
+        elif confirmed:
             if saved: self._finish_account(saved)
             self._forget(saved)
         if not confirmed and persist_failure: raise persist_failure
         if failure: raise failure
         if other_failure: raise other_failure
-        return confirmed and not pending
+        return confirmed and not pending and others_complete
 
     def close(self):
         with self._lifecycle_lock:

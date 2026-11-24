@@ -98,7 +98,8 @@ export async function defaultTransport(request) {
   } catch (error) { cancelled(request.signal); if (error instanceof LaunchError) throw error; throw new LaunchError('NETWORK_UNAVAILABLE'); }
 }
 const denied = error => error instanceof LaunchError && error.code !== 'ENTITLEMENT_PENDING' && !(error.status === 403 && ['SDK_HTTP_DISABLED','SDK_HTTPS_REQUIRED'].includes(error.code)) && ([401,403,404].includes(error.status) || ['SESSION_EXPIRED','SESSION_MISMATCH','ENTITLEMENT_EXPIRED','ENTITLEMENT_SUSPENDED','ENTITLEMENT_NOT_PURCHASED'].includes(error.code));
-const unavailable = error => error instanceof LaunchError && (error.code === 'NETWORK_UNAVAILABLE' || error.status >= 500 && error.status <= 599);
+const retryableStartup = error => error?.transient === true || ['NETWORK_UNAVAILABLE','CANCELLED'].includes(error?.code) ||
+  ['AbortError','TimeoutError'].includes(error?.name) || [408,429].includes(error?.status) || error?.status >= 500 && error?.status <= 599;
 
 export class Application {
   #config; #store; #transport; #factory; #root; #scope; #record = null; #runtime = null; #closed = false; #accountCleared=false; #queue = Promise.resolve(); #wait; #attempts; #callbacks = new AsyncLocalStorage();
@@ -159,20 +160,82 @@ export class Application {
   async #deleteOwned(record){if(await this.#owns(record))await this.#store.delete(this.#scope);}
   async #mark(record){try{await rememberIntent(this.#scope,record.token);}catch{}let queueError,activeError;try{await this.#updatePending(record);}catch(error){queueError=error;}if(await this.#owns(record)){try{await this.#save();}catch(error){activeError=error;try{await this.#deleteOwned(record);}catch{}}if(!activeError||!queueError)return;}else if(!queueError)return;throw new LaunchError('ACCOUNT_LOGOUT_STORAGE_FAILED');}
   async #finish(record){await this.#deleteOwned(record);await this.#updatePending(record,true);await clearIntent(this.#scope,record.token);}
-  async #retryOthers(skip,signal){for(const record of await this.#pending()){if(record.token===skip)continue;try{await this.#call('/auth/logout','POST',{},signal,record.token);}catch(error){if(error?.status!==401)throw new LaunchError('ACCOUNT_LOGOUT_PENDING');}await this.#finish(record);}}
+  #reopenDevice(record) {
+    return this.#factory({...clone(this.#config.product),license_key:'',identity_token:'',
+      launch_connection_id:record.identityContext.launch_connection_id,
+      environment:this.#config.launch.environment,cache_path:this.#cache(record)});
+  }
+  async #retryDevice(record,signal) {
+    const active=await this.#store.load(this.#scope);
+    // A vault may be shared across cache roots or with a newer device binding.
+    if(record.device_pending_cache!==hash(this.#cache(record)) ||
+       active && active.token!==record.token && active.user?.id===record.user.id) return false;
+    const runtime=await this.#reopenDevice(record);
+    try {
+      if(!record.device_logout_needed && typeof runtime.retryPendingLogouts==='function') {
+        try { await runtime.retryPendingLogouts(signal); } catch { cancelled(signal); return false; }
+        return true;
+      }
+      const result=await (runtime.logout?runtime.logout(signal):runtime.deactivate(signal));
+      if(result?.storage_error || result?.local_complete===false) throw new LaunchError('SDK_LOGOUT_STORAGE_FAILED');
+      delete record.device_logout_needed;
+      return result?.revocation_pending!==true;
+    } finally { await runtime.close(); }
+  }
+  async #retryOthers(skip,signal) {
+    let complete=true;
+    for(const record of await this.#pending()) {
+      if(record.token===skip) continue;
+      if(!record.account_logout_confirmed) {
+        try { await this.#call('/auth/logout','POST',{},signal,record.token); }
+        catch(error) { if(error?.status!==401) throw new LaunchError('ACCOUNT_LOGOUT_PENDING'); }
+      }
+      if(record.device_pending_cache && !await this.#retryDevice(record,signal)) {
+        record.account_logout_confirmed=true;
+        await this.#updatePending(record);
+        await this.#deleteOwned(record);
+        complete=false;
+      } else await this.#finish(record);
+    }
+    return complete;
+  }
   async #logout(signal) {
     const saved=this.#record??await this.#saved()??(await this.#pending())[0];let releaseError,persistError,otherError,accountConfirmed=true,deviceConfirmed=true;
-    try{await this.#retryOthers(saved?.token,signal);}catch(error){otherError=error;}
+    let othersComplete=true;
+    try{othersComplete=await this.#retryOthers(saved?.token,signal);}catch(error){otherError=error;}
     if(saved){saved.logout_pending=true;saved.version=3;this.#record=saved;try{await this.#mark(saved);}catch(error){persistError=error;}}
     try {
       const active=await this.#store.load(this.#scope);
-      if(!this.#runtime && saved?.identityContext && (!active||active.token===saved.token)) this.#runtime=await this.#factory({...clone(this.#config.product),license_key:'',identity_token:'',launch_connection_id:saved.identityContext.launch_connection_id,environment:this.#config.launch.environment,cache_path:this.#cache(saved)});
-      if(this.#runtime){const result=await (this.#runtime.logout?this.#runtime.logout(signal):this.#runtime.deactivate(signal));deviceConfirmed=result?.revocation_pending!==true;if(result?.storage_error)throw new LaunchError('SDK_LOGOUT_STORAGE_FAILED');}
+      if(saved?.device_pending_cache) {
+        deviceConfirmed=false;
+        deviceConfirmed=await this.#retryDevice(saved,signal);
+      } else {
+        const canReopen=saved?.identityContext && (!active||active.token===saved.token);
+        // A failed first login can have identity context without ever binding a device.
+        if(saved && (this.#runtime || canReopen && active?.token===saved.token)) {
+          deviceConfirmed=false;
+          saved.device_logout_needed=true;
+        }
+        if(!this.#runtime && canReopen) this.#runtime=await this.#reopenDevice(saved);
+        if(this.#runtime) {
+          const result=await (this.#runtime.logout?this.#runtime.logout(signal):this.#runtime.deactivate(signal));
+          if(result?.storage_error || result?.local_complete===false) throw new LaunchError('SDK_LOGOUT_STORAGE_FAILED');
+          deviceConfirmed=result?.revocation_pending!==true;
+          delete saved.device_logout_needed;
+        }
+      }
     }catch(error){releaseError=error;}
     try{await this.#stop();}catch(error){releaseError??=error;}
-    if(saved)try{await this.#call('/auth/logout','POST',{},signal,saved.token);}catch(error){accountConfirmed=error?.status===401;}
-    if(accountConfirmed){this.#record=null;this.#accountCleared=true;if(saved)await this.#finish(saved);}
-    if(!accountConfirmed&&persistError)throw persistError;if(releaseError)throw releaseError;if(otherError)throw otherError;return accountConfirmed&&deviceConfirmed;
+    if(saved&&!saved.account_logout_confirmed)try{await this.#call('/auth/logout','POST',{},signal,saved.token);}catch(error){accountConfirmed=error?.status===401;}
+    if(saved&&!deviceConfirmed) {
+      saved.device_pending_cache??=hash(this.#cache(saved));
+      saved.account_logout_confirmed=accountConfirmed;
+      await this.#updatePending(saved);
+      // The vault queue is authoritative once this account is signed out.
+      // Another instance may settle the device before the next retry here.
+      if(accountConfirmed) await this.#clear(saved);
+    } else if(accountConfirmed){if(saved)await this.#finish(saved);this.#record=null;this.#accountCleared=true;}
+    if(!accountConfirmed&&persistError)throw persistError;if(releaseError)throw releaseError;if(otherError)throw otherError;return accountConfirmed&&deviceConfirmed&&othersComplete;
   }
   login(email,password,{signal}={}) { return this.#account(async()=>{
     this.#open(); cancelled(signal); if(!await this.#logout(signal))throw new LaunchError('LOGOUT_PENDING');
@@ -193,12 +256,16 @@ export class Application {
     if(Date.parse(this.#record.expires_at)<=Date.now()){await this.#clear();throw new LaunchError('SESSION_EXPIRED');}
     let identity;try{const me=await this.#call('/me','GET',undefined,signal);if(typeof me.user?.id!=='string'||!me.user.id)throw new LaunchError('INVALID_RESPONSE');if(me.user.id!==this.#record.user.id)throw new LaunchError('SESSION_MISMATCH',401);identity=await this.#credential(signal);this.#record.user=me.user;}catch(error){if(denied(error))await this.#clear();throw error;}
     this.#record.identityContext=Object.fromEntries(['product_id','licentivo_product_id','launch_connection_id','environment','expires_at'].map(key=>[key,identity[key]]));
-    try{const state=await this.#start(identity,signal);await this.#save();return state;}catch(error){await this.#clear();throw error;}
+    let state;
+    try { state=await this.#start(identity,signal); }
+    catch(error) { if(!retryableStartup(error) && !signal?.aborted) await this.#clear(); throw error; }
+    try { await this.#save(); } catch(error) { await this.#clear(); throw error; }
+    return state;
   });}
   runFeature(feature,action) { return this.#serial(async()=>{ this.#open(); if(!this.#runtime) throw new LaunchError('LOGIN_REQUIRED'); return this.#runtime.runFeature(feature,()=>this.#callbacks.run(true,action)); }); }
   runMeteredFeature(feature,quantity,operationID,action) { return this.#serial(async()=>{this.#open();if(!this.#runtime)throw new LaunchError('LOGIN_REQUIRED');if(typeof this.#runtime.runMeteredFeature!=='function')throw new LaunchError('METERING_UNSUPPORTED');return this.#runtime.runMeteredFeature(feature,quantity,operationID,()=>this.#callbacks.run(true,action));}); }
   resolveMeteredFeature(operationID,succeeded) { return this.#serial(async()=>{this.#open();if(!this.#runtime)throw new LaunchError('LOGIN_REQUIRED');if(typeof this.#runtime.resolveMeteredFeature!=='function')throw new LaunchError('METERING_UNSUPPORTED');return this.#runtime.resolveMeteredFeature(operationID,succeeded);}); }
-  logout({signal}={}) { return this.#account(async()=>{this.#open();if(this.#accountCleared&&!this.#record){await this.#retryOthers(undefined,signal);return true;}return this.#logout(signal);},true); }
+  logout({signal}={}) { return this.#account(async()=>{this.#open();if(this.#accountCleared&&!this.#record)return this.#retryOthers(undefined,signal);return this.#logout(signal);},true); }
   releaseDevice(options={}) {return this.logout(options).then(confirmed=>{if(!confirmed)throw new LaunchError('DEVICE_REVOCATION_PENDING');});}
   close() { return this.#serial(async()=>{if(this.#closed)return;this.#closed=true;await this.#stop();this.#record=null;}); }
 }

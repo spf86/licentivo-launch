@@ -1,16 +1,16 @@
-# Launch Ruby 0.1.8
+# Launch Ruby 0.1.9
 
 [Website](https://www.licentivo.com/en/launch.html) · [Documentation](https://www.licentivo.com/en/launch-docs.html) · [Source code](https://github.com/spf86/licentivo-launch-sdk)
 
-> This README describes the current account-exchange source: Launch package 0.1.8 with embedded official SDK 0.11.8, paired with Launch server 0.3.6-beta. Login obtains a short-lived identity assertion; Licentivo owns runtime permission. Check [backend requirements, migration and release evidence](https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/sdk-compatibility.md) and the [account boundary](https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/account-purchase-boundary.md). A public version number alone does not certify uncommitted local changes.
+> This README describes the current account-exchange source: Launch package 0.1.9 with embedded official SDK 0.11.9, paired with Launch server 0.3.6-beta. Login obtains a short-lived identity assertion; Licentivo owns runtime permission. Check [backend requirements, migration and release evidence](https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/sdk-compatibility.md) and the [account boundary](https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/account-purchase-boundary.md). A public version number alone does not certify uncommitted local changes.
 
 Ruby 3.1+. Install only the Launch gem matching the platform:
 
 ```sh
-gem install licentivo-launch --version 0.1.8
+gem install licentivo-launch --version 0.1.9
 ```
 
-SDK 0.11.8 Ruby code, its private native core and Windows curl DLL are included. RubyGems resolves the ordinary base64 dependency. The generic source gem builds its own embedded core automatically and needs normal C11/curl/OpenSSL tools for the platform. No official SDK gem or external native-library override is needed.
+SDK 0.11.9 Ruby code, its private native core and Windows curl DLL are included. RubyGems resolves the ordinary base64 dependency. The generic source gem builds its own embedded core automatically and needs normal C11/curl/OpenSSL tools for the platform. No official SDK gem or external native-library override is needed.
 
 ## Direct initialization and manual lifecycle
 

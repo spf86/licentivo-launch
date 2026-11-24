@@ -5,6 +5,27 @@ import (
 	"testing"
 )
 
+func TestSnapshotBeforeDocumentLibrary(t *testing.T) {
+	products := json.RawMessage(`[{"ID":"product","Content":{"guide":"original product text"}}]`)
+	snap := Snapshot{Format: "licentivo-launch-backup-v1", MasterKey: make([]byte, 32), Tables: []SnapshotTable{{Name: "products", Rows: products}}}
+	names := []string{"products", "document_libraries"}
+	entries, err := snapshotEntries(snap, names)
+	if err != nil || string(entries["document_libraries"]) != "[]" || string(entries["products"]) != string(products) {
+		t.Fatal("legacy product backup was not preserved", err)
+	}
+
+	snap.TableCount = 2
+	if _, err := snapshotEntries(snap, names); err == nil {
+		t.Fatal("accepted an incomplete backup with a declared table count")
+	}
+	documents := json.RawMessage(`[{"ProductID":"product","Version":1}]`)
+	snap.Tables = append(snap.Tables, SnapshotTable{Name: "document_libraries", Rows: documents})
+	entries, err = snapshotEntries(snap, names)
+	if err != nil || string(entries["document_libraries"]) != string(documents) {
+		t.Fatal("current document library was not preserved", err)
+	}
+}
+
 func TestLegacySnapshotWithoutAITables(t *testing.T) {
 	base := Snapshot{Format: "licentivo-launch-backup-v1", MasterKey: make([]byte, 32), Tables: []SnapshotTable{{Name: "users", Rows: json.RawMessage("[]")}}}
 	names := []string{"users", "ai_providers", "ai_conversations", "ai_messages", "ai_tasks", "ai_artifacts", "ai_schedules"}

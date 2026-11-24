@@ -34,7 +34,19 @@ type publicPageView struct {
 	JSONLD                                                                              template.JS
 }
 
-var publicTemplate = template.Must(template.New("storefront").Funcs(template.FuncMap{"lowerLocale": app.PublicLocalePath, "docURL": func(locale, slug, doc string) string { return publicPath(locale, "docs", slug, doc) }}).ParseFS(assets, "web/public.html"))
+var publicTemplate = template.Must(template.New("storefront").Funcs(template.FuncMap{"publicPath": publicPath}).ParseFS(assets, "web/public.html"))
+
+func (v publicPageView) Navigation(path string) string {
+	if v.Site.Environment != "sandbox" {
+		return path
+	}
+	before, fragment, hasFragment := strings.Cut(path, "#")
+	before += "?preview=sandbox"
+	if hasFragment {
+		return before + "#" + fragment
+	}
+	return before
+}
 
 func publicPath(locale, kind, slug, doc string) string {
 	base := "/" + app.PublicLocalePath(locale) + "/"
@@ -103,9 +115,13 @@ func publicPrice(plan app.PlanView) (int64, string) {
 
 func (a *application) registerPublicStorefront(mux *http.ServeMux) {
 	for _, locale := range []string{"zh-cn", "en", "ja", "ko", "de", "fr", "es", "pt-br", "it", "ru"} {
-		for _, suffix := range []string{"/{$}", "/products/{slug}", "/products/{slug}/download", "/products/{slug}/docs", "/products/{slug}/docs/{document}"} {
-			mux.HandleFunc("GET /"+locale+suffix, func(w http.ResponseWriter, r *http.Request) {
+		for _, page := range []struct{ suffix, kind string }{
+			{"/{$}", "home"}, {"/products/{slug}", "product"}, {"/products/{slug}/download", "download"},
+			{"/products/{slug}/docs", "docs"}, {"/products/{slug}/docs/{document}", "docs"},
+		} {
+			mux.HandleFunc("GET /"+locale+page.suffix, func(w http.ResponseWriter, r *http.Request) {
 				r.SetPathValue("locale", locale)
+				r.SetPathValue("kind", page.kind)
 				a.publicStorefront(w, r)
 			})
 		}
@@ -131,15 +147,9 @@ func (a *application) publicStorefront(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	kind, slug, document := "home", r.PathValue("slug"), r.PathValue("document")
-	if slug != "" {
-		kind = "product"
-		if strings.HasSuffix(r.URL.Path, "/download") {
-			kind = "download"
-		}
-		if strings.Contains(r.URL.Path, "/docs") {
-			kind = "docs"
-		}
+	kind, slug, document := r.PathValue("kind"), r.PathValue("slug"), r.PathValue("document")
+	if kind == "" {
+		kind = "home"
 	}
 	if slug != "" {
 		resolved, err := a.service.ResolvePublicSlug(r.Context(), slug)

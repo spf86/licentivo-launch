@@ -40,7 +40,7 @@ func (s *Service) reconcilePayment(ctx context.Context, orderID string) error {
 		return ErrStorage
 	}
 	var observed ports.Payment
-	if payment.CaptureOperationID != nil && !s.RecoveryRequired(ctx) && now().Before(payment.CreatedAt.Add(23*time.Hour)) {
+	if payment.Status != "failed" && payment.CaptureOperationID != nil && !s.RecoveryRequired(ctx) && now().Before(payment.CreatedAt.Add(23*time.Hour)) {
 		observed, err = client.CapturePayment(ctx, *payment.ExternalCheckoutID, *payment.CaptureOperationID)
 	} else {
 		observed, err = client.QueryPayment(ctx, *payment.ExternalCheckoutID)
@@ -48,10 +48,13 @@ func (s *Service) reconcilePayment(ctx context.Context, orderID string) error {
 	if err != nil {
 		return problem(503, "PAYMENT_QUERY_PENDING", "付款结果暂未明确，系统将继续核实，请勿重复付款")
 	}
-	if observed.Status != ports.PaymentSucceeded {
+	if observed.Status != ports.PaymentSucceeded && observed.Status != ports.PaymentFailed {
 		return nil
 	}
-	if observed.OrderID != order.ID || observed.MerchantRef != account.MerchantRef || string(observed.Environment) != order.Environment || observed.Amount.Currency != order.Currency || observed.Amount.Minor != order.AmountMinor || observed.ExternalID == "" || observed.PaidAt == nil || observed.PaidAt.After(now().Add(5*time.Minute)) || observed.PaidAt.Before(order.CreatedAt.Add(-2*time.Minute)) {
+	if observed.OrderID != order.ID || observed.MerchantRef != account.MerchantRef || string(observed.Environment) != order.Environment || observed.Amount.Currency != order.Currency || observed.Amount.Minor != order.AmountMinor {
+		return problem(409, "PAYMENT_VERIFICATION_FAILED", "付款结果需要商家核实")
+	}
+	if observed.Status == ports.PaymentSucceeded && (observed.ExternalID == "" || observed.PaidAt == nil || observed.PaidAt.After(now().Add(5*time.Minute)) || observed.PaidAt.Before(order.CreatedAt.Add(-2*time.Minute))) {
 		return problem(409, "PAYMENT_VERIFICATION_FAILED", "付款结果需要商家核实")
 	}
 	return databaseError(s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
@@ -67,6 +70,23 @@ func (s *Service) reconcilePayment(ctx context.Context, orderID string) error {
 		}
 		if payment.Status == "succeeded" {
 			return nil
+		}
+		if observed.Status == ports.PaymentFailed {
+			if order.Status != "pending" || payment.PaidAt != nil {
+				return nil
+			}
+			if err := tx.Model(&payment).Updates(map[string]any{"status": "failed", "checkout_url": nil, "next_check_at": nil}).Error; err != nil {
+				return err
+			}
+			return tx.Model(&order).Update("status", "closed").Error
+		}
+		// Older checkout timeouts could reset a previously settled payment to
+		// unknown. Its receipt and the order were committed in one transaction.
+		if payment.ExternalTransactionID != nil && payment.PaidAt != nil && order.PaidAt != nil {
+			if *payment.ExternalTransactionID != observed.ExternalID {
+				return problem(409, "PAYMENT_VERIFICATION_FAILED", "付款结果需要商家核实")
+			}
+			return tx.Model(&payment).Updates(map[string]any{"status": "succeeded", "next_check_at": nil}).Error
 		}
 		paidAt := observed.PaidAt.UTC()
 		if err := tx.Model(&payment).Updates(map[string]any{"status": "succeeded", "external_transaction_id": observed.ExternalID, "paid_at": paidAt, "next_check_at": nil}).Error; err != nil {

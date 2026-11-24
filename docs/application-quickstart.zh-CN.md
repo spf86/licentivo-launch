@@ -1,6 +1,6 @@
 # 程序接入快速开始
 
-> 当前源码采用账号身份交换：Launch 服务端 `0.3.6-beta` → Launch SDK `0.1.8` → 内置官方 SDK `0.11.8`。接入前先核对[版本兼容性与升级要求](sdk-compatibility.md)；职责和迁移约束见[购买期限与账号 SDK 边界](account-purchase-boundary.md)。
+> 当前源码采用账号身份交换：Launch 服务端 `0.3.10-beta` → Launch SDK `0.1.9` → 内置官方 SDK `0.11.9`。接入前先核对[版本兼容性与升级要求](sdk-compatibility.md)；职责和迁移约束见[购买期限与账号 SDK 边界](account-purchase-boundary.md)。
 
 **一天完成接入，让客户购买后直接用商店账号登录软件。** 已有应用、服务器/MySQL、HTTPS 域名和 Licentivo/支付沙箱账号就绪后，按[一天接入计划](one-day-integration.md)完成部署、套餐与支付配置、应用集成和购买到使用的验证。该计划面向使用现成 Licentivo 接入包的标准工程；支付渠道审核和正式上线验收按各自进度完成。
 
@@ -39,7 +39,7 @@ Launch 自动取得当前站点地址、软件对应的授权产品信息和签�
 
 项目说明请用英文填写。复制提示词并提供现有工程与 Launch 接入包，由自己的 AI 工具完成集成。Launch 不向 AI 服务发送内容。未配置好软件时仍可生成明确标注不可用于真实登录的草稿，待后台设置完成后重新生成。
 
-详见 [AI 快速接入](ai-integration.md)。接入包版本为 `0.1.8`，内置官方 SDK `0.11.8`；公开源码、各语言安装方式和发布状态见 [Launch SDK 仓库](https://github.com/spf86/licentivo-launch-sdk)。不用 AI 时，按[手动开发指南](manual-integration.md)完成相同流程。
+详见 [AI 快速接入](ai-integration.md)。接入包版本为 `0.1.9`，内置官方 SDK `0.11.9`；公开源码、各语言安装方式和发布状态见 [Launch SDK 仓库](https://github.com/spf86/licentivo-launch-sdk)。不用 AI 时，按[手动开发指南](manual-integration.md)完成相同流程。
 
 ## 程序运行与验收
 

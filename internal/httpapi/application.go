@@ -423,6 +423,13 @@ func (a *application) register(mux *http.ServeMux) {
 		}
 		return in, a.service.SaveBrand(r.Context(), p, in)
 	})
+	a.route(mux, "PATCH /api/v1/admin/brand", true, 0, func(w http.ResponseWriter, r *http.Request, p app.Principal) (any, error) {
+		var in app.BrandTextPatch
+		if err := input(w, r, &in); err != nil {
+			return nil, err
+		}
+		return map[string]bool{"saved": true}, a.service.UpdateBrandText(r.Context(), p, in)
+	})
 	a.route(mux, "PUT /api/v1/admin/product", true, 0, func(w http.ResponseWriter, r *http.Request, p app.Principal) (any, error) {
 		var in app.ProductView
 		if err := inputLimit(w, r, &in, 256<<10); err != nil {

@@ -1,24 +1,24 @@
 # Launch, SDK and Licentivo compatibility
 
-This guide describes the **Licentivo account-exchange integration in the current source tree**, reviewed on 2026-10-31. Use it with the [application integration guide](software-sdk-integration.md) and [purchase/account boundary](account-purchase-boundary.md). Merchant-owned licensing services use the [custom HTTP integration](external-licensing.md) and their own runtime SDK instead.
+This guide describes the **Licentivo account-exchange integration in the current source tree**, updated on 2026-11-24. Use it with the [application integration guide](software-sdk-integration.md) and [purchase/account boundary](account-purchase-boundary.md). Merchant-owned licensing services use the [custom HTTP integration](external-licensing.md) and their own runtime SDK instead.
 
 ## Current source baseline
 
 | Component | Version or contract | Requirement |
 | --- | --- | --- |
-| Launch server | `0.3.9-beta` | Provides desktop account sessions, short-lived identity assertions, purchase snapshots and durable session-revocation notifications. The server version is defined in `cmd/launch/main.go`. |
-| Launch application packages | `0.1.8` | All nine language wrappers use account identity exchange. Install only the Launch package for your language. The source version is recorded in [sdk/VERSION](../sdk/VERSION). |
-| Embedded official Licentivo SDK | `0.11.8` | Owns identity exchange with Licentivo, device credentials, signed permissions, feature execution, offline rules and device logout. See [sdk/UPSTREAM_VERSION](../sdk/UPSTREAM_VERSION) and the [reviewed file manifest](../sdk/managed-sdk-manifest.json). |
+| Launch server | `0.3.10-beta` | Provides desktop account sessions, short-lived identity assertions, purchase snapshots and durable session-revocation notifications. The server version is defined in `cmd/launch/main.go`. |
+| Launch application packages | `0.1.9` | All nine language wrappers use account identity exchange. Install only the Launch package for your language. The source version is recorded in [sdk/VERSION](../sdk/VERSION). |
+| Embedded official Licentivo SDK | `0.11.9` | Owns identity exchange with Licentivo, device credentials, signed permissions, feature execution, offline rules and device logout. See [sdk/UPSTREAM_VERSION](../sdk/UPSTREAM_VERSION) and the [reviewed file manifest](../sdk/managed-sdk-manifest.json). |
 | Licentivo backend | Account contract `licentivo-launch-account-v1`, including session revocation | Must implement the endpoint set below. This repository does not record a minimum semantic server version; confirm the deployed backend's supported contract rather than inferring it from an SDK version. |
 | Licentivo device-information backend revision | Matching server and database schema **51** | The [2026-10-30 source-validation record](sdk-validation-20261030.md) requires this backend revision before using the reviewed clients' `device_info` reporting. This is a Licentivo database revision, not a Launch database version or the minimum version of every account endpoint. |
 
 ### Release status and evidence
 
-The public [Launch SDK v0.1.8 release](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.8) exists and describes embedded SDK 0.11.8 and device-information support. A published version number does not prove that an uncommitted local change is present in that package.
+Download the [versioned Launch SDK release](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.9). Use its source revision and artifact checksums to identify the embedded implementation.
 
-Before installing or upgrading, check the selected release's source revision, artifact checksums and per-language [publication/installation evidence](https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/registry-status.json). Check the version **inside** each report: the registry reports currently retained under `sdk/release/docs/` identify 0.1.5 with upstream 0.11.5 and cannot certify 0.1.8. Do not relabel historical 9/9 installation results as results for a newer package.
+Before installing or upgrading, check the selected release's source revision, artifact checksums and per-language [publication/installation evidence](https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/registry-status.json). The report records the package version, upstream SDK version, time of the check and the publication status for each registry.
 
-The 2026-10-30 record covers local source/runtime tests on the listed platforms. It does not certify public package installation or a real merchant payment-to-activation workflow. A source-only fix needs a reviewed local build or a release proven to include it. The installation commands in the [package guide](integration-packages.md) target 0.1.8; their presence is not an installation result.
+The 2026-10-30 record covers local source/runtime tests on the listed platforms. It does not certify public package installation or a real merchant payment-to-activation workflow. A source-only fix needs a reviewed local build or a release proven to include it. The installation commands in the [package guide](integration-packages.md) target 0.1.9; their presence is not an installation result.
 
 ## Required backend endpoints
 
@@ -48,7 +48,7 @@ Product/policy reads alone do not prove support for purchase synchronization, id
 
 Identity assertions are never stored in remembered account records, public configuration, prompts or logs. Remembered records contain the protected Launch account session and public routing context. `Restore` requires an online account check and a fresh assertion; applications needing offline startup must use the official SDK's own recovery contract. Only that SDK can accept a still-valid signed offline grant.
 
-The unpublished F03/floating source update is recorded in `sdk/managed-sdk-manifest.json` as `licentivo-sdk-v0.11.8+workspace-f03-floating-2026-10-31`. It requires the matching Licentivo server changes: floating plan mappings and purchase snapshots, separate instance/account sessions, bounded seat grants, retained-credential reopening and durable metering settlement. Older published SDK builds reject Launch floating grants during signature validation. A package version of `0.11.8` alone does not identify this source update.
+The reviewed upstream source revision and embedded-file hashes for floating licenses are recorded in [the managed SDK manifest](../sdk/managed-sdk-manifest.json). Floating plan mappings and purchase snapshots require a matching Licentivo backend with account sessions, bounded seat grants, retained-credential reopening and durable metering settlement.
 
 With this update, account-mode task journals use the verified license, product, device and licensing origin, so obtaining a fresh identity assertion during `Restore` preserves pending work. Retain the cache path and operation ID. Resolve an unknown business result from the application's durable outcome before retrying settlement. Upgrade legacy journals while the original source credential/cache remains available; a job ID alone cannot establish another journal's account ownership.
 

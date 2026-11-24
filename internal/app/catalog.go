@@ -394,28 +394,64 @@ func (s *Service) Site(ctx context.Context, environment, productSlug, requestedL
 }
 
 func (s *Service) SaveBrand(ctx context.Context, p Principal, in Brand) error {
+	return s.saveBrand(ctx, p, in, nil)
+}
+
+type BrandTextPatch struct {
+	Name         *string `json:"name"`
+	Tagline      *string `json:"tagline"`
+	Description  *string `json:"description"`
+	SupportEmail *string `json:"support_email"`
+}
+
+func (s *Service) UpdateBrandText(ctx context.Context, p Principal, patch BrandTextPatch) error {
+	return s.saveBrand(ctx, p, Brand{}, &patch)
+}
+
+func (s *Service) saveBrand(ctx context.Context, p Principal, in Brand, patch *BrandTextPatch) error {
 	if !p.IsAdmin() {
 		return ErrForbidden
 	}
-	if len(strings.TrimSpace(in.Name)) < 2 || len(in.Name) > 160 || len(in.Tagline) > 240 || len(in.Description) > 8000 {
-		return ErrInvalid
-	}
-	in.Name = strings.TrimSpace(in.Name)
-	if in.Theme == "" {
-		in.Theme = "forest"
-	}
-	if !brandThemes[in.Theme] {
-		return problem(400, "THEME_INVALID", "请选择系统提供的网站主题")
-	}
-	if err := validateLogoDataURL(in.LogoDataURL); err != nil {
-		return err
-	}
-	if in.SupportEmail != "" {
-		if _, err := email(in.SupportEmail); err != nil {
+	return databaseError(s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if patch != nil {
+			var settings storage.InstanceSettings
+			if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Select("brand").First(&settings, "id = ?", 1).Error; err != nil {
+				return err
+			}
+			if err := json.Unmarshal(settings.Brand, &in); err != nil {
+				return err
+			}
+			if patch.Name != nil {
+				in.Name = *patch.Name
+			}
+			if patch.Tagline != nil {
+				in.Tagline = *patch.Tagline
+			}
+			if patch.Description != nil {
+				in.Description = *patch.Description
+			}
+			if patch.SupportEmail != nil {
+				in.SupportEmail = *patch.SupportEmail
+			}
+		}
+		if len(strings.TrimSpace(in.Name)) < 2 || len(in.Name) > 160 || len(in.Tagline) > 240 || len(in.Description) > 8000 {
+			return ErrInvalid
+		}
+		in.Name = strings.TrimSpace(in.Name)
+		if in.Theme == "" {
+			in.Theme = "forest"
+		}
+		if !brandThemes[in.Theme] {
+			return problem(400, "THEME_INVALID", "请选择系统提供的网站主题")
+		}
+		if err := validateLogoDataURL(in.LogoDataURL); err != nil {
 			return err
 		}
-	}
-	return databaseError(s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if in.SupportEmail != "" {
+			if _, err := email(in.SupportEmail); err != nil {
+				return err
+			}
+		}
 		if err := tx.Model(&storage.InstanceSettings{}).Where("id = ?", 1).Update("brand", marshal(in)).Error; err != nil {
 			return err
 		}

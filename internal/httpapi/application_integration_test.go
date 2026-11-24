@@ -271,10 +271,22 @@ func TestApplicationFlows(t *testing.T) {
 	if transport.AllowSDKHTTP || transport.PublicURL != appConfig.PublicURL {
 		t.Fatal("a rejected origin change modified saved transport settings", transport)
 	}
-	brand := app.Brand{Name: "Updated Brand", SupportEmail: "support@example.invalid"}
+	brand := app.Brand{Name: "Updated Brand", Tagline: "Original tagline", Description: "Shop description", SupportEmail: "support@example.invalid", Theme: "ocean", LogoDataURL: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="}
 	a.expect(a.request("PUT", "/api/v1/admin/brand", brand, admin, func(r *http.Request) { r.Header.Del("X-CSRF-Token") }), 403)
 	a.expect(a.request("PUT", "/api/v1/admin/brand", brand, admin, func(r *http.Request) { r.Header.Set("Origin", "https://attacker.invalid") }), 403)
 	a.expect(a.request("PUT", "/api/v1/admin/brand", brand, admin), 200)
+	a.expect(a.request("PATCH", "/api/v1/admin/brand", map[string]string{"support_email": "new@example.invalid"}, admin), 200)
+	brand.SupportEmail = "new@example.invalid"
+	updatedBrand := data[app.SiteView](t, a.request("GET", "/api/v1/site", nil, nil)).Brand
+	if updatedBrand != brand {
+		t.Fatal("editing one brand field changed omitted fields")
+	}
+	a.expect(a.request("PATCH", "/api/v1/admin/brand", map[string]string{"theme": "forest"}, admin), 400)
+	a.expect(a.request("PATCH", "/api/v1/admin/brand", map[string]string{"tagline": ""}, admin), 200)
+	brand.Tagline = ""
+	if got := data[app.SiteView](t, a.request("GET", "/api/v1/site", nil, nil)).Brand; got != brand {
+		t.Fatal("explicitly clearing a brand field did not preserve other fields")
+	}
 	product := app.ProductView{Name: "Test Editor", Slug: "test-editor", Status: "published", Content: app.ProductContent{Summary: "A product", Features: []string{"Export"}, DownloadURL: "https://example.invalid/download"}}
 	productResponse := a.request("PUT", "/api/v1/admin/product", product, admin)
 	a.expect(productResponse, 200)

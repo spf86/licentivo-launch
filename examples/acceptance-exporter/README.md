@@ -1,6 +1,6 @@
 # Launch protected CSV exporter
 
-A small real client for Launch 0.3.6-beta / Launch Python 0.1.8. It uses the
+A small real client for Launch 0.3.10-beta / Launch Python 0.1.9. It uses the
 embedded official SDK, signed permission checks, real device registration, and
 an actual CSV-writing callback. It does not create payments or alter entitlements.
 

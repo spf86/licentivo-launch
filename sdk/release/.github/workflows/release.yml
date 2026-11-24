@@ -6,7 +6,7 @@ on:
       tag:
         description: Existing immutable release tag
         type: string
-        default: v0.1.8
+        default: v0.1.9
         required: true
       registry:
         description: Publish one configured registry

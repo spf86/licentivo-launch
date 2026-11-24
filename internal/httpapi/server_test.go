@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"licentivo-launch/internal/app"
 	"licentivo-launch/internal/storage"
 )
 
@@ -26,6 +27,28 @@ func TestReadinessIsNotLivenessAndDoesNotExposeDatabaseErrors(t *testing.T) {
 			if w.Header().Get("X-Request-ID") == "" {
 				t.Fatal("missing request correlation")
 			}
+		}
+	}
+}
+
+func TestRenderedCheckoutLinksRespectStorefrontEnvironment(t *testing.T) {
+	view := publicPageView{
+		Language: "en", Kind: "product", Home: "/en/", ProductURL: "/en/products/docs-tool",
+		Site:  app.SiteView{Product: &app.ProductView{Slug: "docs-tool"}},
+		Plans: []publicPlan{{CanBuy: true, BuyURL: "/#/checkout/docs-tool/plan-v1"}},
+	}
+	for _, env := range []string{"live", "sandbox"} {
+		view.Site.Environment = env
+		var page strings.Builder
+		if err := publicTemplate.ExecuteTemplate(&page, "public.html", view); err != nil {
+			t.Fatal(err)
+		}
+		path := "/#/checkout/docs-tool/plan-v1"
+		if env == "sandbox" {
+			path = "/?preview=sandbox#/checkout/docs-tool/plan-v1"
+		}
+		if !strings.Contains(page.String(), `href="`+path+`"`) {
+			t.Fatalf("missing %s purchase link %s", env, path)
 		}
 	}
 }

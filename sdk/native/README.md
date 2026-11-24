@@ -1,8 +1,8 @@
-# Launch C / C++ 0.1.8
+# Launch C / C++ 0.1.9
 
-> This README describes the current account-exchange source: Launch package 0.1.8 with embedded official SDK 0.11.8, paired with Launch server 0.3.6-beta. Login obtains a short-lived identity assertion; Licentivo owns runtime permission. Check [backend requirements, migration and release evidence](https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/sdk-compatibility.md) and the [account boundary](https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/account-purchase-boundary.md). A public version number alone does not certify uncommitted local changes.
+> This README describes the current account-exchange source: Launch package 0.1.9 with embedded official SDK 0.11.9, paired with Launch server 0.3.6-beta. Login obtains a short-lived identity assertion; Licentivo owns runtime permission. Check [backend requirements, migration and release evidence](https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/sdk-compatibility.md) and the [account boundary](https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/account-purchase-boundary.md). A public version number alone does not certify uncommitted local changes.
 
-C11/C++17 and CMake. Download the Windows amd64 GNU or Linux amd64 native installation ZIP from [GitHub Releases](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.8), verify SHA256SUMS, then add only that Launch prefix to CMake. SDK 0.11.8 core, adapters, import targets and notices are included. The Windows archive bundles curl. Other platforms can build the complete source using standard C11/curl/OpenSSL development libraries.
+C11/C++17 and CMake. Download the Windows amd64 GNU or Linux amd64 native installation ZIP from [GitHub Releases](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.9), verify SHA256SUMS, then add only that Launch prefix to CMake. SDK 0.11.9 core, adapters, import targets and notices are included. The Windows archive bundles curl. Other platforms can build the complete source using standard C11/curl/OpenSSL development libraries.
 
 ```cmake
 find_package(LicentivoLaunch CONFIG REQUIRED)
@@ -13,7 +13,7 @@ licentivo_launch_link(myapp)
 
 The helper handles SDK/transitive linkage and bundled Windows runtime DLLs. No second find_package for an official SDK or copied adapter is required.
 
-Version 0.1.8 embeds SDK 0.11.8 device-information reporting and portable native sources. Its installed CMake targets also resolve curl through the consumer's public `CURL::libcurl` target, including config-package/FindCURL combinations; consumers do not need compatibility aliases. Match the compiler, architecture and curl runtime/development dependencies to the native package. See the [compatibility guide](https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/sdk-compatibility.md) for the matching backend revision and migration from key-based clients.
+Version 0.1.9 embeds SDK 0.11.9 device-information reporting and portable native sources. Its installed CMake targets also resolve curl through the consumer's public `CURL::libcurl` target, including config-package/FindCURL combinations; consumers do not need compatibility aliases. Match the compiler, architecture and curl runtime/development dependencies to the native package. See the [compatibility guide](https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/sdk-compatibility.md) for the matching backend revision and migration from key-based clients.
 
 ## Direct initialization
 
