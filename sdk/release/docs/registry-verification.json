@@ -1,45 +1,45 @@
 {
-  "version": "0.1.9",
+  "version": "0.1.10",
   "upstream_sdk_version": "0.11.9",
-  "release": "https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.9",
-  "checked_at": "2026-11-24T05:22:38.7135203Z",
+  "release": "https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.10",
+  "checked_at": "2026-11-24T05:30:08.8947737Z",
   "github_release_published": false,
   "all_six_completed": false,
   "registry_count": 6,
   "registries": {
     "npm": {
-      "version": "0.1.9",
-      "url": "https://registry.npmjs.org/@licentivo%2Flaunch/0.1.9",
+      "version": "0.1.10",
+      "url": "https://registry.npmjs.org/@licentivo%2Flaunch/0.1.10",
       "published": false,
       "http_status": 404
     },
     "pypi": {
-      "version": "0.1.9",
-      "url": "https://pypi.org/pypi/licentivo-launch/0.1.9/json",
+      "version": "0.1.10",
+      "url": "https://pypi.org/pypi/licentivo-launch/0.1.10/json",
       "published": false,
       "http_status": 404
     },
     "nuget": {
-      "version": "0.1.9",
-      "url": "https://api.nuget.org/v3-flatcontainer/licentivo.launch/0.1.9/licentivo.launch.nuspec",
+      "version": "0.1.10",
+      "url": "https://api.nuget.org/v3-flatcontainer/licentivo.launch/0.1.10/licentivo.launch.nuspec",
       "published": false,
       "http_status": 404
     },
     "ruby": {
-      "version": "0.1.9",
-      "url": "https://rubygems.org/api/v2/rubygems/licentivo-launch/versions/0.1.9.json",
+      "version": "0.1.10",
+      "url": "https://rubygems.org/api/v2/rubygems/licentivo-launch/versions/0.1.10.json",
       "published": false,
       "http_status": 404
     },
     "crates": {
-      "version": "0.1.9",
-      "url": "https://crates.io/api/v1/crates/licentivo-launch/0.1.9",
+      "version": "0.1.10",
+      "url": "https://crates.io/api/v1/crates/licentivo-launch/0.1.10",
       "published": false,
       "http_status": 404
     },
     "maven": {
-      "version": "0.1.9",
-      "url": "https://repo.maven.apache.org/maven2/com/licentivo/launch/launch-client/0.1.9/launch-client-0.1.9.pom",
+      "version": "0.1.10",
+      "url": "https://repo.maven.apache.org/maven2/com/licentivo/launch/launch-client/0.1.10/launch-client-0.1.10.pom",
       "published": false,
       "http_status": 404
     }

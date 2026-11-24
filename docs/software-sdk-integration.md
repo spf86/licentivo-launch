@@ -4,7 +4,7 @@ For HTTP tests on customer machines or private networks, follow [the two HTTP pe
 
 This guide applies to the Licentivo provider. To connect a merchant-owned licensing system without Licentivo, use [the custom licensing API and integration flow](external-licensing.md), select `custom_http` for the product/environment and retain that system's runtime SDK.
 
-The current source baseline is Launch server **0.3.10-beta**, Launch package **0.1.9** and embedded official SDK **0.11.9**, using account identity exchange. Check the [compatibility matrix](sdk-compatibility.md) for required Licentivo endpoints, the device-information backend revision, package evidence and upgrade order. See [the responsibility and purchase-sync contract](account-purchase-boundary.md) for migration and server-side session revocation. Public releases and uncommitted source changes have separate evidence.
+The current source baseline is Launch server **0.3.11-beta**, Launch package **0.1.10** and embedded official SDK **0.11.9**, using account identity exchange. Check the [compatibility matrix](sdk-compatibility.md) for required Licentivo endpoints, the device-information backend revision, package evidence and upgrade order. See [the responsibility and purchase-sync contract](account-purchase-boundary.md) for migration and server-side session revocation. Public releases and uncommitted source changes have separate evidence.
 
 Launch owns merchant accounts, orders, prices, renewal/upgrade quotes, refunds and absolute purchased dates. Licentivo owns licenses, policies, device allowances, authorization sessions, signed permissions and runtime decisions. A successful Launch login or synchronized purchase is never permission to execute protected work.
 

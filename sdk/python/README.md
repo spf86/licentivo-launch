@@ -1,13 +1,13 @@
-# Launch Python 0.1.9
+# Launch Python 0.1.10
 
 [Website](https://www.licentivo.com/en/launch.html) · [Documentation](https://www.licentivo.com/en/launch-docs.html) · [Source code](https://github.com/spf86/licentivo-launch-sdk)
 
-> This README describes the current account-exchange source: Launch package 0.1.9 with embedded official SDK 0.11.9, paired with Launch server 0.3.6-beta. Login obtains a short-lived identity assertion; Licentivo owns runtime permission. Check [backend requirements, migration and release evidence](https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/sdk-compatibility.md) and the [account boundary](https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/account-purchase-boundary.md). A public version number alone does not certify uncommitted local changes.
+> This README describes the current account-exchange source: Launch package 0.1.10 with embedded official SDK 0.11.9, paired with Launch server 0.3.6-beta. Login obtains a short-lived identity assertion; Licentivo owns runtime permission. Check [backend requirements, migration and release evidence](https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/sdk-compatibility.md) and the [account boundary](https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/account-purchase-boundary.md). A public version number alone does not certify uncommitted local changes.
 
 Python 3.10+. Install only Launch:
 
 ```sh
-python -m pip install licentivo-launch==0.1.9
+python -m pip install licentivo-launch==0.1.10
 ```
 
 From source use python -m pip install ./sdk/python. The wheel embeds SDK 0.11.9 and its default adapter; pip resolves the ordinary cryptography dependency. No separate licentivo-sdk installation or PYTHONPATH entry is needed.

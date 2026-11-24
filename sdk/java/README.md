@@ -1,10 +1,10 @@
-# Launch Java 0.1.9
+# Launch Java 0.1.10
 
 [Website](https://www.licentivo.com/en/launch.html) · [Documentation](https://www.licentivo.com/en/launch-docs.html) · [Source code](https://github.com/spf86/licentivo-launch-sdk)
 
-> This README describes the current account-exchange source: Launch package 0.1.9 with embedded official SDK 0.11.9, paired with Launch server 0.3.6-beta. Login obtains a short-lived identity assertion; Licentivo owns runtime permission. Check [backend requirements, migration and release evidence](https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/sdk-compatibility.md) and the [account boundary](https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/account-purchase-boundary.md). A public version number alone does not certify uncommitted local changes.
+> This README describes the current account-exchange source: Launch package 0.1.10 with embedded official SDK 0.11.9, paired with Launch server 0.3.6-beta. Login obtains a short-lived identity assertion; Licentivo owns runtime permission. Check [backend requirements, migration and release evidence](https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/sdk-compatibility.md) and the [account boundary](https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/account-purchase-boundary.md). A public version number alone does not certify uncommitted local changes.
 
-JDK 17+. Add Maven/Gradle dependency `com.licentivo.launch:launch-client:0.1.9` from Maven Central, or use only launch-client-0.1.9.jar from the matching GitHub release on your classpath. SDK 0.11.9 classes and notices are inside this JAR. No second SDK JAR or Maven dependency is required. Standard Java libraries provide the runtime dependencies.
+JDK 17+. Add Maven/Gradle dependency `com.licentivo.launch:launch-client:0.1.10` from Maven Central, or use only launch-client-0.1.10.jar from the matching GitHub release on your classpath. SDK 0.11.9 classes and notices are inside this JAR. No second SDK JAR or Maven dependency is required. Standard Java libraries provide the runtime dependencies.
 
 ## Direct initialization and manual lifecycle
 

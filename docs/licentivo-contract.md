@@ -2,7 +2,7 @@
 
 This guide describes the current Licentivo provider. Merchants using another licensing system can choose the [custom HTTP provider](external-licensing.md); that mode does not call Licentivo or require its API key.
 
-Pair Launch server `0.3.10-beta` with the account-exchange Launch package `0.1.9` and embedded official SDK `0.11.9` described by this source tree. Confirm the deployed Licentivo backend implements the endpoints below; a readable product catalog is not sufficient. See the [compatibility matrix](sdk-compatibility.md) for device-information schema requirements, release evidence and migration order.
+Pair Launch server `0.3.11-beta` with the account-exchange Launch package `0.1.10` and embedded official SDK `0.11.9` described by this source tree. Confirm the deployed Licentivo backend implements the endpoints below; a readable product catalog is not sufficient. See the [compatibility matrix](sdk-compatibility.md) for device-information schema requirements, release evidence and migration order.
 
 ## Administrator configuration
 

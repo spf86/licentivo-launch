@@ -1,6 +1,6 @@
 # 使用 AI 接入 Licentivo Launch
 
-> 当前源码采用账号身份交换：Launch 服务端 `0.3.10-beta` → Launch SDK `0.1.9` → 内置官方 SDK `0.11.9`。服务端能力、发行包与本地修订的区别见[版本兼容性指南](sdk-compatibility.md)，职责和迁移约束见[购买期限与账号 SDK 边界](account-purchase-boundary.md)。
+> 当前源码采用账号身份交换：Launch 服务端 `0.3.11-beta` → Launch SDK `0.1.10` → 内置官方 SDK `0.11.9`。服务端能力、发行包与本地修订的区别见[版本兼容性指南](sdk-compatibility.md)，职责和迁移约束见[购买期限与账号 SDK 边界](account-purchase-boundary.md)。
 
 Launch 后台的 **运营工具 → AI 快速接入** 会生成一份可交给 AI 编程工具的英文任务说明。它使用当前商店、已有软件和已发布套餐的真实公开配置，并要求 AI 安装公开的 Launch 客户端包、调用真实 API、把权限检查放到业务操作中，再完成接入测试。
 
@@ -29,25 +29,25 @@ Launch 只在浏览器中生成文本。它不会自动连接任何 AI 服务，
 
 ## 提示词会告诉 AI 在哪里下载 SDK
 
-下列命令以当前源码基线 `0.1.9` 为目标，[v0.1.9 GitHub Release](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.9) 提供对应版本的发行文件。AI 应核对所选语言的发布状态、源码提交和包校验值，并报告实际安装结果；不能把历史版本的 9/9 安装记录或本地源码测试当作本版公开安装验收。尚未进入发行包的本地修订需要使用对应的审核构建。
+下列命令以当前源码基线 `0.1.10` 为目标，[v0.1.10 GitHub Release](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.10) 提供对应版本的发行文件。AI 应核对所选语言的发布状态、源码提交和包校验值，并报告实际安装结果；不能把历史版本的 9/9 安装记录或本地源码测试当作本版公开安装验收。尚未进入发行包的本地修订需要使用对应的审核构建。
 
 生成的提示词必须包含与所选语言对应的、固定版本的公开安装方式：
 
 ```text
-Go:         go get github.com/spf86/licentivo-launch-sdk/pkg/launchclient@v0.1.9
-Python:     python -m pip install licentivo-launch==0.1.9
-C# / .NET: dotnet add package Licentivo.Launch --version 0.1.9
-Java:       com.licentivo.launch:launch-client:0.1.9
-Node.js:    npm install @licentivo/launch@0.1.9
-Rust:       cargo add licentivo-launch@=0.1.9
-Ruby:       gem install licentivo-launch --version 0.1.9
-C / C++:    https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.9
+Go:         go get github.com/spf86/licentivo-launch-sdk/pkg/launchclient@v0.1.10
+Python:     python -m pip install licentivo-launch==0.1.10
+C# / .NET: dotnet add package Licentivo.Launch --version 0.1.10
+Java:       com.licentivo.launch:launch-client:0.1.10
+Node.js:    npm install @licentivo/launch@0.1.10
+Rust:       cargo add licentivo-launch@=0.1.10
+Ruby:       gem install licentivo-launch --version 0.1.10
+C / C++:    https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.10
 ```
 
 公开源码、各语言 README 和当前发布状态位于：
 
 - [Licentivo Launch SDK 仓库](https://github.com/spf86/licentivo-launch-sdk)
-- [v0.1.9 GitHub Release](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.9)
+- [v0.1.10 GitHub Release](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.10)
 - [九种语言公开安装验证](https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/registry-verification.json)
 - [版本与包说明](integration-packages.md)
 - [服务端、SDK 与 Licentivo 兼容性](sdk-compatibility.md)
@@ -55,7 +55,7 @@ C / C++:    https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.9
 - [应用接入架构与安全要求](software-sdk-integration.md)
 - [接入验收清单](acceptance.md)
 
-只安装所选语言的 Launch 包。v0.1.9 已内置官方 Licentivo SDK v0.11.9、默认适配器和链接配置，不再单独安装第二份官方 SDK。
+只安装所选语言的 Launch 包。v0.1.10 已内置官方 Licentivo SDK v0.11.9、默认适配器和链接配置，不再单独安装第二份官方 SDK。
 
 ## 提示词会告诉 AI 如何接入
 
@@ -122,7 +122,7 @@ Launch 的公开配置检查、AI 草稿和本地编译都不能证明真实支�
 
 ## 在源码分发包中使用提示词生成器
 
-`licentivo-launch-0.1.9-source.zip` 保留下列文件，便于在自己的工具中生成相同结构的提示词：
+`licentivo-launch-0.1.10-source.zip` 保留下列文件，便于在自己的工具中生成相同结构的提示词：
 
 - `internal/httpapi/web/integration-prompts.js`：不依赖页面或服务端的提示词生成模块；
 - `scripts/integration-prompts.test.mjs`：本地 Node 测试；

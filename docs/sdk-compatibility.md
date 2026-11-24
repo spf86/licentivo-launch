@@ -6,19 +6,19 @@ This guide describes the **Licentivo account-exchange integration in the current
 
 | Component | Version or contract | Requirement |
 | --- | --- | --- |
-| Launch server | `0.3.10-beta` | Provides desktop account sessions, short-lived identity assertions, purchase snapshots and durable session-revocation notifications. The server version is defined in `cmd/launch/main.go`. |
-| Launch application packages | `0.1.9` | All nine language wrappers use account identity exchange. Install only the Launch package for your language. The source version is recorded in [sdk/VERSION](../sdk/VERSION). |
+| Launch server | `0.3.11-beta` | Provides desktop account sessions, short-lived identity assertions, purchase snapshots and durable session-revocation notifications. The server version is defined in `cmd/launch/main.go`. |
+| Launch application packages | `0.1.10` | All nine language wrappers use account identity exchange. Install only the Launch package for your language. The source version is recorded in [sdk/VERSION](../sdk/VERSION). |
 | Embedded official Licentivo SDK | `0.11.9` | Owns identity exchange with Licentivo, device credentials, signed permissions, feature execution, offline rules and device logout. See [sdk/UPSTREAM_VERSION](../sdk/UPSTREAM_VERSION) and the [reviewed file manifest](../sdk/managed-sdk-manifest.json). |
 | Licentivo backend | Account contract `licentivo-launch-account-v1`, including session revocation | Must implement the endpoint set below. This repository does not record a minimum semantic server version; confirm the deployed backend's supported contract rather than inferring it from an SDK version. |
 | Licentivo device-information backend revision | Matching server and database schema **51** | The [2026-10-30 source-validation record](sdk-validation-20261030.md) requires this backend revision before using the reviewed clients' `device_info` reporting. This is a Licentivo database revision, not a Launch database version or the minimum version of every account endpoint. |
 
 ### Release status and evidence
 
-Download the [versioned Launch SDK release](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.9). Use its source revision and artifact checksums to identify the embedded implementation.
+Download the [versioned Launch SDK release](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.10). Use its source revision and artifact checksums to identify the embedded implementation.
 
 Before installing or upgrading, check the selected release's source revision, artifact checksums and per-language [publication/installation evidence](https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/registry-status.json). The report records the package version, upstream SDK version, time of the check and the publication status for each registry.
 
-The 2026-10-30 record covers local source/runtime tests on the listed platforms. It does not certify public package installation or a real merchant payment-to-activation workflow. A source-only fix needs a reviewed local build or a release proven to include it. The installation commands in the [package guide](integration-packages.md) target 0.1.9; their presence is not an installation result.
+The 2026-10-30 record covers local source/runtime tests on the listed platforms. It does not certify public package installation or a real merchant payment-to-activation workflow. A source-only fix needs a reviewed local build or a release proven to include it. The installation commands in the [package guide](integration-packages.md) target 0.1.10; their presence is not an installation result.
 
 ## Required backend endpoints
 

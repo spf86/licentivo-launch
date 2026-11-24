@@ -24,7 +24,7 @@ import (
 	"licentivo-launch/internal/storage"
 )
 
-var version = "0.3.10-beta"
+var version = "0.3.11-beta"
 
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stderr, nil))

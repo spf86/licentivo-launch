@@ -1,12 +1,12 @@
-# Launch Rust 0.1.9
+# Launch Rust 0.1.10
 
 [Website](https://www.licentivo.com/en/launch.html) · [Documentation](https://www.licentivo.com/en/launch-docs/sdk-function-reference/) · [Source code](https://github.com/spf86/licentivo-launch-sdk)
 
 [crates.io package](https://crates.io/crates/licentivo-launch) · [Rust API on docs.rs](https://docs.rs/crate/licentivo-launch/latest)
 
-> This README describes the current account-exchange source: Launch package 0.1.9 with embedded official SDK 0.11.9, paired with Launch server 0.3.6-beta. Login obtains a short-lived identity assertion; Licentivo owns runtime permission. Check [backend requirements, migration and release evidence](https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/sdk-compatibility.md) and the [account boundary](https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/account-purchase-boundary.md). A public version number alone does not certify uncommitted local changes.
+> This README describes the current account-exchange source: Launch package 0.1.10 with embedded official SDK 0.11.9, paired with Launch server 0.3.6-beta. Login obtains a short-lived identity assertion; Licentivo owns runtime permission. Check [backend requirements, migration and release evidence](https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/sdk-compatibility.md) and the [account boundary](https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/account-purchase-boundary.md). A public version number alone does not certify uncommitted local changes.
 
-Rust 1.85+. Install from crates.io with `cargo add licentivo-launch@=0.1.9`. A downloaded .crate or source ZIP can also be used as a local path dependency. SDK 0.11.9 Rust bindings and C11 sources are embedded. build.rs compiles and links the core automatically; no separate licentivo crate or SDK link path is needed.
+Rust 1.85+. Install from crates.io with `cargo add licentivo-launch@=0.1.10`. A downloaded .crate or source ZIP can also be used as a local path dependency. SDK 0.11.9 Rust bindings and C11 sources are embedded. build.rs compiles and links the core automatically; no separate licentivo crate or SDK link path is needed.
 
 Windows uses the GNU/MinGW Rust toolchain. The Windows distribution bundles curl and copies DLLs beside Cargo executables/tests. Other operating systems use normal C11, curl and OpenSSL development libraries. Preserve Cargo.lock. Ordinary Rust dependencies are resolved by Cargo.
 

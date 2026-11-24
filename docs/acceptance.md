@@ -2,7 +2,7 @@
 
 > Account-mode probes now obtain short-lived identity assertions. Negative Launch purchase status is purchase evidence only, not proof of Licentivo runtime denial. Runtime proof requires the official SDK probe; no production deployment or SDK publication is implied. See [account boundary](account-purchase-boundary.md).
 
-Check the [compatibility matrix](sdk-compatibility.md) before running probes. The current source baseline is Launch server 0.3.10-beta, Launch package 0.1.9 and embedded official SDK 0.11.9. The deployed Licentivo backend must support purchase snapshots, identity exchange and session-revocation receipts; the reviewed device-information clients also need the matching backend/database revision. Record the actual source/package revisions used.
+Check the [compatibility matrix](sdk-compatibility.md) before running probes. The current source baseline is Launch server 0.3.11-beta, Launch package 0.1.10 and embedded official SDK 0.11.9. The deployed Licentivo backend must support purchase snapshots, identity exchange and session-revocation receipts; the reviewed device-information clients also need the matching backend/database revision. Record the actual source/package revisions used.
 
 There are two separate evidence levels: controlled local automated checks and external merchant-sandbox probes. A test double, successful catalog read, generated configuration or passing health check never establishes real payment, license issuance or activation. External service configuration was explicitly deferred for this development iteration.
 

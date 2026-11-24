@@ -11,7 +11,7 @@ require 'time'
 require 'monitor'
 
 module LicentivoLaunch
-  VERSION = '0.1.9'
+  VERSION = '0.1.10'
   LIMIT = 1 << 20
   UUID = /\A[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\z/
   class Error < StandardError

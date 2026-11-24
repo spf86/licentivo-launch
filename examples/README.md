@@ -2,7 +2,7 @@
 
 For merchant-owned licensing services, start with [the custom HTTP adapter](custom-licensing/README.md) and [protocol guide](../docs/external-licensing.md). The nine application packages below specifically integrate Licentivo; custom services retain their own runtime SDK.
 
-> These examples follow the current account-exchange source baseline: Launch server 0.3.10-beta, Launch package 0.1.9 and embedded official SDK 0.11.9. Check [compatibility, backend requirements and release evidence](../docs/sdk-compatibility.md) before choosing a package. Launch computes purchased dates; the official SDK owns runtime permission and logout recovery. See the [account boundary](../docs/account-purchase-boundary.md).
+> These examples follow the current account-exchange source baseline: Launch server 0.3.11-beta, Launch package 0.1.10 and embedded official SDK 0.11.9. Check [compatibility, backend requirements and release evidence](../docs/sdk-compatibility.md) before choosing a package. Launch computes purchased dates; the official SDK owns runtime permission and logout recovery. See the [account boundary](../docs/account-purchase-boundary.md).
 
 Read the [application integration guide](../docs/software-sdk-integration.md) for the API sequence, security rules, single-package installation, and language-specific commands.
 

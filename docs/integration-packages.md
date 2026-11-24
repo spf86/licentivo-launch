@@ -1,36 +1,36 @@
 # Launch application integration packages
 
-Launch application package **0.1.9** embeds official Licentivo SDK **0.11.9** for all **nine languages** in the current source baseline, paired with Launch server **0.3.10-beta**. Check the [compatibility matrix](sdk-compatibility.md) before installation or upgrade. Install only the Launch package for your language. Its implementation, default adapter, license notices and SDK linking configuration are included. TypeScript declarations belong to JavaScript; the trusted Go Web backend is an extra example. Public sources, registry commands and per-language availability are maintained in the [Launch SDK repository](https://github.com/spf86/licentivo-launch-sdk) and its [publication status](https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/registry-status.json).
+Launch application package **0.1.10** embeds official Licentivo SDK **0.11.9** for all **nine languages** in the current source baseline, paired with Launch server **0.3.11-beta**. Check the [compatibility matrix](sdk-compatibility.md) before installation or upgrade. Install only the Launch package for your language. Its implementation, default adapter, license notices and SDK linking configuration are included. TypeScript declarations belong to JavaScript; the trusted Go Web backend is an extra example. Public sources, registry commands and per-language availability are maintained in the [Launch SDK repository](https://github.com/spf86/licentivo-launch-sdk) and its [publication status](https://github.com/spf86/licentivo-launch-sdk/blob/main/docs/registry-status.json).
 
-The [Launch SDK release](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.9) provides versioned downloads. Device-information reporting requires the matching Licentivo server/database revision. Clients still calling the removed `/credential` endpoint must migrate to identity exchange.
+The [Launch SDK release](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.10) provides versioned downloads. Device-information reporting requires the matching Licentivo server/database revision. Clients still calling the removed `/credential` endpoint must migrate to identity exchange.
 
 | Language | Single Launch artifact | Package source / API guide |
 | --- | --- | --- |
 | Go | Self-contained module ZIP | [pkg/launchclient](../pkg/launchclient/README.md) |
-| Python | licentivo_launch-0.1.9-py3-none-any.whl | [sdk/python](../sdk/python/README.md) |
-| C# / .NET 8 | Licentivo.Launch.0.1.9.nupkg | [sdk/csharp](../sdk/csharp/README.md) |
-| Java 17 | launch-client-0.1.9.jar and POM | [sdk/java](../sdk/java/README.md) |
-| JavaScript / Node.js | licentivo-launch-0.1.9.tgz | [sdk/javascript](../sdk/javascript/README.md) |
-| Rust | licentivo-launch-0.1.9.crate or source ZIP | [sdk/rust](../sdk/rust/README.md) |
+| Python | licentivo_launch-0.1.10-py3-none-any.whl | [sdk/python](../sdk/python/README.md) |
+| C# / .NET 8 | Licentivo.Launch.0.1.10.nupkg | [sdk/csharp](../sdk/csharp/README.md) |
+| Java 17 | launch-client-0.1.10.jar and POM | [sdk/java](../sdk/java/README.md) |
+| JavaScript / Node.js | licentivo-launch-0.1.10.tgz | [sdk/javascript](../sdk/javascript/README.md) |
+| Rust | licentivo-launch-0.1.10.crate or source ZIP | [sdk/rust](../sdk/rust/README.md) |
 | Ruby | Platform Launch gem or source gem | [sdk/ruby](../sdk/ruby/README.md) |
 | C | Launch native CMake installation ZIP | [sdk/native](../sdk/native/README.md) |
 | C++ | Same native archive, C++17 API | [sdk/native](../sdk/native/README.md) |
 
 ## Install from a public registry
 
-The commands below target 0.1.9. Check per-language publication status, artifact checksums and fresh-consumer results for that exact version before using them. The registry report records availability for each language and the time of its last check. A GitHub archive can be installed locally while a package registry is awaiting publication.
+The commands below target 0.1.10. Check per-language publication status, artifact checksums and fresh-consumer results for that exact version before using them. The registry report records availability for each language and the time of its last check. A GitHub archive can be installed locally while a package registry is awaiting publication.
 
 ```sh
-go get github.com/spf86/licentivo-launch-sdk/pkg/launchclient@v0.1.9
-python -m pip install licentivo-launch==0.1.9
-npm install @licentivo/launch@0.1.9
-dotnet add package Licentivo.Launch --version 0.1.9
-cargo add licentivo-launch@=0.1.9
-gem install licentivo-launch --version 0.1.9
+go get github.com/spf86/licentivo-launch-sdk/pkg/launchclient@v0.1.10
+python -m pip install licentivo-launch==0.1.10
+npm install @licentivo/launch@0.1.10
+dotnet add package Licentivo.Launch --version 0.1.10
+cargo add licentivo-launch@=0.1.10
+gem install licentivo-launch --version 0.1.10
 ```
 
-Java uses Maven/Gradle coordinates `com.licentivo.launch:launch-client:0.1.9`.
-C/C++ use the ABI-compatible native archive from the [versioned GitHub release](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.9).
+Java uses Maven/Gradle coordinates `com.licentivo.launch:launch-client:0.1.10`.
+C/C++ use the ABI-compatible native archive from the [versioned GitHub release](https://github.com/spf86/licentivo-launch-sdk/releases/tag/v0.1.10).
 See the publication status for registry propagation and verification results.
 
 ## Install a downloaded distribution
@@ -38,10 +38,10 @@ See the publication status for registry propagation and verification results.
 Use the artifacts identified in integration-packages.json. Each language records sdk_managed: true and requires_separate_official_sdk: false. Verify SHA256SUMS before installation.
 
 ```powershell
-python -m pip install ./licentivo_launch-0.1.9-py3-none-any.whl
-npm install ./licentivo-launch-0.1.9.tgz
-dotnet add YOUR_PROJECT package Licentivo.Launch --version 0.1.9 --source YOUR_LOCAL_FEED
-gem install --local ./licentivo-launch-0.1.9-x64-mingw-ucrt.gem
+python -m pip install ./licentivo_launch-0.1.10-py3-none-any.whl
+npm install ./licentivo-launch-0.1.10.tgz
+dotnet add YOUR_PROJECT package Licentivo.Launch --version 0.1.10 --source YOUR_LOCAL_FEED
+gem install --local ./licentivo-launch-0.1.10-x64-mingw-ucrt.gem
 ```
 
 Java uses only the Launch JAR on its classpath; its POM has no official SDK dependency. Offline Go consumers can extract the module ZIP and use a local require/replace for `github.com/spf86/licentivo-launch-sdk`. Offline Rust consumers can extract the crate or source ZIP and add a local licentivo-launch path dependency. No official SDK package or checkout is needed.

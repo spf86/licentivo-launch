@@ -1,5 +1,5 @@
 """Launch accounts + official Licentivo runtime; no local entitlement decisions."""
 from .client import Application, APIError, MemoryStore, WindowsDPAPIStore
 
-__version__ = "0.1.9"
+__version__ = "0.1.10"
 __all__ = ["Application", "APIError", "MemoryStore", "WindowsDPAPIStore"]
